@@ -39,6 +39,9 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │                  (堰・穴・三角の切欠き。機能分離型・一体型)と畦畔の越流で s%h へ戻す。
   │                  双方向(f_pd_exchange = 1)は水田のセルを σ の階段形の断面として m_swflow_enc に
   │                  登録し、落水口の逆流と畦畔を越える流入も扱う(§26.3・§119.6)。
+  │                  区画の解像(表現 B。fn_pd_plot)は、区画の畦畔の仮想壁面と落水口の装置則を
+  │                  m_swflow_enc に登録し(上書きは m_swflow_enc_channel の pwall_apply)、
+  │                  本モジュールは減水深と台帳だけを受け持つ(§119.8)。
   │                  セル単位で帯の中だけ。fn_paddy。§119、docs/paddy_plan.md)
   │    m_geomorph    土砂・地形変化(加算: creep / fluvial / suspend / wash / splash / debris /
   │                  bedslide / bank(側岸侵食) / fines(河床細粒分の帳簿) / fixation(植生定着)/

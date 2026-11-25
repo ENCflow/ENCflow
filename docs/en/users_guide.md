@@ -101,12 +101,12 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Soil Water Index](users_guide/swi.md) (&list_swi) - the operational sediment-disaster warning index (JMA 3-tank model; dedicated runs)
 - [Vertical unsaturated flow (VZ) runoff](users_guide/vz.md) (&list_vz / &list_vz_column / &list_vz_zone) - the rainfall-runoff response of mountain hillslopes from the one-dimensional Richards equation on shared reference columns (the VZ model of Tani 2023; direct drainage of zones to outlet cells)
 - [Storage function runoff of zones](users_guide/sfm.md) (&list_sfm / &list_sfm_zone) - rainfall runoff from a tank S = K·q^P per zone (Kimura 1961; outlets and baseflow as in VZ; can be combined with VZ in separate zones)
-- [Paddy-field dams](users_guide/paddy.md) (&list_paddy) - the storage of paddy fields and the discharge laws of their outlets (water-level board, separated type, integrated type) as tanks on the paddy area fraction of each cell, to see how the runoff changes with the adoption ratio
+- [Paddy-field dams](users_guide/paddy.md) (&list_paddy) - the storage of paddy fields and the discharge laws of their outlets (water-level board, separated type, integrated type) as tanks on the paddy area fraction of each cell, or as plots resolved on a grid of 5-10 m (virtual walls of levees and outlets), to see how the runoff changes with the adoption ratio
 - [Measurement](users_guide/record.md) (&list_record) -- probes, flux transects
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 845 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 848 parameter names to their chapters
 
 ---
 

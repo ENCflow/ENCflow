@@ -16,6 +16,10 @@
 !   outlet and the overflow of the levees. There is one outlet per
 !   representative plot area, and the outflow rate per unit paddy area does
 !   not depend on the grid size (users_guide/paddy.md, developer.md §119).
+!   On grids of 5-10 m, representation B, which resolves the plots, can be
+!   chosen by giving the map of plot numbers fn_pd_plot (the levees become
+!   virtual walls and the outlets notches in them; the example below is
+!   commented out).
 !
 !   Required input: only the paddy area fraction (fn_pd_frac or pd_frac). The
 !   rest can be omitted, in which case the adopted values are shown with
@@ -24,15 +28,18 @@
 !   coefficient 0.6)
 !
 !   Features that cannot be combined (stops when given): fn_wq, fn_salt,
-!   nesting, STG grid. Paddy cells cannot be on sea, channel, boundary,
-!   source or structure cells, nor on zone cells of VZ or of the storage
-!   function method. Flow of inundation into the paddy fields (backflow) is
-!   not represented (one way)
+!   nesting, STG grid. B can neither be combined with fn_geomorph, fn_evap,
+!   fn_gwflow nor the non-hydrostatic correction. Paddy cells cannot be on
+!   sea, channel, boundary, source or structure cells, nor on zone cells of
+!   VZ or of the storage function method. The default one-way mode does not
+!   represent the flow of inundation into the paddy fields (backflow); the
+!   two-way mode f_pd_exchange = 1 or B represents it
 !
 !   Output: paddy.csv (accumulated rain, outlet flow, overflow and decrease
 !   in depth, storage, mean ponding depth and full share of each class,
 !   residual of the balance), maps Hpn and Hpd (ponding depth of each
-!   class). The storage of the tanks is included in S (S_surf) of the Log
+!   class; A only). The storage of the tanks is included in S (S_surf) of
+!   the Log. The ponding depth of the plots of B is the water depth H itself
 !
 !======================================================================
 &list_paddy
@@ -73,6 +80,22 @@
   !      the non-paddy area stores and conveys the surface water; the non-paddy
   !      share 1 - a/gv must be at least 0.05)
   !f_pd_exchange = 0
+
+  ! resolved plots (representation B; grids of 5-10 m). Giving the plot
+  ! numbers selects B, and the area fraction, adoption ratio, representative
+  ! plot area and f_pd_exchange above are not used (giving them stops the
+  ! run). At least 3 cells are needed across a plot
+  !   fn_pd_plot  : plot numbers (0 = not a paddy field; integers). Virtual
+  !                 walls of levees stand between cells with different numbers
+  !   fn_pd_outlet: direction of the outlets (1-8 on the outlet cells, in the
+  !                 order of the raster: 1 upper left, 2 up, 3 upper right,
+  !                 4 left, 5 right, 6 lower left, 7 down, 8 lower right;
+  !                 0 elsewhere)
+  !   fn_pd_class : class of the outlets (on the plot cells 1 = normal,
+  !                 2 = paddy-field dam; the same within a plot; default all 1)
+  !fn_pd_plot = "paddy_plot.asc"
+  !fn_pd_outlet = "paddy_outlet.asc"
+  !fn_pd_class = "paddy_class.asc"
 
   ! devices of the outlets (index 1 = normal outlets, 2 = paddy-field dams)
   ! type 0: water-level board only, 1: separated type = min(weir of the

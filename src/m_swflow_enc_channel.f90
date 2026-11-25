@@ -9,6 +9,10 @@ submodule(m_swflow_enc) m_swflow_enc_channel
   !                         (calc_kth_momentum から毎エッジ呼ばれるホット
   !                          コール。submodule 境界のインライン化は
   !                          nvfortran だけ効かない点は adv_edge と同じ。§3)
+  !   - pwall_kind / pwall_apply : 水田の区画の畦畔(仮想壁面)と落水口の装置則による
+  !                         エッジの上書き(田んぼダムの表現 B。登録は
+  !                         m_swflow_enc_set_plot_walls。developer.md §119.8、
+  !                         docs/paddy_plan.md §14)
   ! 設計の正本は developer.md §17(堤防)、§18(開口補正・河道幅)。
   ! bc と違い、状態(frw/wfrac/cwx/cwy と有効フラグ)は親モジュールに置く:
   ! ホスト結合は submodule→親の一方向で、これらを読むのは親カーネルの
@@ -27,6 +31,7 @@ submodule(m_swflow_enc) m_swflow_enc_channel
   ! 複製は削除: nvfortran は submodule のホスト結合で祖先の use を
   ! only 制限なしに見せるため、複製の再宣言が 1254 エラーになる。§13)
   use m_boundary, only : interp_series
+  use m_paddy_law, only : t_pddev, t_gtab, dev_q   ! 水田の落水口の装置則(表現 B。§119.8)
   implicit none
 
   ! エッジ格納スロットの k 成分(親の continuous と同じ写像)
@@ -478,6 +483,7 @@ module subroutine bank_wall(p, g, s, i, j, k, in, jn, uve1, mne1)
   integer :: il, jl               ! 堤内地側セルのインデックス
   real :: sgn                     ! 堤内地→河道向きの符号(中心→近傍が正)
   real :: zc                      ! 天端標高
+  real :: zp                      ! 水田の区画の畦畔の天端標高
   real :: wsr, wsl                ! 河道側・堤内地側の水位
   real :: h, u
 
@@ -507,6 +513,12 @@ module subroutine bank_wall(p, g, s, i, j, k, in, jn, uve1, mne1)
   ! 下回る天端も同様に河道側で落差が乗るため河床で下限する。天端が両地盤
   ! 以上のエッジでは恒等。§68.25)
   zc = max(zc, s%z(il,jl), s%z(ic,jc))
+
+  ! 水田の区画の畦畔と重なるエッジ(区画のセルが堤防のある河道セルに接する)は天端の大きい方
+  ! (破堤で堤防の天端が下がっても畦畔は残る。表現 B。§119.8)
+  if (chn%have_pwall) then
+    if (pwall_kind(g, i, j, k, in, jn, zp) > 0) zc = max(zc, zp)
+  end if
 
   wsr = s%z(ic,jc) + max(s%h(ic,jc), 0.0)
   wsl = s%z(il,jl) + max(s%h(il,jl), 0.0)
@@ -574,6 +586,232 @@ contains
       uve1 = uve1 * cor
     end if
   end subroutine
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 水田の区画の畦畔(仮想壁面)と落水口の登録(田んぼダムの表現 B。m_paddy の init が呼ぶ。
+! developer.md §119.8、docs/paddy_plan.md §14)
+!   pid・pod・pcl: 区画番号・落水口の向き・装置の種類(帯 + ハロ。rank0 が全域で検査して
+!   配った値)。畦畔の天端を決めるセルの高さ pzl(初期の地盤 + 畦畔高(区画のセル)、初期の
+!   地盤(ほか))を作り、落水口のエッジを帯で検査し(通過幅ゼロの対角・堤防の壁・天端より
+!   高い先は停止。collective)、セルの壁エッジの本数 nwall に畦畔・落水口のエッジを足す
+!   (堤防の壁と重なるエッジは bank_init が数えているので足さない)。静的(初期の地盤
+!   g%z)。nwall は bank_init と同じく行 jsh..jeh の
+!   範囲で数える(使うのは js-1..je+1)
+!----------------------------------------------------------------------
+module subroutine m_swflow_enc_set_plot_walls(g, pid, pod, pcl, hlev, dev, gt)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: pid(dcp%ish:, dcp%jsh:), pod(dcp%ish:, dcp%jsh:), pcl(dcp%ish:, dcp%jsh:)
+  real, intent(in) :: hlev
+  type(t_pddev), intent(in) :: dev(1:)
+  type(t_gtab), intent(in) :: gt
+  integer :: i, j, k, in, jn, jlo, jhi, ilo, ihi, nbad, ib, jb, key, kk
+  real :: zc
+  character(len=256) :: msg
+
+  allocate(chn%pid(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), chn%pod(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), &
+           chn%pcl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
+  allocate(chn%pzl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  chn%pid(:,:) = pid(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
+  chn%pod(:,:) = pod(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
+  chn%pcl(:,:) = pcl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
+  chn%pdev(1:2) = dev(1:2)
+  chn%pgt = gt
+  jlo = max(dcp%jsh, 1)
+  jhi = min(dcp%jeh, g%ny)
+  ilo = max(dcp%ish, 1)
+  ihi = min(dcp%ieh, g%nx)
+  do j = jlo, jhi
+    do i = ilo, ihi
+      if (g%x(i,j) <= 0) cycle
+      chn%pzl(i,j) = g%z(i,j)
+      if (chn%pid(i,j) > 0) chn%pzl(i,j) = g%z(i,j) + hlev
+    end do
+  end do
+  chn%have_pwall = .true.
+
+  ! --- 落水口のエッジの検査(帯。誤りの種類と例のセルを 1 つの整数にまとめて
+  !     全ランクの最大) ---
+  nbad = 0
+  ib = 0
+  jb = 0
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      kk = chn%pod(i,j)
+      if (kk <= 0) cycle
+      in = i + din(kk)
+      jn = j + djn(kk)
+      k = 0
+      if (geo%skip8(kk)) then
+        k = 1
+      else if (chn%have_bank) then
+        if (g%rw(in,jn) > 0) then
+          if (is_wall(g%zbank(in,jn), g%z(in,jn), g%z(i,j))) k = 2
+        end if
+      end if
+      if (k == 0) then
+        if (pwall_kind(g, i, j, kk, in, jn, zc) /= 2) k = 3
+      end if
+      if (k > nbad) then
+        nbad = k
+        ib = i
+        jb = j
+      end if
+    end do
+  end do
+  key = 0
+  if (nbad > 0) key = nbad * (g%nx * g%ny) + (jb - 1) * g%nx + (ib - 1)
+  call par_allreduce_maxi(key)
+  if (key > 0) then
+    nbad = key / (g%nx * g%ny)
+    ib = mod(key, g%nx * g%ny)
+    jb = ib / g%nx + 1
+    ib = mod(ib, g%nx) + 1
+    select case (nbad)
+      case (1)
+        msg = "paddy: an outlet points along a diagonal edge of zero width (p_diagratio = 0)"
+      case (2)
+        msg = "paddy: an outlet points into a channel cell through a river bank wall"
+      case default
+        msg = "paddy: an outlet points to a cell whose ground is not below the levee crest"
+    end select
+    call par_stop(trim(msg)//" (outlet cell ("//itoa(ib)//","//itoa(jb)//"))")
+  end if
+
+  ! --- セルの壁エッジの本数(堰流量の追い越しの上限の分母)に畦畔・落水口のエッジを足す ---
+  if (.not. allocated(chn%nwall)) then
+    allocate(chn%nwall(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
+  end if
+  do j = jlo, jhi
+    do i = ilo, ihi
+      if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        if (in < 1 .or. in > g%nx .or. jn < jlo .or. jn > jhi) cycle
+        if (g%x(in,jn) <= 0 .or. g%sw(in,jn) > 0) cycle
+        if (chn%have_bank) then
+          if (g%rw(i,j) > 0 .and. g%rw(in,jn) <= 0) then
+            if (is_wall(g%zbank(i,j), g%z(i,j), g%z(in,jn))) cycle     ! bank_init が数えた
+          else if (g%rw(in,jn) > 0 .and. g%rw(i,j) <= 0) then
+            if (is_wall(g%zbank(in,jn), g%z(in,jn), g%z(i,j))) cycle
+          end if
+        end if
+        if (pwall_kind(g, i, j, k, in, jn, zc) > 0) chn%nwall(i,j) = chn%nwall(i,j) + 1
+      end do
+    end do
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! エッジ (i,j)-(in,jn)(k は中心から近傍への向き 1〜8)の水田の区画の畦畔・落水口の種類
+!   0: なし、1: 畦畔(天端 zc)、2: 落水口(天端 zc の畦畔に装置がある)。
+!   区画番号が違う 2 セルの間の全エッジ(対角を含む)が畦畔。区画番号が同じ 2 セルの
+!   対角エッジでも、両脇の 2 セルが同じ別の区画(番号 > 0)なら畦畔(市松の角。区画の
+!   くびれを横切らせない)。天端は pzl のエッジの両端(市松の角は 4 セル)の最大。天端が
+!   両側の初期の地盤以下なら壁でない(地盤の段差として通常の計算。堤防の is_wall と
+!   同じ考え方)。落水口は m_swflow_enc_set_plot_walls が天端より低い先だけを許す。
+!   静的(pid・pzl・g%z)
+!----------------------------------------------------------------------
+module function pwall_kind(g, i, j, k, in, jn, zc) result(kind)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j, k, in, jn
+  real, intent(out) :: zc
+  integer :: kind
+  integer :: ip, ir
+
+  kind = 0
+  zc = 0.0
+  ip = chn%pid(i,j)
+  if (ip /= chn%pid(in,jn)) then
+    zc = max(chn%pzl(i,j), chn%pzl(in,jn))
+    kind = 1
+    if (chn%pod(i,j) == k .or. chn%pod(in,jn) == 9 - k) kind = 2
+  else if (in /= i .and. jn /= j) then
+    ir = chn%pid(in,j)
+    if (ir <= 0 .or. ir == ip) return
+    if (chn%pid(i,jn) /= ir) return
+    zc = max(chn%pzl(i,j), chn%pzl(in,jn), chn%pzl(in,j), chn%pzl(i,jn))
+    kind = 1
+  else
+    return
+  end if
+  if (.not. (zc > max(g%z(i,j), g%z(in,jn)))) kind = 0
+end function
+
+
+!----------------------------------------------------------------------
+! 水田の区画の畦畔・落水口のエッジの流速・流量の上書き(calc_kth_momentum から、pwall_kind > 0 の
+! エッジだけ呼ばれる。k は 1〜4、(ie, je) はエッジのスロット)
+!   畦畔: 天端より下は不透過、超えたら本間公式を両向きに(bank_weir_flux を共用)。
+!   落水口: 畦畔の越流に装置則(docs/paddy_plan.md §5)の流量 Q を足す。基準は出口セルの
+!     初期の地盤(田面)、水位の高い側を上流として H = 上流の水位 − 田面、
+!     h_D = 下流の水位 − 田面(装置の向きによらず同じ式。独自の簡略化)。
+!     単位幅流量 Q/(l_k × 通過幅係数)(連続式で Q がちょうど移る)、
+!     流速 = 単位幅流量/上流の水深。
+!   上限: 堤防の cap_overshoot と同じ式(水位差の半分まで。セルの壁エッジの本数 nwall は
+!     堤防・畦畔・落水口の和)
+!----------------------------------------------------------------------
+module subroutine pwall_apply(p, g, s, i, j, k, in, jn, ie, je, kind, zc, uve1, mne1)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, k, in, jn, ie, je, kind
+  real, intent(in) :: zc
+  real, intent(inout) :: uve1, mne1
+  integer :: io, jo, c
+  real :: wsc, wsn, zo, q, fw, md, hup, qcap, cor
+
+  wsc = s%z(i,j) + max(s%h(i,j), 0.0)
+  wsn = s%z(in,jn) + max(s%h(in,jn), 0.0)
+  ! 畦畔の越流(中心を堤内地側の引数に渡す。向きの符号は中心→近傍が正)
+  if (max(wsc, wsn) > zc) then
+    call bank_weir_flux(p%gg, wsn, wsc, zc, 1.0, uve1, mne1)
+  else
+    uve1 = 0
+    mne1 = 0
+  end if
+  ! 落水口の装置則
+  if (kind == 2) then
+    if (chn%pod(i,j) == k) then
+      io = i
+      jo = j
+    else
+      io = in
+      jo = jn
+    end if
+    zo = g%z(io,jo)
+    c = chn%pcl(io,jo)
+    if (wsc >= wsn) then
+      q = dev_q(chn%pdev(c), chn%pgt, wsc - zo, wsn - zo)
+      hup = s%h(i,j)
+    else
+      q = -dev_q(chn%pdev(c), chn%pgt, wsn - zo, wsc - zo)
+      hup = s%h(in,jn)
+    end if
+    if (q /= 0.0) then
+      fw = geo%l8(k)
+      if (chn%have_frw) fw = fw * chn%frw(k,ie,je)
+      if (chn%have_fwd) fw = fw * chn%fwd(k,ie,je)
+      if (fw > 0.0) then
+        md = q / fw
+        mne1 = mne1 + md
+        uve1 = uve1 + md / max(hup, p%dd)
+      end if
+    end if
+  end if
+  ! 追い越しの上限(堤防の cap_overshoot と同じ式)
+  if (mne1 /= 0.0) then
+    qcap = 0.5 * abs(wsc - wsn) / (geo%mn2dh(k) * (real(chn%nwall(i,j)) / s%af(i,j) &
+                                              + real(chn%nwall(in,jn)) / s%af(in,jn)))
+    if (abs(mne1) > qcap) then
+      cor = qcap / abs(mne1)
+      mne1 = mne1 * cor
+      uve1 = uve1 * cor
+    end if
+  end if
 end subroutine
 
 

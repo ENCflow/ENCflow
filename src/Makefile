@@ -205,14 +205,15 @@ m_record.o: m_sysparam.o list_record.o m_geoinfo.o m_state.o m_util.o m_sysdep_u
 m_swflow.o: m_sysparam.o m_geoinfo.o m_boundary.o m_state.o \
 	m_swflow_enc.o m_swflow_stg.o $(PAR_OBJ)
 m_swflow_enc.o: m_sysparam.o list_enc.o list_channel.o m_geoinfo.o m_boundary.o \
-	m_precip.o m_state.o m_ffactor.o m_sysdep_util.o m_fileio.o m_util.o $(PAR_OBJ) m_restart.o
+	m_precip.o m_state.o m_ffactor.o m_sysdep_util.o m_fileio.o m_util.o $(PAR_OBJ) m_restart.o \
+	m_paddy_law.o
 m_swflow_stg.o: m_sysparam.o m_geoinfo.o m_precip.o m_boundary.o m_state.o $(PAR_OBJ)
 m_swflow_enc_adv.o: m_swflow_enc.o m_state.o
 m_swflow_enc_diff.o: m_swflow_enc.o m_state.o $(PAR_OBJ)
 m_swflow_enc_nh.o: m_swflow_enc.o m_state.o m_util.o $(PAR_OBJ)
 m_swflow_enc_bc.o: m_swflow_enc.o m_boundary.o m_state.o $(PAR_OBJ)
 m_swflow_enc_channel.o: m_swflow_enc.o m_sysparam.o m_geoinfo.o m_state.o \
-	list_channel.o m_util.o m_boundary.o $(PAR_OBJ)
+	list_channel.o m_util.o m_boundary.o $(PAR_OBJ) m_paddy_law.o
 list_sysparam.o: $(PAR_OBJ)
 list_geoinfo.o: m_sysparam.o $(PAR_OBJ)
 list_channel.o: m_sysparam.o $(PAR_OBJ)

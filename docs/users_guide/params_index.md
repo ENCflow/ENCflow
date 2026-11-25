@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 845 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 848 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -444,7 +444,10 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_nest | &list_sysparam | [ネスティング](nest.md) |
 | fn_paddy | &list_sysparam | [田んぼダム](paddy.md) |
 | fn_pd_adopt | &list_paddy | [田んぼダム](paddy.md) |
+| fn_pd_class | &list_paddy | [田んぼダム](paddy.md) |
 | fn_pd_frac | &list_paddy | [田んぼダム](paddy.md) |
+| fn_pd_outlet | &list_paddy | [田んぼダム](paddy.md) |
+| fn_pd_plot | &list_paddy | [田んぼダム](paddy.md) |
 | fn_precip | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_prmap | &list_precip | [降雨・気象](forcing.md) |
 | fn_pump_in_cell | &list_struct_pump | [構造物](structure.md) |

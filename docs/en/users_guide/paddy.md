@@ -11,14 +11,21 @@ feature puts the storage of paddy fields and the discharge laws of their outlets
 can estimate how the runoff and the inundation change with the adoption ratio (the share of paddy fields
 made into paddy-field dams), the type of device and the ponding before the rain.
 
-The current version represents the paddy fields in a cell as **subgrid tanks** (see
-[How it works](#how-it-works) below). The same formulas can be used from basin models of 100–200 m to
-drainage districts of 20–50 m. The exchange with the surface water can be chosen from two modes. The default
-**one-way** mode puts only the rain on the paddy fields into the tanks; the **two-way** mode (`f_pd_exchange = 1`)
-also lets river and inland flood water enter the paddy fields through the outlets and over the levees (see
-[Relation to the surface water](#relation-to-the-surface-water-one-way-and-two-way) below). Resolving each plot on a
-grid of 5–10 m, with the levees as virtual walls and the outlets as notches in them, is planned (design in
-docs/paddy_plan.md §7).
+There are two representations of the paddy fields, matched to the grid size and chosen by the input.
+
+- **A: subgrid tanks** (give the paddy area fraction `fn_pd_frac` or `pd_frac`): the paddy fields in a cell are
+  represented as tanks (see [How it works](#how-it-works) below). The same formulas can be used from basin models of
+  100–200 m to drainage districts of 20–50 m. The exchange with the surface water can be chosen from two modes. The
+  default **one-way** mode puts only the rain on the paddy fields into the tanks; the **two-way** mode
+  (`f_pd_exchange = 1`) also lets river and inland flood water enter the paddy fields through the outlets and over the
+  levees (see [Relation to the surface water](#relation-to-the-surface-water-one-way-and-two-way) below).
+- **B: resolved plots** (give the map of plot numbers `fn_pd_plot`): on a grid of 5–10 m each plot is solved as a group
+  of cells, with the levees as virtual walls and the outlets as notches in them (see
+  [Resolved plots (B)](#resolved-plots-b) below). The ponding of the plots, the overflow of the levees, the backflow from
+  the drains and the inflow of flood water are represented by the shallow water computation itself.
+
+A and B cannot be mixed in one run. The explanations of A below (paddy tanks, relation to the surface water) do not
+apply to B.
 
 - **Paddy tanks**: tanks that receive the rain falling on the paddy area fraction a of a cell. The paddy
   fields are split by the adoption ratio into "paddy fields with normal outlets" (class 1) and "paddy-field
@@ -52,6 +59,19 @@ Give `fn_paddy` in `&list_sysparam` (`"-"` for the same parameter file). The set
 `fn_pd_frac` or as a uniform value `pd_frac`, and the adoption ratio either as a map `fn_pd_adopt` or as a
 uniform value `pd_adopt`.
 
+For the resolved plots of B, give the plot numbers instead of the area fraction (combining them with the inputs of A
+only, `fn_pd_frac`, `pd_frac`, `fn_pd_adopt`, `pd_adopt`, `pd_aplot` and `f_pd_exchange`, stops the run).
+
+```
+&list_paddy
+  fn_pd_plot = 'plot.txt'         ! map of plot numbers (0 = not a paddy field; integers)
+  fn_pd_outlet = 'outlet.txt'     ! direction of the outlets (1-8 on the outlet cells, 0 elsewhere)
+  fn_pd_class = 'class.txt'       ! class of the outlets (on the plot cells 1 = normal, 2 = paddy-field dam; default all 1)
+  !pd_hlev = 0.30                 ! levee height (m; default 0.30; the same for all plots)
+  !pd_dev_type(2) = 1             ! device type of the paddy-field dams (same as A)
+/
+```
+
 ## Getting started (minimal input)
 
 Only the **paddy area fraction** (`fn_pd_frac` or `pd_frac`) is required. Make the share of the area of each
@@ -71,6 +91,13 @@ giving `pd_adopt`.
 | Comparing devices | change `pd_dev_type(2)` and the size of the hole | rate of the outflow (outlet flow and overflow) `qsurf` and storage in `paddy.csv` |
 | Comparing the state before the rain | `pd_h0` (0 = empty for mid-season drainage, 0.03 = normal ponding, 0.30 = full from an earlier rain) | same as above |
 | River and inland flooding (coarse grids) | `f_pd_exchange = 1`; overtopping or breaching of rivers and backwater of drains given through channels and boundaries | inundation depth `H`, the inflows inflow and levee_in in `paddy.csv`, `Hpn` and `Hpd` |
+| Ponding, overflow and backwater of plots (B on 5–10 m) | `fn_pd_plot`, `fn_pd_outlet`, `fn_pd_class`; farm roads, drains and settlements in the terrain, pumping stations and sluices as boundaries and structures | water depth `H` (including the ponding of the plots), flux lines and probes of the drains, outlet and levee flows in `paddy.csv` |
+
+Make the inputs of B in preprocessing from field polygons (polygons of the farmland plots) or the like. The plot numbers
+are the plot polygons burned into the grid, the outlets are an outlet cell and a direction (towards the drain) chosen for
+each plot, and the class has 2 in the adopted plots. At least 3 cells are needed across a plot, so for a standard plot of
+30 a (30 m × 100 m) the grid should be 10 m or finer. Make the field surface of each plot flat (with a 5 m DEM as it is,
+an error of ±14–15 % in the storage of a plot has been reported[^tebakari2023]).
 
 ## How it works
 
@@ -194,6 +221,42 @@ whole cell. When the level falls below the levees, the paddy fields keep water u
 through the outlets (restricted by the hole for paddy-field dams). Results also differ from the one-way mode under rain
 alone, because the surface water gathers on the non-paddy area, becomes deeper and submerges the outlets more easily.
 
+### Resolved plots (B)
+
+With `fn_pd_plot`, the ponding of a plot is the water depth h of the shallow water flow itself, and the levees and the
+outlets override the edges (the flows between cells) of the shallow water flow (developer.md §119.8; design in
+docs/paddy_plan.md §14).
+
+- **Levees (virtual walls)**: a wall stands on every edge (including the diagonals) between two cells with different plot
+  numbers. Below the crest no water passes; above it the levee overflows in both directions by the Homma formula
+  ([hydraulic laws](hydraulics.md) §1; the same formula as the virtual walls of river banks). The crest is the larger of
+  "field surface + levee height (plot cells) or ground (cells that are not plots)" of the two cells of the edge, so between
+  terraced plots it is the higher field surface + levee height. Edges whose crest is not above both grounds (such as the
+  edge of a road higher than the levee) are not walls (the water flows over the step of the ground). A diagonal edge that
+  crosses the pinch of another plot (a 2 × 2 checkerboard corner) is also a wall.
+- **Outlets (notches in the walls)**: only on the edge between the outlet cell and the cell in its direction, the water
+  flows by the [device law](#device-laws-of-the-outlets) instead of the wall. The side with the higher water level is
+  upstream, and the ponding depth H and the downstream depth $`h_D`$ are both measured from the field surface of the
+  outlet cell. When the level of the drain is higher than the ponding, the water flows back into the plot through the
+  outlet (using the same law regardless of the direction of the device is an original simplification). When the level is
+  above the crest, the levee overflow is added on this edge too. The cell an outlet points to may belong to another plot
+  (drainage from plot to plot).
+- **Ponding before the rain**: when a run starts anew, the plot cells are filled to `pd_h0` (default: the level at which the
+  outlet of the class starts to drain). Cells given deeper water by the initial conditions keep it.
+- **Decrease in depth**: in every step, water leaves the plot cells at the rate `pd_perc_mmd`.
+
+The directions of the outlets are counted in the order of the raster (the first line of the file is the top).
+
+```
+1 2 3
+4 * 5      (* = outlet cell)
+6 7 8
+```
+
+Outside the plots (farm roads, drains, settlements) it is the usual shallow water flow. A main drain can also be given as a
+channel mask with a subgrid width, but an outlet cannot point to a channel cell with a river bank (it would coincide with
+the wall of the bank).
+
 ### Time step
 
 The tanks are explicit and use the same step $`\Delta t`$ as the shallow water flow. The outlet discharge changes
@@ -202,7 +265,9 @@ step of the shallow water flow (seconds), so it does not limit the step. The wat
 by the storage above the level at which the outlet starts to drain and by the amount that fills half the
 difference of the levels to the downstream (to prevent overshoot of the explicit scheme). In the two-way mode too,
 storage and conveyance change in the same proportion, so the speed of gravity waves does not change and the time step
-is not limited further.
+is not limited further. B uses the step of the shallow water flow itself; on a 5 m grid with gravity waves at depths of
+0.3–1 m, about 0.5–1 s is a guide. Like the overflow of river banks, the levee overflow and the outlet discharge move at
+most half the difference of the levels of the two sides in one step (to prevent overshoot).
 
 ## Output and checks
 
@@ -216,6 +281,16 @@ is not limited further.
 The accumulated values in `paddy.csv` start at the beginning of the run (at the restart when restarted). The
 ponding depths of the paddy tanks are saved with the state (`f_state_save`) in the private file `paddy.dat` and
 carried over on restart ([interruption and restart](restart.md)).
+
+**Output of B**: the ponding depth of the plots is the water depth `H` itself (`Hpn` and `Hpd` are not written; S in the Log
+is the surface water with no tanks added). `paddy.csv` has the same columns with these meanings: area1 and area2 (plot area
+of each class), rain (rain on the plot cells), outflow and inflow (outflow and inflow through the outlets), spill and
+levee_in (outflow and inflow over the levees), perc (decrease in depth), store1 and store2 (water of the plots of each
+class), h1 and h2 (mean water depth of each class), full1 and full2 (share of the area of the cells whose depth is at or
+above the levee height), qsurf (net outflow rate in the last step) and residual (change of storage − (rain + inflow −
+outflow − perc)). Flows through outlets and over levees between plots (drainage from plot to plot) are counted both as
+the outflow of the plot they leave and as the inflow of the plot they enter. `paddy.dat` holds only a header (the mark of
+the representation) and stops a restart that mixes up A and B or that disables B.
 
 **Reading the effect of paddy-field dams**: compare two runs that differ only in the adoption ratio, by the peaks
 and timing of the discharge on the flux lines of the channels and drains and by the depth and extent of the
@@ -275,6 +350,23 @@ levee height is the remaining free storage.
   [^yoshikawa2009][^minakawa2022]. The default 0.6 is the value of the calculation program of the guide and is a starting
   point for calibration.
 
+**Limits of B (resolved plots)**
+
+- The crest of a levee is "field surface + levee height", and the levee height is the same for all plots (`pd_hlev`). The
+  crests are set from the initial terrain and do not change during the run. The actual variation of the levee heights
+  and overflow from low points depend on the accuracy of the terrain, like the field surface.
+- An outlet is one edge of the outlet cell and passes only the discharge of the device law (the width of the edge has
+  nothing to do with the width of the device). The levee overflow occurs over the whole width of an edge, so the length
+  of the overflow above the crest is set by the arrangement of the grid (including the diagonal edges).
+- The drains and roads outside the plots are solved at the width of the grid. A small drain narrower than a cell flows as
+  a channel as wide as the grid.
+- The evapotranspiration of the plot water is treated as part of the decrease in depth, so B cannot be combined with
+  evapotranspiration (`fn_evap`) or groundwater (`fn_gwflow`). It cannot be combined with landform change (`fn_geomorph`;
+  bed load is not yet kept from crossing the levees) or the non-hydrostatic correction (`f_nonhydrostatic = 1`) either
+  (stops at start-up). Water quality (`fn_wq`) cannot be combined, as for A.
+- Plot cells cannot be on the outermost rows and columns of the grid, next to sea cells or seaside cells (`fn_seaside`),
+  nor on pond cells (`fn_rscap`) (stops at start-up). Plot numbers are integers from 0 to 16 777 215.
+
 **Restrictions on combinations**: only the ENC grid system (`f_gridsystem = 0`). It cannot be combined with nesting
 (multiple grids), water quality (`fn_wq`) or the two-layer fresh and salt water (`fn_salt`) (stops at start-up).
 Paddy cells (area fraction > 0) cannot be on sea, channel (`fn_rw`), water level boundary, inflow boundary, source or
@@ -308,11 +400,14 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | pd_frac | — | uniform value of the paddy area fraction | **Given** |
 | fn_pd_adopt | — | map of the adoption ratio (share of the paddy area made into paddy-field dams, 0–1) | **Given** |
 | pd_adopt | 0 | uniform value of the adoption ratio | **Given** 0 = no adoption |
-| pd_aplot | 3000 m² | representative plot area (paddy area per outlet) | **Literature** standard plot of 30 a[^maff2026][^maffplan] |
+| pd_aplot | 3000 m² | representative plot area (paddy area per outlet; A only) | **Literature** standard plot of 30 a[^maff2026][^maffplan] |
 | pd_hlev | 0.30 m | levee height (above the field surface) | **Literature** levees of about 30 cm in the guide[^maff2026][^maffplan] |
-| pd_h0 | level at which the outlet starts to drain | ponding depth before the run (above the field surface; same value for both classes) | **Given** the default is normal ponding (height of the water-level board) |
+| pd_h0 | level at which the outlet starts to drain | ponding depth before the run (above the field surface; same value for both classes; in B the plot cells are filled to this depth) | **Given** the default is normal ponding (height of the water-level board) |
 | pd_perc_mmd | 5 mm/d | decrease in depth (leaves the system) | **Literature** default of the calculation program of the guide[^maff2026] |
-| f_pd_exchange | 0 | exchange of water between the surface and the paddy fields (0: one-way = rain only, 1: two-way = flood water also enters the paddy fields through the outlets and over the levees) | **Method** the two-way mode is an original construction (docs/paddy_plan.md §13, developer.md §119.6) |
+| f_pd_exchange | 0 | exchange of water between the surface and the paddy fields (0: one-way = rain only, 1: two-way = flood water also enters the paddy fields through the outlets and over the levees; A only) | **Method** the two-way mode is an original construction (docs/paddy_plan.md §13, developer.md §119.6) |
+| fn_pd_plot | — | map of plot numbers (representation B; 0 = not a paddy field, integers 1–16 777 215) | **Given** giving it selects B (exclusive with the area fraction) |
+| fn_pd_outlet | — | map of the directions of the outlets (B; 1–8 on the outlet cells, 0 elsewhere) | **Given** default: no outlets |
+| fn_pd_class | all 1 | map of the classes of the outlets (B; on the plot cells 1 = normal, 2 = paddy-field dam; the same within a plot) | **Given** |
 | pd_dev_type(c) | 0 / 1 | device type (0: water-level board only, 1: separated type, 2: integrated type) | **Option** class 1 = normal outlet, 2 = separated type[^maff2026] |
 | pd_board_h(c) | 0.03 m | crest height of the water-level board (above the field surface) | **Literature** default of the calculation program[^maff2026][^minakawa2022] |
 | pd_board_w(c) | 0.30 m | width of the water-level board (weir width) | **Literature** example of the guide[^maff2026] |
@@ -340,7 +435,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Contents | Key points |
 |---|---|---|
-| [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). Bit-identical for np = 1, 2, 4 |
+| [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode, resolved plots (B) | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). In B, the drainage of a plot of 3000 m² against the exact solution (weir, 8.7×10⁻⁴ relative) and a reference solution (hole, 2×10⁻⁷ relative), plots without outlets keep their water at the levees and checkerboard corners, and water conservation and levelling out with levee overflow, backflow through an outlet and inflow over the levees. Bit-identical for np = 1, 2, 4 |
 
 ## References
 
@@ -355,3 +450,4 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^nihei2024]: Nihei et al. (2024): *Water*, 16(2), 255. doi:10.3390/w16020255
 [^saha2023]: Saha et al. (2023): *Sustainability*, 15(8), 6604. doi:10.3390/su15086604
 [^bako2016]: Nouhou Bako et al. (2016): *Earth Surface Processes and Landforms*, 41, 1199–1210. doi:10.1002/esp.3894 (water depth and the transport of soil by raindrop splash)
+[^tebakari2023]: Tebakari et al. (2023): Proceedings of the Annual Conference of the Japan Society of Hydrology and Water Resources, 36, 170. doi:10.11520/jshwr.36.0_170 (in Japanese; resolution of DEMs and the error of the storage of paddy plots)

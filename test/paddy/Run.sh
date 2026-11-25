@@ -14,9 +14,15 @@
 #   param_tw_*.txt    双方向(二室化。f_pd_exchange = 1。§119.6): 落水口からの逆流(参照解)、畦畔を越える浸水での
 #                     瞬時の満水と二重計上がないこと、外水の流入での水の保存、浸水が引いた後の落水。tw_drain は sed で
 #                     6 h で保存 → 再開(連続計算とビット一致)
+#   param_b_*.txt     区画の解像(表現 B。fn_pd_plot。§119.8。入力は make_plots.py が作る): 1 区画の落水(堰の厳密解・
+#                     穴の参照解)、畦畔・市松の角の水密、畦畔の越流と閉じた領域の水の保存、落水口からの逆流、畦畔を
+#                     越える外からの流入、畦畔と河川堤防が重なるエッジ、区画から区画への落水口(田越し)。b_back は sed で
+#                     6 h で保存 → 再開(連続計算とビット一致)
 #   停止の確認: 河道セル・面積率 > 空隙率・取組率の範囲・水質との併用・型 0 の流出量調整板・
 #   面積率の二重指定・事前の湛水深 > 畦畔高・保存ファイルが残ったまま無効で再開、双方向の水田でない面積の割合
-#   < 0.05・ため池のセル・浮遊砂・非静水圧との併用・保存時とやり取りの方式が違う再開
+#   < 0.05・ため池のセル・浮遊砂・非静水圧との併用・保存時とやり取りの方式が違う再開、B の入力の誤り(外周の
+#   区画のセル・同じ区画や区画でないセルの落水口・区画の中で違う種類・整数でない区画番号・天端より高い先・
+#   向かい合う落水口)と A だけの入力との併用、B と非静水圧、保存時と表現が違う再開
 # reference 比較は Log.txt(ULP=0)。paddy.csv は 16 桁で書くため CPU(-march=native のベクトル化)が
 # 違うと最終桁が変わりうる(test/vzcol・sfzone と同じ理由)。CSV の内容は Check_paddy.py で確かめる。
 sdir=$(dirname "$(readlink -f "$0")")
@@ -91,6 +97,22 @@ python3 Check_paddy.py restart result_tw_drain result_tw_restart || exit 1
 variant param_tw_drain.txt result_tw_mode "s|^  dir_result = 'result_tw_mode'|&\n  dir_save = 'save_tw'\n  f_state_restore = 1|;s|^  f_pd_exchange = 1 .*|  f_pd_exchange = 0|" > "$tmp"
 expect_stop tw_mode "$tmp" "f_pd_exchange differs from the saved state"
 
+# 区画の解像(表現 B。§119.8)
+python3 make_plots.py data_paddy || exit 1
+for t in b_drain b_tight b_over b_back b_ext b_bank b_chain; do
+    run $t param_$t.txt
+    python3 Check_paddy.py $t result_$t || exit 1
+done
+# B の保存 → 再開(6 h で保存し 12 h まで)と連続計算(b_back の 12 h)のビット一致。表現が違う再開は停止
+rm -rf save_b
+variant param_b_back.txt result_b_save "s/^  tt = 43200$/  tt = 21600/;s|^  dir_result = 'result_b_save'|&\n  dir_save = 'save_b'\n  f_state_save = 1|" > "$tmp"
+run b_save "$tmp"
+variant param_b_back.txt result_b_restart "s|^  dir_result = 'result_b_restart'|&\n  dir_save = 'save_b'\n  f_state_restore = 1|" > "$tmp"
+run b_restart "$tmp"
+python3 Check_paddy.py restart_b result_b_back result_b_restart || exit 1
+variant param_b_back.txt result_b_mode "s|^  dir_result = 'result_b_mode'|&\n  dir_save = 'save_b'\n  f_state_restore = 1|;s|^  fn_pd_plot = .*|  pd_frac = 0.5|;/^  fn_pd_outlet = /d" > "$tmp"
+expect_stop b_mode "$tmp" "the representation of the paddy fields differs from the saved state"
+
 # 保存 → 再開(6 h で保存し 12 h まで)と、連続計算(12 h)のビット一致
 rm -rf save_rs
 variant param_steady.txt result_rs_cont "s/^  tt = 172800$/  tt = 43200/" > "$tmp"
@@ -128,5 +150,24 @@ expect_stop tw_sed "$tmp" "cannot be combined with suspended sediment"
 variant param_tw_back.txt result_tw_nh "s|^  fn_paddy = '-'|&\n  fn_enc = '-'|" > "$tmp"
 printf "\n&list_enc\n  f_nonhydrostatic = 1\n/\n" >> "$tmp"
 expect_stop tw_nh "$tmp" "cannot be combined with the non-hydrostatic correction"
+# 区画の解像(B)の入力の誤りと併用の停止
+bstop() {   # bstop <タグ> <sed 式> <停止の文言>(param_b_back.txt の変形)
+    variant param_b_back.txt "result_$1" "$2" > "$tmp"
+    expect_stop "$1" "$tmp" "$3"
+}
+bstop b_ring "s/'b_back_plot.txt'/'b_bad_ring_plot.txt'/" "a plot cell is on the outermost row or column"
+bstop b_self "s/'b_back_out.txt'/'b_bad_self_out.txt'/" "an outlet points to a cell of the same plot"
+bstop b_noplot "s/'b_back_out.txt'/'b_bad_noplot_out.txt'/" "is given on a cell that is not a plot cell"
+bstop b_class "s|^  fn_pd_outlet = .*|&\n  fn_pd_class = 'b_bad_class.txt'|" "the cells of a plot have different outlet classes"
+bstop b_id "s/'b_back_plot.txt'/'b_bad_id_plot.txt'/" "the plot number (fn_pd_plot) must be an integer"
+bstop b_up "s/'b_back_z.txt'/'b_bad_up_z.txt'/" "an outlet points to a cell whose ground is not below the levee crest"
+bstop b_face "s/'b_back_plot.txt'/'b_bad_face_plot.txt'/;s/'b_back_out.txt'/'b_bad_face_out.txt'/" "two outlets face each other"
+bstop b_frac "s|^  pd_hlev = 0.30|&\n  pd_frac = 1.0|" "fn_pd_frac and pd_frac are for the subgrid paddy tanks"
+bstop b_exch "s|^  pd_hlev = 0.30|&\n  f_pd_exchange = 1|" "f_pd_exchange (the resolved plots exchange water"
+variant param_b_back.txt result_b_nh "s|^  fn_paddy = '-'|&\n  fn_enc = '-'|" > "$tmp"
+printf "\n&list_enc\n  f_nonhydrostatic = 1\n/\n" >> "$tmp"
+expect_stop b_nh "$tmp" "fn_pd_plot cannot be combined with the non-hydrostatic correction"
+variant param.txt result_b_aonly "s|^  pd_frac = 1.0 |  fn_pd_outlet = 'b_back_out.txt'\n&|" > "$tmp"
+expect_stop b_aonly "$tmp" "fn_pd_outlet and fn_pd_class require fn_pd_plot"
 
 echo "=== paddy verification PASS ==="

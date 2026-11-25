@@ -5,6 +5,7 @@
 # 計算と行部分和の決定的総和なので、ランク数によらない)。閉じた領域の水の保存(param_mix.txt)、
 # 雨滴侵食から水田の部分を外す検定(param_wash.txt・param_splash.txt。地盤高も np=1 とバイト比較)、
 # 双方向(二室化)の検定(param_tw_back・tw_flood・tw_drain。np=1 とバイト比較)、
+# 区画の解像(表現 B。§119.8。param_b_*.txt。区画・落水口・市松の角が帯の境にかかる。np=1 とバイト比較)、
 # 保存 → 再開(np=1 とバイト比較)、rank0 が見つける停止と帯で見つける停止(全ランク同時の par_stop)も
 # MPI で確かめる。行は 8 なので np <= 4
 sdir=$(dirname "$(readlink -f "$0")")
@@ -89,6 +90,18 @@ for t in tw_back tw_flood tw_drain; do
     fi
 done
 
+# 区画の解像(表現 B。§119.8): 解析検定と np=1 とのバイト一致
+python3 make_plots.py data_paddy || exit 1
+for t in b_drain b_tight b_over b_back b_ext b_bank b_chain; do
+    run "$np" $t param_$t.txt
+    python3 Check_paddy.py $t result_$t || exit 1
+    if [ "$np" != 1 ]; then
+        variant "param_$t.txt" "result_${t}_np1" "" > "$tmp"
+        run 1 "${t}_np1" "$tmp"
+        same_as_np1 "result_$t" "result_${t}_np1" paddy.csv Log.txt H9998.txt
+    fi
+done
+
 # 保存 → 再開(np で保存・再開)と、連続計算・np=1 とのビット一致
 rm -rf save_rs save_rs1
 for sfx in "" 1; do
@@ -111,5 +124,9 @@ variant param.txt result_rw "s|^  f_masktype = 0|&\n  fn_rw = 'rw_one.txt'|" > "
 expect_stop rw "$tmp" "a paddy cell is on a channel cell (rw)"
 variant param_mix.txt result_overgv "s/'frac_mix.txt'/'frac_over_gv.txt'/" > "$tmp"
 expect_stop overgv "$tmp" "exceeds the void ratio gv"
+variant param_b_back.txt result_b_ring "s/'b_back_plot.txt'/'b_bad_ring_plot.txt'/" > "$tmp"
+expect_stop b_ring "$tmp" "a plot cell is on the outermost row or column"
+variant param_b_back.txt result_b_up "s/'b_back_z.txt'/'b_bad_up_z.txt'/" > "$tmp"
+expect_stop b_up "$tmp" "an outlet points to a cell whose ground is not below the levee crest"
 
 echo "=== paddy MPI verification PASS ==="

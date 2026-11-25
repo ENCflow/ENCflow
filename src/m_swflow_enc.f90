@@ -15,6 +15,7 @@ module m_swflow_enc
   use m_restart, only : restart_write_cell, restart_read_cell, restart_write_edge, &
                         restart_read_edge, restart_skip
   use m_util, only : itoa, rtoa
+  use m_paddy_law, only : t_pddev, t_gtab   ! 水田の落水口の装置(区画の解像 B の状態。§119.8)
   implicit none
   private
 
@@ -48,6 +49,7 @@ module m_swflow_enc
   public :: m_swflow_enc_post            ! ステップ末尾の u,v 正規化パス(§26)
   public :: m_swflow_enc_sdep_update     ! 河床変動後の σ 遷移深さ D の更新(§26)
   public :: m_swflow_enc_set_step_sect   ! 階段形の断面の登録(水田の二室化。m_paddy が呼ぶ。§26.3・§119.6)
+  public :: m_swflow_enc_set_plot_walls  ! 水田の区画の畦畔・落水口の登録(表現 B。m_paddy が呼ぶ。§119.8)
   public :: m_swflow_enc_edge_flux             ! 測線計測のエッジ流量の観測口(opt%have_edge_flux と対)
   public :: m_swflow_enc_nest_export, m_swflow_enc_nest_import   ! ネスティングのエッジ量の窓・帯(nesting_plan §3.5)
   public :: e_bc_wall                          ! m_nest が子の外縁条件(壁)を検査するため
@@ -316,7 +318,8 @@ module m_swflow_enc
   type t_enc_channel
     logical :: have_bank = .false.            ! 堤防天端が有効か
     integer, allocatable :: nwall(:,:)       ! セルの堤防壁エッジ本数(堰流量の追い越し禁止上限の分母。
-                                            !   §68.29 (C')。have_bank のとき bank_init が帯+ハロで構築)
+                                            !   §68.29 (C')。have_bank のとき bank_init が帯+ハロで構築。
+                                            !   水田の区画の畦畔・落水口(have_pwall)のエッジも足す。§119.8)
     logical :: have_swall = .false.           ! 海岸堤防天端が有効か(§17 一般化)
     integer :: f_swall_mode = 0               ! 海岸堤防の水理モード(e_bank_* と同義)
     logical :: have_bopen = .false.           ! 開口補正が有効か(have_bank との合成)
@@ -339,6 +342,18 @@ module m_swflow_enc
     type(t_breach), allocatable :: br(:)      ! サイトリスト(全ランク同一)
     integer, allocatable :: ibr0(:), ibr1(:)  ! (jsh:jeh)
     integer, allocatable :: ibrs(:)           ! 行順に整列したサイト番号
+    ! 水田の区画の畦畔(仮想壁面)と落水口(田んぼダムの表現 B。docs/paddy_plan.md §14、
+    ! developer.md §119.8)。m_paddy が m_swflow_enc_set_plot_walls で登録する(無効時は確保
+    ! しない)。m_paddy が台帳のために読む
+    logical :: have_pwall = .false.           ! 区画の畦畔があるか
+    integer, allocatable :: pid(:,:)          ! 区画番号 (ish:ieh, jsh:jeh)。0 = 水田でない
+    integer, allocatable :: pod(:,:)          ! 落水口の向き 1〜8(出口セル。ほかは 0)
+    integer, allocatable :: pcl(:,:)          ! 装置の種類 1・2(区画のセル。ほかは 0)
+    real, allocatable :: pzl(:,:)             ! 畦畔の天端を決めるセルの高さ(初期の地盤 + 畦畔高
+                                              !   (区画のセル)、初期の地盤(ほか))。天端はエッジの
+                                              !   両端(市松の角は 4 セル)の最大
+    type(t_pddev) :: pdev(1:2)                ! 種類ごとの落水口の装置
+    type(t_gtab) :: pgt                       ! 円の穴の積分の表
     logical :: have_cwd = .false.
     logical :: cwd_restored = .false.
     real, allocatable :: cwxd(:,:), cwyd(:,:)   ! (1:nx, jsh:jeh)。使うのは js:je
@@ -859,6 +874,27 @@ module m_swflow_enc
     end subroutine
     module subroutine bank_init(g)
       type(t_geoinfo), intent(in) :: g
+    end subroutine
+    module subroutine m_swflow_enc_set_plot_walls(g, pid, pod, pcl, hlev, dev, gt)
+      type(t_geoinfo), intent(in) :: g
+      integer, intent(in) :: pid(dcp%ish:, dcp%jsh:), pod(dcp%ish:, dcp%jsh:), pcl(dcp%ish:, dcp%jsh:)
+      real, intent(in) :: hlev
+      type(t_pddev), intent(in) :: dev(1:)
+      type(t_gtab), intent(in) :: gt
+    end subroutine
+    module function pwall_kind(g, i, j, k, in, jn, zc) result(kind)
+      type(t_geoinfo), intent(in) :: g
+      integer, intent(in) :: i, j, k, in, jn
+      real, intent(out) :: zc
+      integer :: kind
+    end function
+    module subroutine pwall_apply(p, g, s, i, j, k, in, jn, ie, je, kind, zc, uve1, mne1)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+      integer, intent(in) :: i, j, k, in, jn, ie, je, kind
+      real, intent(in) :: zc
+      real, intent(inout) :: uve1, mne1
     end subroutine
     module function chan_dir(g, i, j, ux, uy) result(ok)
       type(t_geoinfo), intent(in) :: g
@@ -2441,6 +2477,8 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   real :: cor
   real :: maglim, maglim_inv
   logical :: wall                 ! 堤防壁エッジ(bank_wall が上書きする)
+  integer :: pwk                  ! 水田の区画の畦畔・落水口のエッジの種類(pwall_kind。0 = なし)
+  real :: pwz                     ! その天端標高
 
   ! この文はこの場所になければならない
   have_exflux = .false.
@@ -2506,6 +2544,13 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   maglim_inv = 1.0 / maglim
   wall = .false.
   if (chn%have_bank) wall = bank_edge(g, s, i, j, in, jn)
+  ! 水田の区画の畦畔・落水口のエッジ(表現 B。pwall_apply が上書きする)も同じ理由で判定しない。
+  ! 堤防の壁と重なるエッジは bank_wall が天端の大きい方で扱う(§119.8)
+  pwk = 0
+  if (chn%have_pwall .and. .not. wall) then
+    pwk = pwall_kind(g, i, j, k, in, jn, pwz)
+    wall = pwk > 0
+  end if
   if (opt%f_adaptive_runge > 0 .and. .not. wall) then
     if ((mne >= 0 .and. (mne1 > mne * maglim .or. mne1 < mne * maglim_inv)) .or. &
         (mne < 0  .and. (mne1 < mne * maglim .or. mne1 > mne * maglim_inv))) then
@@ -2533,6 +2578,9 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   ! 海岸堤防(仮想壁面)エッジの流速・流量の上書き(同 submodule。
   ! bank_wall は sw エッジに触れないため干渉しない)
   if (chn%have_swall) call seawall_wall(p, g, s, i, j, in, jn, uve1, mne1)
+
+  ! 水田の区画の畦畔(仮想壁面)と落水口の装置則による上書き(同 submodule。表現 B。§119.8)
+  if (pwk > 0) call pwall_apply(p, g, s, i, j, k, in, jn, ie, je, pwk, pwz, uve1, mne1)
 
   ! セル境界での単位幅流量から境界の両側のセルでの水深の減少量を計算する
   !   通過幅係数有効時はエッジ別係数 frw を乗じる(k<=4 は成分=k)。

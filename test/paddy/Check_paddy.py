@@ -19,6 +19,14 @@ Gauss–Legendre の求積で直接求める(モデルは表と展開)。
   python3 Check_paddy.py tw_fill  result_tw_fill   双方向: 畦畔を越える浸水での瞬時の満水と、二重計上がないこと
   python3 Check_paddy.py tw_flood result_tw_flood  双方向: 外水の流入での水の保存、満水
   python3 Check_paddy.py tw_drain result_tw_drain  双方向: 浸水が引いた後の落水
+  python3 Check_paddy.py b_drain  result_b_drain   区画の解像(B): 1 区画の落水(堰の厳密解・穴の参照解)、台帳
+  python3 Check_paddy.py b_tight  result_b_tight   区画の解像(B): 畦畔・市松の角の水密(全セルで 初期 + 雨)
+  python3 Check_paddy.py b_over   result_b_over    区画の解像(B): 畦畔の越流と閉じた領域の水の保存
+  python3 Check_paddy.py b_back   result_b_back    区画の解像(B): 落水口からの逆流、水位がそろうこと、保存
+  python3 Check_paddy.py b_ext    result_b_ext     区画の解像(B): 畦畔を越える外からの流入、水位がそろうこと、保存
+  python3 Check_paddy.py b_bank   result_b_bank    区画の解像(B): 畦畔と河川堤防が重なるエッジは天端の大きい方
+  python3 Check_paddy.py b_chain  result_b_chain   区画の解像(B): 区画から区画への落水口(田越し)、水深がそろうこと、保存
+  python3 Check_paddy.py restart_b <連続の結果> <再開の結果>    区画の解像(B)の保存 → 再開のビット一致
 """
 import array
 import math
@@ -317,8 +325,8 @@ def check_dflt(res, screen):
     ok("no default is shown for the absent class 2")
 
 
-def check_restart(cont, rest):
-    for f in ["H9998.txt", "Hpn9998.txt", "Hpd9998.txt"]:
+def check_restart(cont, rest, files=("H9998.txt", "Hpn9998.txt", "Hpd9998.txt")):
+    for f in files:
         a = open(os.path.join(cont, f), "rb").read()
         b = open(os.path.join(rest, f), "rb").read()
         if a != b:
@@ -510,6 +518,210 @@ def check_tw_drain(res):
        % (rows[-1]["time(s)"] / 3600, h1[-1], h2[-1]))
     check_ledger(rows)
 
+# ---------------------------------------------------------------- 区画の解像(表現 B。developer.md §119.8)
+B_DX = 5.0        # param_b_*.txt の格子間隔 (m)
+
+
+def rk4(q, h0, area, times, step=2.0):
+    """1 区画の水収支 dH/dt = −Q(H)/A の参照解(古典的ルンゲクッタ。times の時刻ごとの水深)"""
+    out = {}
+    h, t = h0, 0.0
+    for te in sorted(times):
+        n = max(1, int(round((te - t) / step)))
+        dt = (te - t) / n
+        for _ in range(n):
+            k1 = -q(h) / area
+            k2 = -q(h + 0.5 * dt * k1) / area
+            k3 = -q(h + 0.5 * dt * k2) / area
+            k4 = -q(h + dt * k3) / area
+            h += dt * (k1 + 2 * k2 + 2 * k3 + k4) / 6.0
+        t = te
+        out[te] = h
+    return out
+
+
+def b_levels(res, name, nx, ny, zfile=None):
+    """終わりの水位(H0001.bil の水深 + 地盤)"""
+    h = read_bil(os.path.join(res, name), nx, ny)
+    z = [0.0] * (nx * ny)
+    if zfile:
+        with open(os.path.join("data_paddy", zfile)) as f:
+            z = [float(x) for line in f for x in line.split()]
+    return [h[k] + z[k] for k in range(nx * ny)], h, z
+
+
+def no_exchange(last, keys, label):
+    for k in keys:
+        if last[k] != 0.0:
+            fail("%s: %s = %.3e m3 (expected none)" % (label, k, last[k]))
+
+
+def check_b_drain(res):
+    """10 × 12 セル(3000 m2)の区画 2 つの落水。種類 1 は水位調整板の堰(厳密解)、種類 2 は円の穴(参照解)"""
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    a, h0, c = 3000.0, 0.25, 0.6
+    if abs(rows[0]["area1(m2)"] - a) > 1e-9 or abs(rows[0]["area2(m2)"] - a) > 1e-9:
+        fail("plot areas %.6f %.6f differ from 3000 m2" % (rows[0]["area1(m2)"], rows[0]["area2(m2)"]))
+    ok("plot areas 3000 / 3000 m2 (10 x 12 cells of 5 m)")
+    k = (2.0 / 3.0) * c * math.sqrt(2 * G) * 0.30
+    exact = {}
+    for r in rows:
+        t = r["time(s)"]
+        exact[t] = 0.03 + ((h0 - 0.03) ** -0.5 + k / (2 * a) * t) ** -2
+    compare(rows, "h1(mm)", exact, 0.03, 2e-3, "resolved plot, board weir vs exact solution", base=0.03)
+    ref2 = rk4(lambda h: circle(c, 0.05, 0.0, h) + weir(c, 0.30, 0.29, h), h0, a, [r["time(s)"] for r in rows])
+    compare(rows, "h2(mm)", ref2, 0.01, 2e-3, "resolved plot, circular hole vs ODE reference (RK4)")
+    check_ledger(rows)
+    last = rows[-1]
+    drained = 2 * h0 * a - (last["store1(m3)"] + last["store2(m3)"])
+    if abs(last["outflow(m3)"] - drained) > 1e-9 * drained:
+        fail("outlet outflow %.9f m3 differs from the drained volume %.9f m3" % (last["outflow(m3)"], drained))
+    no_exchange(last, ("spill(m3)", "levee_in(m3)", "inflow(m3)"), "b_drain")
+    ok("outlet outflow = drained volume (%.6f m3); no flow over the levees, no inflow" % drained)
+
+
+def check_b_tight(res):
+    """落水口のない区画: どのセルも 初期の水深 + 雨(畦畔・斜めの階段の境・市松の角を水が抜けない)"""
+    nx, ny = 20, 16
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    last = rows[-1]
+    r_in = last["rain(m3)"] / last["area1(m2)"]
+    h0 = read_bil(os.path.join(res, "H0000.bil"), nx, ny)
+    h1 = read_bil(os.path.join(res, "H0001.bil"), nx, ny)
+    worst, wc = 0.0, None
+    for j in range(ny):
+        for i in range(nx):
+            d = h1[j * nx + i] - h0[j * nx + i] - r_in
+            if abs(d) > abs(worst):
+                worst, wc = d, (i + 1, j + 1)
+    if abs(worst) > 1e-6:
+        fail("water moved across a levee: depth change - rain = %.3e m at %s" % (worst, wc))
+    ok("every cell gained exactly the rain %.6f m (max |diff| %.1e m; single precision output)" % (r_in, abs(worst)))
+    for (i, j), hexp, what in (((14, 4), 0.2, "pool D1"), ((15, 5), 0.0, "pool D2 (diagonal through the plot pinch)"),
+                               ((14, 12), 0.2, "cell 1 of plot 4"), ((15, 13), 0.05, "cell 2 of plot 4 (diagonal)")):
+        v = h0[(j - 1) * nx + (i - 1)]
+        if abs(v - hexp) > 1e-6:
+            fail("initial depth of %s is %.6f m, expected %.2f m" % (what, v, hexp))
+    ok("initial depths of the pools and the diagonal plot cells differ (0.2 / 0 / 0.2 / 0.05 m) and stay apart")
+    check_ledger(rows)
+    no_exchange(last, ("outflow(m3)", "spill(m3)", "levee_in(m3)", "inflow(m3)"), "b_tight")
+    ok("no flow through the plot boundaries")
+
+
+def check_b_over(res):
+    """畦畔の越流: 閉じた領域の水の保存(S の増分 + 減水深 = 雨)、越流、区画の水深"""
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    area_dom = 20 * 20 * B_DX * B_DX
+    s = read_log(os.path.join(res, "Log.txt"))
+    by_t = {r["time(s)"]: r for r in rows}
+    worst, n = 0.0, 0
+    for t, sv in s[1:]:
+        r = by_t[t]
+        lhs = (sv - s[0][1]) + r["perc(m3)"] / area_dom
+        rain = r["rain(m3)"] / r["area1(m2)"]
+        worst = max(worst, abs(lhs - rain))
+        n += 1
+    if n < 2 or worst > 1e-12:
+        fail("closed domain: increase of S + percolation - rain = %.3e m" % worst)
+    ok("closed domain: increase of S + percolation = rain (%d times, max |diff| %.1e m)" % (n, worst))
+    hm = [r["h1(mm)"] / 1e3 for r in rows]
+    if not max(hm) > 0.30:
+        fail("the plot water did not rise above the levee crest (max %.4f m)" % max(hm))
+    last = rows[-1]
+    if not last["spill(m3)"] > 0.0:
+        fail("no flow over the levees is recorded")
+    if not (0.2995 < hm[-1] < 0.302):
+        fail("after the rain the plot water should fall to just above the crest: %.5f m" % hm[-1])
+    if last["levee_in(m3)"] != 0.0 or last["outflow(m3)"] != 0.0 or last["inflow(m3)"] != 0.0:
+        fail("unexpected exchange (outlet or inflow over the levees)")
+    ok("overflow over the levees %.1f m3; max plot depth %.4f m, %.4f m one hour after the rain"
+       % (last["spill(m3)"], max(hm), hm[-1]))
+    check_ledger(rows)
+
+
+def check_b_even(res, efile, e0_out, levee_in_expected):
+    """閉じた領域で区画の外(水位 e0_out)から区画へ水が入り、水位がそろう(水位 = 体積の保存から決まる値)"""
+    nx, ny = 20, 20
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    s = [v for _, v in read_log(os.path.join(res, "Log.txt"))]
+    if max(abs(x - s[0]) for x in s) > 1e-12 * s[0]:
+        fail("S is not conserved in the closed domain")
+    ok("S conserved in the closed domain (%.12f m)" % s[0])
+    lv, h, z = b_levels(res, "H0001.bil", nx, ny, "b_back_z.txt")
+    vol = sum(h)                       # 体積 / セル面積
+    eeq = (vol + sum(z)) / (nx * ny)    # 全セルが浸かっているときの水位
+    worst = max(abs(x - eeq) for x in lv)
+    if worst > 2e-3:
+        fail("levels have not evened out: max |level - %.5f| = %.3e m" % (eeq, worst))
+    if abs(eeq - (0.75 * e0_out + 0.25 * 0.05)) > 1e-4:
+        fail("equilibrium level %.6f m differs from the volume balance %.6f m" % (eeq, 0.75 * e0_out + 0.25 * 0.05))
+    ok("plot and surroundings at the same level %.5f m (max |diff| %.1e m)" % (eeq, worst))
+    last = rows[-1]
+    gain = last["store1(m3)"] - rows[0]["store1(m3)"] + (rows[0]["inflow(m3)"] + rows[0]["levee_in(m3)"]
+                                                          - rows[0]["outflow(m3)"] - rows[0]["spill(m3)"])
+    net = last["inflow(m3)"] + last["levee_in(m3)"] - last["outflow(m3)"] - last["spill(m3)"]
+    if abs(gain - net) > 1e-9 * max(gain, 1.0):
+        fail("plot water gained %.9f m3 but the net inflow is %.9f m3" % (gain, net))
+    if not last["inflow(m3)"] > 0.0:
+        fail("no inflow through the outlet is recorded")
+    if levee_in_expected and not last["levee_in(m3)"] > 0.0:
+        fail("no inflow over the levees is recorded")
+    if not levee_in_expected and last["levee_in(m3)"] != 0.0:
+        fail("inflow over the levees while the outside level stays below the crest")
+    ok("plot water gained = inflow through the outlet %.2f m3 + over the levees %.2f m3 - outflow %.2e m3"
+       % (last["inflow(m3)"], last["levee_in(m3)"], last["outflow(m3)"] + last["spill(m3)"]))
+    check_ledger(rows)
+
+
+
+def check_b_bank(res):
+    """区画の東隣が河道(堤防の天端 = 地盤 + 0.1 m)。外の水位 0.20 m は堤防より上・畦畔(0.30 m)より下なので、
+    重なるエッジの天端が大きい方(畦畔)なら区画に水は入らない(堤防の天端だけなら越流して入る)"""
+    nx, ny = 20, 20
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    h = read_bil(os.path.join(res, "H0001.bil"), nx, ny)
+    pl = [h[(j - 1) * nx + (i - 1)] for j in range(6, 16) for i in range(8, 18)]
+    worst = max(abs(v - 0.05) for v in pl)
+    if worst > 1e-6:
+        fail("water crossed the edge shared by the levee and the river bank: max |plot depth - 0.05| = %.3e m" % worst)
+    ok("plot depth stays 0.05 m next to the channel (bank crest 0.1 m < levee crest 0.3 m; max |diff| %.1e m)" % worst)
+    s = [v for _, v in read_log(os.path.join(res, "Log.txt"))]
+    if max(abs(x - s[0]) for x in s) > 1e-12 * s[0]:
+        fail("S is not conserved in the closed domain")
+    no_exchange(rows[-1], ("outflow(m3)", "spill(m3)", "levee_in(m3)", "inflow(m3)"), "b_bank")
+    ok("S conserved; no flow through the plot boundaries")
+    check_ledger(rows)
+
+
+def check_b_chain(res):
+    """区画 A(種類 1、初期 0.25 m)の落水口が隣の区画 B(種類 2、初期 0)を向く(田越し)。同じ面積なので終わりに
+    両方 0.125 m。A の落水口からの流出 = B の落水口からの流入(区画どうしの流れは両方に数える)"""
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    last = rows[-1]
+    h1, h2 = last["h1(mm)"] / 1e3, last["h2(mm)"] / 1e3
+    if abs(h1 - 0.125) > 1e-3 or abs(h2 - 0.125) > 1e-3:
+        fail("the plots did not even out at 0.125 m: A %.5f m, B %.5f m" % (h1, h2))
+    ok("plots A and B even out (A %.5f m, B %.5f m; 0.125 m from the volume balance)" % (h1, h2))
+    if abs(last["outflow(m3)"] - last["inflow(m3)"]) > 1e-9 * last["outflow(m3)"]:
+        fail("outflow from A %.9f m3 differs from the inflow into B %.9f m3" % (last["outflow(m3)"], last["inflow(m3)"]))
+    # 落水口を通る流れは A の流出(B の流入)と、水位がそろう近くで向きが逆になった分(B の流出・A の流入)の和
+    area = 7 * 8 * B_DX * B_DX
+    loss_a = 0.25 * area - last["store1(m3)"]
+    gain_b = last["store2(m3)"]                  # B は空から始まる
+    back = last["outflow(m3)"] - loss_a
+    if abs(loss_a - gain_b) > 1e-9 * loss_a:
+        fail("plot A lost %.9f m3 but plot B gained %.9f m3" % (loss_a, gain_b))
+    if not (-1e-9 * loss_a <= back <= 1e-3 * loss_a):
+        fail("outlet outflow %.9f m3 does not match the water moved from A to B %.9f m3" % (last["outflow(m3)"], loss_a))
+    no_exchange(last, ("spill(m3)", "levee_in(m3)"), "b_chain")
+    ok("A lost = B gained = %.6f m3; outlet outflow = inflow (%.6f m3, of which %.1e m3 back and forth near the "
+       "end); no flow over the levees" % (loss_a, last["outflow(m3)"], back))
+    s = [v for _, v in read_log(os.path.join(res, "Log.txt"))]
+    if max(abs(x - s[0]) for x in s) > 1e-12 * s[0]:
+        fail("S is not conserved in the closed domain")
+    ok("S conserved in the closed domain")
+    check_ledger(rows)
+
 
 def main():
     if len(sys.argv) < 3:
@@ -532,6 +744,22 @@ def main():
         check_dflt(sys.argv[2], sys.argv[3])
     elif cmd == "restart":
         check_restart(sys.argv[2], sys.argv[3])
+    elif cmd == "restart_b":
+        check_restart(sys.argv[2], sys.argv[3], files=("H9998.txt",))
+    elif cmd == "b_drain":
+        check_b_drain(sys.argv[2])
+    elif cmd == "b_tight":
+        check_b_tight(sys.argv[2])
+    elif cmd == "b_over":
+        check_b_over(sys.argv[2])
+    elif cmd == "b_back":
+        check_b_even(sys.argv[2], "b_back_e.txt", 0.20, False)
+    elif cmd == "b_ext":
+        check_b_even(sys.argv[2], "b_ext_e.txt", 0.40, True)
+    elif cmd == "b_bank":
+        check_b_bank(sys.argv[2])
+    elif cmd == "b_chain":
+        check_b_chain(sys.argv[2])
     elif cmd in ("wash", "splash"):
         check_erosion(sys.argv[2], cmd)
     elif cmd == "tw_back":

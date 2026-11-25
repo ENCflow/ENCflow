@@ -4,7 +4,8 @@ module list_paddy
   ! 導出は m_paddy の init が行う(developer.md §119、docs/paddy_plan.md)。
   !   &list_paddy : 有効化・水田面積率と取組率(分布か一様)・区画面積・畦畔高・事前の湛水深・
   !                 減水深と、落水口の装置(種類 1 = 取組なしの通常の落水口、2 = 田んぼダム。
-  !                 配列の添字)
+  !                 配列の添字)。区画の解像(表現 B。developer.md §119.7)は区画番号・落水口の向き・
+  !                 落水口の種類の分布
   ! 未指定の番兵は実数 −9999、整数 −9999。グループ不在は全番兵のまま(init が判定)。
   use m_sysparam, only : t_sysparam
   use m_parallel, only : par_info, par_stop
@@ -27,6 +28,10 @@ module list_paddy
     real :: pd_hlev = -9999.0                       ! 畦畔高 (m。田面から)
     real :: pd_h0 = -9999.0                         ! 事前の湛水深 (m。未指定 = 種類ごとの流れ始める高さ)
     real :: pd_perc_mmd = -9999.0                   ! 減水深 (mm/d。系外へ)
+    character(len=maxpathlen) :: fn_pd_plot = ""    ! 区画番号の分布(表現 B。0 = 水田でない。整数)
+    character(len=maxpathlen) :: fn_pd_outlet = ""  ! 落水口の向きの分布(表現 B。出口セルに 1〜8、ほかは 0)
+    character(len=maxpathlen) :: fn_pd_class = ""   ! 落水口の種類の分布(表現 B。1 = 通常・2 = 田んぼダム。
+                                                    !   区画のセルに。未指定 = 全て 1)
     integer :: f_pd_exchange = -9999                ! 地表と水田の水のやり取り 0: 片方向(雨だけ)、
                                                     !   1: 双方向(二室化。未指定 = 0。developer.md §119.6)
     integer :: pd_dev_type(1:pd_nclass) = -9999     ! 装置の型 0: 水位調整板だけ, 1: 機能分離型, 2: 機能一体型
@@ -57,7 +62,7 @@ subroutine list_paddy_read(p, list)
   character(len=256) :: msg
 
   integer :: f_paddy
-  character(len=maxpathlen) :: fn_pd_frac, fn_pd_adopt
+  character(len=maxpathlen) :: fn_pd_frac, fn_pd_adopt, fn_pd_plot, fn_pd_outlet, fn_pd_class
   real :: pd_frac, pd_adopt, pd_aplot, pd_hlev, pd_h0, pd_perc_mmd
   integer :: f_pd_exchange
   integer :: pd_dev_type(1:pd_nclass), pd_open_type(1:pd_nclass)
@@ -68,7 +73,8 @@ subroutine list_paddy_read(p, list)
   real :: pd_cw(1:pd_nclass), pd_co(1:pd_nclass)
 
   namelist /list_paddy/ f_paddy, fn_pd_frac, pd_frac, fn_pd_adopt, pd_adopt, pd_aplot, pd_hlev, pd_h0, &
-                        pd_perc_mmd, f_pd_exchange, pd_dev_type, pd_board_h, pd_board_w, pd_open_type, pd_open_d, pd_open_b, &
+                        pd_perc_mmd, f_pd_exchange, fn_pd_plot, fn_pd_outlet, fn_pd_class, pd_dev_type, &
+                        pd_board_h, pd_board_w, pd_open_type, pd_open_d, pd_open_b, &
                         pd_open_e, pd_open_ang, pd_open_z, pd_plate_h, pd_plate_w, pd_cw, pd_co
 
   f_paddy = list%f_paddy
@@ -81,6 +87,9 @@ subroutine list_paddy_read(p, list)
   pd_h0 = list%pd_h0
   pd_perc_mmd = list%pd_perc_mmd
   f_pd_exchange = list%f_pd_exchange
+  fn_pd_plot = list%fn_pd_plot
+  fn_pd_outlet = list%fn_pd_outlet
+  fn_pd_class = list%fn_pd_class
   pd_dev_type = list%pd_dev_type
   pd_board_h = list%pd_board_h
   pd_board_w = list%pd_board_w
@@ -112,6 +121,9 @@ subroutine list_paddy_read(p, list)
   list%pd_h0 = pd_h0
   list%pd_perc_mmd = pd_perc_mmd
   list%f_pd_exchange = f_pd_exchange
+  list%fn_pd_plot = fn_pd_plot
+  list%fn_pd_outlet = fn_pd_outlet
+  list%fn_pd_class = fn_pd_class
   list%pd_dev_type = pd_dev_type
   list%pd_board_h = pd_board_h
   list%pd_board_w = pd_board_w

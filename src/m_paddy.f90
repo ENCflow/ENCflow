@@ -27,6 +27,14 @@ module m_paddy
   !   湛水が低ければ排水路の水が逆流する。独自の簡略化)、(3) 畦畔: タンクが畦畔高を超えた分は地表へ、地表の
   !   水位が畦畔を越えたら畦畔より上の水で満ちていない水田を瞬時に満たす(足りなければ空きの比で分ける)、
   !   (4) 減水深。地表の水位が畦畔高以上のときは落水口のやり取りをしない(水田は (3) で満ちる)。
+  ! 【表現 B: 区画の解像(fn_pd_plot。paddy_plan.md §14、developer.md §119.8)】5〜10 m の格子で
+  !   区画をセルの集まりとして解く。区画番号が違うセルの間のエッジ(対角を含む。市松の角
+  !   も)に畦畔の仮想壁面を立て、落水口のエッジは装置則(両向き)にする。どちらも浅水流の
+  !   本体の上書き(m_swflow_enc_channel の pwall_apply。登録は m_swflow_enc_set_plot_walls)。区画の湛水は
+  !   浅水流の h そのもので、本モジュールは事前の湛水深(新しい計算の開始で h を max(h, h0) に)、
+  !   減水深(区画のセルの h から perc·dt を系外へ)、台帳(区画の境のエッジの流量を測線と同じ
+  !   観測口 m_swflow_enc_edge_flux で読む)だけを受け持つ。タンクはなく、S の台帳は地表の水の
+  !   まま(pd_active を立てない)。
   ! 【装置則】(paddy_plan.md §5)落水口 1 か所の流量 Q (m3/s)。H = 湛水深、h_D = 下流の水深。
   !   堰(天端 z、幅 B): 本間公式の形を流量係数 C で一般化(C = 0.525 で本間公式 0.35・0.91。
   !     独自の一般化)。h1 = H − z、h2 = max(h_D − z, 0)。自由 (2/3)C√(2g)B h1^1.5、
@@ -48,7 +56,9 @@ module m_paddy
   ! 【併用】ENC のみ。ネスト(複数インスタンス)・水質・淡塩とは init で停止する。水田のセルは
   !   海・河道(rw)・境界(水位規定・区間流入)・ソース・構造物のセルと、VZ・貯留関数の区画セルに
   !   置けない(雨の回収が boundary_h の式と一致する前提)。面積率は空隙率 gv を超えない。
-  !   蒸発散はタンクから引かない(段 4)。双方向は、家屋破壊の空隙率の帰還・浮遊砂・非静水圧と併用できず、
+  !   蒸発散はタンクから引かない(段 4)。B は、A の制限に加えて、地形変化・蒸発散・地下水・
+  !   非静水圧と併用できず(init で停止)、区画のセルを格子の外周と海の隣にも置けない。
+  !   双方向は、家屋破壊の空隙率の帰還・浮遊砂・非静水圧と併用できず、
   !   水田のセルをため池のセルに置けず、s ≥ 0.05 が要る(init で停止)。地形変化(fn_geomorph)と併用すると、雨滴侵食(f_wash の
   !   雨滴の項・f_splash)は水田の部分を外す(1 − a を掛ける。s%pdfr。§119.5)。流れによる侵食・
   !   浮遊砂・掃流砂はセル全面のまま(タンクは土砂を運ばない)。
@@ -57,7 +67,8 @@ module m_paddy
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state, sect_vh, sect_h_of, sect_sig
-  use m_swflow_enc, only : m_swflow_enc_set_step_sect, m_swflow_enc_nh_active
+  use m_swflow_enc, only : m_swflow_enc_set_step_sect, m_swflow_enc_nh_active, m_swflow_enc_set_plot_walls, &
+                          m_swflow_enc_edge_flux, chn   ! chn は区画の番号・落水口・種類を読むだけ(B。§119.8)
   use m_boundary, only : t_boundary
   use m_zonerunoff, only : t_zonerunoff
   use list_paddy, only : t_list_paddy, list_paddy_read, pd_nclass
@@ -67,7 +78,7 @@ module m_paddy
   use m_sysdep_util, only : sysdep_mkdir
   use m_util, only : param_default, itoa, es_out
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, par_sum_rows, par_scatter_cell, &
-                         par_allreduce_maxi, par_allreduce_sumi
+                         par_scatter_cell_i, par_allreduce_maxi, par_allreduce_sumi
   implicit none
   private
   public :: t_paddy
@@ -76,9 +87,12 @@ module m_paddy
   public :: m_paddy_record
   public :: m_paddy_dispose
 
-  integer, parameter :: save_version = 2026112402 ! paddy.dat の形式の版(2026-11-24 に双方向の印を足した)
+  integer, parameter :: save_version = 2026112501 ! paddy.dat の形式の版(2026-11-25 に表現の印を足した)
   integer, parameter :: nrow = 7                   ! 台帳の行部分和の列数
   real, parameter :: pd_smin = 0.05                ! 双方向の水田のセルの、水田でない面積の割合の下限(独自の目安)
+  integer, parameter :: pid_max = 16777215         ! 区画番号の上限(単精度の実数で正確に読める 2^24 − 1)
+  integer, parameter :: din8(1:8) = [-1, 0, 1, -1, 1, -1, 0, 1]   ! 8 近傍の向き(浅水流と同じ並び)
+  integer, parameter :: djn8(1:8) = [-1, -1, -1, 0, 0, 1, 1, 1]
 
   !-------------------------------------------
   ! 田んぼダムの状態の容器(t_encflow の成分。init に早期 return 経路があるため全成分
@@ -91,6 +105,7 @@ module m_paddy
     type(t_pddev) :: dev(1:pd_nclass)          ! 種類ごとの落水口の装置
     type(t_gtab) :: gt                         ! 円の穴の積分の表(円の穴を使うときだけ)
     integer :: exch = 0                        ! 地表と水田のやり取り 0: 片方向、1: 双方向(二室化)
+    integer :: rep = 0                         ! 表現 0: A(サブグリッドのタンク)、1: B(区画の解像)
     real :: aplot = 0.0                        ! 代表区画面積 (m2)
     real :: hlev = 0.0                         ! 畦畔高 (m)
     real :: perc = 0.0                         ! 減水深 (m/s)
@@ -99,7 +114,9 @@ module m_paddy
     real(real64) :: area(1:pd_nclass) = 0.0_real64  ! 種類ごとの水田面積 (m2。全ランク同値)
     real(real64), allocatable :: rows(:,:)     ! (js:je, 1:nrow) 行ごとの量 (m3): 1 雨の回収・2 落水・
                                                !   3 越流・4 減水深(累積)、5 直近のステップの地表への量(正味)、
-                                               !   6 落水口からの流入・7 畦畔を越えた流入(累積。双方向だけ)
+                                               !   6 落水口からの流入・7 畦畔を越えた流入
+                                               !   (累積。双方向と B)。B: 1 区画のセルの雨・
+                                               !   2 落水口からの流出・3 畦畔を越えた流出
     real(real64) :: store0 = 0.0_real64        ! 計算開始(再開)時の貯留 (m3。全ランク同値)
     real(real64) :: dxdy = 0.0_real64          ! セル面積 (m2)
     integer :: un_csv = 0                      ! CSV 装置番号(rank0)
@@ -141,7 +158,12 @@ subroutine m_paddy_init(pd, p, g, b, s, multi, vzr, sfr)
 
   call check_combinations(p, multi)
   pd%dxdy = real(g%dx, real64) * real(g%dy, real64)
+  if (len_trim(list%fn_pd_plot) > 0) pd%rep = 1
   call setup_scalars(pd, list)
+  if (pd%rep == 1) then
+    call init_plots(pd, p, g, b, s, list, vzr, sfr)
+    return
+  end if
   call setup_maps(pd, p, g, b, s, list, vzr, sfr)
   call setup_devices(pd, p, list)
   if (pd%exch == 1) call setup_twoway(pd, g, s)
@@ -202,6 +224,10 @@ subroutine m_paddy_calc(pd, p, g, s)
   real(real64) :: rr(1:nrow)
 
   if (.not. pd%enabled) return
+  if (pd%rep == 1) then
+    call calc_plots(pd, p, g, s)
+    return
+  end if
   if (pd%exch == 1) then
     call calc_twoway(pd, p, g, s)
     return
@@ -282,7 +308,9 @@ subroutine m_paddy_record(pd, p, g, s)
   ! 種類ごとの貯留と、畦畔高まで満ちた水田の面積(行部分和)
   hfull = pd%hlev * (1.0 - 1.0e-6)
   allocate(srow(dcp%js:dcp%je, 1:4), source = 0.0_real64)
+  if (pd%rep == 1) call plot_rows(pd, g, s, hfull, srow)
   do j = dcp%js, dcp%je
+    if (pd%rep == 1) exit
     do i = g%wx(1,j), g%wx(2,j)
       if (pd%have(1)) then
         if (pd%fr1(i,j) > 0.0) then
@@ -573,6 +601,535 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 区画の解像(表現 B。fn_pd_plot。§119.8、paddy_plan.md §14)の初期化: 併用の検査、区画の分布の
+! 読み込みと検査、装置、浅水流への畦畔・落水口の登録、事前の湛水深(または復元の照合)、
+! 台帳
+!----------------------------------------------------------------------
+subroutine init_plots(pd, p, g, b, s, list, vzr, sfr)
+  type(t_paddy), intent(inout) :: pd
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  type(t_state), intent(inout) :: s
+  type(t_list_paddy), intent(in) :: list
+  type(t_zonerunoff), intent(in) :: vzr, sfr
+  integer, allocatable :: pid(:,:), pod(:,:), pcl(:,:)
+  integer :: i, j, c
+
+  call no_combo(p%fn_geomorph, "fn_geomorph", "the bed load is not kept from crossing the levees yet")
+  call no_combo(p%fn_evap, "fn_evap", "pd_perc_mmd is the daily decrease of the ponding depth and already " &
+                //"includes the evapotranspiration")
+  call no_combo(p%fn_gwflow, "fn_gwflow", "the infiltration of gwflow and pd_perc_mmd would both drain the " &
+                //"plot water")
+  if (m_swflow_enc_nh_active()) call par_stop("list_paddy: fn_pd_plot cannot be combined with the " &
+      //"non-hydrostatic correction (f_nonhydrostatic=1): the levee walls are not excluded from it")
+  call setup_plots(pd, p, g, b, list, vzr, sfr, pid, pod, pcl)
+  call setup_devices(pd, p, list)
+  call m_swflow_enc_set_plot_walls(g, pid, pod, pcl, pd%hlev, pd%dev, pd%gt)
+  deallocate(pid, pod, pcl)
+  if (p%f_state_restore > 0) then
+    call restore_state(pd, p, s)
+  else
+    ! 事前の湛水深: 区画のセルの水深を max(h, h0) にする(帯 + ハロ。全ランクが同じ規則で同じ値)
+    do j = dcp%jsh, dcp%jeh
+      do i = dcp%ish, dcp%ieh
+        c = chn%pcl(i,j)
+        if (c <= 0) cycle
+        if (s%h(i,j) < pd%h0(c)) then
+          s%h(i,j) = pd%h0(c)
+          s%e(i,j) = s%z(i,j) + s%h(i,j)
+        end if
+      end do
+    end do
+    call par_info("paddy: the plot cells start with the water depth max(h, initial ponding depth of the class)")
+  end if
+  allocate(pd%rows(dcp%js:dcp%je, 1:nrow), source = 0.0_real64)
+  pd%store0 = plot_store(pd, g, s)
+  call report(pd)
+  call open_csv(pd, p)
+  pd%enabled = .true.
+  pd%initialized = .true.
+contains
+  subroutine no_combo(fn, name, why)
+    character(len=*), intent(in) :: fn, name, why
+    if (len_trim(fn) > 0) call par_stop("list_paddy: fn_pd_plot cannot be combined with "//name//" ("//why//")")
+  end subroutine
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 区画の分布(rank0 が全域で読み、検査して帯 + ハロへ配る)と、帯の検査・種類の有無・面積(B)
+!   pid: 区画番号(0 = 水田でない)、pod: 落水口の向き 1〜8(出口セル)、
+!   pcl: 装置の種類 1・2(区画のセル)
+!----------------------------------------------------------------------
+subroutine setup_plots(pd, p, g, b, list, vzr, sfr, pid, pod, pcl)
+  type(t_paddy), intent(inout) :: pd
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  type(t_list_paddy), intent(in) :: list
+  type(t_zonerunoff), intent(in) :: vzr, sfr
+  integer, allocatable, intent(out) :: pid(:,:), pod(:,:), pcl(:,:)
+  real, allocatable :: wp(:,:), wo(:,:), wc(:,:)
+  integer, allocatable :: ip(:,:), io(:,:), ic(:,:), mk(:,:)
+  integer :: idum(1,1)
+  integer :: i, j, k, n, in, jn, ierr, ie, je, nbad, ib, jb, key
+  integer :: hv(1:pd_nclass)
+  real(real64), allocatable :: r1(:), r2(:)
+  character(len=512) :: msg
+
+  ! --- rank0: 全域で読み、検査する ---
+  ierr = 0
+  ie = 0
+  je = 0
+  if (is_root) then
+    allocate(wp(1:g%nx, 1:g%ny), wo(1:g%nx, 1:g%ny), wc(1:g%nx, 1:g%ny))
+    call read_full(p, g, list%fn_pd_plot, wp)
+    if (len_trim(list%fn_pd_outlet) > 0) then
+      call read_full(p, g, list%fn_pd_outlet, wo)
+    else
+      wo(:,:) = 0.0
+    end if
+    if (len_trim(list%fn_pd_class) > 0) then
+      call read_full(p, g, list%fn_pd_class, wc)
+    else
+      wc(:,:) = 1.0
+    end if
+    ! 境界・ソース・構造物のセルの印(区画のセルに置けない)
+    allocate(mk(1:g%nx, 1:g%ny), source = 0)
+    do k = 1, b%nsrc
+      do n = 1, b%src(k)%ncell
+        call mark(b%src(k)%cell(1,n), b%src(k)%cell(2,n))
+      end do
+    end do
+    do k = 1, b%nstage
+      do n = 1, b%stage(k)%ncell
+        call mark(b%stage(k)%cell(1,n), b%stage(k)%cell(2,n))
+      end do
+    end do
+    do k = 1, b%ninflow
+      do n = 1, b%inflow(k)%ncell
+        call mark(b%inflow(k)%cell(1,n), b%inflow(k)%cell(2,n))
+      end do
+    end do
+    do k = 1, b%nstruct
+      do n = 1, b%struct(k)%ncin
+        call mark(b%struct(k)%cin(1,n), b%struct(k)%cin(2,n))
+      end do
+      do n = 1, b%struct(k)%ncout
+        call mark(b%struct(k)%cout(1,n), b%struct(k)%cout(2,n))
+      end do
+    end do
+    ! 値(整数であること)
+    allocate(ip(1:g%nx, 1:g%ny), io(1:g%nx, 1:g%ny), ic(1:g%nx, 1:g%ny), source = 0)
+    do j = 1, g%ny
+      do i = 1, g%nx
+        if (ierr > 0) exit
+        if (g%x(i,j) <= 0) cycle
+        if (.not. is_int(wp(i,j), pid_max)) then
+          call fail(11, i, j)
+        else if (.not. is_int(wo(i,j), 8)) then
+          call fail(12, i, j)
+        else if (.not. is_int(wc(i,j), pd_nclass)) then
+          call fail(13, i, j)
+        else
+          ip(i,j) = nint(wp(i,j))
+          io(i,j) = nint(wo(i,j))
+          ic(i,j) = nint(wc(i,j))
+        end if
+      end do
+    end do
+    ! 区画のセルと落水口
+    do j = 1, g%ny
+      do i = 1, g%nx
+        if (ierr > 0) exit
+        if (g%x(i,j) <= 0) cycle
+        if (ip(i,j) <= 0) then
+          if (io(i,j) > 0) call fail(14, i, j)
+          ic(i,j) = 0
+          cycle
+        end if
+        if (ic(i,j) < 1) then
+          call fail(15, i, j)
+        else if (g%sw(i,j) > 0) then
+          call fail(3, i, j)
+        else if (g%rw(i,j) > 0) then
+          call fail(4, i, j)
+        else if (mk(i,j) > 0) then
+          call fail(5, i, j)
+        else if (i == 1 .or. i == g%nx .or. j == 1 .or. j == g%ny) then
+          call fail(16, i, j)
+        end if
+        if (ierr > 0) exit
+        do k = 1, 8
+          in = i + din8(k)
+          jn = j + djn8(k)
+          if (g%x(in,jn) <= 0) cycle
+          if (g%sw(in,jn) > 0) then
+            call fail(17, i, j)
+          else if (ip(in,jn) == ip(i,j) .and. nint(wc(in,jn)) /= ic(i,j)) then
+            call fail(18, i, j)
+          end if
+        end do
+        if (io(i,j) > 0 .and. ierr == 0) then
+          k = io(i,j)
+          in = i + din8(k)
+          jn = j + djn8(k)
+          if (g%x(in,jn) <= 0) then
+            call fail(19, i, j)
+          else if (ip(in,jn) == ip(i,j)) then
+            call fail(20, i, j)
+          else if (ip(in,jn) > 0 .and. io(in,jn) == 9 - k) then
+            call fail(21, i, j)
+          end if
+        end if
+      end do
+    end do
+    if (ierr == 0) call plot_stats(ip, io, ic)
+  end if
+  call par_allreduce_maxi(ierr)
+  call par_allreduce_maxi(ie)
+  call par_allreduce_maxi(je)
+  if (ierr > 0) then
+    select case (ierr)
+      case (3)
+        msg = "paddy: a plot cell is on a sea cell"
+      case (4)
+        msg = "paddy: a plot cell is on a channel cell (rw)"
+      case (5)
+        msg = "paddy: a plot cell overlaps a boundary, source or structure cell"
+      case (11)
+        msg = "paddy: the plot number (fn_pd_plot) must be an integer from 0 to "//itoa(pid_max)
+      case (12)
+        msg = "paddy: the outlet direction (fn_pd_outlet) must be an integer from 0 to 8"
+      case (13)
+        msg = "paddy: the outlet class (fn_pd_class) must be 0, 1 or 2"
+      case (14)
+        msg = "paddy: an outlet direction (fn_pd_outlet) is given on a cell that is not a plot cell"
+      case (15)
+        msg = "paddy: the outlet class (fn_pd_class) of a plot cell must be 1 or 2"
+      case (16)
+        msg = "paddy: a plot cell is on the outermost row or column of the grid (it has open boundary faces)"
+      case (17)
+        msg = "paddy: a plot cell is next to a sea cell"
+      case (18)
+        msg = "paddy: the cells of a plot have different outlet classes (fn_pd_class must be the same " &
+              //"within a plot)"
+      case (19)
+        msg = "paddy: an outlet points to a cell outside the computational domain"
+      case (20)
+        msg = "paddy: an outlet points to a cell of the same plot"
+      case default
+        msg = "paddy: two outlets face each other on the same edge"
+    end select
+    call par_stop(trim(msg)//" at ("//itoa(ie)//","//itoa(je)//")")
+  end if
+
+  ! --- 帯 + ハロへ配る ---
+  allocate(pid(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), pod(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), &
+           pcl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
+  if (is_root) then
+    call par_scatter_cell_i(ip, pid)
+    call par_scatter_cell_i(io, pod)
+    call par_scatter_cell_i(ic, pcl)
+  else
+    call par_scatter_cell_i(idum, pid)
+    call par_scatter_cell_i(idum, pod)
+    call par_scatter_cell_i(idum, pcl)
+  end if
+
+  ! --- 帯の検査: ため池・VZ・貯留関数の区画のセル、海側のセルの隣(collective に停止) ---
+  nbad = 0
+  ib = 0
+  jb = 0
+  key = 0
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (pcl(i,j) <= 0) cycle
+      k = 0
+      if (g%rscap(i,j) > 0.0) k = 1
+      if (allocated(vzr%zid)) then
+        if (vzr%zid(i,j) > 0) k = 2
+      end if
+      if (allocated(sfr%zid)) then
+        if (sfr%zid(i,j) > 0) k = 3
+      end if
+      if (g%swall_active) then
+        do n = 1, 8
+          if (g%ssw(i+din8(n), j+djn8(n)) > 0) k = 4
+        end do
+      end if
+      if (k > nbad) then
+        nbad = k
+        ib = i
+        jb = j
+      end if
+    end do
+  end do
+  if (nbad > 0) key = nbad * (g%nx * g%ny) + (jb - 1) * g%nx + (ib - 1)
+  call par_allreduce_maxi(key)
+  if (key > 0) then
+    nbad = key / (g%nx * g%ny)
+    ib = mod(key, g%nx * g%ny)
+    jb = ib / g%nx + 1
+    ib = mod(ib, g%nx) + 1
+    select case (nbad)
+      case (1)
+        msg = "paddy: a plot cell is a pond cell (rscap > 0)"
+      case (2)
+        msg = "paddy: a plot cell is a VZ zone cell (both would take the rain of the cell)"
+      case (3)
+        msg = "paddy: a plot cell is a SFM zone cell (both would take the rain of the cell)"
+      case default
+        msg = "paddy: a plot cell is next to a seaside cell (fn_seaside)"
+    end select
+    call par_stop(trim(msg)//" (e.g. at ("//itoa(ib)//","//itoa(jb)//"))")
+  end if
+
+  ! --- 種類の有無と面積(全ランク同値) ---
+  hv(:) = 0
+  allocate(r1(dcp%js:dcp%je), r2(dcp%js:dcp%je), source = 0.0_real64)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (pcl(i,j) == 1) then
+        hv(1) = 1
+        r1(j) = r1(j) + 1.0_real64
+      else if (pcl(i,j) == 2) then
+        hv(2) = 1
+        r2(j) = r2(j) + 1.0_real64
+      end if
+    end do
+  end do
+  call par_allreduce_sumi(hv)
+  pd%have(:) = hv(:) > 0
+  call par_sum_rows(r1, pd%area(1))
+  call par_sum_rows(r2, pd%area(2))
+  pd%area(:) = pd%area(:) * pd%dxdy
+  if (.not. any(pd%have)) call par_stop("paddy: no plot cell in the domain (fn_pd_plot is 0 everywhere)")
+contains
+  subroutine mark(ii, jj)
+    integer, intent(in) :: ii, jj
+    if (ii < 1 .or. ii > g%nx .or. jj < 1 .or. jj > g%ny) return
+    mk(ii,jj) = 1
+  end subroutine
+  subroutine fail(code, ii, jj)
+    integer, intent(in) :: code, ii, jj
+    if (ierr > 0) return
+    ierr = code
+    ie = ii
+    je = jj
+  end subroutine
+  logical function is_int(v, vmax)
+    real, intent(in) :: v
+    integer, intent(in) :: vmax
+    is_int = .false.
+    if (.not. (v >= 0.0 .and. v <= real(vmax))) return
+    is_int = abs(v - anint(v)) <= 1.0e-3
+  end function
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 区画の数・落水口の数・落水口のない区画の数を画面へ(rank0。全域の配列から。区画番号の
+! 数で数える)
+!----------------------------------------------------------------------
+subroutine plot_stats(ip, io, ic)
+  integer, intent(in) :: ip(1:, 1:), io(1:, 1:), ic(1:, 1:)
+  integer, allocatable :: ids(:), ods(:)
+  integer :: n, m, i, j, np, nno, no1, no2, k
+  character(len=512) :: line
+
+  n = count(ip > 0)
+  m = count(io > 0)
+  allocate(ids(1:n), ods(1:max(m, 1)))
+  n = 0
+  m = 0
+  no1 = 0
+  no2 = 0
+  do j = 1, size(ip, 2)
+    do i = 1, size(ip, 1)
+      if (ip(i,j) <= 0) cycle
+      n = n + 1
+      ids(n) = ip(i,j)
+      if (io(i,j) > 0) then
+        m = m + 1
+        ods(m) = ip(i,j)
+        if (ic(i,j) == 1) no1 = no1 + 1
+        if (ic(i,j) == 2) no2 = no2 + 1
+      end if
+    end do
+  end do
+  call isort(ids(1:n))
+  if (m > 0) call isort(ods(1:m))
+  ! 区画番号の数と、落水口のない区画番号の数(整列した 2 つの列を突き合わせる)
+  np = 0
+  nno = 0
+  k = 1
+  do i = 1, n
+    if (i > 1) then
+      if (ids(i) == ids(i-1)) cycle
+    end if
+    np = np + 1
+    do while (k <= m)
+      if (ods(k) >= ids(i)) exit
+      k = k + 1
+    end do
+    if (k > m) then
+      nno = nno + 1
+    else if (ods(k) /= ids(i)) then
+      nno = nno + 1
+    end if
+  end do
+  write(line, '(a,i0,a,i0,a,i0,a,i0,a)') "paddy: resolved plots (fn_pd_plot): ", np, " plot numbers on ", n, &
+        " cells; outlets: ", no1, " normal, ", no2, " paddy-dam"
+  call par_info(trim(line))
+  if (nno > 0) then
+    write(line, '(a,i0,a)') "paddy: ", nno, " plot numbers have no outlet (they drain only by percolation and " &
+          //"over the levees)"
+    call par_info(trim(line))
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 整数の列を昇順に整列する(ヒープソート。初期化の 1 回きり)
+!----------------------------------------------------------------------
+subroutine isort(a)
+  integer, intent(inout) :: a(1:)
+  integer :: n, i, t
+  n = size(a)
+  do i = n / 2, 1, -1
+    call sift(i, n)
+  end do
+  do i = n, 2, -1
+    t = a(1)
+    a(1) = a(i)
+    a(i) = t
+    call sift(1, i - 1)
+  end do
+contains
+  subroutine sift(l, r)
+    integer, intent(in) :: l, r
+    integer :: ii, jj, v
+    ii = l
+    v = a(ii)
+    do
+      jj = 2 * ii
+      if (jj > r) exit
+      if (jj < r) then
+        if (a(jj+1) > a(jj)) jj = jj + 1
+      end if
+      if (a(jj) <= v) exit
+      a(ii) = a(jj)
+      ii = jj
+    end do
+    a(ii) = v
+  end subroutine
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 毎ステップ(B。浅水流の後): 区画の境のエッジの流量の台帳(このステップの確定した流量を
+! 測線と同じ観測口で読む)と、区画のセルの減水深(h から perc·dt を系外へ。e の回復)。
+! セル単位で帯の中だけ
+!----------------------------------------------------------------------
+subroutine calc_plots(pd, p, g, s)
+  type(t_paddy), intent(inout) :: pd
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j, k, in, jn, ipl
+  real :: dt, q, pc
+  real(real64) :: rr(1:nrow)
+
+  dt = p%dt
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ipl, q, pc, rr)
+  do j = dcp%js, dcp%je
+    rr(:) = 0.0_real64
+    do i = g%wx(1,j), g%wx(2,j)
+      if (chn%pcl(i,j) <= 0) cycle
+      ipl = chn%pid(i,j)
+      ! 区画の境のエッジ(このセルから出る向きが正。落水口と畦畔に分ける)
+      do k = 1, 8
+        in = i + din8(k)
+        jn = j + djn8(k)
+        if (chn%pid(in,jn) == ipl) cycle
+        if (g%x(in,jn) <= 0) cycle
+        q = m_swflow_enc_edge_flux(i, j, in, jn) * dt
+        if (chn%pod(i,j) == k .or. chn%pod(in,jn) == 9 - k) then
+          if (q > 0.0) then
+            rr(2) = rr(2) + real(q, real64)
+          else
+            rr(6) = rr(6) - real(q, real64)
+          end if
+        else
+          if (q > 0.0) then
+            rr(3) = rr(3) + real(q, real64)
+          else
+            rr(7) = rr(7) - real(q, real64)
+          end if
+        end if
+        rr(5) = rr(5) + real(q, real64)
+      end do
+      ! 雨(boundary_h が足した区画のセルの雨)と減水深(系外へ)
+      rr(1) = rr(1) + real(s%pre(i,j) * dt, real64) * pd%dxdy
+      pc = min(pd%perc * dt, max(s%h(i,j), 0.0))
+      s%h(i,j) = s%h(i,j) - pc
+      s%e(i,j) = s%z(i,j) + s%h(i,j)
+      rr(4) = rr(4) + real(s%gv(i,j) * pc, real64) * pd%dxdy
+    end do
+    pd%rows(j,1:4) = pd%rows(j,1:4) + rr(1:4)
+    pd%rows(j,5) = rr(5)
+    pd%rows(j,6:7) = pd%rows(j,6:7) + rr(6:7)
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 台帳の行部分和(B): 種類ごとの区画の水の量 gv·h(列 1・2)と、畦畔高まで満ちたセルの数(列 3・4)
+!----------------------------------------------------------------------
+subroutine plot_rows(pd, g, s, hfull, srow)
+  type(t_paddy), intent(in) :: pd
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  real, intent(in) :: hfull
+  real(real64), intent(inout) :: srow(dcp%js:, 1:)
+  integer :: i, j, c
+  if (.not. pd%enabled) return
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      c = chn%pcl(i,j)
+      if (c <= 0) cycle
+      srow(j,c) = srow(j,c) + real(s%gv(i,j) * s%h(i,j), real64)
+      if (s%h(i,j) >= hfull) srow(j,c+2) = srow(j,c+2) + 1.0_real64
+    end do
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 区画の水の量の合計 (m3。gv·h·A の行部分和の決定的総和。collective。B)
+!----------------------------------------------------------------------
+real(real64) function plot_store(pd, g, s)
+  type(t_paddy), intent(in) :: pd
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  real(real64), allocatable :: r1(:)
+  integer :: i, j
+  allocate(r1(dcp%js:dcp%je), source = 0.0_real64)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (chn%pcl(i,j) <= 0) cycle
+      r1(j) = r1(j) + real(s%gv(i,j) * s%h(i,j), real64)
+    end do
+  end do
+  call par_sum_rows(r1, plot_store)
+  plot_store = plot_store * pd%dxdy
+end function
+
+
+!----------------------------------------------------------------------
 ! 初版で併用できない機能・実行形態を停止する
 !----------------------------------------------------------------------
 subroutine check_combinations(p, multi)
@@ -600,8 +1157,23 @@ subroutine setup_scalars(pd, list)
   type(t_paddy), intent(inout) :: pd
   type(t_list_paddy), intent(in) :: list
   real :: v
-  pd%aplot = param_default("paddy", "pd_aplot", list%pd_aplot, 3000.0, " m2", unset = -9999.0)
-  if (.not. (pd%aplot > 0.0)) call par_stop("list_paddy: pd_aplot must be > 0 (m2)")
+  if (pd%rep == 1) then
+    ! 区画の解像(B)では、サブグリッドのタンク(A)だけの入力を停止する
+    if (len_trim(list%fn_pd_frac) > 0 .or. list%pd_frac > -9998.0) call a_only("fn_pd_frac and pd_frac")
+    if (len_trim(list%fn_pd_adopt) > 0 .or. list%pd_adopt > -9998.0) then
+      call a_only("fn_pd_adopt and pd_adopt (give the outlet classes of the plots with fn_pd_class)")
+    end if
+    if (list%pd_aplot > -9998.0) call a_only("pd_aplot (the plots are resolved by the grid)")
+    if (list%f_pd_exchange > -9998) then
+      call a_only("f_pd_exchange (the resolved plots exchange water with their surroundings both ways)")
+    end if
+  else
+    if (len_trim(list%fn_pd_outlet) > 0 .or. len_trim(list%fn_pd_class) > 0) then
+      call par_stop("list_paddy: fn_pd_outlet and fn_pd_class require fn_pd_plot (the resolved plots)")
+    end if
+    pd%aplot = param_default("paddy", "pd_aplot", list%pd_aplot, 3000.0, " m2", unset = -9999.0)
+    if (.not. (pd%aplot > 0.0)) call par_stop("list_paddy: pd_aplot must be > 0 (m2)")
+  end if
   pd%hlev = param_default("paddy", "pd_hlev", list%pd_hlev, 0.30, " m", unset = -9999.0)
   if (.not. (pd%hlev > 0.0)) call par_stop("list_paddy: pd_hlev must be > 0 (m)")
   v = param_default("paddy", "pd_perc_mmd", list%pd_perc_mmd, 5.0, " mm/d", unset = -9999.0)
@@ -612,6 +1184,7 @@ subroutine setup_scalars(pd, list)
       call par_stop("list_paddy: pd_h0 must satisfy 0 <= pd_h0 <= pd_hlev (m)")
     end if
   end if
+  if (pd%rep == 1) return
   if (list%f_pd_exchange <= -9998) then
     pd%exch = 0
     call par_info("paddy: f_pd_exchange = 0 (default)")
@@ -623,6 +1196,12 @@ subroutine setup_scalars(pd, list)
     call par_stop("list_paddy: f_pd_exchange must be 0(one-way: rain only) or 1(two-way: flood water also " &
                   //"enters the paddy fields): "//itoa(pd%exch))
   end if
+contains
+  subroutine a_only(name)
+    character(len=*), intent(in) :: name
+    call par_stop("list_paddy: "//name//" are for the subgrid paddy tanks and cannot be combined with " &
+                  //"fn_pd_plot (the resolved plots)")
+  end subroutine
 end subroutine
 
 
@@ -1041,17 +1620,28 @@ subroutine report(pd)
   character(len=512) :: line
   character(len=32), parameter :: kname(0:2) = [character(len=32) :: "water-level board only", &
                                                 "separated type", "integrated type"]
-  write(line, '(a,es11.4,a,es11.4,a)') "paddy: paddy area with normal outlets ", pd%area(1), &
-        " m2, with paddy-dam outlets ", pd%area(2), " m2"
+  if (pd%rep == 1) then
+    write(line, '(a,es11.4,a,es11.4,a)') "paddy: resolved plots: plot area with normal outlets ", pd%area(1), &
+          " m2, with paddy-dam outlets ", pd%area(2), " m2"
+  else
+    write(line, '(a,es11.4,a,es11.4,a)') "paddy: paddy area with normal outlets ", pd%area(1), &
+          " m2, with paddy-dam outlets ", pd%area(2), " m2"
+  end if
   call par_info(trim(line))
   do c = 1, pd_nclass
     if (.not. pd%have(c)) cycle
     associate (dv => pd%dev(c))
       hq = pd%hlev
       q = dev_q(dv, pd%gt, hq, 0.0)
-      write(line, '(a,i0,a,a,a,g0.4,a,g0.4,a)') "  class ", c, ": ", trim(kname(dv%kind)), &
-            ", drains above ", dv%zlow, " m; outflow at the levee crest (free) ", &
-            q / pd%aplot * 3.6e6, " mm/h of the paddy area"
+      if (pd%rep == 1) then
+        write(line, '(a,i0,a,a,a,g0.4,a,g0.4,a)') "  class ", c, ": ", trim(kname(dv%kind)), &
+              ", drains above ", dv%zlow, " m; outflow at the levee crest (free) ", &
+              q * 1.0e3, " L/s per outlet"
+      else
+        write(line, '(a,i0,a,a,a,g0.4,a,g0.4,a)') "  class ", c, ": ", trim(kname(dv%kind)), &
+              ", drains above ", dv%zlow, " m; outflow at the levee crest (free) ", &
+              q / pd%aplot * 3.6e6, " mm/h of the paddy area"
+      end if
       call par_info(trim(line))
     end associate
   end do
@@ -1084,10 +1674,13 @@ subroutine save_state(pd, p, s)
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/paddy.dat', form='unformatted', status='replace')
-    write(un) save_version, dcp%nx_g, dcp%ny_g, merge(1, 0, pd%have(1)), merge(1, 0, pd%have(2)), pd%exch
+    write(un) save_version, dcp%nx_g, dcp%ny_g, merge(1, 0, pd%have(1)), merge(1, 0, pd%have(2)), pd%exch, pd%rep
   end if
-  if (pd%have(1)) call restart_write_cell(un, s%hpn)
-  if (pd%have(2)) call restart_write_cell(un, s%hpd)
+  ! 湛水深はタンク(A)だけ。B の区画の水は浅水流の h(state.dat)にあり、ここはヘッダ(表現の印)だけ
+  if (pd%rep == 0) then
+    if (pd%have(1)) call restart_write_cell(un, s%hpn)
+    if (pd%have(2)) call restart_write_cell(un, s%hpd)
+  end if
   if (is_root) close(un)
 end subroutine
 
@@ -1101,7 +1694,7 @@ subroutine restore_state(pd, p, s)
   type(t_state), intent(inout) :: s
   character(:), allocatable :: fname
   logical :: found
-  integer :: un, hd(1:6)
+  integer :: un, hd(1:7)
   fname = trim(p%dir_save)//'/paddy.dat'
   inquire(file=fname, exist=found)
   if (.not. found) call par_stop("paddy: state file not found (was fn_paddy enabled when saving): "//fname)
@@ -1117,6 +1710,7 @@ subroutine restore_state(pd, p, s)
   call par_allreduce_maxi(hd(4))
   call par_allreduce_maxi(hd(5))
   call par_allreduce_maxi(hd(6))
+  call par_allreduce_maxi(hd(7))
   if (hd(1) /= save_version) then
     call par_stop("paddy: state file format version "//itoa(hd(1))//" does not match the version this " &
                   //"executable reads ("//itoa(save_version)//"): "//fname)
@@ -1125,12 +1719,18 @@ subroutine restore_state(pd, p, s)
       ((hd(5) > 0) .neqv. pd%have(2))) then
     call par_stop("paddy: the grid or the classes of paddy fields differ from the saved state "//fname)
   end if
+  if (hd(7) /= pd%rep) then
+    call par_stop("paddy: the representation of the paddy fields differs from the saved state (subgrid tanks " &
+                  //"with fn_pd_frac / pd_frac, or resolved plots with fn_pd_plot): "//fname)
+  end if
   if (hd(6) /= pd%exch) then
     call par_stop("paddy: f_pd_exchange differs from the saved state (the surface water of paddy cells is " &
                   //"stored differently in one-way and two-way runs): "//fname)
   end if
-  if (pd%have(1)) call restart_read_cell(un, s%hpn)
-  if (pd%have(2)) call restart_read_cell(un, s%hpd)
+  if (pd%rep == 0) then
+    if (pd%have(1)) call restart_read_cell(un, s%hpn)
+    if (pd%have(2)) call restart_read_cell(un, s%hpd)
+  end if
   if (is_root) close(un)
 end subroutine
 

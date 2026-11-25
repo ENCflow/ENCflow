@@ -1,0 +1,62 @@
+!======================================================================
+! paddy: 区画の解像(表現 B)の区画から区画への落水口(田越し。Check_paddy.py b_chain)
+!
+!   20 × 12 セル(Δx = Δy = 5 m)、地盤はすべて 0 m、四辺は不透過。7 × 8 セル(1400 m2)の区画 A(種類 1)と
+!   区画 B(種類 2)が隣り合い、A の落水口(水位調整板の四角セキ)が B を向く。A の初期の水深は 0.25 m、B は 0。6 h。
+!   確認: 終わりに A と B の水深がそろう(0.125 m)、台帳で A の落水口からの流出 = B の落水口からの流入、閉じた
+!   領域の水の保存(S)、台帳の閉合。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 21600
+  dt_disp = 3600
+  dt_file = 21600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_b_chain'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  f_output_mode = 3
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+
+&list_initial
+  f_htype = 1               ! 水深ファイル
+  fn_hinit = 'b_chain_h0.txt'
+/
+
+&list_geoinfo
+  nx = 20
+  ny = 12
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+/
+
+&list_paddy
+  fn_pd_plot = 'b_chain_plot.txt'
+  fn_pd_outlet = 'b_chain_out.txt'
+  fn_pd_class = 'b_chain_class.txt'
+  pd_hlev = 0.30
+  pd_h0 = 0.0
+  pd_perc_mmd = 0.0
+  pd_dev_type(1:2) = 0, 0
+  pd_board_h(1:2) = 0.03, 0.03
+  pd_board_w(1:2) = 0.30, 0.30
+  pd_cw(1:2) = 0.6, 0.6
+/

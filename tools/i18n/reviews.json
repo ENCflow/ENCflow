@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "954cd515a289c22a5d89e1acdd0578829a542ef058c8fdf905a831d38ff12183",
-      "target_sha256": "8b4232f71772be7ed1c5fc72baf695dd091b9be55e9932847667d53d77f6f4d5",
-      "reviewer": "Claude (Claude Code session; reviewed the changed entries (the f_pd_exchange row and the parameter count 845) against the Japanese source; the rest is unchanged since the previous record)",
+      "source_sha256": "b4910bad9e25571d6a8b6115bbadeeb381e1b37be0fa83146a69271d13a18e68",
+      "target_sha256": "c648d9d2a6fe4a15b3dc456b071f1daee3bf9a1eaa94806b45eb2746b927f644",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -428,11 +428,11 @@
     {
       "source": "docs/users_guide/paddy.md",
       "target": "docs/en/users_guide/paddy.md",
-      "source_sha256": "ebe240b1f0f4c2be1a4bf2f81bdef6fa3846daf229d9032314104ebb7fecc958",
-      "target_sha256": "b4a86cbb033dd032dfd64646e957201864be57258ff06c089287941b852a9937",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/paddy runs)",
+      "source_sha256": "499dca5ab4f81fb04a49218c1433f15372b9ea43b7cab7f06c84e4fd5032c8df",
+      "target_sha256": "14afbb65938a381e10828f462915ca852c73132eba513496e81b59ffc28daca1",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/parallel.md",
@@ -446,11 +446,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "c47b44217dad65f5078d501841ea0b7ca0da0836bb0560d5c5cb64707f9ddf05",
-      "target_sha256": "4987fc8b5268b3aec4eab19604c871ff42f1b273ede6ee0db305c6326f52da79",
-      "reviewer": "Claude (Claude Code session; reviewed the changed entries (the f_pd_exchange row and the parameter count 845) against the Japanese source; the rest is unchanged since the previous record)",
+      "source_sha256": "1d261ed98f5171fd9c30c721cf4d92c2ade9d0a70db785c5a2f5d51560dc0774",
+      "target_sha256": "bdee169d15e29bcf902e716927bea24c0ff2e1621ef0a486fa73a4761c1d9df1",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -788,11 +788,11 @@
     {
       "source": "examples/List_samples/list_paddy.txt",
       "target": "examples/List_samples/en/list_paddy.txt",
-      "source_sha256": "3b5cb1db960798a776c0bbb77f14979a08a0304db91b3aa5f1764ae27509f3c5",
-      "target_sha256": "11a2756296c11ae7fe393cb389a44650cd1c5b8649c3c946546e2308afd446b4",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/paddy runs)",
+      "source_sha256": "c0db73ad6e54163b4aec5c25e2c3b863ce991430e8007a4d763de739638d1b38",
+      "target_sha256": "b746e6c66e2c0eb1ac68c96c822899cbb6f5aef3ece574e18c989c100c2b421f",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/List_samples/list_precip.txt",
@@ -3776,11 +3776,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "47bd2f3e91d264e3daee3557095c9ae4690a39b8fc79c0d929795ec66e03eeff",
-      "target_sha256": "ab21c1685e4c1f9cc11be99a63d6bf9df249209ee9062ed6ecaf797230b2005d",
-      "reviewer": "Claude (Claude Code session; reviewed the added test/bankhalo row against the Japanese source; the rest is unchanged since the previous record)",
+      "source_sha256": "f25d3682b79f8d3884ecc777c90a2db732fb1afe2ecd0c4242fb097ed613f018",
+      "target_sha256": "eb04106bf5e47977feac5674bc7e5bce0b91dc1f1a119d42b54b497ec999d651",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/avalanche/README.md",
@@ -4820,11 +4820,11 @@
     {
       "source": "test/paddy/README.md",
       "target": "test/paddy/en/README.md",
-      "source_sha256": "101159fc309cd386150d620ad906cd900e34226f59236044242a449f6fbd4b62",
-      "target_sha256": "6d88bdfe90c4e305259ebc135e145ec2b17988418b338b5512b41f87e22bdc12",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/paddy runs)",
+      "source_sha256": "625a097c3bbb65010bf4a7de05ed31c53922969531ca7bae47a18dc2bd819faa",
+      "target_sha256": "42a5b7afd7c2e79e62843c8e365219eeafae7907f64efe18ce886b561489d558",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/prmap/README.md",

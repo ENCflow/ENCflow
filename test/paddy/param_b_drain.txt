@@ -1,0 +1,68 @@
+!======================================================================
+! paddy: 区画の解像(表現 B。fn_pd_plot。developer.md §119.8)の 1 区画の落水(Check_paddy.py b_drain)
+!
+!   16 × 32 セル(Δx = Δy = 5 m)。10 × 12 セル(3000 m2)の区画が 2 つ(区画 1 = 種類 1、区画 2 = 種類 2)。
+!   区画の田面と道路は 0 m、東の 4 列は地盤 −0.5 m の排水路で東の辺は自由流出(落水口は潜らない)。
+!   事前の湛水深 0.25 m から 12 h 落水する(雨・減水深なし)。種類 1 は水位調整板(四角セキ。天端 0.03 m・
+!   幅 0.30 m・C = 0.6。A の param.txt と同じ)、種類 2 は機能一体型(円の穴 φ50・天端 0.29 m の調整板)。
+!   確認: 種類ごとの平均水深 = 1 区画の常微分方程式の厳密解(堰)・参照解(穴)、台帳の閉合と、落水口の
+!   流出 = 区画から抜けた水、畦畔を越える流れがないこと。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 43200
+  dt_disp = 3600
+  dt_file = 43200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_b_drain'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 16
+  ny = 32
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'b_drain_z.txt'
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東の辺(排水路の端)は自由流出。ほかは不透過
+/
+
+&list_paddy
+  fn_pd_plot = 'b_drain_plot.txt'     ! 区画番号
+  fn_pd_outlet = 'b_drain_out.txt'    ! 落水口の向き(5 = 東)
+  fn_pd_class = 'b_drain_class.txt'   ! 装置の種類(区画 1 = 1、区画 2 = 2)
+  pd_hlev = 0.30
+  pd_h0 = 0.25
+  pd_perc_mmd = 0.0
+  pd_dev_type(1:2) = 0, 2
+  pd_board_h(1:2) = 0.03, 0.29
+  pd_board_w(1:2) = 0.30, 0.30
+  pd_cw(1:2) = 0.6, 0.6
+  pd_open_type(2) = 1
+  pd_open_d(2) = 0.05
+  pd_open_z(2) = 0.0
+  pd_co(2) = 0.6
+/

@@ -95,12 +95,12 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [土壌雨量指数](users_guide/swi.md)(&list_swi)— 土砂災害警戒の実務指標(気象庁3段タンク。専用ラン)
 - [鉛直不飽和浸透(VZ)流出](users_guide/vz.md)(&list_vz / &list_vz_column / &list_vz_zone)— 山地斜面の降雨流出応答を共有参照柱の 1 次元 Richards 式から求める(谷 2023 の VZ モデル。区画の直接排水を出口セルへ)
 - [貯留関数法の区画流出](users_guide/sfm.md)(&list_sfm / &list_sfm_zone)— 区画ごとのタンク S = K·q^P(木村 1961)で降雨流出を求める(出口・基底流は VZ と同じ。VZ と区画を分けて併用可)
-- [田んぼダム](users_guide/paddy.md)(&list_paddy)— 水田の貯留と落水口の装置則(水位調整板・機能分離型・機能一体型)をセルの水田面積率のタンクで表し、取組率による流出の違いを見る
+- [田んぼダム](users_guide/paddy.md)(&list_paddy)— 水田の貯留と落水口の装置則(水位調整板・機能分離型・機能一体型)をセルの水田面積率のタンク、または 5〜10 m の格子で解像した区画(畦畔の仮想壁面と落水口)で表し、取組率による流出の違いを見る
 - [計測](users_guide/record.md)(&list_record)— プローブ・フラックス測線
 - [用途集](users_guide/usecases.md)— 現象名から機能の組み合わせを引く(未対応の現象も明示)
 
 **付録**
-- [全パラメータ索引](users_guide/params_index.md) — 全 845 パラメータの名前→章の逆引き
+- [全パラメータ索引](users_guide/params_index.md) — 全 848 パラメータの名前→章の逆引き
 
 ---
 
