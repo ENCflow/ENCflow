@@ -4451,11 +4451,11 @@
     {
       "source": "test/damwq/README.md",
       "target": "test/damwq/en/README.md",
-      "source_sha256": "699973b54085d37a4e51d7ce75d62f1c3bffbfd4113e1e35aeb4b1b7baf7e740",
-      "target_sha256": "1c76f6e475ea00768b262755ec69feb10eea953d13163befe9bcb40afd0aef2a",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "bc9420a3b52e144ba60437da7a069304ea78d0fafc87022e5990933c866053c5",
+      "target_sha256": "621fbaae37fd81a3fa05cda6317b7d3d93212080fdc46155794d24fce87b349d",
+      "reviewer": "Claude (Claude Code session; the Run.sh row of the file table changed in both versions (reference comparison ULP = 1 with the ULP=0 override) and compared side by side; the rest is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/damwq/figs/damwq.png",
