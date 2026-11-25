@@ -98,7 +98,7 @@
 ### 地下水・淡塩
 
 - 現行: [地下水](users_guide/gwflow.md)・[地下水モデルの解説](users_guide/gwflow_models.md)・[淡塩2層](users_guide/salt.md)。既定値は [§64](developer/064.md)
-- 記録: [§16](developer/016.md)・[§46](developer/046.md)(管路層)・[§47](developer/047.md)(淡塩 2 層)・[§64](developer/064.md)・[§98](developer/098.md)・[§117](developer/117.md)(1 層の側方飽和透水係数の等価な値。例題 source_area)・[§124](developer/124.md)(管路層の 1 セル幅の幹線の通水能と、吐口の時間刻みごとの頭打ち。例題 coastal_compound_flood)
+- 記録: [§16](developer/016.md)・[§46](developer/046.md)(管路層)・[§47](developer/047.md)(淡塩 2 層)・[§64](developer/064.md)・[§98](developer/098.md)・[§117](developer/117.md)(1 層の側方飽和透水係数の等価な値。例題 source_area)・[§125](developer/125.md)(管路層の 1 セル幅の幹線の通水能と、吐口の時間刻みごとの頭打ち。例題 coastal_compound_flood)
 
 ### 流出の指標と区画流出(土壌雨量指数・VZ・貯留関数法)
 
@@ -163,7 +163,7 @@
 ### 例題・教材・データ
 
 - 現行: examples/README.md・tutorials/
-- 記録: [§104](developer/104.md)(examples/benchmark の再構築)・[§109](developer/109.md)・[§111](developer/111.md)・[§115](developer/115.md)・[§117](developer/117.md)(例題 source_area の作成と検討)・[§120](developer/120.md)(例題 joganji_flume。公開の実験データとの比較)・[§124](developer/124.md)(例題 coastal_compound_flood。沿岸の町の複合浸水)
+- 記録: [§104](developer/104.md)(examples/benchmark の再構築)・[§109](developer/109.md)・[§111](developer/111.md)・[§115](developer/115.md)・[§117](developer/117.md)(例題 source_area の作成と検討)・[§120](developer/120.md)(例題 joganji_flume。公開の実験データとの比較)・[§125](developer/125.md)(例題 coastal_compound_flood。沿岸の町の複合浸水)
 ## 全節の一覧
 
 - [§1](developer/001.md) 実数精度の方針
@@ -289,4 +289,4 @@
 - [§121](developer/121.md) 芦田・道上の有効掃流力(式 (11))を f_taupart = 2 として実装する(2026-11-24。§19.8 の今後の課題。既存の手続きの写しで、無効時はビット一致)
 - [§122](developer/122.md) 混合粒径の段 2a: 浮遊砂を粒径階 1 と結び、プローブに Dm の列を足し、抵抗分割の D84 を組成から求める(2026-11-24。docs/mixed_sediment_plan.md の段 2 の最初。既存の手続きの写しで、無効時はビット一致)
 - [§123](developer/123.md) 混合粒径の段 2b: 崩落と崖錐・深さ依存クリープ・沿岸漂砂を粒径階の組成で運ぶ(2026-11-24。遡上帯は前提の f_wfsed がないので見送り。無効時はビット一致)
-- [§124](developer/124.md) 例題 examples/coastal_compound_flood: 堤防を越えない沿岸の町の複合浸水(2026-11-25。利用者の依頼。計算本体は変えていない)
+- [§125](developer/125.md) 例題 examples/coastal_compound_flood: 堤防を越えない沿岸の町の複合浸水(2026-11-25。利用者の依頼。計算本体は変えていない)

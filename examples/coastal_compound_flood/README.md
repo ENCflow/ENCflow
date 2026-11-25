@@ -333,4 +333,4 @@ python3 plot_results.py   # figs/*.png と数表(引数 en で英語版を en/fi
 - [docs/users_guide/wq.md](../../docs/users_guide/wq.md) — 管路連続体層との連携(`wq_gwc_conc`)
 - [examples/sewer_hybrid](../sewer_hybrid/) — 幹線と枝管網を 1 つの管路連続体層で表す模式実験。
   [test/coastal_drain](../../test/coastal_drain/) — 海域吐口と管路から汲む機場の検証
-- 設計の記録は developer.md §124
+- 設計の記録は developer.md §125

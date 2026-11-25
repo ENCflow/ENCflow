@@ -396,4 +396,4 @@ details of the main text were not checked).
 - [docs/en/users_guide/wq.md](../../../docs/en/users_guide/wq.md) — coupling with the conduit continuum layer (`wq_gwc_conc`)
 - [examples/sewer_hybrid](../../sewer_hybrid/en/README.md) — a schematic run with a trunk and a branch network in one conduit continuum layer.
   [test/coastal_drain](../../../test/coastal_drain/en/README.md) — verification of the sea outfall and the pumping station drawing from the conduits
-- The design record is developer.md §124 (in Japanese)
+- The design record is developer.md §125 (in Japanese)

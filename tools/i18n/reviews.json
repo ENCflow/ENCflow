@@ -1760,8 +1760,8 @@
     {
       "source": "examples/coastal_compound_flood/README.md",
       "target": "examples/coastal_compound_flood/en/README.md",
-      "source_sha256": "16a1efaf99657eeb9ff62beaa3ab24cee9e7cac06cbdbfe7c745ba9d60254a2d",
-      "target_sha256": "82294d4595c5fb8c6175f2d98e5bfcfeee880f3795b7100c12e7e6a685b2fe32",
+      "source_sha256": "ec82c41661ed50b48fbeecfae6b205e4946394b4d368b234f891f033e31af467",
+      "target_sha256": "4adb855812f26e3b420067c8e28512c3a296fbfff01f2607b1a695cdedd8496a",
       "reviewer": "Claude (Claude Code session; new example written in Japanese and English in parallel; both versions read in full side by side; numbers checked against the tables printed by plot_results.py from the computed results)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
