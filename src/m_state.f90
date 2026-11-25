@@ -440,6 +440,9 @@ module m_state
     logical :: debris_active = .false. ! 土石流モデルの有効化(m_geomorph_init が
                                     ! 設定。swflow_enc が運動量へ hs を算入し、
                                     ! 抵抗則を切り替える。debris_plan.md §2.3-2.4)
+    logical :: rainero_active = .false. ! 雨滴侵食(f_wash の雨滴の項 wash_kr > 0・
+                                    ! f_splash)の有効化(m_geomorph_init が設定。
+                                    ! 田んぼダムの集水面積率との併用の停止に使う。§119.13)
     real :: hmean
     real :: cnmax
     integer :: it0 = 0       ! 時間ループの開始ステップ(フレッシュランは 0。

@@ -2,7 +2,7 @@ module list_paddy
   ! 田んぼダム(水田の落水口の流出抑制)の設定ファイル(fn_paddy の namelist)の読み込み専任
   ! (層契約 §12)。生の値を t_list_paddy に運ぶだけで、解釈・検証・既定値の適用・
   ! 導出は m_paddy の init が行う(developer.md §119、docs/paddy_plan.md)。
-  !   &list_paddy : 有効化・水田面積率と取組率(分布か一様)・区画面積・畦畔高・事前の湛水深・
+  !   &list_paddy : 有効化・水田面積率と取組率(分布か一様)・集水面積率(分布)・区画面積・畦畔高・事前の湛水深・
   !                 減水深と、落水口の装置(種類 1 = 取組なしの通常の落水口、2 = 田んぼダム。
   !                 配列の添字)。区画の解像(表現 B。developer.md §119.7)は区画番号・落水口の向き・
   !                 落水口の種類の分布
@@ -24,6 +24,8 @@ module list_paddy
     real :: pd_frac = -9999.0                       ! 水田面積率の一様値(fn_pd_frac と排他)
     character(len=maxpathlen) :: fn_pd_adopt = ""   ! 取組率の分布(水田面積のうち田んぼダムの割合 0〜1)
     real :: pd_adopt = -9999.0                      ! 取組率の一様値(fn_pd_adopt と排他。未指定 = 0)
+    character(len=maxpathlen) :: fn_pd_catch = ""   ! 集水面積率の分布(セル面積のうち雨が同じセルの水田へ流れ込む
+                                                    !   部分の割合。表現 A だけ。未指定 = 0。developer.md §119.13)
     real :: pd_aplot = -9999.0                      ! 代表区画面積 (m2。落水口 1 か所あたりの水田面積)
     real :: pd_hlev = -9999.0                       ! 畦畔高 (m。田面から)
     real :: pd_h0 = -9999.0                         ! 事前の湛水深 (m。未指定 = 種類ごとの流れ始める高さ)
@@ -64,7 +66,7 @@ subroutine list_paddy_read(p, list)
   character(len=256) :: msg
 
   integer :: f_paddy
-  character(len=maxpathlen) :: fn_pd_frac, fn_pd_adopt, fn_pd_plot, fn_pd_outlet, fn_pd_class
+  character(len=maxpathlen) :: fn_pd_frac, fn_pd_adopt, fn_pd_catch, fn_pd_plot, fn_pd_outlet, fn_pd_class
   real :: pd_frac, pd_adopt, pd_aplot, pd_hlev, pd_h0, pd_perc_mmd, pd_wq_c0
   integer :: f_pd_exchange
   integer :: pd_dev_type(1:pd_nclass), pd_open_type(1:pd_nclass)
@@ -74,7 +76,7 @@ subroutine list_paddy_read(p, list)
   real :: pd_plate_h(1:pd_nclass), pd_plate_w(1:pd_nclass)
   real :: pd_cw(1:pd_nclass), pd_co(1:pd_nclass)
 
-  namelist /list_paddy/ f_paddy, fn_pd_frac, pd_frac, fn_pd_adopt, pd_adopt, pd_aplot, pd_hlev, pd_h0, &
+  namelist /list_paddy/ f_paddy, fn_pd_frac, pd_frac, fn_pd_adopt, pd_adopt, fn_pd_catch, pd_aplot, pd_hlev, pd_h0, &
                         pd_perc_mmd, pd_wq_c0, f_pd_exchange, fn_pd_plot, fn_pd_outlet, fn_pd_class, pd_dev_type, &
                         pd_board_h, pd_board_w, pd_open_type, pd_open_d, pd_open_b, &
                         pd_open_e, pd_open_ang, pd_open_z, pd_plate_h, pd_plate_w, pd_cw, pd_co
@@ -84,6 +86,7 @@ subroutine list_paddy_read(p, list)
   pd_frac = list%pd_frac
   fn_pd_adopt = list%fn_pd_adopt
   pd_adopt = list%pd_adopt
+  fn_pd_catch = list%fn_pd_catch
   pd_aplot = list%pd_aplot
   pd_hlev = list%pd_hlev
   pd_h0 = list%pd_h0
@@ -119,6 +122,7 @@ subroutine list_paddy_read(p, list)
   list%pd_frac = pd_frac
   list%fn_pd_adopt = fn_pd_adopt
   list%pd_adopt = pd_adopt
+  list%fn_pd_catch = fn_pd_catch
   list%pd_aplot = pd_aplot
   list%pd_hlev = pd_hlev
   list%pd_h0 = pd_h0

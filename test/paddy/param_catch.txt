@@ -1,0 +1,67 @@
+!======================================================================
+! paddy: 集水面積率(fn_pd_catch。developer.md §119.13): 雨だけの閉じた箱
+!   10 × 8 セル(Δx = Δy = 10 m)の平らな閉じた箱。全セルが水田面積率 a = 0.5・取組率 0.5、集水面積率 c = 0.3
+!   (catch_03.txt)。一様な雨 20 mm/h を 2 h、地表も水田も空から(事前の湛水深 0)、減水深なし。水位調整板の
+!   天端 0.10 m は湛水深(最大 64 mm)より高いので落水しない。Run.sh は sed で双方向(f_pd_exchange = 1)も解く。
+!   確認(Check_paddy.py catch・catch_tw): 種類ごとの湛水深 = (a + c)/a × 雨 = 1.6 × 雨、地表の水
+!   (セル面積あたり)= (1 − a − c) × 雨 = 0.2 × 雨(S − 水田の貯留)、地表の水深 H = 0.2 × 雨(片方向。セル全面)・
+!   0.2 × 雨 / (1 − a) = 0.4 × 雨(双方向。水田でない面積だけ)、paddy.csv の rain = a × 雨 × 面積・
+!   catch = c × 雨 × 面積、台帳の閉合
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt = 7200
+  dt_disp = 1800
+  dt_file = 7200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_precip = '-'
+  fn_paddy = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_catch'
+  f_output_mode = 3         ! テキストと単精度のバイナリ(検定は H0001.bil を読む)
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+&list_geoinfo
+  nx = 10
+  ny = 8                    ! np = 4 でもランクあたり 2 行
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+&list_bound_edge
+/
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 20
+  prval(1:2,2) = 99999, 20
+/
+&list_paddy
+  pd_frac = 0.5
+  pd_adopt = 0.5
+  fn_pd_catch = 'catch_03.txt'   ! 集水面積率 0.3(全セル)
+  pd_aplot = 3000.0
+  pd_hlev = 0.30
+  pd_h0 = 0.0
+  pd_perc_mmd = 0.0
+  pd_dev_type(1:2) = 0, 0
+  pd_board_h(1:2) = 0.10, 0.10
+  pd_board_w(1:2) = 0.30, 0.30
+  pd_cw(1:2) = 0.6, 0.6
+/

@@ -29,7 +29,9 @@ apply to B.
 
 - **Paddy tanks**: tanks that receive the rain falling on the paddy area fraction a of a cell. The paddy
   fields are split by the adoption ratio into "paddy fields with normal outlets" (class 1) and "paddy-field
-  dams" (class 2), and each class has one ponding depth (water depth above the field surface).
+  dams" (class 2), and each class has one ponding depth (water depth above the field surface). Rain that falls on
+  levees, farm roads and upland and flows into the paddy fields of the same cell enters the tanks when given as the
+  catchment fraction `fn_pd_catch` ([Catchment fraction](#catchment-fraction-fn_pd_catch) below).
 - **Outlets**: one outlet for each representative plot area A_plot. Its discharge is given by the device law
   from the ponding depth and the water depth downstream (on the surface of the cell). The discharge goes to
   the surface water of the cell and flows with the shallow water flow.
@@ -52,6 +54,7 @@ Give `fn_paddy` in `&list_sysparam` (`"-"` for the same parameter file). The set
   !pd_dev_type(2) = 1             ! device type of the paddy-field dams (default 1 = separated type)
   !pd_open_d(2) = 0.05            ! diameter of the hole of the outflow control plate (m; default 0.05)
   !f_pd_exchange = 1              ! two-way: flood water also enters the paddy fields (default 0 = one-way, rain only)
+  !fn_pd_catch = 'paddy_catch.txt' ! map of the catchment fraction (share of the area whose rain flows into the paddy fields of the same cell; default 0)
 /
 ```
 
@@ -125,7 +128,9 @@ shallow water flow) the tanks advance in this order.
 
 1. **Rain**: the rain $`a\,R\,\Delta t`$ that fell on the paddy fields is taken from the surface water and
    $`R\,\Delta t`$ is added to each tank (R is the rain at the ground, after
-   [rainfall interception](forcing.md) when it is used).
+   [rainfall interception](forcing.md) when it is used). With a catchment fraction c, the rain taken is
+   $`(a + c)\,R\,\Delta t`$ and the rain added to each tank is $`R\,\Delta t\,(a + c)/a`$
+   ([Catchment fraction](#catchment-fraction-fn_pd_catch) below).
 2. **Outlet flow**: $`\Delta H = q_c\,\Delta t`$ is moved to the surface. $`h_D`$ is the surface water depth of the
    cell (the water level downstream of the outlet measured from the field surface).
 3. **Overflow**: the part of $`H_c`$ above the levee height is moved to the surface at once (the same treatment
@@ -134,6 +139,35 @@ shallow water flow) the tanks advance in this order.
 
 The water moved to the surface flows as surface water of the cell with the shallow water flow and gathers in
 the channels and drains.
+
+#### Catchment fraction (fn_pd_catch)
+
+Part of the rain on levees, farm roads and upland higher than the plots flows over the levees into the neighbouring paddy
+fields. In A on a coarse grid these are the non-paddy part of a cell, so without further input their rain becomes surface
+water and heads for the drains (overestimating the water sent to the drains and underestimating the effect of paddy-field
+dams). Giving the catchment fraction c (`fn_pd_catch`; the share of the cell area whose rain flows into the paddy fields of
+the same cell) puts that rain into the tanks as well.
+
+- The rain taken from the surface is $`(a + c)\,R\,\Delta t`$, and the rain of the tank of class k is
+  $`R\,\Delta t\,(a + c)/a`$. The rain of the catchment is split in proportion to the areas of the classes (an original
+  simplification) and enters the tanks within the step in which it falls (no travel time; a short distance within the cell
+  is assumed).
+- The tank area, the number of outlets, the levees, the decrease in depth and the cross-section of the two-way mode (the
+  non-paddy share 1 − a/gv) stay those of a. Unlike adding the catchment to the area fraction, the ponding depth and the
+  number of outlets do not change.
+- c is counted in the cell where the rain falls (the model does not trace the terrain). From high-resolution terrain and a
+  plot map, follow the steepest descent from cells that are neither plots nor drains, and aggregate the area that reaches a
+  plot over the coarse cell where the rain falls (`catchment()` in `make_district.py` of the example
+  [paddy_dam](../../../examples/paddy_dam/en/README.md)). When the area fraction a is given as the field surfaces
+  (without the levees), include the area of the levees in c.
+- The rain sent into the paddy fields does not infiltrate or evaporate on the way. For a catchment that infiltrates (fields,
+  upland), give its area multiplied by a runoff coefficient as c.
+- With water quality, the substance of the rain on the catchment also enters the pools of the tanks in the same proportion
+  as the water. The "1 − area fraction" applied to raindrop erosion does not include c (raindrops also hit the catchment).
+- 0 ≤ c, a + c ≤ the void ratio gv, and c > 0 only on cells with paddy fields (a > 0) (otherwise the run stops at
+  start-up). A catchment on cells without paddy fields cannot be represented. It cannot be combined with resolved plots (B)
+  or with the raindrop erosion of landform change (the rain term of `f_wash`, `f_splash`) (stops at start-up; this avoids
+  detached soil staying on the surface while the water that carries it goes into the tanks).
 
 ### Device laws of the outlets
 
@@ -303,7 +337,8 @@ most half the difference of the levels of the two sides in one step (to prevent 
 | `H` (paddy cells in the two-way mode) | surface water depth (above the field surface): the depth on the non-paddy area while the level is below the levee crest, and the inundation depth over the whole cell above it |
 | S (S_surf) in the Log | surface water plus the storage of the paddy tanks (domain mean, m) |
 | c1 and c2 in `paddy.csv` (only with water quality) | mean concentration of the paddy water of each class (mg/L; total mass / total water). A: the tanks; B: the water of the plot cells |
-| sed in `paddy.csv` (only when the two-way mode is combined with suspended sediment `f_suspend`; the last column) | accumulated deposit on the field surface of the suspended sediment of the water that entered the tanks from the surface (m³, volume of solids) |
+| sed in `paddy.csv` (only when the two-way mode is combined with suspended sediment `f_suspend`; after c1 and c2) | accumulated deposit on the field surface of the suspended sediment of the water that entered the tanks from the surface (m³, volume of solids) |
+| catch in `paddy.csv` (only when the catchment fraction `fn_pd_catch` is given; the last column) | accumulated rain of the catchment that entered the tanks (m³; rain is the rain on the paddy fields, and residual closes including catch) |
 | mass_paddy_g and out_paddy_perc_g in `wq.csv` (only in runs with paddy-field dams; the last 2 columns) | current mass of the pools of the tanks of A (g; 0 for B, whose plot water is counted in the surface `mass_surface_g`), accumulated substance that left the system with the decrease in depth (g) |
 
 The accumulated values in `paddy.csv` start at the beginning of the run (at the restart when restarted). The
@@ -381,14 +416,14 @@ levee height is the remaining free storage.
   Suspended sediment carried into the paddy fields by the flood is deposited on the field surface when combined with
   landform change ("Combination with landform change" below). Solutes are carried when it is combined with water quality
   ([Combination with water quality](#combination-with-water-quality-fn_wq) above).
-- **Paddy area fraction on coarse grids (A)**: a tank receives only the rain on the paddy part of the cell. Rain that
-  falls on farm roads and upland higher than the plots and flows into the paddy fields over the levees is not
-  represented; it becomes surface water of the cell. In districts with much of such rain, the water sent to the drains is
-  overestimated and the effect of paddy-field dams underestimated. Adding the area whose rain flows into the paddy fields
-  (the catchment) to the area fraction in the two-way mode comes closer to a computation that resolves the plots (it also
-  enlarges the tank area and the number of outlets; result 2 and the hints of the example
-  [paddy_dam](../../../examples/paddy_dam/en/README.md)). Where a decision is near a threshold, such as whether a
-  settlement floods, a difference of a few percent in the fraction changes the result.
+- **Paddy area fraction on coarse grids (A)**: without the catchment fraction `fn_pd_catch`, a tank receives only the
+  rain on the paddy part of the cell. Rain that falls on farm roads and upland higher than the plots and flows into the
+  paddy fields over the levees becomes surface water, and in districts with much of such rain the water sent to the drains
+  is overestimated and the effect of paddy-field dams underestimated (result 2 of the example
+  [paddy_dam](../../../examples/paddy_dam/en/README.md)). The value of the catchment fraction depends on how it is traced
+  in preprocessing (a single steepest descent; the division of shallow water flow is not represented), and the rain of the
+  catchment enters the tanks without travel time. Where a decision is near a threshold, such as whether a settlement
+  floods, a difference of a few percent in the area fraction or the catchment fraction changes the result.
 - The discharge coefficients of devices vary from 0.40 to 0.88 with the product and the installation
   [^yoshikawa2009][^minakawa2022]. The default 0.6 is the value of the calculation program of the guide and is a starting
   point for calibration.
@@ -418,6 +453,8 @@ two-way mode cannot be combined with the feedback of building destruction on the
 debris flows (`f_debris`) or the non-hydrostatic correction (`f_nonhydrostatic = 1`); paddy cells
 cannot be pond cells (`fn_rscap`); and the non-paddy share 1 − a/gv must be at least 0.01 (a place for the water from
 the outlets) (stops at start-up). A state saved in the one-way mode cannot be restarted in the two-way mode, nor the reverse.
+The catchment fraction (`fn_pd_catch`) cannot be combined with resolved plots (B) or with the raindrop erosion of landform
+change (the rain term of `f_wash`, `f_splash`) (stops at start-up).
 
 **Combination with landform change** (`fn_geomorph`): the rain on paddy fields falls into the tanks (the ponded water on
 the fields), so erosion by raindrops (the raindrop term of `f_wash`, `f_splash`) is computed without the paddy part (the
@@ -473,6 +510,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | pd_frac | — | uniform value of the paddy area fraction | **Given** |
 | fn_pd_adopt | — | map of the adoption ratio (share of the paddy area made into paddy-field dams, 0–1) | **Given** |
 | pd_adopt | 0 | uniform value of the adoption ratio | **Given** 0 = no adoption |
+| fn_pd_catch | — | map of the catchment fraction (share of the cell area whose rain flows into the paddy fields of the same cell; A only) | **Given** default 0 (traced from the terrain in preprocessing; [Catchment fraction](#catchment-fraction-fn_pd_catch) above) |
 | pd_aplot | 3000 m² | representative plot area (paddy area per outlet; A only) | **Literature** standard plot of 30 a[^maff2026][^maffplan] |
 | pd_hlev | 0.30 m | levee height (above the field surface) | **Literature** levees of about 30 cm in the guide[^maff2026][^maffplan] |
 | pd_h0 | level at which the outlet starts to drain | ponding depth before the run (above the field surface; same value for both classes; in B the plot cells are filled to this depth) | **Given** the default is normal ponding (height of the water-level board) |
@@ -509,7 +547,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Contents | Key points |
 |---|---|---|
-| [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode, resolved plots (B), combination with water quality and sediment | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). In B, the drainage of a plot of 3000 m² against the exact solution (weir, 8.7×10⁻⁴ relative) and a reference solution (hole, 2×10⁻⁷ relative), plots without outlets keep their water at the levees and checkerboard corners, and water conservation and levelling out with levee overflow, backflow through an outlet and inflow over the levees. For water quality, first-order decay of the tank concentration against the exact solution (4×10⁻¹³ relative), the concentration of the water entering by backflow equal to the surface concentration, and the mass balance of wq.csv closing to the digits of the output (5×10⁻⁸ relative). For sediment, the suspended sediment entering the tanks settles only on the paddy cells with the solids conserved (2×10⁻⁹ relative), and in B bed load does not cross the levees (total bed change of the plot 9×10⁻¹² m). Bit-identical for np = 1, 2, 4 |
+| [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode, resolved plots (B), combination with water quality and sediment, catchment fraction | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). In B, the drainage of a plot of 3000 m² against the exact solution (weir, 8.7×10⁻⁴ relative) and a reference solution (hole, 2×10⁻⁷ relative), plots without outlets keep their water at the levees and checkerboard corners, and water conservation and levelling out with levee overflow, backflow through an outlet and inflow over the levees. For water quality, first-order decay of the tank concentration against the exact solution (4×10⁻¹³ relative), the concentration of the water entering by backflow equal to the surface concentration, and the mass balance of wq.csv closing to the digits of the output (5×10⁻⁸ relative). For sediment, the suspended sediment entering the tanks settles only on the paddy cells with the solids conserved (2×10⁻⁹ relative), and in B bed load does not cross the levees (total bed change of the plot 9×10⁻¹² m). For the catchment fraction, rain on a closed box gives ponding depth = (a + c)/a × rain and surface water = (1 − a − c) × rain against the exact solution (9×10⁻¹⁴ relative), a catchment fraction map of 0 is bit-identical to none, and the substance of the rain on the catchment also enters the tanks. Bit-identical for np = 1, 2, 4 |
 | [examples/paddy_dam](../../../examples/paddy_dam/en/README.md) | heavy rain on a lowland drainage district that can drain only through a pumping station (inland flooding) | the same district is solved with representation A (Δx = 30 m; one-way, two-way, and two-way with the catchment added) and representation B (Δx = 10 m). With representation B, compares the inundation of a settlement with normal outlets and with paddy-field dams (all, the upstream half, the downstream half), and compares it with representation A under the same conditions |
 
 ## References

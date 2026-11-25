@@ -50,6 +50,7 @@ overflow, the backflow and the conservation of water with inflow from outside.
 | `param_wq_b.txt` | water quality, part 4: param_b_over.txt (overflow of resolved plots, closed domain) with a concentration of the ponding before the run of 10 mg/L and a rain concentration of 2 mg/L | `wq_b`: concentration of the plot water between 2 and 10 mg/L, mass balance (substance taken out by the decrease in depth > 0) |
 | `param_sed_tw.txt` | sediment (landform change `fn_geomorph`), part 1: param_tw_flood.txt (two-way mode, 1.0 m³/s of flood water for 2 h) with suspended sediment at a volume concentration of 0.002 in the flood water (no entrainment, practically no settling) | `sed_tw`: solids conserved (suspended + rise of the bed × (1 − porosity) = sediment fed in), the suspended sediment of the water entering the tanks settles only on the paddy cells, in the amount of sed in paddy.csv. Run.sh also checks bit identity between save at 1 h → restart and a continuous run with a landform step of 7 s, and the stop of a restart without suspended sediment |
 | `param_b_sed.txt` | sediment, part 2: param_b_ext.txt (the outside level rises above the crest and water flows into the plot for 2 h) with bed load (d50 1 mm, soil depth 1 m) | `b_sed`: total bed change of the plot = 0 (bed load does not cross the edges of the levees and outlets), bed load acts inside the plot |
+| `param_catch.txt` | catchment fraction (`fn_pd_catch`): a flat closed box with paddy area fraction a = 0.5 and catchment fraction c = 0.3, rain of 20 mm/h for 2 h (no outlet flow, no decrease in depth). Run.sh also solves it in the two-way mode with sed, runs param_steady.txt and param_tw_drain.txt with a catchment fraction map of 0, and runs param_wq_rain.txt with the area fraction set to 0.5 and a catchment fraction of 0.3 | `catch`, `catch_tw`: ponding depth = (a + c)/a × rain, rain in paddy.csv = a × rain × area and catch = c × rain × area, surface water (per cell area) = (1 − a − c) × rain, S = rain, surface depth H over the whole cell in the one-way mode and over the non-paddy area only in the two-way mode, the ledger closes. `catch_zero`: a run with a catchment fraction of 0 is bit-identical to a run without it in Log, depth, ponding depth and paddy.csv (apart from the catch column). Water quality: the substance of the rain on the catchment also enters the tanks, and the tank concentration approaches the rain concentration of 2 mg/L (the `wq_rain` check) |
 
 In addition, `Run.sh` checks bit identity between a run saved at 6 h and restarted to 12 h and a continuous run
 (`restart`), and the following stops: paddy fields on a channel cell, area fraction > void ratio, adoption ratio out
@@ -57,17 +58,18 @@ of range, outflow control plate given for type 0, area fraction given both as a
 map and as a uniform value, ponding depth before the run > levee height, restart with the feature disabled while the
 saved file remains, and in the two-way mode a non-paddy share below 0.01, a pond cell, combination with debris flows
 or the non-hydrostatic correction, restart with a different exchange mode from the saved state, and restart with
-suspended sediment enabled differently from the saved state; and for the resolved
+suspended sediment enabled differently from the saved state; a catchment fraction out of range, a catchment on a cell
+without paddy fields, area fraction + catchment fraction > void ratio, and combination with raindrop erosion; and for the resolved
 plots, input errors (a plot cell on the outer rows and columns, an outlet pointing to the same plot or given on a cell that
 is not a plot cell, different classes within a plot, a non-integer plot number, an outlet pointing to a cell higher than
-the crest, outlets facing each other), combination with inputs of A only, with the non-hydrostatic correction or with
+the crest, outlets facing each other), combination with inputs of A only (including the catchment fraction), with the non-hydrostatic correction or with
 debris flows, restart with a different representation from the saved state, and restart with water quality enabled differently from
 the saved state.
 
 | File | Contents |
 |---|---|
 | `Run.sh` | compares Log.txt of param.txt with the reference (ULP = 0) → checks of each setting, save → restart and stops |
-| `Run_MPI.sh [np]` | the same comparison with MPI (ULP = 0 against the serial reference), byte identity of paddy.csv, maps and paddy.dat with np = 1, conservation in the closed domain, the two checks of raindrop erosion (the ground elevation also byte-identical with np = 1), the three checks of the two-way mode (paddy.csv, Log, depth and ponding depth byte-identical with np = 1), the seven checks of the resolved plots (paddy.csv, Log and depth byte-identical with np = 1; plots, outlets and checkerboard corners cross the band boundaries), the three checks of water quality (paddy.csv, Log and wq.csv byte-identical with np = 1) and save → restart of the pools, the two checks of sediment (paddy.csv, Log and ground elevation byte-identical with np = 1), stops found by rank 0 and in the bands |
+| `Run_MPI.sh [np]` | the same comparison with MPI (ULP = 0 against the serial reference), byte identity of paddy.csv, maps and paddy.dat with np = 1, conservation in the closed domain, the two checks of raindrop erosion (the ground elevation also byte-identical with np = 1), the three checks of the two-way mode (paddy.csv, Log, depth and ponding depth byte-identical with np = 1), the seven checks of the resolved plots (paddy.csv, Log and depth byte-identical with np = 1; plots, outlets and checkerboard corners cross the band boundaries), the three checks of water quality (paddy.csv, Log and wq.csv byte-identical with np = 1) and save → restart of the pools, the two checks of sediment (paddy.csv, Log and ground elevation byte-identical with np = 1), the three checks of the catchment fraction (one-way, two-way, water quality; paddy.csv, Log and depth byte-identical with np = 1), stops found by rank 0 and in the bands (including two for the catchment fraction) |
 | `Check_paddy.py` | checks (Python standard library only) |
 | `make_plots.py` | makes the inputs of the resolved plots (Python standard library only) |
 | `data_paddy/` | maps for param_mix.txt and param_tw_flood.txt and for the checks of stops (the `b_*.txt` of the resolved plots are made by `make_plots.py`) |
@@ -99,6 +101,9 @@ the saved state.
 | water quality: mass balance of wq.csv (largest of the 4 settings) | 5.1×10⁻⁸ | 1×10⁻⁶ |
 | sediment: conservation of solids (suspended + deposited vs sediment fed in) | 1.7×10⁻⁹ | 1×10⁻⁶ |
 | sediment: total bed change of the plot (bed load) | 9.1×10⁻¹² m | 1×10⁻⁶ of the movement inside the plot (3.2×10⁻² m) |
+| catchment fraction: ponding depth, rain and catch vs exact solution (one-way, two-way) | 9.3×10⁻¹⁴ | 1×10⁻⁹ |
+| catchment fraction: surface water and S vs exact solution | 1.7×10⁻¹⁵ m, 0 | 1×10⁻¹² m |
+| catchment fraction: surface depth H (single-precision binary) vs exact solution | 3.8×10⁻¹⁰ m, 7.6×10⁻¹⁰ m | 1×10⁻⁷ m |
 
 The difference from the exact solutions is the time-step error of the explicit scheme (dt = 2 s; the time scale of the
 ponding depth is hours). The difference of the weir of the resolved plots is the drawdown of the water surface where the
@@ -125,3 +130,5 @@ human visual check (handoff 00ae).
   comparison of the concentrations of A and B for the same district.
 - Sediment: deposit in the tanks while entrainment and settling of suspended sediment act (the check stops
   entrainment), and hillslope creep and slope failure at the levees.
+- Catchment fraction: the rain of the catchment while outlet flow, backflow or inflow over the levees take place (the
+  check is a closed box with rain only; the closure of the ledger is confirmed in the example paddy_dam).

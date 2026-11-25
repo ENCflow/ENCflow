@@ -35,6 +35,9 @@ Gauss–Legendre の求積で直接求める(モデルは表と展開)。
   python3 Check_paddy.py sed_tw   result_sed_tw    土砂: 双方向のタンクへ入る水の浮遊砂を田面に積む(固相の保存)
   python3 Check_paddy.py b_sed    result_b_sed     土砂: 区画の解像で掃流砂が畦畔を越えない(区画ごとの河床の変化の合計 0)
   python3 Check_paddy.py restart_sed <連続の結果> <再開の結果>  土砂: 堆積の記録の保存 → 再開のビット一致
+  python3 Check_paddy.py catch    result_catch     集水面積率(片方向): 閉じた箱の雨だけの厳密解(タンク・地表)と台帳
+  python3 Check_paddy.py catch_tw result_catch_tw  集水面積率(双方向): 同じ厳密解(地表の水は水田でない面積だけ)
+  python3 Check_paddy.py catch_zero <与えない結果> <c = 0 を与えた結果>   集水面積率 0 の分布でビット一致(catch 列を除く)
 """
 import array
 import math
@@ -879,6 +882,69 @@ def check_b_sed(res):
            % (p, moved, net))
 
 
+# ---------------------------------------------------------------- 集水面積率(段 4c。§119.13)
+def check_catch(res, tw):
+    """param_catch.txt: a = 0.5・c = 0.3・雨 20 mm/h の閉じた平らな箱。落水・減水深なし。
+    湛水深 = (a + c)/a × 雨、地表の水(セル面積あたり)= (1 − a − c) × 雨、地表の水深 H は片方向でセル全面
+    (0.2 × 雨)、双方向で水田でない面積だけ(0.2 × 雨 / (1 − a))"""
+    a, c, area = 0.5, 0.3, 8000.0
+    rate = 20.0 / 3.6e6                          # m/s
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    worst = 0.0
+    for r in rows:
+        p = rate * r["time(s)"]                  # それまでの雨 (m)
+        for k in ("h1(mm)", "h2(mm)"):
+            worst = max(worst, abs(r[k] - (a + c) / a * p * 1e3) / ((a + c) / a * p * 1e3))
+        worst = max(worst, abs(r["rain(m3)"] - a * p * area) / (a * p * area))
+        worst = max(worst, abs(r["catch(m3)"] - c * p * area) / (c * p * area))
+        if r["outflow(m3)"] != 0.0 or r["spill(m3)"] != 0.0 or r["inflow(m3)"] != 0.0 or r["levee_in(m3)"] != 0.0:
+            fail("water moved between the tanks and the surface at t = %.0f s (only rain is expected)" % r["time(s)"])
+    if worst > 1e-9:
+        fail("ponding depth or ledger differs from the exact solution by %.3e (relative)" % worst)
+    ok("ponding depth = (a + c)/a x rain, rain = a x rain x area, catch = c x rain x area (%d records, max relative "
+       "difference %.1e)" % (len(rows), worst))
+    # 地表の水: Log の S(地表 + タンク。領域平均 m)からタンクの貯留を引く
+    last = rows[-1]
+    p = rate * last["time(s)"]
+    s = log_s(res)[-1]
+    surf = s - (last["store1(m3)"] + last["store2(m3)"]) / area
+    if abs(surf - (1.0 - a - c) * p) > 1e-12:
+        fail("surface water %.15f m differs from (1 - a - c) x rain = %.15f m" % (surf, (1.0 - a - c) * p))
+    if abs(s - p) > 1e-12:
+        fail("S = %.15f m differs from the rain %.15f m (closed box)" % (s, p))
+    hexp = (1.0 - a - c) * p / ((1.0 - a) if tw else 1.0)
+    hv = read_bil(os.path.join(res, "H0001.bil"), 10, 8)
+    e = max(abs(x - hexp) for x in hv)
+    if e > 1e-7:
+        fail("surface depth differs from %.6f m by %.3e m" % (hexp, e))
+    ok("surface water = (1 - a - c) x rain (%.6f m per cell area), S = rain (closed box), surface depth %.6f m (%s)"
+       % (surf, hexp, "non-paddy area only" if tw else "whole cell"))
+    check_ledger(rows)
+
+
+def check_catch_zero(res0, res1):
+    """集水面積率 0 の分布を与えた計算は、与えない計算とビット一致(paddy.csv は末尾の catch 列を除く)"""
+    for f in ("Log.txt", "H9998.txt", "Hpn9998.txt", "Hpd9998.txt"):
+        p0, p1 = os.path.join(res0, f), os.path.join(res1, f)
+        if not os.path.exists(p0):
+            continue
+        with open(p0, "rb") as a, open(p1, "rb") as b:
+            if a.read() != b.read():
+                fail("%s differs between no catchment and a catchment fraction of 0" % f)
+        ok("%s identical with a catchment fraction of 0" % f)
+    with open(os.path.join(res0, "paddy.csv")) as a, open(os.path.join(res1, "paddy.csv")) as b:
+        l0, l1 = a.read().splitlines(), b.read().splitlines()
+    if len(l0) != len(l1):
+        fail("paddy.csv: %d and %d lines" % (len(l0), len(l1)))
+    for x, y in zip(l0, l1):
+        head, _, last = y.rpartition(",")
+        if x != head:
+            fail("paddy.csv differs apart from the catch column:\n  %s\n  %s" % (x, y))
+        if last.strip() not in ("catch(m3)",) and float(last) != 0.0:
+            fail("catch column is not 0: %s" % last)
+    ok("paddy.csv identical apart from the added catch column (all 0)")
+
+
 def main():
     if len(sys.argv) < 3:
         print(__doc__)
@@ -938,6 +1004,12 @@ def main():
         check_sed_tw(sys.argv[2])
     elif cmd == "b_sed":
         check_b_sed(sys.argv[2])
+    elif cmd == "catch":
+        check_catch(sys.argv[2], False)
+    elif cmd == "catch_tw":
+        check_catch(sys.argv[2], True)
+    elif cmd == "catch_zero":
+        check_catch_zero(sys.argv[2], sys.argv[3])
     elif cmd in ("wash", "splash"):
         check_erosion(sys.argv[2], cmd)
     elif cmd == "tw_back":

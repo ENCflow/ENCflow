@@ -7,7 +7,8 @@
 # 双方向(二室化)の検定(param_tw_back・tw_flood・tw_drain。np=1 とバイト比較)、
 # 区画の解像(表現 B。§119.8。param_b_*.txt。区画・落水口・市松の角が帯の境にかかる。np=1 とバイト比較)、
 # 水質と併用するタンクのプールと区画の解像の減水深の持ち出し(param_wq_a・wq_tw・wq_b。np=1 とバイト比較)と
-# その保存 → 再開、土砂(param_sed_tw・b_sed。np=1 とバイト比較)、
+# その保存 → 再開、土砂(param_sed_tw・b_sed。np=1 とバイト比較)、集水面積率(param_catch の片方向・双方向と
+# 水質。np=1 とバイト比較)、
 # 保存 → 再開(np=1 とバイト比較)、rank0 が見つける停止と帯で見つける停止(全ランク同時の par_stop)も
 # MPI で確かめる。行は 8 なので np <= 4
 sdir=$(dirname "$(readlink -f "$0")")
@@ -136,6 +137,22 @@ for t in sed_tw b_sed; do
     fi
 done
 
+# 集水面積率(§119.13): 解析検定と np=1 とのバイト一致(片方向・双方向、集水面積の雨の物質)
+variant param_catch.txt result_catch_tw "s|^  pd_perc_mmd = 0.0|&\n  f_pd_exchange = 1|" > param_catch_tw.tmp
+variant param_wq_rain.txt result_catch_wq "s/^  pd_frac = 1.0$/  pd_frac = 0.5\n  fn_pd_catch = 'catch_03.txt'/" > param_catch_wq.tmp
+for t in catch catch_tw catch_wq; do
+    pf=param_$t.txt; [ "$t" != catch ] && pf=param_$t.tmp
+    run "$np" $t "$pf"
+    ck=$t; [ "$t" = catch_wq ] && ck=wq_rain
+    python3 Check_paddy.py $ck result_$t || exit 1
+    if [ "$np" != 1 ]; then
+        variant "$pf" "result_${t}_np1" "" > "$tmp"
+        run 1 "${t}_np1" "$tmp"
+        same_as_np1 "result_$t" "result_${t}_np1" paddy.csv Log.txt H9998.txt
+    fi
+done
+rm -f param_catch_tw.tmp param_catch_wq.tmp
+
 # 保存 → 再開(np で保存・再開)と、連続計算・np=1 とのビット一致
 rm -rf save_rs save_rs1
 for sfx in "" 1; do
@@ -158,6 +175,10 @@ variant param.txt result_rw "s|^  f_masktype = 0|&\n  fn_rw = 'rw_one.txt'|" > "
 expect_stop rw "$tmp" "a paddy cell is on a channel cell (rw)"
 variant param_mix.txt result_overgv "s/'frac_mix.txt'/'frac_over_gv.txt'/" > "$tmp"
 expect_stop overgv "$tmp" "exceeds the void ratio gv"
+variant param_mix.txt result_catch_nopd "s|^  fn_pd_frac = 'frac_mix.txt'|&\n  fn_pd_catch = 'catch_03.txt'|" > "$tmp"
+expect_stop catch_nopd "$tmp" "is > 0 on a cell without paddy fields"
+variant param_steady.txt result_catch_gv "s|^  pd_adopt = 0.5|&\n  fn_pd_catch = 'catch_03.txt'|" > "$tmp"
+expect_stop catch_gv "$tmp" "plus the catchment fraction (fn_pd_catch) exceeds the void ratio"
 variant param_b_back.txt result_b_ring "s/'b_back_plot.txt'/'b_bad_ring_plot.txt'/" > "$tmp"
 expect_stop b_ring "$tmp" "a plot cell is on the outermost row or column"
 variant param_b_back.txt result_b_up "s/'b_back_z.txt'/'b_bad_up_z.txt'/" > "$tmp"
