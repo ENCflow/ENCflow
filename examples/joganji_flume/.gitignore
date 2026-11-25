@@ -27,3 +27,6 @@ h_outlet.txt
 z_outlet.txt
 geoinfo_outlet.txt
 done_*.txt
+h_sill.txt
+z_sill.txt
+geoinfo_sill.txt

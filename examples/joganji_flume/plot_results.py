@@ -44,7 +44,8 @@ plt.rcParams["axes.unicode_minus"] = False
 RUNS = [("result", "混合粒径", "mixed sizes"),
         ("result_single", "単一粒径", "single size"),
         ("result_sub", "混合粒径(下層 = 表層)", "mixed (substrate = surface)"),
-        ("result_outlet", "混合粒径(下流端 = 固定床高)", "mixed (outlet at fixed bed)")]
+        ("result_outlet", "混合粒径(下流端 = 固定床高)", "mixed (outlet at fixed bed)"),
+        ("result_sill", "混合粒径(下流端 = 敷と段落ち)", "mixed (outlet sill and drop)")]
 GAUGES_FIG = ["19.2k", "16.6k", "13.3k", "9.7k"]
 REACHES = [(0, 500), (500, 1000), (1000, 1500), (1500, 2000), (2000, 2362)]
 MAP_RUNS = ["result", "result_single"]          # 河床変化・流速の平面図に描く構成(感度の構成は縦断と数表で)
@@ -223,7 +224,8 @@ def read_probe(path, both=False):
 
 INK = "#333333"
 MUTED = "#8a8a86"
-COLORS = {"result": "#2a78d6", "result_single": "#eb6834", "result_sub": "#1baf7a", "result_outlet": "#eda100"}
+COLORS = {"result": "#2a78d6", "result_single": "#eb6834", "result_sub": "#1baf7a", "result_outlet": "#eda100",
+          "result_sill": "#8f5bd6"}
 NEUTRAL = "#f0efec"
 BLUES = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#2a78d6", "#1c5cab", "#104281", "#0d366b"]
 ORANGES = ["#fde2d6", "#f9c2aa", "#f3a07d", "#eb6834", "#c94e1d", "#9c3a12", "#6e270a"]
