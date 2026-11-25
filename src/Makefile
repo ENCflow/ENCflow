@@ -29,7 +29,7 @@ LIBOBJS	= m_main.o m_sysparam.o m_geoinfo.o m_precip.o m_tide.o m_boundary.o \
 	  m_sedform.o \
 	  m_gwflow.o m_gwflow_bucket.o m_gwflow_greenampt.o \
 	  m_gwflow_lateral.o m_gwflow_layer2.o m_gwflow_conduit.o m_gwflow_pump.o m_gwflow_frost.o m_gwflow_bed.o m_saltwater.o m_evap.o m_meteo.o m_wq.o m_driftwood.o m_bldgdebris.o m_snow.o m_glacier.o m_lavaflow.o m_flow8.o m_bedmotion.o m_swi.o \
-	  m_vzflow.o m_vzflow_column.o m_zonerunoff.o m_sfm.o m_paddy.o \
+	  m_vzflow.o m_vzflow_column.o m_zonerunoff.o m_sfm.o m_paddy.o m_paddy_law.o \
 	  m_wavefield.o \
 	  m_intercept.o m_intercept_fixed.o m_intercept_initloss.o \
 	  m_state.o m_record.o m_swflow.o m_swflow_enc.o m_swflow_enc_adv.o m_swflow_enc_bc.o \
@@ -174,7 +174,8 @@ list_vz.o: m_sysparam.o $(PAR_OBJ)
 m_sfm.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o list_sfm.o m_zonerunoff.o \
 	m_sysdep_util.o m_util.o $(PAR_OBJ)
 list_sfm.o: m_sysparam.o $(PAR_OBJ)
-m_paddy.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o list_paddy.o m_zonerunoff.o \
+m_paddy_law.o:
+m_paddy.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o list_paddy.o m_zonerunoff.o m_paddy_law.o \
 	m_fileio.o m_restart.o m_sysdep_util.o m_util.o m_swflow_enc.o $(PAR_OBJ)
 list_paddy.o: m_sysparam.o $(PAR_OBJ)
 m_wavefield.o: m_sysparam.o m_geoinfo.o m_state.o m_swflow_enc.o list_wavefield.o \
