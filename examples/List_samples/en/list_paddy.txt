@@ -58,9 +58,10 @@
   pd_adopt = 0.5
 
   ! catchment fraction (share of the cell area of levees, farm roads and upland
-  ! whose rain flows into the paddy fields of the same cell, 0-1; map; default 0).
-  ! Trace it from high-resolution terrain in preprocessing; a + c must not exceed
-  ! the void ratio, and c > 0 only on cells with paddy fields
+  ! whose rain flows into the paddy fields, 0-1; map; default 0). The rain is
+  ! shared among the paddy fields of the surrounding 3 x 3 cells in proportion to
+  ! their area. Trace it from high-resolution terrain in preprocessing; a + c must
+  ! not exceed the void ratio, and c > 0 only on cells with paddy fields
   !fn_pd_catch = "paddy_catch.asc"
 
   ! representative plot area (m2; paddy area per outlet; default 3000 = 30 a)

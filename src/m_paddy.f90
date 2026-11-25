@@ -27,11 +27,13 @@ module m_paddy
   !   湛水が低ければ排水路の水が逆流する。独自の簡略化)、(3) 畦畔: タンクが畦畔高を超えた分は地表へ、地表の
   !   水位が畦畔を越えたら畦畔より上の水で満ちていない水田を瞬時に満たす(足りなければ空きの比で分ける)、
   !   (4) 減水深。地表の水位が畦畔高以上のときは落水口のやり取りをしない(水田は (3) で満ちる)。
-  ! 【集水面積率(fn_pd_catch。表現 A。paddy_plan.md §17、developer.md §119.13)】セルの面積のうち、雨が同じセルの
-  !   水田へ流れ込む部分の割合 c(畦畔・農道・台地など)。(1) の雨の回収を (a + c)·pre·dt/gv にし、種類 k のタンクの
-  !   雨を pre·dt·(a + c)/a にする(集水面積の雨は種類の面積の比で分ける。降ったステップでタンクへ。独自の簡略化)。
-  !   タンクの面積・落水口の数・畦畔・減水深・双方向の断面は a のまま。c = 0 で今の計算とビット一致する式の並び
-  !   ((a + c)/a を先に計算)。水質の雨の物質の割合 s%pdfa も (a + c)/a 倍。雨滴侵食の 1 − a(s%pdfr)は変えない
+  ! 【集水面積率(fn_pd_catch。表現 A。paddy_plan.md §17・§17.1、developer.md §119.13・§119.15)】セルの面積のうち、
+  !   雨が水田へ流れ込む部分の割合 c(畦畔・農道・台地など。a > 0 のセルだけ)。(1) の雨の回収を (a + c)·pre·dt/gv
+  !   にし、集水面積の雨を、そのセルを中心とする 3 × 3 のセル(領域の外は除く)の水田へ水田の面積の比で配る(どの
+  !   タンクも同じ水深 w = pre·dt·c/A_m を受ける。A_m = 近傍の水田面積率の和。降ったステップでタンクへ。独自の
+  !   簡略化)。pre はハロの行で計算されていないので、w を帯で求めてハロを交換する(1 ステップに 1 回。catch_spread)。
+  !   受けた水深は s%pdcr(水質の m_wq も使う)。タンクの面積・落水口の数・畦畔・減水深・双方向の断面は a のまま。
+  !   c = 0 なら w = 0 で、タンクの雨はちょうど pre·dt。雨滴侵食の 1 − a(s%pdfr)は変えない
   ! 【表現 B: 区画の解像(fn_pd_plot。paddy_plan.md §14、developer.md §119.8)】5〜10 m の格子で
   !   区画をセルの集まりとして解く。区画番号が違うセルの間のエッジ(対角を含む。市松の角
   !   も)に畦畔の仮想壁面を立て、落水口のエッジは装置則(両向き)にする。どちらも浅水流の
@@ -51,7 +53,8 @@ module m_paddy
   !     円の積分は正規化した G(η) の表(η = (H − z_o)/d ≤ 4。η > 4 は展開)
   !   型 0: 水位調整板の堰、型 1(機能分離型): min(水位調整板の堰, 穴 + 流出量調整板の越流)、
   !   型 2(機能一体型): 穴 + 水位調整板の天端の越流(農林水産省「田んぼダム」の手引き 2026)
-  ! 【並列】セル単位で帯の中だけ(owner-compute)。近傍を読まないのでハロ交換なし。台帳の累積は
+  ! 【並列】セル単位で帯の中だけ(owner-compute)。近傍を読まないのでハロ交換なし(集水面積率の近傍への配分だけは
+  !   配る水深のハロを 1 ステップに 1 回交換し、受ける側は固定の順で足す)。台帳の累積は
   !   行ごとの部分和(行は 1 つのランクだけが持つ)を par_sum_rows で集めるので、ランク数・
   !   スレッド数によらない。
   ! 【台帳】タンクのセル面積基底の貯留 s%pdv を calcstat が S(S_surf)に足す。paddy.csv(dt_record
@@ -62,7 +65,8 @@ module m_paddy
   !   s%cpn・s%cpd(セル面積基底 g/m2)を持ち、本モジュールが水と同じ割合で物質を動かす(落水・越流はタンクの
   !   濃度で地表の cq へ、双方向の流入は地表の濃度でタンクへ、減水深はタンクの濃度で系外へ = s%fmpd に記録)。
   !   水田の上の雨の物質は m_wq がプールへ直接入れる(s%pdfa。m_wq は本モジュールの後に雨の物質を足すので、
-  !   雨の回収は水だけを動かす)。減衰・沈降は m_wq。B は区画の水が地表の水なので、減水深に同伴する物質だけを
+  !   雨の回収は水だけを動かす。集水面積率のときは地表から除く割合に c(s%pdfc)を足し、配られた雨の物質を
+  !   受けるセルのプールへ入れる(s%pdcr。§119.15))。減衰・沈降は m_wq。B は区画の水が地表の水なので、減水深に同伴する物質だけを
   !   動かす(s%fmpd)。事前の湛水の濃度は pd_wq_c0(既定 0)
   ! 【併用】ENC のみ。ネスト(複数インスタンス)・淡塩とは init で停止する。水田のセルは
   !   海・河道(rw)・境界(水位規定・区間流入)・ソース・構造物のセルと、VZ・貯留関数の区画セルに
@@ -93,7 +97,7 @@ module m_paddy
   use m_sysdep_util, only : sysdep_mkdir
   use m_util, only : param_default, itoa, es_out
   use m_parallel, only : par_info, par_stop, par_abort, dcp, is_root, par_sum_rows, par_scatter_cell, &
-                         par_scatter_cell_i, par_allreduce_maxi, par_allreduce_sumi
+                         par_scatter_cell_i, par_allreduce_maxi, par_allreduce_sumi, par_halo_cell
   implicit none
   private
   public :: t_paddy
@@ -135,6 +139,10 @@ module m_paddy
     real :: h0(1:pd_nclass) = 0.0              ! 事前の湛水深 (m)
     real, allocatable :: fr1(:,:), fr2(:,:)    ! 種類ごとの面積率(セル面積基底。帯+ハロ)
     real, allocatable :: fc(:,:)               ! 集水面積率 c(セル面積基底。帯+ハロ。fn_pd_catch のときだけ確保)
+    real, allocatable :: cw(:,:)               ! 集水面積の雨を配る係数 c/A_m(A_m = 3 × 3 の近傍の水田面積率の和。
+                                               !   帯。fn_pd_catch のときだけ確保。§119.15)
+    real, allocatable :: wc(:,:)               ! そのステップに雨の降るセルが配る水深 w = pre·dt·c/A_m(水田の面積
+                                               !   あたり。帯+ハロ。毎ステップ求めてハロを交換。fn_pd_catch のときだけ)
     real(real64) :: acatch = 0.0_real64        ! 集水面積 (m2。全ランク同値。fn_pd_catch のときだけ)
     real(real64) :: area(1:pd_nclass) = 0.0_real64  ! 種類ごとの水田面積 (m2。全ランク同値)
     real(real64), allocatable :: rows(:,:)     ! (js:je, 1:nrow) 行ごとの量 (m3): 1 雨の回収・2 落水・
@@ -194,6 +202,7 @@ subroutine m_paddy_init(pd, p, g, b, s, multi, vzr, sfr)
   if (pd%catch .and. s%rainero_active) call par_stop("list_paddy: fn_pd_catch cannot be combined with the " &
       //"raindrop erosion of geomorph (the rain term of f_wash with wash_kr > 0, f_splash) yet: the soil detached " &
       //"on the catchment would stay on the surface while its water goes into the tanks")
+  if (pd%catch) call setup_catch(pd, g, s)
   call setup_devices(pd, p, list)
   if (pd%exch == 1) call setup_twoway(pd, g, s)
   ! 双方向と浮遊砂(f_suspend)の併用(§119.11): タンクへ入る水の浮遊砂を田面に堆積させる記録
@@ -215,14 +224,11 @@ subroutine m_paddy_init(pd, p, g, b, s, multi, vzr, sfr)
     allocate(s%pdfa(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:2), source = 0.0)
     s%pdfa(:,:,1) = pd%fr1(:,:)
     s%pdfa(:,:,2) = pd%fr2(:,:)
-    ! 集水面積率(§119.13): 集水面積の雨の物質も種類の面積の比でプールへ(水と同じ (a + c)/a 倍)
+    ! 集水面積率(§119.15): 雨の降るセルの地表から雨の物質を除く割合 a + c の c(配られた雨の物質は、m_wq が
+    ! s%pdcr で受けるセルのプールへ入れる)
     if (pd%catch) then
-      do j = dcp%jsh, dcp%jeh
-        do i = dcp%ish, dcp%ieh
-          if (pd%fr1(i,j) + pd%fr2(i,j) <= 0.0) cycle
-          s%pdfa(i,j,:) = s%pdfa(i,j,:) * ((pd%fr1(i,j) + pd%fr2(i,j) + pd%fc(i,j)) / (pd%fr1(i,j) + pd%fr2(i,j)))
-        end do
-      end do
+      allocate(s%pdfc(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      s%pdfc(:,:) = pd%fc(:,:)
     end if
     if (pd%have(1)) allocate(s%cpn(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     if (pd%have(2)) allocate(s%cpd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -272,7 +278,8 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 毎ステップ(swflow の直後。VZ・貯留関数の後、地下水の前): 雨の回収・落水・越流・減水深と、
-! 地表への受け渡し(e の回復まで)。セル単位で帯の中だけ(ハロ交換なし)
+! 地表への受け渡し(e の回復まで)。セル単位で帯の中だけ(ハロ交換なし。集水面積率のときだけ、近傍へ配る
+! 水深のハロを catch_spread で 1 回交換する)
 !----------------------------------------------------------------------
 subroutine m_paddy_calc(pd, p, g, s)
   type(t_paddy), intent(inout) :: pd
@@ -281,7 +288,7 @@ subroutine m_paddy_calc(pd, p, g, s)
   type(t_state), intent(inout) :: s
   integer :: i, j
   real :: dt, a, rain, hd, dsur, f, dv, sp, pc, st, hb, msur
-  real :: ac, rk                  ! 雨を受ける面積率 a + c と、タンクの雨(集水面積率。§119.13)
+  real :: ac, rk                  ! 雨を受ける面積率 a + c と、タンクの雨(集水面積率。§119.13・§119.15)
   real(real64) :: rr(1:nrow)
 
   if (.not. pd%enabled) return
@@ -294,18 +301,19 @@ subroutine m_paddy_calc(pd, p, g, s)
     return
   end if
   dt = p%dt
+  if (pd%catch) call catch_spread(pd, p, g, s)    ! 集水面積の雨を近傍の水田へ配る(collective。§119.15)
   !$omp parallel do schedule(dynamic) private(i, j, a, rain, hd, dsur, f, dv, sp, pc, st, rr, hb, msur, ac, rk)
   do j = dcp%js, dcp%je
     rr(:) = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
       a = pd%fr1(i,j) + pd%fr2(i,j)
       if (a <= 0.0) cycle
-      ! (1) 雨の回収(boundary_h が足した雨のうち水田の上に降った分。集水面積率があれば集水面積の分も。
-      !     集水面積の雨は種類の面積の比で分ける: タンクの雨 rk = rain·(a + c)/a。c = 0 で rk = rain)
+      ! (1) 雨の回収(boundary_h が足した雨のうち水田の上に降った分。集水面積率があれば集水面積の分も)。
+      !     タンクの雨 rk = rain + 近傍の集水面積から配られた水深 s%pdcr(§119.15。c = 0 なら rk = rain)
       rain = s%pre(i,j) * dt
       if (pd%catch) then
         ac = a + pd%fc(i,j)
-        rk = rain * (ac / a)
+        rk = rain + s%pdcr(i,j)
       else
         ac = a
         rk = rain
@@ -503,6 +511,8 @@ subroutine m_paddy_dispose(pd, p, s)
   if (allocated(pd%fr1)) deallocate(pd%fr1)
   if (allocated(pd%fr2)) deallocate(pd%fr2)
   if (allocated(pd%fc)) deallocate(pd%fc)
+  if (allocated(pd%cw)) deallocate(pd%cw)
+  if (allocated(pd%wc)) deallocate(pd%wc)
   if (allocated(pd%rows)) deallocate(pd%rows)
   if (allocated(pd%gt%v)) deallocate(pd%gt%v)
   s%pd_active = .false.
@@ -518,7 +528,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! 毎ステップ(双方向。f_pd_exchange = 1。§119.6): 地表の水は σ の階段形の断面(畦畔の高さより下は水田でない
 ! 面積の割合 1 − a/gv、上はセル全面)で、タンクと落水口(両向き)・畦畔(瞬時)で水をやり取りする。地表の水の
-! 足し引きは矩形換算水深 vh で行う(§26.2)。セル単位で帯の中だけ(ハロ交換なし)
+! 足し引きは矩形換算水深 vh で行う(§26.2)。セル単位で帯の中だけ(ハロ交換なし。集水面積率のときだけ、近傍へ
+! 配る水深のハロを catch_spread で 1 回交換する)
 !----------------------------------------------------------------------
 subroutine calc_twoway(pd, p, g, s)
   type(t_paddy), intent(inout) :: pd
@@ -527,13 +538,14 @@ subroutine calc_twoway(pd, p, g, s)
   type(t_state), intent(inout) :: s
   integer :: i, j, c
   real :: dt, a, rain, gv, vh, vh0, hd, r, q, sp, pc, fill, wv, dtot, phi, vcrest
-  real :: ac, rk                                 ! 雨を受ける面積率 a + c と、タンクの雨(集水面積率。§119.13)
+  real :: ac, rk                                 ! 雨を受ける面積率 a + c と、タンクの雨(集水面積率。§119.15)
   real :: f(1:pd_nclass), tk(1:pd_nclass), qd(1:pd_nclass)
   real :: cqv, pl(1:pd_nclass), w                ! 水質: 地表の物質(cq の基底)、タンクのプール(セル面積基底)
   real :: hsv, dep                               ! 浮遊砂: 地表の hs、タンクへ入って田面に積む分(§119.11)
   real(real64) :: rr(1:nrow)
 
   dt = p%dt
+  if (pd%catch) call catch_spread(pd, p, g, s)    ! 集水面積の雨を近傍の水田へ配る(collective。§119.15)
   !$omp parallel do schedule(dynamic) private(i, j, c, a, rain, gv, vh, vh0, hd, r, q, sp, pc, fill, wv, &
   !$omp                                        dtot, phi, vcrest, f, tk, qd, rr, cqv, pl, w, hsv, dep, ac, rk)
   do j = dcp%js, dcp%je
@@ -554,10 +566,10 @@ subroutine calc_twoway(pd, p, g, s)
       gv = s%gv(i,j)
       rain = s%pre(i,j) * dt
       ! (1) 雨の回収(boundary_h が vh に足した雨のうち水田の上の分。集水面積率があれば集水面積の分も)と、
-      !     タンクへの雨(集水面積の雨は種類の面積の比で分ける: rk = rain·(a + c)/a。§119.13)
+      !     タンクへの雨(rk = rain + 近傍の集水面積から配られた水深 s%pdcr。§119.15)
       if (pd%catch) then
         ac = a + pd%fc(i,j)
-        rk = rain * (ac / a)
+        rk = rain + s%pdcr(i,j)
       else
         ac = a
         rk = rain
@@ -708,6 +720,77 @@ subroutine calc_twoway(pd, p, g, s)
     pd%rows(j,1:4) = pd%rows(j,1:4) + rr(1:4) * pd%dxdy
     pd%rows(j,5) = rr(5) * pd%dxdy
     pd%rows(j,6:9) = pd%rows(j,6:9) + rr(6:9) * pd%dxdy
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 集水面積率の近傍への配分の準備(§119.15): 雨の降るセル m の係数 c_m/A_m(A_m = m を中心とする 3 × 3 のセル
+! (領域の外は除く)の水田面積率の和。配布済みの帯 + ハロの面積率から固定の順で足すので、ランク数によらない)と、
+! 配る水深・受けた水深の配列。c > 0 は a > 0 のセルだけ(setup_maps の検査)なので A_m ≥ a_m > 0
+!----------------------------------------------------------------------
+subroutine setup_catch(pd, g, s)
+  type(t_paddy), intent(inout) :: pd
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j, ii, jj
+  real :: anb
+
+  allocate(pd%cw(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(pd%wc(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(s%pdcr(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (pd%fr1(i,j) + pd%fr2(i,j) <= 0.0) cycle
+      if (.not. (pd%fc(i,j) > 0.0)) cycle
+      anb = 0.0
+      do jj = max(j - 1, dcp%jsh), min(j + 1, dcp%jeh)
+        do ii = max(i - 1, dcp%ish), min(i + 1, dcp%ieh)
+          anb = anb + (pd%fr1(ii,jj) + pd%fr2(ii,jj))
+        end do
+      end do
+      pd%cw(i,j) = pd%fc(i,j) / anb
+    end do
+  end do
+  call par_info("paddy: the rain on the catchment (fn_pd_catch) is shared among the paddy fields of the 3 x 3 " &
+                //"neighbouring cells in proportion to their area")
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 毎ステップ(集水面積率のとき。§119.15。collective = 全ランクが呼ぶ): 雨の降るセルが配る水深
+! w = pre·dt·c/A_m(水田の面積あたり)を帯で求めてハロを交換し(pre はハロの行で計算されていない)、水田のセルが
+! 受ける水深 s%pdcr = Σ_{3 × 3} w を固定の順(行、列の順)で足す(ランク数・スレッド数によらない)
+!----------------------------------------------------------------------
+subroutine catch_spread(pd, p, g, s)
+  type(t_paddy), intent(inout) :: pd
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j, ii, jj
+  real :: q
+
+  !$omp parallel do schedule(static) private(i, j)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (pd%cw(i,j) > 0.0) pd%wc(i,j) = s%pre(i,j) * p%dt * pd%cw(i,j)
+    end do
+  end do
+  !$omp end parallel do
+  call par_halo_cell(pd%wc)
+  !$omp parallel do schedule(static) private(i, j, ii, jj, q)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (pd%fr1(i,j) + pd%fr2(i,j) <= 0.0) cycle
+      q = 0.0
+      do jj = max(j - 1, dcp%jsh), min(j + 1, dcp%jeh)
+        do ii = max(i - 1, dcp%ish), min(i + 1, dcp%ieh)
+          q = q + pd%wc(ii,jj)
+        end do
+      end do
+      s%pdcr(i,j) = q
+    end do
   end do
   !$omp end parallel do
 end subroutine
@@ -1768,8 +1851,8 @@ subroutine setup_maps(pd, p, g, b, s, list, vzr, sfr)
       case (6)
         msg = "paddy: the catchment fraction (fn_pd_catch) must satisfy 0 <= c <= 1"
       case default
-        msg = "paddy: the catchment fraction (fn_pd_catch) is > 0 on a cell without paddy fields (its rain goes " &
-              //"into the paddy tanks of the same cell)"
+        msg = "paddy: the catchment fraction (fn_pd_catch) is > 0 on a cell without paddy fields (a catchment is " &
+              //"given only on cells with paddy fields; its rain is shared among the paddy fields of the 3 x 3 cells)"
     end select
     call par_stop(trim(msg)//" at ("//itoa(ie)//","//itoa(je)//")")
   end if

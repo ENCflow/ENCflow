@@ -26,6 +26,8 @@
 #   param_catch.txt   集水面積率(fn_pd_catch。§119.13): 閉じた箱の雨だけの厳密解(片方向と、sed で双方向)。
 #                     集水面積率 0 の分布を与えた計算と与えない計算のビット一致(steady・tw_drain の変形)、
 #                     集水面積の雨の物質がタンクへ入ること(wq_rain の変形)
+#   param_catch_sp.txt 集水面積の雨を 3 × 3 の近傍の水田へ配る(§119.15): 面積率・取組率・集水面積率が場所で違う
+#                     閉じた箱のセルごとのタンクの水深と種類ごとの濃度の厳密解(片方向と、sed で双方向)
 #   停止の確認: 河道セル・面積率 > 空隙率・取組率の範囲・型 0 の流出量調整板・
 #   面積率の二重指定・事前の湛水深 > 畦畔高・保存ファイルが残ったまま無効で再開、双方向の水田でない面積の割合
 #   < 0.01・ため池のセル・土石流・非静水圧との併用・保存時とやり取りの方式が違う再開・保存時と水質の有無が違う
@@ -156,8 +158,9 @@ python3 Check_paddy.py restart_sed result_sed_cont result_sed_restart || exit 1
 variant param_tw_flood.txt result_sed_mode "s|^  dir_result = 'result_sed_mode'|&\n  dir_save = 'save_sed'\n  f_state_restore = 1|" > "$tmp"
 expect_stop sed_mode "$tmp" "suspended sediment (f_suspend) with f_pd_exchange=1 differs from the saved state"
 
-# 集水面積率(fn_pd_catch。§119.13): 閉じた箱の雨だけの厳密解(片方向・双方向)、集水面積率 0 の分布を与えた計算と
-# 与えない計算のビット一致(片方向 steady・双方向 tw_drain)、集水面積の雨の物質もタンクへ入ること(雨の濃度へ近づく)
+# 集水面積率(fn_pd_catch。§119.13・§119.15): 閉じた箱の雨だけの厳密解(片方向・双方向)、集水面積率 0 の分布を与えた
+# 計算と与えない計算のビット一致(片方向 steady・双方向 tw_drain)、集水面積の雨の物質もタンクへ入ること(雨の濃度へ
+# 近づく)、近傍の水田へ配る雨のセルごとの厳密解(場所で違う面積率・取組率・集水面積率。片方向・双方向)
 run catch param_catch.txt
 python3 Check_paddy.py catch result_catch || exit 1
 variant param_catch.txt result_catch_tw "s|^  pd_perc_mmd = 0.0|&\n  f_pd_exchange = 1|" > "$tmp"
@@ -172,6 +175,11 @@ python3 Check_paddy.py catch_zero result_tw_drain result_catch_zero_tw || exit 1
 variant param_wq_rain.txt result_catch_wq "s/^  pd_frac = 1.0$/  pd_frac = 0.5\n  fn_pd_catch = 'catch_03.txt'/" > "$tmp"
 run catch_wq "$tmp"
 python3 Check_paddy.py wq_rain result_catch_wq || exit 1
+run catch_sp param_catch_sp.txt
+python3 Check_paddy.py catch_sp result_catch_sp || exit 1
+variant param_catch_sp.txt result_catch_sp_tw "s|^  pd_perc_mmd = 0.0|&\n  f_pd_exchange = 1|" > "$tmp"
+run catch_sp_tw "$tmp"
+python3 Check_paddy.py catch_sp_tw result_catch_sp_tw || exit 1
 
 # 保存 → 再開(6 h で保存し 12 h まで)と、連続計算(12 h)のビット一致
 rm -rf save_rs

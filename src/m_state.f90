@@ -169,6 +169,9 @@ module m_state
     real, allocatable :: pdfr(:,:)  ! 水田面積率 a (セル面積基底。帯+ハロ。地形変化 fn_geomorph と併用する
                                     ! ときだけ m_paddy_init が確保し、雨滴侵食(f_wash の雨滴の項・f_splash)
                                     ! に 1 − a を掛けるのに使う。§119.5)
+    real, allocatable :: pdcr(:,:)  ! そのステップに近傍の集水面積から配られた雨 (m。水田の面積あたりの水深。帯。
+                                    ! 集水面積率 fn_pd_catch のときだけ m_paddy_init が確保し、m_paddy が毎ステップ
+                                    ! 書いてタンクに足す。水質と併用すると m_wq がその雨の物質をプールへ入れる。§119.15)
     ! 水質(fn_wq)と併用するときの水田の物質(段 4a。docs/paddy_plan.md §16.1、developer.md §119.10)。
     ! 確保は m_paddy_init(水質が有効なときだけ)。cpn・cpd・pdfa はタンク(表現 A)のその種類の水田がある
     ! 格子だけ、fmpd は A・B とも
@@ -176,6 +179,8 @@ module m_state
     real, allocatable :: cpd(:,:)   ! 田んぼダムの落水口の水田のタンクの物質 (g/m2。同上)
     real, allocatable :: pdfa(:,:,:) ! 種類ごとの水田面積率 (ish:ieh, jsh:jeh, 1:2。m_wq が水田の上の雨の物質を
                                     ! タンクへ入れるのに使う)
+    real, allocatable :: pdfc(:,:)  ! 集水面積率 c (セル面積基底。帯+ハロ。集水面積率 fn_pd_catch のときだけ。m_wq が
+                                    ! 雨の降るセルの地表から雨の物質を除く割合 a + c の c。§119.15)
     real, allocatable :: pdsd(:,:)  ! 双方向の水田のタンクへ入った水が運んだ浮遊砂(hs と同じ柱状量 m。m_paddy が足し、
                                     ! m_geomorph の浮遊砂が田面 z・sd に堆積させてゼロに戻す。fxr と同じ契約。
                                     ! 双方向と浮遊砂 f_suspend の併用のときだけ m_paddy_init が確保。§119.11)
@@ -1133,6 +1138,8 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%cpn)) deallocate(s%cpn)
   if (allocated(s%cpd)) deallocate(s%cpd)
   if (allocated(s%pdfa)) deallocate(s%pdfa)
+  if (allocated(s%pdfc)) deallocate(s%pdfc)
+  if (allocated(s%pdcr)) deallocate(s%pdcr)
   if (allocated(s%fmpd)) deallocate(s%fmpd)
   if (allocated(s%pdsd)) deallocate(s%pdsd)
   if (allocated(s%wvh)) deallocate(s%wvh)

@@ -38,6 +38,9 @@ Gauss–Legendre の求積で直接求める(モデルは表と展開)。
   python3 Check_paddy.py catch    result_catch     集水面積率(片方向): 閉じた箱の雨だけの厳密解(タンク・地表)と台帳
   python3 Check_paddy.py catch_tw result_catch_tw  集水面積率(双方向): 同じ厳密解(地表の水は水田でない面積だけ)
   python3 Check_paddy.py catch_zero <与えない結果> <c = 0 を与えた結果>   集水面積率 0 の分布でビット一致(catch 列を除く)
+  python3 Check_paddy.py catch_sp    result_catch_sp     集水面積の雨を 3 × 3 の近傍の水田へ配る(片方向): セルごとの
+                                                         タンクの水深・種類ごとの平均湛水深と濃度の厳密解、台帳
+  python3 Check_paddy.py catch_sp_tw result_catch_sp_tw  同じ(双方向)
 """
 import array
 import math
@@ -885,7 +888,8 @@ def check_b_sed(res):
 # ---------------------------------------------------------------- 集水面積率(段 4c。§119.13)
 def check_catch(res, tw):
     """param_catch.txt: a = 0.5・c = 0.3・雨 20 mm/h の閉じた平らな箱。落水・減水深なし。
-    湛水深 = (a + c)/a × 雨、地表の水(セル面積あたり)= (1 − a − c) × 雨、地表の水深 H は片方向でセル全面
+    種類ごとの平均湛水深 = (a + c)/a × 雨(集水面積の雨は 3 × 3 の近傍の水田へ配るので、箱の縁のセルの湛水深は
+    平均と違う。セルごとの厳密解は catch_sp。§119.15)、地表の水(セル面積あたり)= (1 − a − c) × 雨、地表の水深 H は片方向でセル全面
     (0.2 × 雨)、双方向で水田でない面積だけ(0.2 × 雨 / (1 − a))"""
     a, c, area = 0.5, 0.3, 8000.0
     rate = 20.0 / 3.6e6                          # m/s
@@ -900,8 +904,8 @@ def check_catch(res, tw):
         if r["outflow(m3)"] != 0.0 or r["spill(m3)"] != 0.0 or r["inflow(m3)"] != 0.0 or r["levee_in(m3)"] != 0.0:
             fail("water moved between the tanks and the surface at t = %.0f s (only rain is expected)" % r["time(s)"])
     if worst > 1e-9:
-        fail("ponding depth or ledger differs from the exact solution by %.3e (relative)" % worst)
-    ok("ponding depth = (a + c)/a x rain, rain = a x rain x area, catch = c x rain x area (%d records, max relative "
+        fail("class mean ponding depth or ledger differs from the exact solution by %.3e (relative)" % worst)
+    ok("class mean ponding depth = (a + c)/a x rain, rain = a x rain x area, catch = c x rain x area (%d records, max relative "
        "difference %.1e)" % (len(rows), worst))
     # 地表の水: Log の S(地表 + タンク。領域平均 m)からタンクの貯留を引く
     last = rows[-1]
@@ -920,6 +924,83 @@ def check_catch(res, tw):
     ok("surface water = (1 - a - c) x rain (%.6f m per cell area), S = rain (closed box), surface depth %.6f m (%s)"
        % (surf, hexp, "non-paddy area only" if tw else "whole cell"))
     check_ledger(rows)
+
+
+def check_catch_sp(res, tw):
+    """param_catch_sp.txt: 面積率・取組率・集水面積率が場所で違う閉じた平らな箱(雨 20 mm/h を 2 h、事前の湛水 0.01 m、
+    落水・減水深なし)。雨の降るセル m の集水面積の雨 c_m × 雨を、m を中心とする 3 × 3 のセル(領域の外は除く)の水田へ
+    面積の比で配る(§119.15): 水田のセル n のタンクの水深 = 0.01 + 雨 × (1 + Σ_m c_m / A_m)、A_m = Σ_{3 × 3(m)} a。
+    雨の物質(2 mg/L)も水と同じ行き先なので、種類ごとの平均濃度 = 2 × (受けた水) / (事前の湛水 + 受けた水)"""
+    nx, ny, acell, h0, crain = 10, 8, 100.0, 0.01, 2.0
+    rate = 20.0 / 3.6e6                          # m/s
+    fa, ad, fc = read_map("frac_sp.txt"), read_map("adopt_sp.txt"), read_map("catch_sp.txt")
+    f1 = [x * (1.0 - r) for x, r in zip(fa, ad)]
+    f2 = [x * r for x, r in zip(fa, ad)]
+
+    def nb(i, j):
+        return [(ii, jj) for jj in range(max(j - 1, 0), min(j + 1, ny - 1) + 1)
+                for ii in range(max(i - 1, 0), min(i + 1, nx - 1) + 1)]
+    anb = [sum(fa[jj * nx + ii] for ii, jj in nb(i, j)) for j in range(ny) for i in range(nx)]
+    gain = [0.0] * (nx * ny)                     # 雨 1 m あたりのタンクの水深の増え(1 + Σ c_m / A_m)
+    for j in range(ny):
+        for i in range(nx):
+            n = j * nx + i
+            if fa[n] > 0.0:
+                gain[n] = 1.0 + sum(fc[jj * nx + ii] / anb[jj * nx + ii] for ii, jj in nb(i, j) if fc[jj * nx + ii] > 0.0)
+    a1, a2, csum = sum(f1), sum(f2), sum(fc)
+    g1 = sum(f * g for f, g in zip(f1, gain)) / a1
+    g2 = sum(f * g for f, g in zip(f2, gain)) / a2
+    if abs(a1 * g1 + a2 * g2 - (a1 + a2 + csum)) > 1e-12 * (a1 + a2 + csum):
+        fail("test setup: the spread water is not conserved in the reference solution")
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    worst = 0.0
+    for r in rows:
+        p = rate * r["time(s)"]
+        for key, gk in (("h1(mm)", g1), ("h2(mm)", g2)):
+            ex = (h0 + gk * p) * 1e3
+            worst = max(worst, abs(r[key] - ex) / ex)
+        if p > 0.0:
+            worst = max(worst, abs(r["rain(m3)"] - (a1 + a2) * p * acell) / ((a1 + a2) * p * acell))
+            worst = max(worst, abs(r["catch(m3)"] - csum * p * acell) / (csum * p * acell))
+            for key, gk in (("c1(mg/L)", g1), ("c2(mg/L)", g2)):
+                ex = crain * gk * p / (h0 + gk * p)
+                worst = max(worst, abs(r[key] - ex) / ex)
+        if r["outflow(m3)"] != 0.0 or r["spill(m3)"] != 0.0 or r["inflow(m3)"] != 0.0 or r["levee_in(m3)"] != 0.0:
+            fail("water moved between the tanks and the surface at t = %.0f s (only rain is expected)" % r["time(s)"])
+    if worst > 1e-9:
+        fail("class mean ponding depth, concentration or ledger differs from the exact solution by %.3e (relative)"
+             % worst)
+    ok("class mean ponding depth (%.6f, %.6f x rain + 0.01 m), concentration, rain and catch match the exact solution "
+       "(%d records, max relative difference %.1e)" % (g1, g2, len(rows), worst))
+    # セルごとのタンクの水深(単精度の出力。両方の種類が同じ水深)
+    p = rate * rows[-1]["time(s)"]
+    e = 0.0
+    for name, fk in (("Hpn0001.bil", f1), ("Hpd0001.bil", f2)):
+        hv = read_bil(os.path.join(res, name), nx, ny)
+        for n in range(nx * ny):
+            if fk[n] > 0.0:
+                ex = h0 + gain[n] * p
+                e = max(e, abs(hv[n] - ex) / ex)
+    if e > 2e-7:
+        fail("tank depth of a cell differs from 0.01 + rain x (1 + sum c/A) by %.3e (relative)" % e)
+    ok("tank depth of every paddy cell = 0.01 m + rain x (1 + sum of c/A over the 3 x 3 neighbourhood), "
+       "%.4f to %.4f m (max relative difference %.1e, single-precision output)"
+       % (min(h0 + g * p for g, x in zip(gain, fa) if x > 0.0), max(h0 + g * p for g in gain), e))
+    # 地表の水: Log の S(地表 + タンク。領域平均 m)から水田の貯留を引く
+    last = rows[-1]
+    s = log_s(res)[-1]
+    area = acell * nx * ny
+    surf = s - (last["store1(m3)"] + last["store2(m3)"]) / area
+    sexp = sum(1.0 - x - c for x, c in zip(fa, fc)) * p / (nx * ny)
+    sdep = h0 * (a1 + a2) / (nx * ny)
+    if abs(surf - sexp) > 1e-12:
+        fail("surface water %.15f m differs from the mean of (1 - a - c) x rain = %.15f m" % (surf, sexp))
+    if abs(s - (p + sdep)) > 1e-12:
+        fail("S = %.15f m differs from rain + initial ponding %.15f m (closed box)" % (s, p + sdep))
+    ok("surface water = mean of (1 - a - c) x rain (%.6f m per cell area), S = rain + initial ponding (closed box, %s)"
+       % (surf, "two-way" if tw else "one-way"))
+    check_ledger(rows)
+    wq_closure(res, 0.0)
 
 
 def check_catch_zero(res0, res1):
@@ -1008,6 +1089,10 @@ def main():
         check_catch(sys.argv[2], False)
     elif cmd == "catch_tw":
         check_catch(sys.argv[2], True)
+    elif cmd == "catch_sp":
+        check_catch_sp(sys.argv[2], False)
+    elif cmd == "catch_sp_tw":
+        check_catch_sp(sys.argv[2], True)
     elif cmd == "catch_zero":
         check_catch_zero(sys.argv[2], sys.argv[3])
     elif cmd in ("wash", "splash"):

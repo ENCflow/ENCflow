@@ -30,8 +30,8 @@ apply to B.
 - **Paddy tanks**: tanks that receive the rain falling on the paddy area fraction a of a cell. The paddy
   fields are split by the adoption ratio into "paddy fields with normal outlets" (class 1) and "paddy-field
   dams" (class 2), and each class has one ponding depth (water depth above the field surface). Rain that falls on
-  levees, farm roads and upland and flows into the paddy fields of the same cell enters the tanks when given as the
-  catchment fraction `fn_pd_catch` ([Catchment fraction](#catchment-fraction-fn_pd_catch) below).
+  levees, farm roads and upland and flows into the paddy fields enters the tanks of the cell and its neighbouring cells
+  when given as the catchment fraction `fn_pd_catch` ([Catchment fraction](#catchment-fraction-fn_pd_catch) below).
 - **Outlets**: one outlet for each representative plot area A_plot. Its discharge is given by the device law
   from the ponding depth and the water depth downstream (on the surface of the cell). The discharge goes to
   the surface water of the cell and flows with the shallow water flow.
@@ -54,7 +54,7 @@ Give `fn_paddy` in `&list_sysparam` (`"-"` for the same parameter file). The set
   !pd_dev_type(2) = 1             ! device type of the paddy-field dams (default 1 = separated type)
   !pd_open_d(2) = 0.05            ! diameter of the hole of the outflow control plate (m; default 0.05)
   !f_pd_exchange = 1              ! two-way: flood water also enters the paddy fields (default 0 = one-way, rain only)
-  !fn_pd_catch = 'paddy_catch.txt' ! map of the catchment fraction (share of the area whose rain flows into the paddy fields of the same cell; default 0)
+  !fn_pd_catch = 'paddy_catch.txt' ! map of the catchment fraction (share of the area whose rain flows into the paddy fields; default 0)
 /
 ```
 
@@ -129,7 +129,7 @@ shallow water flow) the tanks advance in this order.
 1. **Rain**: the rain $`a\,R\,\Delta t`$ that fell on the paddy fields is taken from the surface water and
    $`R\,\Delta t`$ is added to each tank (R is the rain at the ground, after
    [rainfall interception](forcing.md) when it is used). With a catchment fraction c, the rain taken is
-   $`(a + c)\,R\,\Delta t`$ and the rain added to each tank is $`R\,\Delta t\,(a + c)/a`$
+   $`(a + c)\,R\,\Delta t`$, and the rain of the catchment is shared among the paddy fields of the surrounding 3 × 3 cells
    ([Catchment fraction](#catchment-fraction-fn_pd_catch) below).
 2. **Outlet flow**: $`\Delta H = q_c\,\Delta t`$ is moved to the surface. $`h_D`$ is the surface water depth of the
    cell (the water level downstream of the outlet measured from the field surface).
@@ -145,13 +145,22 @@ the channels and drains.
 Part of the rain on levees, farm roads and upland higher than the plots flows over the levees into the neighbouring paddy
 fields. In A on a coarse grid these are the non-paddy part of a cell, so without further input their rain becomes surface
 water and heads for the drains (overestimating the water sent to the drains and underestimating the effect of paddy-field
-dams). Giving the catchment fraction c (`fn_pd_catch`; the share of the cell area whose rain flows into the paddy fields of
-the same cell) puts that rain into the tanks as well.
+dams). Giving the catchment fraction c (`fn_pd_catch`; the share of the cell area whose rain flows into the paddy fields)
+puts that rain into the tanks as well.
 
-- The rain taken from the surface is $`(a + c)\,R\,\Delta t`$, and the rain of the tank of class k is
-  $`R\,\Delta t\,(a + c)/a`$. The rain of the catchment is split in proportion to the areas of the classes (an original
-  simplification) and enters the tanks within the step in which it falls (no travel time; a short distance within the cell
-  is assumed).
+- The rain taken from the surface is $`(a + c)\,R\,\Delta t`$ of the cell where the rain falls. The rain of the catchment
+  $`c\,R\,\Delta t`$ is shared among the paddy fields of the 3 × 3 cells centred on that cell (cells outside the domain
+  excluded) in proportion to their area (regardless of class; an original simplification). Every receiving tank gets the
+  same depth $`w = c\,R\,\Delta t/A`$ ($`A`$ = the sum of the paddy area fractions of those 3 × 3 cells), and the rain of
+  the tanks of a paddy cell is the rain of that cell $`R\,\Delta t`$ plus the sum of $`w`$ received from the surrounding
+  cells where rain falls. The water shared out equals the rain of the catchment, and it enters the tanks within the step in
+  which it falls (no travel time).
+- The rain is shared with the surrounding cells because a plot that straddles the boundary of coarse cells leaves cells
+  containing only part of the plot and farm roads or upland. Putting the rain of the catchment only into the tanks of the
+  same cell gathers it there, and those tanks overflow easily (in D of the example
+  [paddy_dam](../../../examples/paddy_dam/en/README.md) this was the largest factor in the difference from the computation
+  that resolves the plots; developer.md §119.14). Sharing with the surrounding cells approximates the spreading of water
+  within a plot.
 - The tank area, the number of outlets, the levees, the decrease in depth and the cross-section of the two-way mode (the
   non-paddy share 1 − a/gv) stay those of a. Unlike adding the catchment to the area fraction, the ponding depth and the
   number of outlets do not change.
@@ -162,17 +171,17 @@ the same cell) puts that rain into the tanks as well.
   (without the levees), include the area of the levees in c.
 - The rain sent into the paddy fields does not infiltrate or evaporate on the way. For a catchment that infiltrates (fields,
   upland), give its area multiplied by a runoff coefficient as c.
-- The tanks are per cell, so where a plot straddles the boundary of coarse cells, the rain of the catchment gathers in the
-  tank of a cell with a small paddy fraction (containing only part of a plot and farm roads or upland), which then
-  overflows easily (the spreading of water within a plot is not represented). In D of the example
-  [paddy_dam](../../../examples/paddy_dam/en/README.md), this was the largest factor in the difference from the
-  computation that resolves the plots (developer.md §119.14).
-- With water quality, the substance of the rain on the catchment also enters the pools of the tanks in the same proportion
-  as the water. The "1 − area fraction" applied to raindrop erosion does not include c (raindrops also hit the catchment).
+- The receiving paddy fields are taken to be "within one cell". On grids much coarser than the plots the rain is shared
+  with paddy fields farther away than in reality, and on grids finer than the plots only with part of a plot (the total
+  water entering the paddy fields does not change either way). The shape of the plots is not represented.
+- With water quality, the substance of the rain on the catchment also goes where the water goes (the pools of the
+  receiving tanks). The "1 − area fraction" applied to raindrop erosion does not include c (raindrops also hit the
+  catchment).
 - 0 ≤ c, a + c ≤ the void ratio gv, and c > 0 only on cells with paddy fields (a > 0) (otherwise the run stops at
-  start-up). A catchment on cells without paddy fields cannot be represented. It cannot be combined with resolved plots (B)
-  or with the raindrop erosion of landform change (the rain term of `f_wash`, `f_splash`) (stops at start-up; this avoids
-  detached soil staying on the surface while the water that carries it goes into the tanks).
+  start-up). A catchment on cells without paddy fields cannot be represented, even when it drains into the paddy fields of
+  the surrounding cells. It cannot be combined with resolved plots (B) or with the raindrop erosion of landform change (the
+  rain term of `f_wash`, `f_splash`) (stops at start-up; this avoids detached soil staying on the surface while the water
+  that carries it goes into the tanks).
 
 ### Device laws of the outlets
 
@@ -427,8 +436,9 @@ levee height is the remaining free storage.
   is overestimated and the effect of paddy-field dams underestimated (result 2 of the example
   [paddy_dam](../../../examples/paddy_dam/en/README.md)). The value of the catchment fraction depends on how it is traced
   in preprocessing (a single steepest descent; the division of shallow water flow is not represented), and the rain of the
-  catchment enters the tanks without travel time. Where a decision is near a threshold, such as whether a settlement
-  floods, a difference of a few percent in the area fraction or the catchment fraction changes the result.
+  catchment enters the paddy fields of the surrounding 3 × 3 cells in proportion to their area without travel time (the
+  shape of the plots is not represented). Where a decision is near a threshold, such as whether a settlement floods, a
+  difference of a few percent in the area fraction or the catchment fraction changes the result.
 - The discharge coefficients of devices vary from 0.40 to 0.88 with the product and the installation
   [^yoshikawa2009][^minakawa2022]. The default 0.6 is the value of the calculation program of the guide and is a starting
   point for calibration.
@@ -515,7 +525,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | pd_frac | — | uniform value of the paddy area fraction | **Given** |
 | fn_pd_adopt | — | map of the adoption ratio (share of the paddy area made into paddy-field dams, 0–1) | **Given** |
 | pd_adopt | 0 | uniform value of the adoption ratio | **Given** 0 = no adoption |
-| fn_pd_catch | — | map of the catchment fraction (share of the cell area whose rain flows into the paddy fields of the same cell; A only) | **Given** default 0 (traced from the terrain in preprocessing; [Catchment fraction](#catchment-fraction-fn_pd_catch) above) |
+| fn_pd_catch | — | map of the catchment fraction (share of the cell area whose rain flows into the paddy fields; the rain is shared among the paddy fields of the surrounding 3 × 3 cells; A only) | **Given** default 0 (traced from the terrain in preprocessing; [Catchment fraction](#catchment-fraction-fn_pd_catch) above) |
 | pd_aplot | 3000 m² | representative plot area (paddy area per outlet; A only) | **Literature** standard plot of 30 a[^maff2026][^maffplan] |
 | pd_hlev | 0.30 m | levee height (above the field surface) | **Literature** levees of about 30 cm in the guide[^maff2026][^maffplan] |
 | pd_h0 | level at which the outlet starts to drain | ponding depth before the run (above the field surface; same value for both classes; in B the plot cells are filled to this depth) | **Given** the default is normal ponding (height of the water-level board) |

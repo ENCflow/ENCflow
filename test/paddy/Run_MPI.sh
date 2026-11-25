@@ -8,7 +8,7 @@
 # 区画の解像(表現 B。§119.8。param_b_*.txt。区画・落水口・市松の角が帯の境にかかる。np=1 とバイト比較)、
 # 水質と併用するタンクのプールと区画の解像の減水深の持ち出し(param_wq_a・wq_tw・wq_b。np=1 とバイト比較)と
 # その保存 → 再開、土砂(param_sed_tw・b_sed。np=1 とバイト比較)、集水面積率(param_catch の片方向・双方向と
-# 水質。np=1 とバイト比較)、
+# 水質、param_catch_sp の近傍へ配る雨が帯の境をまたぐ片方向・双方向。np=1 とバイト比較)、
 # 保存 → 再開(np=1 とバイト比較)、rank0 が見つける停止と帯で見つける停止(全ランク同時の par_stop)も
 # MPI で確かめる。行は 8 なので np <= 4
 sdir=$(dirname "$(readlink -f "$0")")
@@ -137,11 +137,14 @@ for t in sed_tw b_sed; do
     fi
 done
 
-# 集水面積率(§119.13): 解析検定と np=1 とのバイト一致(片方向・双方向、集水面積の雨の物質)
+# 集水面積率(§119.13・§119.15): 解析検定と np=1 とのバイト一致(片方向・双方向、集水面積の雨の物質、近傍の水田へ
+# 配る雨が帯の境をまたぐ配置)
 variant param_catch.txt result_catch_tw "s|^  pd_perc_mmd = 0.0|&\n  f_pd_exchange = 1|" > param_catch_tw.tmp
 variant param_wq_rain.txt result_catch_wq "s/^  pd_frac = 1.0$/  pd_frac = 0.5\n  fn_pd_catch = 'catch_03.txt'/" > param_catch_wq.tmp
-for t in catch catch_tw catch_wq; do
-    pf=param_$t.txt; [ "$t" != catch ] && pf=param_$t.tmp
+variant param_catch_sp.txt result_catch_sp_tw "s|^  pd_perc_mmd = 0.0|&\n  f_pd_exchange = 1|" > param_catch_sp_tw.tmp
+for t in catch catch_tw catch_wq catch_sp catch_sp_tw; do
+    pf=param_$t.txt
+    case $t in catch_tw|catch_wq|catch_sp_tw) pf=param_$t.tmp ;; esac
     run "$np" $t "$pf"
     ck=$t; [ "$t" = catch_wq ] && ck=wq_rain
     python3 Check_paddy.py $ck result_$t || exit 1
@@ -149,9 +152,10 @@ for t in catch catch_tw catch_wq; do
         variant "$pf" "result_${t}_np1" "" > "$tmp"
         run 1 "${t}_np1" "$tmp"
         same_as_np1 "result_$t" "result_${t}_np1" paddy.csv Log.txt H9998.txt
+        case $t in catch_sp|catch_sp_tw) same_as_np1 "result_$t" "result_${t}_np1" Hpn0001.bil Hpd0001.bil wq.csv ;; esac
     fi
 done
-rm -f param_catch_tw.tmp param_catch_wq.tmp
+rm -f param_catch_tw.tmp param_catch_wq.tmp param_catch_sp_tw.tmp
 
 # 保存 → 再開(np で保存・再開)と、連続計算・np=1 とのビット一致
 rm -rf save_rs save_rs1

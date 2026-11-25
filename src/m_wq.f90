@@ -59,8 +59,10 @@ module m_wq
   !           プールは蓄積・減衰のみのシンク(蒸発は純水のみ = 連携不要)
   !   水田:   田んぼダム(fn_paddy)のタンク(表現 A)は種類ごとの物質のプール s%cpn・s%cpd(セル面積基底)を
   !           持つ。水と物質の出入り(落水・越流・双方向の流入・減水深)は水を動かす m_paddy が同じ割合で動かし
-  !           (取水・ポンプと同じ契約。§30.10)、本モジュールは水田の上の雨の物質をプールへ入れ(s%pdfa)、
-  !           プールに減衰・沈降を掛け、減水深で系外へ出た物質(s%fmpd。m_paddy が記録)を台帳に積む。
+  !           (取水・ポンプと同じ契約。§30.10)、本モジュールは水田の上の雨の物質をプールへ入れ(s%pdfa。
+  !           集水面積率のときは集水面積の雨の物質も地表から除き(s%pdfc)、近傍から配られた雨の物質を受ける
+  !           セルのプールへ入れる(s%pdcr。§119.15))、プールに減衰・沈降を掛け、減水深で系外へ出た物質
+  !           (s%fmpd。m_paddy が記録)を台帳に積む。
   !           区画の解像(表現 B)の区画の水は地表の水のまま(減水深の持ち出しだけ同じ記録)。
   !           docs/paddy_plan.md §16.1、developer.md §119.10
   !   蒸発:   純水のみが抜けるため質量は残留(濃縮)= 物理的に正しい。
@@ -1235,16 +1237,29 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
         do i = g%wx(1,j), g%wx(2,j)
           if (g%sw(i,j) > 0) cycle
           if (g%x(i,j) <= 0) cycle
+          ! 田んぼダムの集水面積率(fn_pd_catch。§119.15): 近傍の雨の降るセルから配られた雨の物質を、受けるセルの
+          ! タンクのプールへ(このセルの雨の有無によらない。水は m_paddy が s%pdcr の水深でタンクに入れている)
+          if (allocated(s%pdcr) .and. allocated(s%pdfa)) then
+            if (s%pdcr(i,j) > 0.0) then
+              if (allocated(s%cpn)) s%cpn(i,j) = s%cpn(i,j) + rate * s%pdcr(i,j) * s%pdfa(i,j,1)
+              if (allocated(s%cpd)) s%cpd(i,j) = s%cpd(i,j) + rate * s%pdcr(i,j) * s%pdfa(i,j,2)
+            end if
+          end if
           if (s%pre(i,j) <= 0.0) cycle
           ! セルの質量 = 濃度×雨量×面積。柱状量へは実効面積で除す
           w = rate * s%pre(i,j) * p%dt * real(acell) / real(mass_of(g, s, i, j, 1.0))
           if (allocated(s%pdfa)) then
             ! 田んぼダムのタンク(表現 A)のあるセル: 水田の上の雨の物質はタンクのプールへ(セル面積基底。
-            ! 水は m_paddy が地表から回収してタンクに入れている。§119.10)
+            ! 水は m_paddy が地表から回収してタンクに入れている。§119.10)。集水面積率があれば、集水面積の
+            ! 雨の物質も地表から除く(行き先は上の近傍のプール。§119.15)
             a1 = s%pdfa(i,j,1)
             a2 = s%pdfa(i,j,2)
             if (a1 + a2 > 0.0) then
-              w = w * (1.0 - a1 - a2)
+              if (allocated(s%pdfc)) then
+                w = w * (1.0 - a1 - a2 - s%pdfc(i,j))
+              else
+                w = w * (1.0 - a1 - a2)
+              end if
               if (allocated(s%cpn)) s%cpn(i,j) = s%cpn(i,j) + rate * s%pre(i,j) * p%dt * a1
               if (allocated(s%cpd)) s%cpd(i,j) = s%cpd(i,j) + rate * s%pre(i,j) * p%dt * a2
             end if
