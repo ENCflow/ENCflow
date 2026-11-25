@@ -428,8 +428,8 @@
     {
       "source": "docs/users_guide/paddy.md",
       "target": "docs/en/users_guide/paddy.md",
-      "source_sha256": "ae0f24354cb793ca0c84d25365157e93b0443c52979f09d0b5cb4618b7750a45",
-      "target_sha256": "0007f6b2c16d6d93c4f76330b2ed5b4455d5b7d39dbd485e4faa84fa9823543d",
+      "source_sha256": "13cc9e260068eb1c7d3bddfd269e674988f85c8ffb5efe0d7a71fe0d1ddb507c",
+      "target_sha256": "7d46414dacec1c7d2079eba962406bd5a8643c655dbc0a8e7a5d0b5aa09f9140",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -923,8 +923,8 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "6fe094420d652bd6faab220864a8e4b35791469b4b74992f5fbd25a9e80ba268",
-      "target_sha256": "109b9e34054bca9c02676772ab557e14d8b81fb1f7f3d08ce37d953634fad4b7",
+      "source_sha256": "d2abb3e567485253845287f1dd1b26bcabbc2adaeef11aa3fc37581db9260c63",
+      "target_sha256": "4fea7102580c3887d41e87166f639176cb9d2947ed613a154d45337e9901a34c",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -2975,8 +2975,8 @@
     {
       "source": "examples/paddy_dam/README.md",
       "target": "examples/paddy_dam/en/README.md",
-      "source_sha256": "72bdcc6b8ff3a41a9a8aabbd9e447fa0f532f63c5572caabc1913d3482025cb2",
-      "target_sha256": "dd6972e788171459ef2c53aaaa7af0192f8927f236693d77ee8b1a71a74789e5",
+      "source_sha256": "aa5ae5398287002b1c45985aa39dcfbc14d94f4c42974189dd3222ace6cca572",
+      "target_sha256": "122aea80faa50fb3f78c01b7786313455185e1f2c92d968f4e36a405e21fd5ce",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"

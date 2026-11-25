@@ -7,7 +7,7 @@
   figs/representations.png  地区と 2 つの表現(入力だけ。計算結果を使わない): 表現 A の地区、表現 B の地区、表現 B の拡大
   figs/maps.png      結果 1: 表現 B の最大水深(N と D)
   figs/series.png    結果 1: 表現 B の雨、集落の浸水深、排水機場の前の水位、区画の平均水深(N・D・Du・Dd)
-  figs/scale.png     結果 2: 同じ条件の表現 B と表現 A(片方向・双方向・双方向で集水面積を足す)の比べ(集落の浸水深と
+  figs/scale.png     結果 2: 同じ条件の表現 B と表現 A(片方向・双方向・双方向で集水面積率を与える)の比べ(集落の浸水深と
                      水田の平均水深)
 数表(README の 2 つの表)は標準出力に Markdown で出す。引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は
 共通)。図のパネルの番号は (1)(2)… とする(表現 A・B の記号と紛れないように)。
@@ -300,11 +300,11 @@ def fig_series():
 
 # ---------------------------------------------------------------- 結果 2: 同じ条件の表現 B と表現 A
 # 表現ごとに色を分け(表現 B = 青、表現 A = オレンジ)、表現 A の与え方は線種で(片方向 = 破線、双方向 = 実線、
-# 双方向で水田面積率に水田へ流れ込む面積を足したもの = 点線)
+# 双方向で集水面積率 fn_pd_catch を与えたもの = 点線)
 REPS = [("B10_%s", REP_B, C1, "-"),
         ("A30_%s", T("%s・片方向" % REP_A, "%s, one-way" % REP_A), C2, "--"),
         ("A30_%s2", T("%s・双方向" % REP_A, "%s, two-way" % REP_A), C2, "-"),
-        ("A30_%s2c", T("%s・双方向・集水面積を足す" % REP_A, "%s, two-way, catchment added" % REP_A), C2, ":")]
+        ("A30_%s2c", T("%s・双方向・集水面積率" % REP_A, "%s, two-way, catchment fraction" % REP_A), C2, ":")]
 
 
 def oneway(c):
@@ -406,9 +406,9 @@ def table():
     print()
     print(T("表 3(48 h までの水の行き先 m³。地区に降った雨 %.0f m³)" % vrain,
             "Table 3 (where the water went up to 48 h, m³; rain on the district %.0f m³)" % vrain))
-    print(T("| 落水口 | 表現 | 水田(タンク)の面積 ha | 水田の上に降った雨 | 水田でない所に降った雨 | 水田への流入(逆流 + 畦畔を越えた流入) | 水田に入った水の計 |",
-            "| Outlets | Representation | area of the paddy fields (tanks) ha | rain on the paddy fields | rain elsewhere | inflow into the paddy fields (backflow + over the levees) | total water into the paddy fields |"))
-    print("|---|---|---:|---:|---:|---:|---:|")
+    print(T("| 落水口 | 表現 | 水田の面積 ha | 水田の上に降った雨 | 集水面積からタンクへ入った雨 | ほかの所に降った雨 | 水田への流入(逆流 + 畦畔を越えた流入) | 水田に入った水の計 |",
+            "| Outlets | Representation | paddy area ha | rain on the paddy fields | rain of the catchment into the tanks | rain elsewhere | inflow into the paddy fields (backflow + over the levees) | total water into the paddy fields |"))
+    print("|---|---|---:|---:|---:|---:|---:|---:|")
     for g in ["N", "D"]:
         for fmt, rname, _, _ in REPS:
             c = fmt % g
@@ -417,12 +417,17 @@ def table():
             p = paddy(c)
             r = p["rain(m3)"][-1]
             area = (p["area1(m2)"][-1] + p["area2(m2)"][-1]) / 1.0e4
+            if "catch(m3)" in p:                    # 集水面積率(fn_pd_catch)を与えたケースだけの列
+                cr, cr_s = p["catch(m3)"][-1], "%.0f" % p["catch(m3)"][-1]
+            else:
+                cr, cr_s = 0.0, "—"
             if oneway(c):
                 inf, inf_s = 0.0, "—"
             else:
                 inf = p["inflow(m3)"][-1] + p["levee_in(m3)"][-1]
                 inf_s = "%.0f" % inf
-            print("| %s | %s | %.1f | %.0f | %.0f | %s | %.0f |" % (g, rname, area, r, vrain - r, inf_s, r + inf))
+            print("| %s | %s | %.1f | %.0f | %s | %.0f | %s | %.0f |"
+                  % (g, rname, area, r, cr_s, vrain - r - cr, inf_s, r + cr + inf))
 
 
 if __name__ == "__main__":

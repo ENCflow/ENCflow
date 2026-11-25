@@ -30,7 +30,8 @@
 #   use.txt               土地利用の番号(図のため。1 農道・2 小排水路・3 支線・4 幹線・5 区画・6 集落・7 畑・8 台地)
 #   catch.txt             水田へ流れ込むセル(1。農道・台地のうち、雨が区画へ流れ込むもの。catchment() でたどる)
 #   *30.txt               表現 A の 30 m 格子(10 m の値の 3 × 3 の平均): frac30(水田面積率。0.99 で頭打ち)、
-#                         frac30c(frac30 に水田へ流れ込む面積を足したもの。ケース A30_*2c)、z30(地盤高。
+#                         catch30(集水面積率 fn_pd_catch = catch.txt のセルの割合。雨の降る 30 m のセルで数える。
+#                         ケース A30_*2c)、z30(地盤高。
 #                         排水路を含むセルは排水路の底の最低)、rw30・w30(支線・幹線排水路のセルの河道マスクと
 #                         サブグリッド幅 m)、gv30(空隙率)、adopt30_N・D・Du・Dd(取組率)
 import os
@@ -55,13 +56,12 @@ HLEV = 0.30                       # 畦畔高(param の pd_hlev の既定と同�
 
 def catchment(z, use, isp):
     """水田へ流れ込む面積: 区画でも排水路でもない 10 m のセルから、8 近傍の最急の下り(区画のセルは畦畔の天端 =
-    田面 + 畦畔高を高さとする)をたどり、区画のセルに着くものを 1 とする。排水路に着くか、下りがなくなったら 0。
-    着いた区画のセルを dest に返す(独自の簡略な前処理。浅水流の分流は表さず、1 つの向きだけをたどる)"""
+    田面 + 畦畔高を高さとする)をたどり、区画のセルに着くものを 1 とする。排水路に着くか、下りがなくなったら 0
+    (独自の簡略な前処理。浅水流の分流は表さず、1 つの向きだけをたどる)"""
     ny, nx = z.shape
     isd = np.isin(use, [USE["drain"], USE["branch"], USE["main"]])
     ze = np.where(isp, z + HLEV, z)
     catch = np.zeros((ny, nx), dtype=int)
-    dest = np.full((ny, nx, 2), -1, dtype=int)
     for j0 in range(ny):
         for i0 in range(nx):
             if isp[j0, i0] or isd[j0, i0]:
@@ -81,10 +81,9 @@ def catchment(z, use, isp):
                     break
                 if isp[nxt]:
                     catch[j0, i0] = 1
-                    dest[j0, i0] = nxt
                     break
                 j, i = nxt
-    return catch, dest
+    return catch
 
 
 def main():
@@ -174,18 +173,18 @@ def main():
     np.savetxt(os.path.join(d, "w30.txt"), wid, fmt="%.2f")
     gvc = np.maximum(coarse(gv, 1.0).mean(axis=(1, 3)), frc)
     np.savetxt(os.path.join(d, "gv30.txt"), gvc, fmt="%.4f")
-    # 水田へ流れ込む面積(集水面積)を足した面積率 frac30c(ケース A30_*2c)。流れ込む先を表現 B の地形でたどり、
-    # 流れ込む先の区画のセルを含む 30 m のセルの面積率に足す(同じく 0.99 で頭打ち)
-    catch, dest = catchment(z, use, isp)
+    # 集水面積率 catch30(ケース A30_*2c。fn_pd_catch): 雨が区画へ流れ込むセル(catchment() でたどる)を、雨の降る
+    # 30 m のセルで数える(着いた区画のセルでなく)。水田のない 30 m のセルの分は表せないので数えない
+    catch = catchment(z, use, isp)
     np.savetxt(os.path.join(d, "catch.txt"), catch, fmt="%d")
-    add = np.zeros((nyc, nxc))
-    for j, i in zip(*np.nonzero(catch)):
-        add[dest[j, i, 0] // f, dest[j, i, 1] // f] += 1.0 / (f * f)
-    frcc = np.where(frc > 0, np.minimum(frc + add, 0.99 * gvc), frc)
-    np.savetxt(os.path.join(d, "frac30c.txt"), frcc, fmt="%.4f")
-    print("catchment: %.2f ha of roads and upland drain into plots; %.2f ha added to the 30 m fractions, "
-          "%.2f ha cut by the cap" % (catch.sum() * DX * DX / 1e4, ((frcc - frc) * f * f * DX * DX).sum() / 1e4,
-                                      (add.sum() - (frcc - frc).sum()) * f * f * DX * DX / 1e4))
+    cc = coarse(catch.astype(float), 0.0).mean(axis=(1, 3))
+    lost = np.where(frc > 0, 0.0, cc)
+    cc = np.where(frc > 0, np.minimum(cc, gvc - frc), 0.0)
+    np.savetxt(os.path.join(d, "catch30.txt"), cc, fmt="%.4f")
+    print("catchment: %.2f ha of roads and upland drain into plots; %.2f ha in 30 m cells with paddies (catch30), "
+          "%.2f ha in cells without paddies (not represented)" % (catch.sum() * DX * DX / 1e4,
+                                                                  cc.sum() * f * f * DX * DX / 1e4,
+                                                                  lost.sum() * f * f * DX * DX / 1e4))
     uc = coarse(unit * isp, 0).sum(axis=(1, 3)) / np.maximum(coarse(isp.astype(float), 0.0).sum(axis=(1, 3)), 1e-9)
     for tag, a in (("N", np.zeros((nyc, nxc))), ("D", np.ones((nyc, nxc))),
                    ("Du", np.where((uc > 0) & (uc <= 2.0), 1.0, 0.0)), ("Dd", np.where(uc > 2.0, 1.0, 0.0))):
