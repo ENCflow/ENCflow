@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""test/paddy の区画の解像(表現 B。fn_pd_plot。developer.md §119.8)の入力を作る(Python 標準ライブラリのみ)。
+"""test/paddy の区画の解像(表現 B。fn_pd_plot。developer.md §127.8)の入力を作る(Python 標準ライブラリのみ)。
 
   python3 make_plots.py <出力ディレクトリ>
 

@@ -48,7 +48,7 @@
 ### 並列化と配列の確保範囲(帯分割・窓)
 
 - 現行: [§11](developer/011.md)(分割実装の基準)と [§79](developer/079.md)〜[§83](developer/083.md)(行窓・列の確保範囲・全域配列の窓化・入力の窓読み・save/restore)。利用者向けは [並列実行](users_guide/parallel.md)
-- 記録: [§2](developer/002.md)・[§8](developer/008.md)・[§11](developer/011.md)・[§42](developer/042.md)・[§79](developer/079.md)・[§80](developer/080.md)・[§81](developer/081.md)・[§82](developer/082.md)・[§83](developer/083.md)・[§120](developer/120.md)(実効平面積率 af のハロ)
+- 記録: [§2](developer/002.md)・[§8](developer/008.md)・[§11](developer/011.md)・[§42](developer/042.md)・[§79](developer/079.md)・[§80](developer/080.md)・[§81](developer/081.md)・[§82](developer/082.md)・[§83](developer/083.md)・[§128](developer/128.md)(実効平面積率 af のハロ)
 
 ### 浅水流の数値: ENC 格子・時間刻み・乾湿・エッジ水深
 
@@ -83,7 +83,7 @@
 ### 河道
 
 - 現行: [河道](users_guide/channel.md)・[河道の解説](users_guide/channel_models.md)。設計の文書は docs/channel_model.md
-- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)・[§120](developer/120.md)(堤防の越流の上限が読む af のハロ)
+- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)・[§128](developer/128.md)(堤防の越流の上限が読む af のハロ)
 
 ### 内部水理構造物・堤防・家屋
 
@@ -108,9 +108,9 @@
 ### 田んぼダム(水田の貯留と落水口)
 
 - 現行: [田んぼダム](users_guide/paddy.md)。設計の正本は docs/paddy_plan.md
-- 記録: [§119](developer/119.md)(§119.9 は例題 paddy_dam、§119.10・§119.11 は水質・土砂との併用、§119.12 は双方向の
-  水田でない面積の割合の下限、§119.13 は A の集水面積率 fn_pd_catch、§119.14 は例題 D の表現 A と B の差の切り分け、
-  §119.15 は集水面積の雨を 3 × 3 の近傍のタンクへ配る形と例題の前処理、§119.16 は test/paddy の reference の確定と
+- 記録: [§127](developer/127.md)(§127.9 は例題 paddy_dam、§127.10・§127.11 は水質・土砂との併用、§127.12 は双方向の
+  水田でない面積の割合の下限、§127.13 は A の集水面積率 fn_pd_catch、§127.14 は例題 D の表現 A と B の差の切り分け、
+  §127.15 は集水面積の雨を 3 × 3 の近傍のタンクへ配る形と例題の前処理、§127.16 は test/paddy の reference の確定と
   夜間の回帰への登録)
 
 ### 土砂・地形変化
@@ -292,5 +292,5 @@
 - [§116](developer/116.md) developer.md の分割: 基本方針の独立(docs/policy.md)と節ごとのファイル化(2026-11-22。利用者の依頼と、推奨案での合意)
 - [§117](developer/117.md) 例題 examples/source_area: 山地流域の流出寄与域の発達と縮小(2026-11-10〜16。作成と検討の経過。handoff 00q から移した)
 - [§118](developer/118.md) 河道の向きが変わる場所の移流項(§110)の続き: 200 KB を超えた §110 に代わる追記先(2026-11-22 から)
-- [§119](developer/119.md) 田んぼダムの評価機能 m_paddy(fn_paddy): 落水口の装置則とサブグリッドの水田タンク・区画の解像(2026-11-24 設計合意・段 1 実装、2026-11-25 段 2 実装・段 3 例題・段 4 水質と土砂・集水面積率)
-- [§120](developer/120.md) 実効平面積率 af のハロの行の更新漏れ: 堤防の越流の追い越し上限が帯の境で古い値を読む(MPI の実バグ。2026-11-24 発見・修正)
+- [§127](developer/127.md) 田んぼダムの評価機能 m_paddy(fn_paddy): 落水口の装置則とサブグリッドの水田タンク・区画の解像(2026-11-24 設計合意・段 1 実装、2026-11-25 段 2 実装・段 3 例題・段 4 水質と土砂・集水面積率)
+- [§128](developer/128.md) 実効平面積率 af のハロの行の更新漏れ: 堤防の越流の追い越し上限が帯の境で古い値を読む(MPI の実バグ。2026-11-24 発見・修正)

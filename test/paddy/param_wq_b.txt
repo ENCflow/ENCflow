@@ -1,5 +1,5 @@
 !======================================================================
-! paddy: 水質(fn_wq)と区画の解像(B)(Check_paddy.py wq_b。developer.md §119.10)
+! paddy: 水質(fn_wq)と区画の解像(B)(Check_paddy.py wq_b。developer.md §127.10)
 !
 !   param_b_over.txt(閉じた領域、区画に 60 mm/h を 1 h で畦畔を越流、減水深 5 mm/d)に、雨の濃度 2 mg/L と
 !   事前の湛水の濃度 10 mg/L を足す。

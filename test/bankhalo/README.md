@@ -3,7 +3,7 @@
 [English](en/README.md)
 
 堤防の越流の追い越し上限(`cap_overshoot`。developer.md §68.29 (C'))が、MPI の帯の境で古い実効平面積率
-`s%af` を読んでいた実バグ(developer.md §120)の検定です。reference を持たない検定型で、合否は `Run.sh`・
+`s%af` を読んでいた実バグ(developer.md §128)の検定です。reference を持たない検定型で、合否は `Run.sh`・
 `Run_MPI.sh` の終了コードで決まります。
 
 ## 何を確かめるか

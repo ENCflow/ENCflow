@@ -15,7 +15,7 @@ module m_swflow_enc
   use m_restart, only : restart_write_cell, restart_read_cell, restart_write_edge, &
                         restart_read_edge, restart_skip
   use m_util, only : itoa, rtoa
-  use m_paddy_law, only : t_pddev, t_gtab   ! 水田の落水口の装置(区画の解像 B の状態。§119.8)
+  use m_paddy_law, only : t_pddev, t_gtab   ! 水田の落水口の装置(区画の解像 B の状態。§127.8)
   implicit none
   private
 
@@ -48,9 +48,9 @@ module m_swflow_enc
   public :: sct                                ! m_geomorph の浮遊砂 E-D が読む(have_sect, sdep。§26)
   public :: m_swflow_enc_post            ! ステップ末尾の u,v 正規化パス(§26)
   public :: m_swflow_enc_sdep_update     ! 河床変動後の σ 遷移深さ D の更新(§26)
-  public :: m_swflow_enc_set_step_sect   ! 階段形の断面の登録(水田の二室化。m_paddy が呼ぶ。§26.3・§119.6)
-  public :: m_swflow_enc_set_plot_walls  ! 水田の区画の畦畔・落水口の登録(表現 B。m_paddy が呼ぶ。§119.8)
-  public :: m_swflow_enc_plot_walls_on   ! 区画の畦畔があるか(m_geomorph の掃流砂の除外。§119.11)
+  public :: m_swflow_enc_set_step_sect   ! 階段形の断面の登録(水田の二室化。m_paddy が呼ぶ。§26.3・§127.6)
+  public :: m_swflow_enc_set_plot_walls  ! 水田の区画の畦畔・落水口の登録(表現 B。m_paddy が呼ぶ。§127.8)
+  public :: m_swflow_enc_plot_walls_on   ! 区画の畦畔があるか(m_geomorph の掃流砂の除外。§127.11)
   public :: m_swflow_enc_plot_wall       ! エッジが区画の畦畔・落水口か(同上)
   public :: m_swflow_enc_edge_flux             ! 測線計測のエッジ流量の観測口(opt%have_edge_flux と対)
   public :: m_swflow_enc_nest_export, m_swflow_enc_nest_import   ! ネスティングのエッジ量の窓・帯(nesting_plan §3.5)
@@ -321,7 +321,7 @@ module m_swflow_enc
     logical :: have_bank = .false.            ! 堤防天端が有効か
     integer, allocatable :: nwall(:,:)       ! セルの堤防壁エッジ本数(堰流量の追い越し禁止上限の分母。
                                             !   §68.29 (C')。have_bank のとき bank_init が帯+ハロで構築。
-                                            !   水田の区画の畦畔・落水口(have_pwall)のエッジも足す。§119.8)
+                                            !   水田の区画の畦畔・落水口(have_pwall)のエッジも足す。§127.8)
     logical :: have_swall = .false.           ! 海岸堤防天端が有効か(§17 一般化)
     integer :: f_swall_mode = 0               ! 海岸堤防の水理モード(e_bank_* と同義)
     logical :: have_bopen = .false.           ! 開口補正が有効か(have_bank との合成)
@@ -345,7 +345,7 @@ module m_swflow_enc
     integer, allocatable :: ibr0(:), ibr1(:)  ! (jsh:jeh)
     integer, allocatable :: ibrs(:)           ! 行順に整列したサイト番号
     ! 水田の区画の畦畔(仮想壁面)と落水口(田んぼダムの表現 B。docs/paddy_plan.md §14、
-    ! developer.md §119.8)。m_paddy が m_swflow_enc_set_plot_walls で登録する(無効時は確保
+    ! developer.md §127.8)。m_paddy が m_swflow_enc_set_plot_walls で登録する(無効時は確保
     ! しない)。m_paddy が台帳のために読む
     logical :: have_pwall = .false.           ! 区画の畦畔があるか
     integer, allocatable :: pid(:,:)          ! 区画番号 (ish:ieh, jsh:jeh)。0 = 水田でない
@@ -2547,7 +2547,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   wall = .false.
   if (chn%have_bank) wall = bank_edge(g, s, i, j, in, jn)
   ! 水田の区画の畦畔・落水口のエッジ(表現 B。pwall_apply が上書きする)も同じ理由で判定しない。
-  ! 堤防の壁と重なるエッジは bank_wall が天端の大きい方で扱う(§119.8)
+  ! 堤防の壁と重なるエッジは bank_wall が天端の大きい方で扱う(§127.8)
   pwk = 0
   if (chn%have_pwall .and. .not. wall) then
     pwk = pwall_kind(g, i, j, k, in, jn, pwz)
@@ -2581,7 +2581,7 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   ! bank_wall は sw エッジに触れないため干渉しない)
   if (chn%have_swall) call seawall_wall(p, g, s, i, j, in, jn, uve1, mne1)
 
-  ! 水田の区画の畦畔(仮想壁面)と落水口の装置則による上書き(同 submodule。表現 B。§119.8)
+  ! 水田の区画の畦畔(仮想壁面)と落水口の装置則による上書き(同 submodule。表現 B。§127.8)
   if (pwk > 0) call pwall_apply(p, g, s, i, j, k, in, jn, ie, je, pwk, pwz, uve1, mne1)
 
   ! セル境界での単位幅流量から境界の両側のセルでの水深の減少量を計算する
@@ -4841,8 +4841,8 @@ end subroutine
 !   閉じた境界面・乾いた対・通過幅ゼロのエッジは momentum/boundary_uvmn が
 !   mn を 0 にしているので、ここでは判定しない(continuous と同じ集合)。
 !----------------------------------------------------------------------
-! 水田の区画の畦畔・落水口のエッジの問い合わせ(表現 B。§119.8)。地形変化の掃流砂が区画の境を越えないように
-! m_geomorph_fluvial が使う(§119.11。河道の堤防の okbank と同じ扱い)。区画の解像がなければ常に .false.
+! 水田の区画の畦畔・落水口のエッジの問い合わせ(表現 B。§127.8)。地形変化の掃流砂が区画の境を越えないように
+! m_geomorph_fluvial が使う(§127.11。河道の堤防の okbank と同じ扱い)。区画の解像がなければ常に .false.
 !----------------------------------------------------------------------
 logical function m_swflow_enc_plot_walls_on()
   m_swflow_enc_plot_walls_on = chn%have_pwall
@@ -5115,7 +5115,7 @@ subroutine m_swflow_enc_sdep_update(p, g, s)
   !$omp end parallel do
   ! af(実効平面積率)は σ(h, D) を含むため更新する。D が変わったかは全ランクで集める
   ! (逐次は領域のどこかで変われば全セルを更新するので、それと同じにする。update_af は
-  ! ハロの行も交換する collective。§120)
+  ! ハロの行も交換する collective。§128)
   ich = 0
   if (changed) ich = 1
   call par_allreduce_maxi(ich)
@@ -5124,7 +5124,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 階段形の断面の登録(水田の二室化。§26.3・§119.6)
+! 階段形の断面の登録(水田の二室化。§26.3・§127.6)
 !   dstep > 0 のセルを、遷移深さ D = dstep・床の割合 f = fstep の σ のセル(h < D で σ = f、h ≥ D で 1)に
 !   する。m_paddy_init が swflow の init の後に 1 度だけ呼ぶ(collective: update_af がハロを交換する)。
 !   河道の σ(冪の形)と同じ配列に載せる(水田のセルは河道セルに置けないので重ならない)。D は河床変動に
@@ -5196,7 +5196,7 @@ subroutine update_af(g, s)
   end do
   !$omp end parallel do
   ! ハロの行も持ち主の値にそろえる(堤防の越流の追い越し上限 cap_overshoot が、帯の境の
-  ! 堤防エッジで隣の行(ハロ)のセルの af を読む。§120)。呼ぶ条件(幅・σ・可動 gv)は
+  ! 堤防エッジで隣の行(ハロ)のセルの af を読む。§128)。呼ぶ条件(幅・σ・可動 gv)は
   ! 全ランク同値なので collective の条件を満たす
   call par_halo_cell(s%af)
 

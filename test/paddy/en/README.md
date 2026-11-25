@@ -3,13 +3,13 @@
 > English mirror of test/paddy/README.md. The Japanese file is the master copy.
 
 This case verifies the subgrid tanks on the paddy area fraction of each cell and the device laws of the outlets of
-[paddy-field dams](../../../docs/en/users_guide/paddy.md) (`fn_paddy`; developer.md §119). The water balance of one
+[paddy-field dams](../../../docs/en/users_guide/paddy.md) (`fn_paddy`; developer.md §127). The water balance of one
 plot has exact and reference solutions, so the mean ponding depths in the ledger `paddy.csv` of the model are
 compared with them. `Check_paddy.py` rewrites the device laws independently (the chord-width integral of a
 circular hole is computed directly by Gauss–Legendre quadrature, while the model uses a table and an expansion)
 and builds both a reference solution with the same explicit scheme and the exact solutions of the ordinary
 differential equations. For representation B, which resolves the plots on a grid of 5–10 m (`fn_pd_plot`;
-developer.md §119.8), the case checks the solution of the same single plot and the water tightness of the levees, the
+developer.md §127.8), the case checks the solution of the same single plot and the water tightness of the levees, the
 overflow, the backflow and the conservation of water with inflow from outside.
 
 ## Configuration
@@ -31,7 +31,7 @@ overflow, the backflow and the conservation of water with inflow from outside.
 | `param_spill.txt` | 80 mm/h for 6 h, then no rain for 6 h; all separated type (default device) | `spill`: ponding depth ≤ levee height, rate of overflow while full, falls below the levee height after the rain, ledger |
 | `param_mix.txt` | maps of area fraction, adoption ratio and void ratio of buildings, walls on all four sides, 10 mm/h for 2 h | `mix`: paddy area of each class, water conservation against the same run without paddy fields (increase of S + decrease in depth = rain), ledger |
 | `param_dflt.txt` | minimal input with the paddy area fraction only | `dflt`: defaults adopted and shown (no defaults shown for an absent class). Run.sh also checks bit identity with the same values given explicitly |
-| `param_wash.txt` | combination with landform change, part 1: a box with walls on all four sides filled with water 0.05 m deep, 50 mm/h for 1 h. Only the raindrop term of hillslope erosion on wet cells (`wash_kr` = 0.01, no sheet erosion, settling of the suspended sediment practically stopped). The area fraction is the same map by column as param_mix.txt | `wash`: on every cell, lowering of the ground = (1 − area fraction) × raindrop erosion coefficient × rain × time (the rain on the paddy part falls into the ponded water on the fields; developer.md §119.5). No erosion on cells with area fraction 1 |
+| `param_wash.txt` | combination with landform change, part 1: a box with walls on all four sides filled with water 0.05 m deep, 50 mm/h for 1 h. Only the raindrop term of hillslope erosion on wet cells (`wash_kr` = 0.01, no sheet erosion, settling of the suspended sediment practically stopped). The area fraction is the same map by column as param_mix.txt | `wash`: on every cell, lowering of the ground = (1 − area fraction) × raindrop erosion coefficient × rain × time (the rain on the paddy part falls into the ponded water on the fields; developer.md §127.5). No erosion on cells with area fraction 1 |
 | `param_splash.txt` | combination with landform change, part 2: a box where the infiltration capacity (Green-Ampt 72 mm/h) exceeds the rain of 30 mm/h and every cell stays dry, with only the raindrop term of dry-slope erosion (`spl_kr` = 0.003, morfac = 5) | `splash`: on every cell, lowering of the ground = (1 − area fraction) × `spl_kr` × rain × time × morfac |
 | `param_tw_back.txt` | two-way mode (`f_pd_exchange = 1`), part 1: a box with walls on all four sides, area fraction 0.6 in every cell. Surface water depth 0.15 m (below the levees), empty paddy fields. Water of the drains flows back into the paddy fields over the water-level board for 4 h | `tw_back`: ponding depth = reference solution of the same explicit scheme (step-shaped cross-section, device law in both directions, caps), conservation of S, equilibrium level 0.06 m |
 | `param_tw_fill.txt` | two-way mode, part 2: surface water depth 0.50 m (above the levees), ponding depth 0.03 m | `tw_fill`: in the first step the water above the levees fills the paddy fields (ponding depth = levee height, surface water depth 0.338 m, inflow over the levees 1296 m³), S = depth of the merged water (no double counting) |

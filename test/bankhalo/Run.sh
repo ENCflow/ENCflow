@@ -1,5 +1,5 @@
 #!/bin/bash
-# bankhalo: 堤防の越流の追い越し上限と実効平面積率 af(逐次実行。2 構成 = 河道幅、河道幅 + 断面形 σ。developer.md §120)
+# bankhalo: 堤防の越流の追い越し上限と実効平面積率 af(逐次実行。2 構成 = 河道幅、河道幅 + 断面形 σ。developer.md §128)
 #   ./Run.sh
 # reference を持たない検定型。合否は Check_bankhalo.py(閉じた箱の水の保存と、深く潜った堤防を越えて
 # 両岸の水位差が縮まること)。ランク数によらないことは Run_MPI.sh が確かめる

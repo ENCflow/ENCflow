@@ -1368,7 +1368,7 @@ subroutine m_geomorph_init(gm, p, g, s)
   ! 土石流モデルの有効化を通知(swflow_enc が運動量へ hs を算入し抵抗則を
   ! 切り替える。抵抗則のパラメータは init_debris が set_debris で渡し済み)
   s%debris_active = (gm%f_debris > 0)
-  s%rainero_active = ((gm%f_wash > 0 .and. gm%wkr > 0.0) .or. gm%f_splash > 0)   ! 雨滴侵食(§119.13)
+  s%rainero_active = ((gm%f_wash > 0 .and. gm%wkr > 0.0) .or. gm%f_splash > 0)   ! 雨滴侵食(§127.13)
 
   ! (将来のプロセスの検証をここに追加する)
 

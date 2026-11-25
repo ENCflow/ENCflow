@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""test/bankhalo の検定(Python 標準ライブラリのみ。developer.md §120)。
+"""test/bankhalo の検定(Python 標準ライブラリのみ。developer.md §128)。
 
   python3 Check_bankhalo.py <結果のディレクトリ> ...
 

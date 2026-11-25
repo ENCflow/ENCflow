@@ -1,5 +1,5 @@
 #!/bin/bash
-# bankhalo: MPI 実行(N ランク)+ 検定(developer.md §120)
+# bankhalo: MPI 実行(N ランク)+ 検定(developer.md §128)
 #   ./Run_MPI.sh [N](既定 2。行は 16 なので N <= 8)
 # N ランクと 1 ランク(同じ実行ファイル)の Log.txt・水位 E・水深 H をバイト比較する。帯の境が河道を
 # 横切るので、斜めの堤防エッジの隣のセルがハロの行に入り、越流の追い越し上限がハロの af を読む

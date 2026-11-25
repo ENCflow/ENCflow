@@ -1,5 +1,5 @@
 !======================================================================
-! paddy: 水質(fn_wq)と併用するタンクの物質のプールと雨の物質(Check_paddy.py wq_rain。developer.md §119.10)
+! paddy: 水質(fn_wq)と併用するタンクの物質のプールと雨の物質(Check_paddy.py wq_rain。developer.md §127.10)
 !
 !   param_steady.txt(一定の雨 20 mm/h を 48 h。通常の落水口と機能分離型、減水深 5 mm/d)に、雨の濃度 2 mg/L を
 !   足す。事前の湛水の濃度は 0。

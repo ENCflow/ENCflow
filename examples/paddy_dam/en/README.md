@@ -262,8 +262,8 @@ Table 3 (where the water went up to 48 h, m³; rain on the district 125,194 m³)
     in representation B).
   - **The maximum level comes out 0.07 m lower than in representation B** (−0.16 m). In representation A, more of the
     water such as that released by the outlets stays on the surface of the paddy cells and reaches the drains later
-    (water in the branch and main drains at 15 h 6,000 m³; 6,600 m³ in representation B; developer.md §119.14 and
-    §119.15).
+    (water in the branch and main drains at 15 h 6,000 m³; 6,600 m³ in representation B; developer.md §127.14 and
+    §127.15).
 - **The one-way mode stays dry in D by cancellation**: the one-way mode did not flood the settlement in D either
   (0.006 m), but its maximum level is 0.18 m, leaving only 0.004 m to the ground of the settlement.
   - It lets the least water into the paddy fields of the three ways (93,700 m³) and still stays dry, because the one-way

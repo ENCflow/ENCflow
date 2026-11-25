@@ -15,7 +15,7 @@
 !   paddy-field dams) and returned to the surface by the device law of the
 !   outlet and the overflow of the levees. There is one outlet per
 !   representative plot area, and the outflow rate per unit paddy area does
-!   not depend on the grid size (users_guide/paddy.md, developer.md §119).
+!   not depend on the grid size (users_guide/paddy.md, developer.md §127).
 !   On grids of 5-10 m, representation B, which resolves the plots, can be
 !   chosen by giving the map of plot numbers fn_pd_plot (the levees become
 !   virtual walls and the outlets notches in them; the example below is

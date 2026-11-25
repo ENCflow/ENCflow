@@ -90,7 +90,7 @@ module m_main
     type(t_swi) :: si
     type(t_vzflow) :: vz             ! 鉛直不飽和浸透(VZ)流出(fn_vz。§87)
     type(t_sfm) :: sf                ! 貯留関数法の区画流出(fn_sfm。§106)
-    type(t_paddy) :: pd              ! 田んぼダム(水田のサブグリッドのタンク。fn_paddy。§119)
+    type(t_paddy) :: pd              ! 田んぼダム(水田のサブグリッドのタンク。fn_paddy。§127)
     type(t_wavefield) :: wf          ! 沿岸の波浪場(fn_wavefield。§90)
     type(t_glacier) :: gl
     type(t_lavaflow) :: lv
@@ -347,7 +347,7 @@ subroutine init_instance(fn_param, align)
     call m_paddy_init(pd, p, g, b, s, ninst > 1, vz%zr, sf%zr)  ! 田んぼダムを初期化(fn_paddy 指定時のみ
                                             ! 有効。水田のセルの検査にゾーン2の全域マスク・境界の
                                             ! 一覧・空隙率 s%gv、VZ・貯留関数の区画との重なりの
-                                            ! 検査のため両者の init より後に。§119)
+                                            ! 検査のため両者の init より後に。§127)
     call m_wavefield_init(wf, p, g, s, ninst > 1)  ! 沿岸の波浪場を初期化(fn_wavefield 指定時のみ
                                             ! 有効。swflow init より後 = 河道の幅・断面形の
                                             ! 有無が確定、静的な波浪セルの判定にゾーン2の
@@ -595,7 +595,7 @@ subroutine finalize_instance()
     call m_vzflow_dispose(vz, p, s)         ! save は dispose で(契約5。区間の途中なら残りを
                                             ! 同期して s%h へ移してから。m_state の save より先。§87)
     call m_sfm_dispose(sf, p, s)            ! save は dispose で(契約5。VZ と同じ扱い。§106)
-    call m_paddy_dispose(pd, p, s)          ! save は dispose で(契約5。水田の湛水深。§119)
+    call m_paddy_dispose(pd, p, s)          ! save は dispose で(契約5。水田の湛水深。§127)
     call m_wavefield_dispose(wf, p, g, s)   ! save は dispose で(契約5。§90)
     call m_record_dispose(r)
     call m_state_dispose(s, p)
@@ -1077,7 +1077,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   type(t_swi), intent(inout) :: si     ! 土壌雨量指数(タンク貯留を保持。§49)
   type(t_vzflow), intent(inout) :: vz  ! VZ 流出(共有参照柱・区画・出口。§87)
   type(t_sfm), intent(inout) :: sf     ! 貯留関数法の区画流出(区画のタンク・出口。§106)
-  type(t_paddy), intent(inout) :: pd   ! 田んぼダム(水田のサブグリッドのタンク。§119)
+  type(t_paddy), intent(inout) :: pd   ! 田んぼダム(水田のサブグリッドのタンク。§127)
   type(t_wavefield), intent(inout) :: wf  ! 沿岸の波浪場(ビン別エネルギー・台帳。§90)
   type(t_output), intent(inout) :: ou  ! 分布出力(集約バッファ・装置番号)
   logical, intent(in) :: extpre_active    ! BMI 外部降水供給モードか
@@ -1288,7 +1288,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
 
   ! 田んぼダム(fn_paddy 未指定なら no-op。VZ・貯留関数と同じ結合: swflow が水田の上に入れた雨を
   ! s%h から回収して水田のタンクに貯め、落水口の装置則と畦畔の越流で地表の s%h へ戻す(e 回復まで)。
-  ! 水田のセルは VZ・貯留関数の区画セルと重ならないので順序は結果に影響しない。地下水の前。§119)
+  ! 水田のセルは VZ・貯留関数の区画セルと重ならないので順序は結果に影響しない。地下水の前。§127)
   call m_paddy_calc(pd, p, g, s)
 
   ! 湖水位の地下水頭強制(dam_gw 指定の湖沼のみ。gwflow と同周期で

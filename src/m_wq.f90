@@ -61,10 +61,10 @@ module m_wq
   !           持つ。水と物質の出入り(落水・越流・双方向の流入・減水深)は水を動かす m_paddy が同じ割合で動かし
   !           (取水・ポンプと同じ契約。§30.10)、本モジュールは水田の上の雨の物質をプールへ入れ(s%pdfa。
   !           集水面積率のときは集水面積の雨の物質も地表から除き(s%pdfc)、近傍から配られた雨の物質を受ける
-  !           セルのプールへ入れる(s%pdcr。§119.15))、プールに減衰・沈降を掛け、減水深で系外へ出た物質
+  !           セルのプールへ入れる(s%pdcr。§127.15))、プールに減衰・沈降を掛け、減水深で系外へ出た物質
   !           (s%fmpd。m_paddy が記録)を台帳に積む。
   !           区画の解像(表現 B)の区画の水は地表の水のまま(減水深の持ち出しだけ同じ記録)。
-  !           docs/paddy_plan.md §16.1、developer.md §119.10
+  !           docs/paddy_plan.md §16.1、developer.md §127.10
   !   蒸発:   純水のみが抜けるため質量は残留(濃縮)= 物理的に正しい。
   !           コード上の連携は不要
   !   save:   s%cq と cg をモジュール私有ファイル wq.dat で保存(§7 の
@@ -183,7 +183,7 @@ module m_wq
     type(t_wqdam), allocatable :: dam(:)
     logical :: have_rs = .false.            ! ため池(rscap)同伴の有効(§30.7)
     logical :: have_pd = .false.            ! 田んぼダム(fn_paddy)の指定あり = wq.csv に水田の 2 列を足す
-                                            !   (§119.10。指定のない計算の wq.csv の形は変えない)
+                                            !   (§127.10。指定のない計算の wq.csv の形は変えない)
     real(real64) :: dam_decay = 0.0_real64  ! ダムプールの減衰消失の累積 (g。全ランク
                                             !   同値 = 台帳へは rank0 の出力時に加算)
     ! 診断(行部分和 real64。累積 m3 でなく質量 g)
@@ -199,7 +199,7 @@ module m_wq
                                             !   21=取水で系外へ持ち出した量(吐口のない
                                             !   ポンプ・域外分水・内部ソースの吸い込み・
                                             !   井戸揚水。s%cqx から。§30.10)
-                                            !   22=水田の減水深で系外へ(s%fmpd から。§119.10)
+                                            !   22=水田の減水深で系外へ(s%fmpd から。§127.10)
     integer :: un = 0                       ! CSV 装置番号(rank0。open(newunit=) は負値。§22)
   end type
 
@@ -379,7 +379,7 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---
   !     系外との出入りの列(out_sea_g 以降)は末尾に追加した(§30.9。既存の
   !     列の位置は変えない)。out_intake_g は §30.10 で、水田の 2 列(タンクのプールの質量・減水深の
-  !     持ち出し)は §119.10 で最後に追加した(田んぼダム fn_paddy を指定した計算だけ)
+  !     持ち出し)は §127.10 で最後に追加した(田んぼダム fn_paddy を指定した計算だけ)
   wq%have_pd = len_trim(p%fn_paddy) > 0
   if (is_root) then
     open(newunit=wq%un, file=trim(p%dir_result)//"/wq.csv", status='replace')
@@ -1107,7 +1107,7 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
     !$omp end parallel do
   end if
 
-  ! (2p) 水田の減水深の持ち出し(§119.10): m_paddy が減水深に同伴させて系外へ出した物質 fmpd
+  ! (2p) 水田の減水深の持ち出し(§127.10): m_paddy が減水深に同伴させて系外へ出した物質 fmpd
   !      (セル面積基底)を台帳に積んでゼロに戻す(fxr と同じ契約)
   if (allocated(s%fmpd)) then
     !$omp parallel do schedule(static) private(i, j)
@@ -1237,7 +1237,7 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
         do i = g%wx(1,j), g%wx(2,j)
           if (g%sw(i,j) > 0) cycle
           if (g%x(i,j) <= 0) cycle
-          ! 田んぼダムの集水面積率(fn_pd_catch。§119.15): 近傍の雨の降るセルから配られた雨の物質を、受けるセルの
+          ! 田んぼダムの集水面積率(fn_pd_catch。§127.15): 近傍の雨の降るセルから配られた雨の物質を、受けるセルの
           ! タンクのプールへ(このセルの雨の有無によらない。水は m_paddy が s%pdcr の水深でタンクに入れている)
           if (allocated(s%pdcr) .and. allocated(s%pdfa)) then
             if (s%pdcr(i,j) > 0.0) then
@@ -1250,8 +1250,8 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
           w = rate * s%pre(i,j) * p%dt * real(acell) / real(mass_of(g, s, i, j, 1.0))
           if (allocated(s%pdfa)) then
             ! 田んぼダムのタンク(表現 A)のあるセル: 水田の上の雨の物質はタンクのプールへ(セル面積基底。
-            ! 水は m_paddy が地表から回収してタンクに入れている。§119.10)。集水面積率があれば、集水面積の
-            ! 雨の物質も地表から除く(行き先は上の近傍のプール。§119.15)
+            ! 水は m_paddy が地表から回収してタンクに入れている。§127.10)。集水面積率があれば、集水面積の
+            ! 雨の物質も地表から除く(行き先は上の近傍のプール。§127.15)
             a1 = s%pdfa(i,j,1)
             a2 = s%pdfa(i,j,2)
             if (a1 + a2 > 0.0) then
@@ -1440,7 +1440,7 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
               wq%vrow(j,5) = wq%vrow(j,5) + real(w, real64) * acell
             end if
           end if
-          ! 田んぼダムのタンクのプール(セル面積基底。§119.10)
+          ! 田んぼダムのタンクのプール(セル面積基底。§127.10)
           if (allocated(s%cpn)) then
             if (s%cpn(i,j) > 0.0) then
               w = s%cpn(i,j) * (1.0 - wq%fdec)
@@ -1457,7 +1457,7 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
           end if
         end if
         ! 田んぼダムのタンクのプールの沈降(wq_vs だけ。湛水深で割る。沈んだ物質は田面に残り、台帳の
-        ! settle に数える。wq_kd の二相分配はタンクの中では扱わない。§119.10)
+        ! settle に数える。wq_kd の二相分配はタンクの中では扱わない。§127.10)
         if (wq%vs > 0.0 .and. wq%kdsi <= 0.0) then
           if (allocated(s%cpn)) then
             if (s%cpn(i,j) > 0.0 .and. s%hpn(i,j) > p%dd) then
@@ -1652,7 +1652,7 @@ subroutine m_wq_record(wq, p, g, s)
       if (wq%have_pool) rows3(j) = rows3(j) + real(s%bp(i,j), real64) * acell
       ! crs も幾何面積基底(§30.7)
       if (wq%have_rs) rows4(j) = rows4(j) + real(s%crs(i,j), real64) * acell
-      ! 田んぼダムのタンクのプール(セル面積基底。§119.10)
+      ! 田んぼダムのタンクのプール(セル面積基底。§127.10)
       if (allocated(s%cpn)) rows5(j) = rows5(j) + real(s%cpn(i,j), real64) * acell
       if (allocated(s%cpd)) rows5(j) = rows5(j) + real(s%cpd(i,j), real64) * acell
     end do

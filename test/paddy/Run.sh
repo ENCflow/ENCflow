@@ -1,5 +1,5 @@
 #!/bin/bash
-# paddy: 逐次実行 + 回帰テスト + 解析検定(田んぼダムのサブグリッドの水田タンク fn_paddy。developer.md §119)
+# paddy: 逐次実行 + 回帰テスト + 解析検定(田んぼダムのサブグリッドの水田タンク fn_paddy。developer.md §127)
 #   ./Run.sh [-u]
 # param.txt は reference 比較(Log.txt、ULP=0)と Check_paddy.py weir。
 # ほかは Check_paddy.py の検定と停止の確認のみ(reference 非依存):
@@ -9,24 +9,24 @@
 #   param_spill.txt   強い雨で畦畔まで満ちる越流
 #   param_mix.txt     面積率・取組率・空隙率の分布と閉じた領域の水の保存(sed で作る水田なしの計算と比べる)
 #   param_dflt.txt    既定値の採用と表示、同じ値を明示した構成(sed で作る)とのビット一致
-#   param_wash.txt    雨滴侵食(f_wash の雨滴の項)に 1 − 面積率が掛かること(§119.5)
-#   param_splash.txt  乾いた斜面の侵食(f_splash)に 1 − 面積率が掛かること(§119.5)
-#   param_tw_*.txt    双方向(二室化。f_pd_exchange = 1。§119.6): 落水口からの逆流(参照解)、畦畔を越える浸水での
+#   param_wash.txt    雨滴侵食(f_wash の雨滴の項)に 1 − 面積率が掛かること(§127.5)
+#   param_splash.txt  乾いた斜面の侵食(f_splash)に 1 − 面積率が掛かること(§127.5)
+#   param_tw_*.txt    双方向(二室化。f_pd_exchange = 1。§127.6): 落水口からの逆流(参照解)、畦畔を越える浸水での
 #                     瞬時の満水と二重計上がないこと、外水の流入での水の保存、浸水が引いた後の落水。tw_drain は sed で
 #                     6 h で保存 → 再開(連続計算とビット一致)
-#   param_b_*.txt     区画の解像(表現 B。fn_pd_plot。§119.8。入力は make_plots.py が作る): 1 区画の落水(堰の厳密解・
+#   param_b_*.txt     区画の解像(表現 B。fn_pd_plot。§127.8。入力は make_plots.py が作る): 1 区画の落水(堰の厳密解・
 #                     穴の参照解)、畦畔・市松の角の水密、畦畔の越流と閉じた領域の水の保存、落水口からの逆流、畦畔を
 #                     越える外からの流入、畦畔と河川堤防が重なるエッジ、区画から区画への落水口(田越し)。b_back は sed で
 #                     6 h で保存 → 再開(連続計算とビット一致)
-#   param_wq_*.txt    水質(fn_wq。§119.10): タンクの濃度の一次減衰(厳密解)、雨の物質、双方向の逆流で入る水の
+#   param_wq_*.txt    水質(fn_wq。§127.10): タンクの濃度の一次減衰(厳密解)、雨の物質、双方向の逆流で入る水の
 #                     濃度、区画の解像の減水深の持ち出し(wq.csv の質量の収支)。wq_a は sed で 6 h で保存 → 再開
-#   param_sed_tw.txt  土砂(§119.11): 双方向のタンクへ入る水の浮遊砂を田面に積む(固相の保存)。地形変化の刻み 7 s
+#   param_sed_tw.txt  土砂(§127.11): 双方向のタンクへ入る水の浮遊砂を田面に積む(固相の保存)。地形変化の刻み 7 s
 #                     で 1 h で保存 → 再開
 #   param_b_sed.txt   土砂: 区画の解像で掃流砂が畦畔を越えない(区画ごとの河床の変化の合計 0)
-#   param_catch.txt   集水面積率(fn_pd_catch。§119.13): 閉じた箱の雨だけの厳密解(片方向と、sed で双方向)。
+#   param_catch.txt   集水面積率(fn_pd_catch。§127.13): 閉じた箱の雨だけの厳密解(片方向と、sed で双方向)。
 #                     集水面積率 0 の分布を与えた計算と与えない計算のビット一致(steady・tw_drain の変形)、
 #                     集水面積の雨の物質がタンクへ入ること(wq_rain の変形)
-#   param_catch_sp.txt 集水面積の雨を 3 × 3 の近傍の水田へ配る(§119.15): 面積率・取組率・集水面積率が場所で違う
+#   param_catch_sp.txt 集水面積の雨を 3 × 3 の近傍の水田へ配る(§127.15): 面積率・取組率・集水面積率が場所で違う
 #                     閉じた箱のセルごとのタンクの水深と種類ごとの濃度の厳密解(片方向と、sed で双方向)
 #   停止の確認: 河道セル・面積率 > 空隙率・取組率の範囲・型 0 の流出量調整板・
 #   面積率の二重指定・事前の湛水深 > 畦畔高・保存ファイルが残ったまま無効で再開、双方向の水田でない面積の割合
@@ -88,13 +88,13 @@ for f in paddy.csv Log.txt; do
 done
 echo "  ok   the defaults are bit-identical to the same values given explicitly"
 
-# 雨滴侵食から水田の部分を外す(地形変化との併用。§119.5)
+# 雨滴侵食から水田の部分を外す(地形変化との併用。§127.5)
 run wash param_wash.txt
 python3 Check_paddy.py wash result_wash || exit 1
 run splash param_splash.txt
 python3 Check_paddy.py splash result_splash || exit 1
 
-# 双方向(二室化。§119.6)
+# 双方向(二室化。§127.6)
 for t in tw_back tw_fill tw_flood tw_drain; do
     run $t param_$t.txt
     python3 Check_paddy.py $t result_$t || exit 1
@@ -109,7 +109,7 @@ python3 Check_paddy.py restart result_tw_drain result_tw_restart || exit 1
 variant param_tw_drain.txt result_tw_mode "s|^  dir_result = 'result_tw_mode'|&\n  dir_save = 'save_tw'\n  f_state_restore = 1|;s|^  f_pd_exchange = 1 .*|  f_pd_exchange = 0|" > "$tmp"
 expect_stop tw_mode "$tmp" "f_pd_exchange differs from the saved state"
 
-# 区画の解像(表現 B。§119.8)
+# 区画の解像(表現 B。§127.8)
 python3 make_plots.py data_paddy || exit 1
 for t in b_drain b_tight b_over b_back b_ext b_bank b_chain; do
     run $t param_$t.txt
@@ -125,7 +125,7 @@ python3 Check_paddy.py restart_b result_b_back result_b_restart || exit 1
 variant param_b_back.txt result_b_mode "s|^  dir_result = 'result_b_mode'|&\n  dir_save = 'save_b'\n  f_state_restore = 1|;s|^  fn_pd_plot = .*|  pd_frac = 0.5|;/^  fn_pd_outlet = /d" > "$tmp"
 expect_stop b_mode "$tmp" "the representation of the paddy fields differs from the saved state"
 
-# 水質(fn_wq。§119.10): タンクのプール(A の片方向・双方向)と区画の解像(B)の減水深の持ち出し
+# 水質(fn_wq。§127.10): タンクのプール(A の片方向・双方向)と区画の解像(B)の減水深の持ち出し
 for t in wq_a wq_rain wq_tw wq_b; do
     run $t param_$t.txt
     python3 Check_paddy.py $t result_$t || exit 1
@@ -140,7 +140,7 @@ python3 Check_paddy.py restart_wq result_wq_a result_wq_restart || exit 1
 variant param.txt result_wq_mode "s|^  dir_result = 'result_wq_mode'|&\n  dir_save = 'save_wq'\n  f_state_restore = 1|;s/^  pd_perc_mmd = 0.0 .*/  pd_perc_mmd = 5.0/" > "$tmp"
 expect_stop wq_mode "$tmp" "water quality (fn_wq) differs from the saved state"
 
-# 土砂(§119.11): 双方向のタンクへ入る水の浮遊砂を田面に積む、区画の解像の掃流砂は畦畔を越えない
+# 土砂(§127.11): 双方向のタンクへ入る水の浮遊砂を田面に積む、区画の解像の掃流砂は畦畔を越えない
 for t in sed_tw b_sed; do
     run $t param_$t.txt
     python3 Check_paddy.py $t result_$t || exit 1
@@ -158,7 +158,7 @@ python3 Check_paddy.py restart_sed result_sed_cont result_sed_restart || exit 1
 variant param_tw_flood.txt result_sed_mode "s|^  dir_result = 'result_sed_mode'|&\n  dir_save = 'save_sed'\n  f_state_restore = 1|" > "$tmp"
 expect_stop sed_mode "$tmp" "suspended sediment (f_suspend) with f_pd_exchange=1 differs from the saved state"
 
-# 集水面積率(fn_pd_catch。§119.13・§119.15): 閉じた箱の雨だけの厳密解(片方向・双方向)、集水面積率 0 の分布を与えた
+# 集水面積率(fn_pd_catch。§127.13・§127.15): 閉じた箱の雨だけの厳密解(片方向・双方向)、集水面積率 0 の分布を与えた
 # 計算と与えない計算のビット一致(片方向 steady・双方向 tw_drain)、集水面積の雨の物質もタンクへ入ること(雨の濃度へ
 # 近づく)、近傍の水田へ配る雨のセルごとの厳密解(場所で違う面積率・取組率・集水面積率。片方向・双方向)
 run catch param_catch.txt
@@ -219,7 +219,7 @@ expect_stop b_db "$tmp" "fn_pd_plot cannot be combined with debris flows"
 variant param_tw_back.txt result_tw_nh "s|^  fn_paddy = '-'|&\n  fn_enc = '-'|" > "$tmp"
 printf "\n&list_enc\n  f_nonhydrostatic = 1\n/\n" >> "$tmp"
 expect_stop tw_nh "$tmp" "cannot be combined with the non-hydrostatic correction"
-# 集水面積率(§119.13)の入力の誤りと併用の停止
+# 集水面積率(§127.13)の入力の誤りと併用の停止
 variant param_catch.txt result_catch_range "s/'catch_03.txt'/'catch_bad.txt'/" > "$tmp"
 expect_stop catch_range "$tmp" "the catchment fraction (fn_pd_catch) must satisfy 0 <= c <= 1"
 variant param_mix.txt result_catch_nopd "s|^  fn_pd_frac = 'frac_mix.txt'|&\n  fn_pd_catch = 'catch_03.txt'|" > "$tmp"

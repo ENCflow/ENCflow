@@ -428,9 +428,9 @@
     {
       "source": "docs/users_guide/paddy.md",
       "target": "docs/en/users_guide/paddy.md",
-      "source_sha256": "aca9c3541430afa8c4db3ff84ba4cbb69ac617aa6e6b9b657f4166b9328ad737",
-      "target_sha256": "710635fbb96215a4fdc584f77daddf15a408b2145ec82edb6df239bdea460969",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "58450809c61f0ff0cb082ecee40f82681d640e8c2e7b775ee2b5072a00cecd2a",
+      "target_sha256": "fb0f630ac8f61e9c925130bbae2e7c9878745ac396ef6c0eade28eeee9cf0e7a",
+      "reviewer": "Claude (Claude Code session; renumbering of the developer record and handoff citations checked in both files, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -788,9 +788,9 @@
     {
       "source": "examples/List_samples/list_paddy.txt",
       "target": "examples/List_samples/en/list_paddy.txt",
-      "source_sha256": "2fd28df079fe57de466ceea6bda4479ef26ac4b17e11ae47d7747f31aba668f1",
-      "target_sha256": "4a9d731af9e3b3cae28dd1f159139d97e09cda619a1db76efb6d051c0176867d",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "e32e2d208e822987b732185387066da1d8c44459f3502071b2661618efecf1f9",
+      "target_sha256": "7ac07c26c8bb8a04fc833f24129425f74ad5f45b9d4648fde834ff5ec00e0ea5",
+      "reviewer": "Claude (Claude Code session; renumbering of the developer record and handoff citations checked in both files, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -2975,9 +2975,9 @@
     {
       "source": "examples/paddy_dam/README.md",
       "target": "examples/paddy_dam/en/README.md",
-      "source_sha256": "88148219a61676404a44f7ed78f3dd3df30306d11f21234418516e6dddbcbf90",
-      "target_sha256": "0e2ed50c1ddf8bfc0fcfaf95aaa1d42bcbd8fc1b0a3ee9851dd4a1e7bd9688cb",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "5e05eb54ad7f43ce2d292f7fbee54e685ce9e40f5e0547ec64a01383da11402c",
+      "target_sha256": "d66a9b4d49071e5703f80341947fa8e4b359dc579485c5303d48b1b9a37b18ff",
+      "reviewer": "Claude (Claude Code session; renumbering of the developer record and handoff citations checked in both files, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -3785,9 +3785,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "f25d3682b79f8d3884ecc777c90a2db732fb1afe2ecd0c4242fb097ed613f018",
-      "target_sha256": "eb04106bf5e47977feac5674bc7e5bce0b91dc1f1a119d42b54b497ec999d651",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "fca1e05c83ac7959e0e0f85605b556cfb8b0909c7e6131055ba3f976f4b669de",
+      "target_sha256": "2c1869f270583866798c7e9aad742987ea0fbe83821e61f5c2def2a47242cfaf",
+      "reviewer": "Claude (Claude Code session; renumbering of the developer record and handoff citations checked in both files, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -3830,11 +3830,11 @@
     {
       "source": "test/bankhalo/README.md",
       "target": "test/bankhalo/en/README.md",
-      "source_sha256": "c3b3b5264797538be6a53d85f41b6d66c0989d0d255afe56618b9ecfa42e9c06",
-      "target_sha256": "90e9e72b2a08b09d9faf761fcac8b68b933eed672ef5c297492dd0b3577414dc",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/bankhalo runs)",
+      "source_sha256": "0dba28f60bf706bde6a164e2e9f38bfd3b75aa6e7ffb15515455eb7b005e437e",
+      "target_sha256": "551081ff697ac49c7492e4b23caea4dc6f37c2df548062b47289a2e3cd6204c2",
+      "reviewer": "Claude (Claude Code session; renumbering of the developer record and handoff citations checked in both files, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/bankspill/README.md",
@@ -4829,9 +4829,9 @@
     {
       "source": "test/paddy/README.md",
       "target": "test/paddy/en/README.md",
-      "source_sha256": "5be2a3e06f7e59fe339b5d0d72baa362cb832bd225509cd747a719092590daf5",
-      "target_sha256": "7de85aacbf1db760deef02f800f37d4a8e8d428d12ad27fa3c1a957bf92d3d8a",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "a29c9d598d28271c0b503627d91e64059b3221840c1953c34e7799646f91317b",
+      "target_sha256": "7bc5f13c8b828809a69879537a6dd25058a60300062c7b4d4f856feb6a9b9093",
+      "reviewer": "Claude (Claude Code session; renumbering of the developer record and handoff citations checked in both files, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },

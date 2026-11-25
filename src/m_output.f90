@@ -177,7 +177,7 @@ subroutine output_state(o, p, g, s, k)
   ! 土壌雨量指数 SWI (mm。fn_swi 有効時のみ。§49)
   if (allocated(s%swi)) call output_matrix(o, p, g, "Swi", s%swi, k)
   if (allocated(s%frofac)) call output_matrix(o, p, g, "Ff", s%frofac, k)
-  ! 水田の湛水深 (m。田面から。fn_paddy 有効時、その種類の水田がある格子だけ。§119)。
+  ! 水田の湛水深 (m。田面から。fn_paddy 有効時、その種類の水田がある格子だけ。§127)。
   ! Hpn = 通常の落水口の水田、Hpd = 田んぼダムの落水口の水田(水田のないセルは 0)
   if (allocated(s%hpn)) call output_matrix(o, p, g, "Hpn", s%hpn, k)
   if (allocated(s%hpd)) call output_matrix(o, p, g, "Hpd", s%hpd, k)

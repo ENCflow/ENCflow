@@ -38,7 +38,7 @@ apply to B.
 - **Levees**: ponding above the levee height overflows at once to the surface. In the two-way mode, the paddy
   fields fill at once when the surface water level rises above the levees.
 
-The history and the decisions of the design are in developer.md §119, and the study and the list of
+The history and the decisions of the design are in developer.md §127, and the study and the list of
 references are in docs/paddy_plan.md.
 
 ## Enabling and settings
@@ -159,7 +159,7 @@ puts that rain into the tanks as well.
   containing only part of the plot and farm roads or upland. Putting the rain of the catchment only into the tanks of the
   same cell gathers it there, and those tanks overflow easily (in D of the example
   [paddy_dam](../../../examples/paddy_dam/en/README.md) this was the largest factor in the difference from the computation
-  that resolves the plots; developer.md §119.14). Sharing with the surrounding cells approximates the spreading of water
+  that resolves the plots; developer.md §127.14). Sharing with the surrounding cells approximates the spreading of water
   within a plot.
 - The tank area, the number of outlets, the levees, the decrease in depth and the cross-section of the two-way mode (the
   non-paddy share 1 − a/gv) stay those of a. Unlike adding the catchment to the area fraction, the ponding depth and the
@@ -246,7 +246,7 @@ paddy fields with area fraction 0.8 and levees of 0.3 m under inundation, the in
 by about 0.24 m). Use the two-way mode for targets where inundation enters the paddy fields.
 
 **Two-way (`f_pd_exchange = 1`)**: the surface water of a paddy cell is treated as a **step-shaped cross-section** with
-the same mechanism as the channel cross-section shape σ (developer.md §119.6; design in docs/paddy_plan.md §13).
+the same mechanism as the channel cross-section shape σ (developer.md §127.6; design in docs/paddy_plan.md §13).
 
 - Below the levee crest: only the non-paddy area (roads, drains, levees; the share 1 − a/gv of the open area of the
   cell) stores and conveys the water.
@@ -275,7 +275,7 @@ alone, because the surface water gathers on the non-paddy area, becomes deeper a
 ### Resolved plots (B)
 
 With `fn_pd_plot`, the ponding of a plot is the water depth h of the shallow water flow itself, and the levees and the
-outlets override the edges (the flows between cells) of the shallow water flow (developer.md §119.8; design in
+outlets override the edges (the flows between cells) of the shallow water flow (developer.md §127.8; design in
 docs/paddy_plan.md §14).
 
 - **Levees (virtual walls)**: a wall stands on every edge (including the diagonals) between two cells with different plot
@@ -311,7 +311,7 @@ the wall of the bank).
 ### Combination with water quality (fn_wq)
 
 When [water quality](wq.md) (`fn_wq`) is enabled, the water of the paddy fields also carries the substance (developer.md
-§119.10; design in docs/paddy_plan.md §16.1). The substance is the single substance of the water quality chapter, and its
+§127.10; design in docs/paddy_plan.md §16.1). The substance is the single substance of the water quality chapter, and its
 decay and settling coefficients are used as they are. There is no substance model specific to paddy fields (fertilizer,
 turbid water from puddling, leaching of pesticides, etc.); it is a generic form that does not fix the kind of substance.
 
@@ -534,7 +534,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | pd_h0 | level at which the outlet starts to drain | ponding depth before the run (above the field surface; same value for both classes; in B the plot cells are filled to this depth) | **Given** the default is normal ponding (height of the water-level board) |
 | pd_perc_mmd | 5 mm/d | decrease in depth (leaves the system) | **Literature** default of the calculation program of the guide[^maff2026] |
 | pd_wq_c0 | 0 mg/L | concentration of the substance in the ponding before the rain (only with water quality `fn_wq`; A: initial water of the tanks, B: water added to the plot cells) | **Given** |
-| f_pd_exchange | 0 | exchange of water between the surface and the paddy fields (0: one-way = rain only, 1: two-way = flood water also enters the paddy fields through the outlets and over the levees; A only) | **Method** the two-way mode is an original construction (docs/paddy_plan.md §13, developer.md §119.6) |
+| f_pd_exchange | 0 | exchange of water between the surface and the paddy fields (0: one-way = rain only, 1: two-way = flood water also enters the paddy fields through the outlets and over the levees; A only) | **Method** the two-way mode is an original construction (docs/paddy_plan.md §13, developer.md §127.6) |
 | fn_pd_plot | — | map of plot numbers (representation B; 0 = not a paddy field, integers 1–16 777 215) | **Given** giving it selects B (exclusive with the area fraction) |
 | fn_pd_outlet | — | map of the directions of the outlets (B; 1–8 on the outlet cells, 0 elsewhere) | **Given** default: no outlets |
 | fn_pd_class | all 1 | map of the classes of the outlets (B; on the plot cells 1 = normal, 2 = paddy-field dam; the same within a plot) | **Given** |

@@ -1,7 +1,7 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
 #   高速な 31 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
 #   ローカルで test/chichibu/Run.sh を実行すること。test/paddy も実行時間の都合で、夜間の nightly.yml だけで
-#   回す。developer.md §119.16)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
+#   回す。developer.md §127.16)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
 #   bldgdrag・driftwood・bankcap・brink・bankspill・chutepool・cascade・tjunction・stairbank・stageside・bankhalo は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
 #   終了コードで判定。stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。
 #   vshaped は V 字流域の降雨流出の運動学的波の理論解との比較。bldgdrag は家屋の抗力項を含む等流の
@@ -48,7 +48,7 @@
 #   使わない。Run.sh が utils/river_flowline をビルドする)
 #   bankhalo は、堤防の越流の追い越し上限が帯の境で読む実効平面積率 af のハロの検定(閉じた箱の水の保存と、
 #   深く潜った堤防を越えて両岸の水位差が縮まることを判定する)。逐次と MPI の両方で回す(MPI のジョブは
-#   2 ランクと 1 ランクの Log・水位・水深をバイト比較する。帯の境が堤防付きの河道を横切る。developer.md §120)
+#   2 ランクと 1 ランクの Log・水位・水深をバイト比較する。帯の境が堤防付きの河道を横切る。developer.md §128)
 #   フル回帰・MPI np=1,2,4・-fcheck=all・BMI 適合性は夜間の nightly.yml で回す
 name: CI
 

@@ -1,10 +1,10 @@
 module list_paddy
   ! 田んぼダム(水田の落水口の流出抑制)の設定ファイル(fn_paddy の namelist)の読み込み専任
   ! (層契約 §12)。生の値を t_list_paddy に運ぶだけで、解釈・検証・既定値の適用・
-  ! 導出は m_paddy の init が行う(developer.md §119、docs/paddy_plan.md)。
+  ! 導出は m_paddy の init が行う(developer.md §127、docs/paddy_plan.md)。
   !   &list_paddy : 有効化・水田面積率と取組率(分布か一様)・集水面積率(分布)・区画面積・畦畔高・事前の湛水深・
   !                 減水深と、落水口の装置(種類 1 = 取組なしの通常の落水口、2 = 田んぼダム。
-  !                 配列の添字)。区画の解像(表現 B。developer.md §119.7)は区画番号・落水口の向き・
+  !                 配列の添字)。区画の解像(表現 B。developer.md §127.7)は区画番号・落水口の向き・
   !                 落水口の種類の分布
   ! 未指定の番兵は実数 −9999、整数 −9999。グループ不在は全番兵のまま(init が判定)。
   use m_sysparam, only : t_sysparam
@@ -25,19 +25,19 @@ module list_paddy
     character(len=maxpathlen) :: fn_pd_adopt = ""   ! 取組率の分布(水田面積のうち田んぼダムの割合 0〜1)
     real :: pd_adopt = -9999.0                      ! 取組率の一様値(fn_pd_adopt と排他。未指定 = 0)
     character(len=maxpathlen) :: fn_pd_catch = ""   ! 集水面積率の分布(セル面積のうち雨が同じセルの水田へ流れ込む
-                                                    !   部分の割合。表現 A だけ。未指定 = 0。developer.md §119.13)
+                                                    !   部分の割合。表現 A だけ。未指定 = 0。developer.md §127.13)
     real :: pd_aplot = -9999.0                      ! 代表区画面積 (m2。落水口 1 か所あたりの水田面積)
     real :: pd_hlev = -9999.0                       ! 畦畔高 (m。田面から)
     real :: pd_h0 = -9999.0                         ! 事前の湛水深 (m。未指定 = 種類ごとの流れ始める高さ)
     real :: pd_perc_mmd = -9999.0                   ! 減水深 (mm/d。系外へ)
     real :: pd_wq_c0 = -9999.0                      ! 事前の湛水の物質の濃度 (mg/L。水質 fn_wq と併用するときだけ。
-                                                    !   A のタンク・B の区画に足した水。developer.md §119.10)
+                                                    !   A のタンク・B の区画に足した水。developer.md §127.10)
     character(len=maxpathlen) :: fn_pd_plot = ""    ! 区画番号の分布(表現 B。0 = 水田でない。整数)
     character(len=maxpathlen) :: fn_pd_outlet = ""  ! 落水口の向きの分布(表現 B。出口セルに 1〜8、ほかは 0)
     character(len=maxpathlen) :: fn_pd_class = ""   ! 落水口の種類の分布(表現 B。1 = 通常・2 = 田んぼダム。
                                                     !   区画のセルに。未指定 = 全て 1)
     integer :: f_pd_exchange = -9999                ! 地表と水田の水のやり取り 0: 片方向(雨だけ)、
-                                                    !   1: 双方向(二室化。未指定 = 0。developer.md §119.6)
+                                                    !   1: 双方向(二室化。未指定 = 0。developer.md §127.6)
     integer :: pd_dev_type(1:pd_nclass) = -9999     ! 装置の型 0: 水位調整板だけ, 1: 機能分離型, 2: 機能一体型
     real :: pd_board_h(1:pd_nclass) = -9999.0       ! 水位調整板の天端の高さ (m。田面から)
     real :: pd_board_w(1:pd_nclass) = -9999.0       ! 水位調整板の幅(堰幅) (m)

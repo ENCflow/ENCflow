@@ -160,7 +160,7 @@ module m_state
     real, allocatable :: sfe(:,:)   ! タンクへ渡す蒸発散の要求 (m。セル面積基底。そのステップの
                                     ! m_evap の残りの要求。確保は m_sfm_init(fn_sfm と fn_evap の
                                     ! 両方が有効なときのみ)、m_sfm_evap が引いてゼロ戻し。§106.7)
-    ! 田んぼダム(水田のサブグリッドのタンク。§119)の状態と台帳。pd_active は m_paddy_init が
+    ! 田んぼダム(水田のサブグリッドのタンク。§127)の状態と台帳。pd_active は m_paddy_init が
     ! 立てる。確保は m_paddy_init(有効時のみ。hpn・hpd はその種類の水田がある格子だけ)
     logical :: pd_active = .false.  ! 水田のタンクの有効化
     real, allocatable :: hpn(:,:)   ! 通常の落水口の水田の湛水深 (m。その種類の水田面積の上。田面から)
@@ -168,11 +168,11 @@ module m_state
     real, allocatable :: pdv(:,:)   ! 水田のタンクの貯留 (m。セル面積基底。calcstat が S に足す)
     real, allocatable :: pdfr(:,:)  ! 水田面積率 a (セル面積基底。帯+ハロ。地形変化 fn_geomorph と併用する
                                     ! ときだけ m_paddy_init が確保し、雨滴侵食(f_wash の雨滴の項・f_splash)
-                                    ! に 1 − a を掛けるのに使う。§119.5)
+                                    ! に 1 − a を掛けるのに使う。§127.5)
     real, allocatable :: pdcr(:,:)  ! そのステップに近傍の集水面積から配られた雨 (m。水田の面積あたりの水深。帯。
                                     ! 集水面積率 fn_pd_catch のときだけ m_paddy_init が確保し、m_paddy が毎ステップ
-                                    ! 書いてタンクに足す。水質と併用すると m_wq がその雨の物質をプールへ入れる。§119.15)
-    ! 水質(fn_wq)と併用するときの水田の物質(段 4a。docs/paddy_plan.md §16.1、developer.md §119.10)。
+                                    ! 書いてタンクに足す。水質と併用すると m_wq がその雨の物質をプールへ入れる。§127.15)
+    ! 水質(fn_wq)と併用するときの水田の物質(段 4a。docs/paddy_plan.md §16.1、developer.md §127.10)。
     ! 確保は m_paddy_init(水質が有効なときだけ)。cpn・cpd・pdfa はタンク(表現 A)のその種類の水田がある
     ! 格子だけ、fmpd は A・B とも
     real, allocatable :: cpn(:,:)   ! 通常の落水口の水田のタンクの物質 (g/m2。セル面積基底 = ため池の crs と同じ)
@@ -180,10 +180,10 @@ module m_state
     real, allocatable :: pdfa(:,:,:) ! 種類ごとの水田面積率 (ish:ieh, jsh:jeh, 1:2。m_wq が水田の上の雨の物質を
                                     ! タンクへ入れるのに使う)
     real, allocatable :: pdfc(:,:)  ! 集水面積率 c (セル面積基底。帯+ハロ。集水面積率 fn_pd_catch のときだけ。m_wq が
-                                    ! 雨の降るセルの地表から雨の物質を除く割合 a + c の c。§119.15)
+                                    ! 雨の降るセルの地表から雨の物質を除く割合 a + c の c。§127.15)
     real, allocatable :: pdsd(:,:)  ! 双方向の水田のタンクへ入った水が運んだ浮遊砂(hs と同じ柱状量 m。m_paddy が足し、
                                     ! m_geomorph の浮遊砂が田面 z・sd に堆積させてゼロに戻す。fxr と同じ契約。
-                                    ! 双方向と浮遊砂 f_suspend の併用のときだけ m_paddy_init が確保。§119.11)
+                                    ! 双方向と浮遊砂 f_suspend の併用のときだけ m_paddy_init が確保。§127.11)
     real, allocatable :: fmpd(:,:)  ! 減水深で系外へ出た物質 (g/m2。セル面積基底。m_paddy が足し、m_wq が
                                     ! 台帳に積んでゼロに戻す。fxr と同じ契約)
     real :: pdmean = 0.0     ! 領域平均の水田の貯留(m)。pd_active 時のみ更新
@@ -447,7 +447,7 @@ module m_state
                                     ! 抵抗則を切り替える。debris_plan.md §2.3-2.4)
     logical :: rainero_active = .false. ! 雨滴侵食(f_wash の雨滴の項 wash_kr > 0・
                                     ! f_splash)の有効化(m_geomorph_init が設定。
-                                    ! 田んぼダムの集水面積率との併用の停止に使う。§119.13)
+                                    ! 田んぼダムの集水面積率との併用の停止に使う。§127.13)
     real :: hmean
     real :: cnmax
     integer :: it0 = 0       ! 時間ループの開始ステップ(フレッシュランは 0。
@@ -676,7 +676,7 @@ end subroutine
 !   二次の効果として受容)。
 !   呼び出し側の契約: 自帯 js..je のセルだけを更新し、更新後に
 !   par_halo_cell(s%gv)・par_halo_cell(s%lm)・par_halo_cell(s%af) を行うこと(運動量項が
-!   ±1 近傍の gv・lm を平均し、堤防の越流の追い越し上限が隣の行の af を読む。§120)。gvnew >= gv_old のみ(第1段 = 破壊で空隙が増える
+!   ±1 近傍の gv・lm を平均し、堤防の越流の追い越し上限が隣の行の af を読む。§128)。gvnew >= gv_old のみ(第1段 = 破壊で空隙が増える
 !   方向)。gvnew == gv_old は no-op
 !----------------------------------------------------------------------
 subroutine m_state_set_gv(p, s, i, j, gvnew)
@@ -904,7 +904,7 @@ subroutine m_state_calcstat(s, p, g)
     call par_sum_rows(sfsum_j, sfsum)
     s%sfmean = (sfsum + s%sfstore) / s%n_valcells
   end if
-  ! 水田のタンクの貯留(§119)。VZ と同じく別ループ(無効時は何もしない)。判定 pd_active は全ランク同一
+  ! 水田のタンクの貯留(§127)。VZ と同じく別ループ(無効時は何もしない)。判定 pd_active は全ランク同一
   if (s%pd_active) then
     pdsum_j(:) = 0.0
     do j = dcp%js, dcp%je
@@ -1005,7 +1005,7 @@ subroutine m_state_printstate(p, s)
     sblk(2) = sblk(2) + s%sfmean
     sblk(3) = sblk(3) + s%sfmean
   end if
-  ! 水田のタンクの貯留は地表の水として S(S_surf)に算入(§119。無効時は既存の式に触れない別枝)
+  ! 水田のタンクの貯留は地表の水として S(S_surf)に算入(§127。無効時は既存の式に触れない別枝)
   if (s%pd_active) then
     sblk(1) = sblk(1) + s%pdmean
     if (ns == 3) sblk(3) = sblk(3) + s%pdmean

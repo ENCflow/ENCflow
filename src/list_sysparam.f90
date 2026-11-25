@@ -129,7 +129,7 @@ module list_sysparam
     character(len=maxpathlen) :: fn_bldgdebris = ""      ! 家屋破壊・瓦礫設定ファイル(§63)
     character(len=maxpathlen) :: fn_vz = ""              ! 鉛直不飽和浸透(VZ)流出設定ファイル(§87)
     character(len=maxpathlen) :: fn_sfm = ""             ! 貯留関数法の区画流出設定ファイル(§106)
-    character(len=maxpathlen) :: fn_paddy = ""           ! 田んぼダム(水田の落水口)設定ファイル(§119)
+    character(len=maxpathlen) :: fn_paddy = ""           ! 田んぼダム(水田の落水口)設定ファイル(§127)
     character(len=maxpathlen) :: fn_wavefield = ""       ! 沿岸の波浪場設定ファイル(§90)
     character(len=maxpathlen) :: fn_channel = ""         ! 河道条件設定ファイル
     character(len=maxpathlen) :: fn_enc = ""             ! ENC設定ファイル

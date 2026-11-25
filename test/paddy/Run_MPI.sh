@@ -1,11 +1,11 @@
 #!/bin/bash
-# paddy: MPI 実行 + 回帰テスト + 解析検定(田んぼダムのサブグリッドの水田タンク fn_paddy。developer.md §119)
+# paddy: MPI 実行 + 回帰テスト + 解析検定(田んぼダムのサブグリッドの水田タンク fn_paddy。developer.md §127)
 #   ./Run_MPI.sh [ランク数] [-u]
 # 逐次 reference との比較は Log.txt を ULP=0。paddy.csv は同じバイナリの np=1 とバイト比較(セル単位の
 # 計算と行部分和の決定的総和なので、ランク数によらない)。閉じた領域の水の保存(param_mix.txt)、
 # 雨滴侵食から水田の部分を外す検定(param_wash.txt・param_splash.txt。地盤高も np=1 とバイト比較)、
 # 双方向(二室化)の検定(param_tw_back・tw_flood・tw_drain。np=1 とバイト比較)、
-# 区画の解像(表現 B。§119.8。param_b_*.txt。区画・落水口・市松の角が帯の境にかかる。np=1 とバイト比較)、
+# 区画の解像(表現 B。§127.8。param_b_*.txt。区画・落水口・市松の角が帯の境にかかる。np=1 とバイト比較)、
 # 水質と併用するタンクのプールと区画の解像の減水深の持ち出し(param_wq_a・wq_tw・wq_b。np=1 とバイト比較)と
 # その保存 → 再開、土砂(param_sed_tw・b_sed。np=1 とバイト比較)、集水面積率(param_catch の片方向・双方向と
 # 水質、param_catch_sp の近傍へ配る雨が帯の境をまたぐ片方向・双方向。np=1 とバイト比較)、
@@ -67,7 +67,7 @@ if [ "$np" != 1 ]; then
     same_as_np1 result_mix result_mix_np1 paddy.csv Log.txt Hpn9998.txt Hpd9998.txt
 fi
 
-# 雨滴侵食から水田の部分を外す(地形変化との併用。§119.5): 解析検定と np=1 とのバイト一致
+# 雨滴侵食から水田の部分を外す(地形変化との併用。§127.5): 解析検定と np=1 とのバイト一致
 run "$np" wash param_wash.txt
 python3 Check_paddy.py wash result_wash || exit 1
 run "$np" splash param_splash.txt
@@ -80,7 +80,7 @@ if [ "$np" != 1 ]; then
     done
 fi
 
-# 双方向(二室化。§119.6): 解析検定と np=1 とのバイト一致(帯の境の水田のセルも階段形の断面)
+# 双方向(二室化。§127.6): 解析検定と np=1 とのバイト一致(帯の境の水田のセルも階段形の断面)
 for t in tw_back tw_flood tw_drain; do
     run "$np" $t param_$t.txt
     python3 Check_paddy.py $t result_$t || exit 1
@@ -93,7 +93,7 @@ for t in tw_back tw_flood tw_drain; do
     fi
 done
 
-# 区画の解像(表現 B。§119.8): 解析検定と np=1 とのバイト一致
+# 区画の解像(表現 B。§127.8): 解析検定と np=1 とのバイト一致
 python3 make_plots.py data_paddy || exit 1
 for t in b_drain b_tight b_over b_back b_ext b_bank b_chain; do
     run "$np" $t param_$t.txt
@@ -105,7 +105,7 @@ for t in b_drain b_tight b_over b_back b_ext b_bank b_chain; do
     fi
 done
 
-# 水質(§119.10): 解析検定と np=1 とのバイト一致(タンクのプールと減水深の持ち出しの記録)
+# 水質(§127.10): 解析検定と np=1 とのバイト一致(タンクのプールと減水深の持ち出しの記録)
 for t in wq_a wq_tw wq_b; do
     run "$np" $t param_$t.txt
     python3 Check_paddy.py $t result_$t || exit 1
@@ -125,7 +125,7 @@ variant param_wq_a.txt result_wq_restart "s|^  dir_result = 'result_wq_restart'|
 run "$np" wq_restart "$tmp"
 python3 Check_paddy.py restart_wq result_wq_a result_wq_restart || exit 1
 
-# 土砂(§119.11): 解析検定と np=1 とのバイト一致(タンクへ入る浮遊砂の堆積、区画の解像の掃流砂の除外。区画の
+# 土砂(§127.11): 解析検定と np=1 とのバイト一致(タンクへ入る浮遊砂の堆積、区画の解像の掃流砂の除外。区画の
 # 畦畔が帯の境にかかる)
 for t in sed_tw b_sed; do
     run "$np" $t param_$t.txt
@@ -137,7 +137,7 @@ for t in sed_tw b_sed; do
     fi
 done
 
-# 集水面積率(§119.13・§119.15): 解析検定と np=1 とのバイト一致(片方向・双方向、集水面積の雨の物質、近傍の水田へ
+# 集水面積率(§127.13・§127.15): 解析検定と np=1 とのバイト一致(片方向・双方向、集水面積の雨の物質、近傍の水田へ
 # 配る雨が帯の境をまたぐ配置)
 variant param_catch.txt result_catch_tw "s|^  pd_perc_mmd = 0.0|&\n  f_pd_exchange = 1|" > param_catch_tw.tmp
 variant param_wq_rain.txt result_catch_wq "s/^  pd_frac = 1.0$/  pd_frac = 0.5\n  fn_pd_catch = 'catch_03.txt'/" > param_catch_wq.tmp

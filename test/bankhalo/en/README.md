@@ -3,7 +3,7 @@
 > English mirror of test/bankhalo/README.md. The Japanese file is the master copy.
 
 This case checks a real bug in which the overshoot cap of levee overflow (`cap_overshoot`; developer.md §68.29 (C'))
-read a stale effective plan-area ratio `s%af` at MPI band boundaries (developer.md §120). It is a check-type case
+read a stale effective plan-area ratio `s%af` at MPI band boundaries (developer.md §128). It is a check-type case
 without a reference; the result is decided by the exit codes of `Run.sh` and `Run_MPI.sh`.
 
 ## What it checks

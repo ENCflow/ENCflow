@@ -11,7 +11,7 @@ submodule(m_swflow_enc) m_swflow_enc_channel
   !                          nvfortran だけ効かない点は adv_edge と同じ。§3)
   !   - pwall_kind / pwall_apply : 水田の区画の畦畔(仮想壁面)と落水口の装置則による
   !                         エッジの上書き(田んぼダムの表現 B。登録は
-  !                         m_swflow_enc_set_plot_walls。developer.md §119.8、
+  !                         m_swflow_enc_set_plot_walls。developer.md §127.8、
   !                         docs/paddy_plan.md §14)
   ! 設計の正本は developer.md §17(堤防)、§18(開口補正・河道幅)。
   ! bc と違い、状態(frw/wfrac/cwx/cwy と有効フラグ)は親モジュールに置く:
@@ -31,7 +31,7 @@ submodule(m_swflow_enc) m_swflow_enc_channel
   ! 複製は削除: nvfortran は submodule のホスト結合で祖先の use を
   ! only 制限なしに見せるため、複製の再宣言が 1254 エラーになる。§13)
   use m_boundary, only : interp_series
-  use m_paddy_law, only : t_pddev, t_gtab, dev_q   ! 水田の落水口の装置則(表現 B。§119.8)
+  use m_paddy_law, only : t_pddev, t_gtab, dev_q   ! 水田の落水口の装置則(表現 B。§127.8)
   implicit none
 
   ! エッジ格納スロットの k 成分(親の continuous と同じ写像)
@@ -515,7 +515,7 @@ module subroutine bank_wall(p, g, s, i, j, k, in, jn, uve1, mne1)
   zc = max(zc, s%z(il,jl), s%z(ic,jc))
 
   ! 水田の区画の畦畔と重なるエッジ(区画のセルが堤防のある河道セルに接する)は天端の大きい方
-  ! (破堤で堤防の天端が下がっても畦畔は残る。表現 B。§119.8)
+  ! (破堤で堤防の天端が下がっても畦畔は残る。表現 B。§127.8)
   if (chn%have_pwall) then
     if (pwall_kind(g, i, j, k, in, jn, zp) > 0) zc = max(zc, zp)
   end if
@@ -591,7 +591,7 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 水田の区画の畦畔(仮想壁面)と落水口の登録(田んぼダムの表現 B。m_paddy の init が呼ぶ。
-! developer.md §119.8、docs/paddy_plan.md §14)
+! developer.md §127.8、docs/paddy_plan.md §14)
 !   pid・pod・pcl: 区画番号・落水口の向き・装置の種類(帯 + ハロ。rank0 が全域で検査して
 !   配った値)。畦畔の天端を決めるセルの高さ pzl(初期の地盤 + 畦畔高(区画のセル)、初期の
 !   地盤(ほか))を作り、落水口のエッジを帯で検査し(通過幅ゼロの対角・堤防の壁・天端より
