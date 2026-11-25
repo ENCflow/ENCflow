@@ -239,6 +239,15 @@ s_y = \frac{c}{D}
 [test/conduit](../../test/conduit/README.md)(解析平衡に表示全桁で一致)に
 基づきます。
 
+**1 セル幅の線として置く管。** 上の $`c_{nd} = C \times`$ 本数/セル幅 は、管網が面に
+広がっているときの換算です(軸と斜めのエッジを合わせて、同じ勾配で $`c_{nd}\,\Delta`$ を
+運ぶ)。幹線のように 1 セル幅の線として置いた管では、線に沿う流れは軸のエッジ(通過幅
+$`(1-d)\Delta`$。既定の `gwc_diagratio` で $`0.414\Delta`$)だけを通り、斜めのエッジは隣の
+セルとの小さい方の通水能密度(min 規約)になります。満管の通水能 $`C`$ をそのまま運ばせる
+には、線のセルの通水能密度を $`c_{nd} = C/((1-d)\Delta)`$ で与えます($`C/\Delta`$ で与えると、
+線の能力は 0.41 倍。満管・定常の流れで確かめた値)。換算の例は
+[examples/coastal_compound_flood](../../examples/coastal_compound_flood/) の gen_data.py にあります。
+
 ## 7. 井戸揚水(f_gwpump = 1)
 
 井戸 $`n`$ の需要 $`Q_n(t)`$ をセル集合 $`N_n`$ 個に等分配し、各セルの
@@ -365,6 +374,7 @@ $`k_{bed}`$ に $`\Delta h / M`$ を掛ければ後から移行できます)。
 | [test/gwbed](../../test/gwbed/README.md) | 河床交換能の律速・遮断・置き換え | 堤内地の 1 ステップ損失が S_grnd に全 14 桁一致、得水の増分が解析値 |
 | [examples/sewer_hybrid](../../examples/sewer_hybrid/) | 幹線 + 枝管網の換算 | セル別 sy マップの実演 |
 | [examples/qanat](../../examples/qanat/) | 管路層 + 層 2 + 井戸揚水 | 横坑の集水・導水・出口湧出、揚水井による湧出の減少 |
+| [examples/coastal_compound_flood](../../examples/coastal_compound_flood/) | 管路層(枝管網 + 幹線 + ポンプ井)+ 海域吐口 + Green-Ampt + 機場 | 潮位で吐口が閉じる沿岸の町の浸水。水収支の閉合、時間刻み・疑似スロット・格子への感度 |
 
 ## 参考文献
 

@@ -324,6 +324,18 @@ Applications are expressed by parameter combinations:
     (inside the domain = mass conserving). Use it for qanat outlets and
     tile-drain outfalls (note the difference from surcharge through the
     inlet density, which occurs only while pressurized).
+  - **An outfall that gathers a large discharge in one cell**: the outfall
+    discharges once per time step, after the flow in the pipes (the
+    subcycled lateral flow). When the outfall cell is a full pipe, what
+    leaves at one time is at most the pseudo-slot water that lowers the
+    head to the receiving head (gwc_slot_sy × head difference × cell
+    area), so the discharge is capped at "that water ÷ dt" (smaller for a
+    stiffer pseudo-slot, a larger dt and a smaller cell). To discharge the
+    flow of a whole catchment through one cell, make the outfall cell a
+    chamber with a free surface (a pump well or outfall chamber: with
+    fn_gwc_sy, storage coefficient = water surface area ÷ cell area and
+    capacity = storage coefficient × chamber depth). Example:
+    [examples/coastal_compound_flood](../../../examples/coastal_compound_flood/en/README.md).
 - See [test/conduit](../../../test/conduit/en/README.md) for schematic experiments (with an analytic
   equilibrium check).
 
@@ -665,6 +677,7 @@ see [the rainfall and meteorology chapter](forcing.md).
 - [test/gwtani](../../../test/gwtani/en/README.md): constant rain on a steep slope with a thin soil layer; the time of saturation is set by the vertical arrival time (vertical infiltration dominates) and the steady saturated extent by the contributing recharge and the lateral transmissivity (lateral flow dominates), compared with kinematic predictions. A restart round trip with lateral flow enabled is also checked.
 - [examples/source_area](../../../examples/source_area/en/README.md): an example on a real headwater catchment (35 km² cut out of the 50 m grid of Chichibu) that shows the growth and shrinkage of the saturated (runoff source) area and the outlet hydrograph with Green-Ampt and lateral flow, and compares them with runs without infiltration and with vertical infiltration only. It also shows how the surface-flow roughness that represents the same runoff (the equivalent roughness) changes with the lateral conductivity and the rain intensity, and that a layer 2 with a small specific yield gives equally fast runoff.
 - [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md): example settings and input generation that represent a trunk and a branch network in the same conduit layer.
+- [examples/coastal_compound_flood](../../../examples/coastal_compound_flood/en/README.md): an example that combines the conduit layer (branch network, trunk, pump well), a sea outfall and Green-Ampt with the tide, a seawall and a pumping station drawing from the conduits, and compares the flooding of a coastal town when heavy rain, a storm surge and a high water table coincide.
 - [examples/qanat](../../../examples/qanat/en/README.md): an example combining the conduit layer with layer 2 to represent the collection, conveyance and outlet flow of a qanat (tunnel) that collects the groundwater of a fan, and to compare how a nearby pumping well reduces and dries up the flow.
 
 ## References
