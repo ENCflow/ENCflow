@@ -288,7 +288,7 @@ snow is fixed into the terrain by f_dbstop. Panel (b) summarizes the setup below
   the tip of the deposit hardly change. The numbers for (5) and (6) are in the example
   [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md).
 - A verified example is [test/avalanche](../../../test/avalanche/en/README.md)
-  (release → entrained solids grow to 1.81 times the released solids → stopping on the flat;
+  (release → entrained solids grow to 1.97 times the released solids → stopping on the flat;
   solid ledger at machine precision; for a sheet released at once on a uniform slope, the velocity and flow
   depth with the velocity-proportional law, Hungr's law, the minimum flow depth, and with and without the
   momentum switch are within 0.5 % of the solutions of the ordinary differential equations). The Voellmy steady uniform-flow

@@ -320,9 +320,9 @@
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "49f6e7625ef30f6296e9cb1dc5b22f6fb924f83c84758b0ddffcc783994b90f6",
-      "target_sha256": "9c484457a7a0a9426cbc98a33ef8b93a53d36d94df213a7e334e5934839fe4b9",
-      "reviewer": "Claude (Claude Code session; the new item of §5 on the numerical setting for flows in gullies and valleys resolved by the grid (f_opening_dynamic = 0) written in both languages in the same work and compared side by side; the rest is as recorded before)",
+      "source_sha256": "026bd528e91d21b89f92d4f3f0f70b0be353549bbd4b8fd4fa47180650571e80",
+      "target_sha256": "d5e75b87aa498bc80f730c30e1a7b16f7132068fbe72aecbbd93f7fd110d4b89",
+      "reviewer": "Claude (Claude Code session; the value of test/avalanche in §5 (1.81 → 1.97) changed in both languages; the rest is as recorded before)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "45fd9a11f0e17147ba52eeed46d24d65d81406d55f10fe3f960cbf413b61e3e4",
-      "target_sha256": "eaceb32eb47ae5c4ff17178159590b85d44748e869556b8d14b8e0ead489df38",
-      "reviewer": "Claude (Claude Code session; the new verification row of test/vchannel compared side by side with the Japanese source; the rest is as recorded before)",
+      "source_sha256": "5baf4dd32dcfc1ad607bc205256dbea914b8db0f4211376180a7964b67524f3b",
+      "target_sha256": "298a019177d75388c48749642fe7e9ebb79c1fc2051b4e54471eff5f846821dc",
+      "reviewer": "Claude (Claude Code session; the value of test/avalanche in the verification table (1.81 → 1.97) changed in both languages; the rest is as recorded before)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -4046,20 +4046,20 @@
     {
       "source": "test/avalanche/README.md",
       "target": "test/avalanche/en/README.md",
-      "source_sha256": "61d6c477e923e4fca66d8bc434214414d8ce571944dfe211b9b1f9677e8355f1",
-      "target_sha256": "29709a1749f127bd924dad454d0da012b816254bd564999105d284ff36618763",
-      "reviewer": "Claude (Claude Code session; the parts added for configurations 2 to 5 (sheet on a uniform slope): the configuration subsection, the run comments, the results subsection and the related-documents line; tables and numbers compared with the Japanese source)",
+      "source_sha256": "e8176309aafc6106c17cf969b836903b9e3934315ee8f38feb0339f704e8227c",
+      "target_sha256": "da442bc1bc1bc1fc2ca63c9afd17cee851d3f35ae5344eda888312dec580c0bd",
+      "reviewer": "Claude (Claude Code session; values changed by the correction of the blockage ratio (flow depth instead of water depth, developer.md §128) updated in the table, the text and the history note of both languages in the same work and compared side by side; numbers taken from the test run)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/avalanche/figs/avalanche.png",
       "target": "test/avalanche/en/figs/avalanche.png",
-      "source_sha256": "9284f1e1574d97c433971370633303d03177f92194bc5370267dc8b7a8529da4",
-      "target_sha256": "5caba9bfcb2992ea0fce2e3e1d49203e2ae9b30e8e10d2499918cd3c0f61796b",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
+      "source_sha256": "5a1bf661a30e4a0f0ff8cee3b0a196920ddbb078c950a1a29b0ca65cba6849a2",
+      "target_sha256": "d3311c3ad0ff1ee6c3a2d35b2a847789127950d6d8f39d73e2c304ed7f5ced09",
+      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/bankcap/README.md",
@@ -4109,11 +4109,11 @@
     {
       "source": "test/bedslide/README.md",
       "target": "test/bedslide/en/README.md",
-      "source_sha256": "4164e681869778af62c7c80681d1c686bd024804b120453a5e4588830aadc183",
-      "target_sha256": "f40f4f31b145045f8e36985567999201822661dd698dfb6f0701a4f87011c487",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "a113647e9e0f9e781c100d773d74b5fa758a56dd97fae15eb37086e9a7bee655",
+      "target_sha256": "63cecc21d6779fd34f0576a0a3bc7e0307ee97f3b71e4d6906e88f312018cdcd",
+      "reviewer": "Claude (Claude Code session; values changed by the correction of the blockage ratio (flow depth instead of water depth, developer.md §128) updated in the table, the text and the history note of both languages in the same work and compared side by side; numbers taken from the test run)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/bedslide/figs/bench.png",
@@ -4127,11 +4127,11 @@
     {
       "source": "test/bedslide/figs/plunge.png",
       "target": "test/bedslide/en/figs/plunge.png",
-      "source_sha256": "f1ba03e568a25ef6721f6816977e2bee23f83b5f24a33b3d8507bf05330b2ffb",
-      "target_sha256": "e050ca41684f260010891fc5cec37369843490f046ed9bca5acbfacbd1b5099d",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
+      "source_sha256": "0a41e5b13fcf150af49a87c15c62f665cda22a42fda2bb925633ae681155b3a0",
+      "target_sha256": "6ce9d9161199a37dc73d602582712042afc146a12deeae15fe5f525f5fd30522",
+      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/bedslide/figs/tsunami.png",
@@ -5225,29 +5225,29 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "8df621efc676f2fe5a0c145435cf28b6bc24a122a3a6880eabe07a7e0271e63c",
-      "target_sha256": "1e287fc18740a9ba1d7647c0de94250d5ac11fac35f419fbbeaf547ef3a89aae",
-      "reviewer": "Claude (Claude Code session; the parts changed for the new test cases of f_slide_noflow = 2 in configuration 8: the option list, the case table, the description of the thin-film cases and the check table; both diffs were read side by side)",
+      "source_sha256": "a4a263c5659dbd254faab4a17ec3e8c66e75e6ae49a349816facd99940889275",
+      "target_sha256": "2a5338e8a118429ae71b04139785ce56f0f3a1b771da09d8b005aa6a905ad8e2",
+      "reviewer": "Claude (Claude Code session; values changed by the correction of the blockage ratio (flow depth instead of water depth, developer.md §128) updated in the table, the text and the history note of both languages in the same work and compared side by side; numbers taken from the test run)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/slide/figs/fslide.png",
       "target": "test/slide/en/figs/fslide.png",
-      "source_sha256": "2d79304ac47e89230a76923e6b1f2e44c67eb64f44ed798f5ce4d699bb4b506a",
-      "target_sha256": "7ba2ba8cf5aefeab45d621be19b14e87669f3d6ecd81dbb44fc8ae904ef24606",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
+      "source_sha256": "86a41811a28ddc27e897b63ed411c7f3957e006b7ae4d538c50c2e7a3bd29f40",
+      "target_sha256": "8421b2d6203ffb9e40c9e3bd9a7e5922cea1359c3542c001d22a8a36a395268b",
+      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/slide/figs/release.png",
       "target": "test/slide/en/figs/release.png",
-      "source_sha256": "1a3a3d99397b84b818e08e0b906c95e7d7a22a06cba7c6eb653f04491e66bdb5",
-      "target_sha256": "423c826fde17915bdf7347c154a50805a2eaaba139d030dfd3e4f6b683e1eef9",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
+      "source_sha256": "cb34145a04f212100ed64490cfed8eb3382c74a0c8829b339ba25dd36b570f19",
+      "target_sha256": "1e6dceb5268bff6705f51c16fdcda2d2b64e02df19d0c7fdfbc51bb5cb82ad7d",
+      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/slopefric/README.md",
@@ -5306,20 +5306,20 @@
     {
       "source": "test/splashslide/README.md",
       "target": "test/splashslide/en/README.md",
-      "source_sha256": "e52140b79edd1862623cbed39b0ded4f8751d29bbafbc9a56ae798ec03409df4",
-      "target_sha256": "d585f807d09940c48bf056212c89491425d8a3639a284c26b06665c8dc51f166",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "1fa59fb57fe4c2739b5524f56759b0b307756fe9265d949d0c59b6ea7ac57687",
+      "target_sha256": "02c88d2d942cfc3de6ba6d67587f5c1f57d431931f8ddd81caadadc41e4dfad8",
+      "reviewer": "Claude (Claude Code session; values changed by the correction of the blockage ratio (flow depth instead of water depth, developer.md §128) updated in the table, the text and the history note of both languages in the same work and compared side by side; numbers taken from the test run)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/splashslide/figs/splashslide.png",
       "target": "test/splashslide/en/figs/splashslide.png",
-      "source_sha256": "a29aa17abf3308ee8354b97ded86dbb15d6357fc3a7c2f508ba9c2740a5caea0",
-      "target_sha256": "eb541ab122bc8fbf80bff8684018d18f615d5aac261df1decb05c98f5d150061",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
+      "source_sha256": "3e6f2f2062f520a2374ae35f409aad9b0973e52c2a3808258356337111eb23d9",
+      "target_sha256": "0405ea9c18a96cb2f584a8f21f7d2c74433ed6b829c2879389aaa086b43ad148",
+      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/splashstrata/README.md",
@@ -5513,20 +5513,20 @@
     {
       "source": "test/volcano/README.md",
       "target": "test/volcano/en/README.md",
-      "source_sha256": "5c88d696bd0386954595fb1643c782885eecd5d4fb9dbb7c74d3bcd6153b5660",
-      "target_sha256": "6b1a77e3e8a190f926019ceedb0987e546e4abff9d0e2dd290c2659184eea7ae",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "5b48c94c67db1ba87c93975ade99756e35a1247535fa0c7b7b6dfbe6f8a1319b",
+      "target_sha256": "b4faf75f9d09c5598f24b69b51af27a5b470e93a0f2e1e8fa66439466ffcc751",
+      "reviewer": "Claude (Claude Code session; values changed by the correction of the blockage ratio (flow depth instead of water depth, developer.md §128) updated in the table, the text and the history note of both languages in the same work and compared side by side; numbers taken from the test run)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/volcano/figs/tauy.png",
       "target": "test/volcano/en/figs/tauy.png",
-      "source_sha256": "f7b90ab4dc81c44005b0ec3e5456aae27619ac2d6ef188fb9b1c0ec36369cd9b",
-      "target_sha256": "9a14d7032af910960329f943e4fa0f2be3622584225fd540d5fe790ce7fba7fb",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
+      "source_sha256": "da0eb78b01620f5b41f01c88f5f439bd2dd276c803e0887f8f78164c8b0d80c5",
+      "target_sha256": "906ff4f19c4381f886dd174625fd348e4f6373034bafe1f5a6d4db60dcb43f2f",
+      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/volcano/figs/voellmy.png",

@@ -86,8 +86,8 @@ python3 Fig.py en # en/figs/avalanche.png
 
 Top left: fracture depth D = 0.5 m of the release area. Top right: thickness
 of the entrained snow sd₀ − sd. Along the path from the release area to the
-slope break the snow is scoured. The depth is at most 0.47 m on the upper
-slope (95 % of the 0.5 m layer) and becomes shallower toward the lower slope.
+slope break the snow is scoured. The depth is at most 0.44 m on the upper
+slope (88 % of the 0.5 m layer) and becomes shallower toward the lower slope.
 Bottom left: change of the snow surface z − z₀. The path is negative from
 scouring, and stopped debris deposits up to 0.56 m around the slope break
 (x = 30 m) at x = 25–43 m. Bottom right: longitudinal profile (average over
@@ -101,11 +101,11 @@ snow is still flowing (remaining hs).
 |---|---|---|
 | (1) Solid ledger | about 1e-13 m·cell or less (round-off) | PASS |
 | (2) Co-update | about 1e-14 m or less (round-off) | PASS |
-| (3) Entrainment activity | path min(sd − sd₀) = −0.471 m (layer 0.5 m) | PASS |
-| (4) Growth | entrained solid 39.1 / released solid 21.6 = 1.81 times | PASS |
+| (3) Entrainment activity | path min(sd − sd₀) = −0.438 m (layer 0.5 m) | PASS |
+| (4) Growth | entrained solid 42.6 / released solid 21.6 = 1.97 times | PASS |
 | (5) Stopping | remaining Σhs / (released + entrained) = 0.000 | PASS |
 
-- By entrainment the avalanche grows to about 2.8 times the released amount,
+- By entrainment the avalanche grows to about 3.0 times the released amount,
   and all of it stops by 60 s and deposits around the slope break. The ledger
   and the co-update are at machine precision.
 - The entrainable layer is given by reinterpreting the existing soil depth
@@ -152,8 +152,13 @@ snow is still flowing (remaining hs).
   f_dry_head_cap = 4) became the default on 2026-11-21 it is 1.81 (entrained solid 39.1, remaining 0.000,
   largest deposit 0.49 m; developer.md §114). The change comes mainly from f_advection_bend = 2 (with 1
   restored it is 1.95); restoring only f_advection_donor or only f_advection_lateral to the old value gives
-  1.77, and restoring f_dry_head_cap to 3 keeps 1.81. The table, the values in the text and the figures
-  are from this computation.
+  1.77, and restoring f_dry_head_cap to 3 keeps 1.81. After the blockage ratio of the dynamic reassignment
+  of blocked openings was corrected on 2026-11-25 to be measured with the flow depth h + hs, it is 1.97
+  (entrained solid 42.6, remaining 0.000, largest deposit 0.56 m; developer.md §128. How far the snow
+  surface on both sides of the path lowered by entrainment counts as a blockage is now set by the flow depth
+  instead of the water depth of the carrier. The largest scoured depth per column is 0.43, 0.37, 0.26 and
+  0.15 m at x = 14.5, 19.5, 24.5 and 28.5 m). The table, the values in the text and the figures are from
+  this computation.
 
 ### Configurations 2 to 5 (uniform slope)
 

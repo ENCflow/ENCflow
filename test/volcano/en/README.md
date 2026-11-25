@@ -96,8 +96,8 @@ released amount (99.5% has been fixed to the bed).
 | Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | about 1e-11 m·cell or less (round-off) | PASS |
 | Configuration 1 (3) <h_t> versus the analytical solution | 0.3525 / 0.3525 m (0.0%), CV 0.000, C 0.444 (theory 0.444) | PASS |
 | Configuration 2 (1) solid ledger | about 1e-10 m·cell or less (round-off) | PASS |
-| Configuration 2 (2) activity | release area min dz = −1.59 m, flat max dz = 0.439 m | PASS |
-| Configuration 2 (3) stopping | remaining Σhs / released solids = 0.005 (< 0.3) | PASS |
+| Configuration 2 (2) activity | release area min dz = −1.59 m, flat max dz = 0.438 m | PASS |
+| Configuration 2 (3) stopping | remaining Σhs / released solids = 0.006 (< 0.3) | PASS |
 
 - The Voellmy uniform flow agrees with the analytical solution to 4 digits, and
   the water and solid ledgers close at machine precision. These are the
@@ -161,7 +161,10 @@ released amount (99.5% has been fixed to the bed).
   f_dry_head_cap = 4) became the default on 2026-11-21, the lowering of the release area stays at 1.59 m
   and the deposit on the flat part goes from 0.427 to 0.439 m (the next cell from 0.067 to 0.103 m; the
   volume deposited on the flat part from 3.7 to 4.0 % of the whole), with a remaining fraction of 0.005
-  (developer.md §114). The values of the table and the text and the figures are from this computation.
+  (developer.md §114). After the blockage ratio of the dynamic reassignment of blocked openings was corrected
+  on 2026-11-25 to be measured with the flow depth h + hs, the lowering of the release area stays at 1.59 m,
+  the deposit on the flat part goes from 0.439 to 0.438 m and the remaining fraction from 0.005 to 0.006
+  (developer.md §128). The values of the table and the text and the figures are from this computation.
 
 ## Related documents
 
