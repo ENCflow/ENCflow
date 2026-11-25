@@ -259,6 +259,16 @@ snow is fixed into the terrain by f_dbstop. Panel (b) summarizes the setup below
   taking up snow, and the size of the avalanche ends up being set by the threshold depth `dd`. If the snow is
   placed over a chosen area, such as a band along the gully floor, the amount taken up is set by the amount
   placed even without the minimum.
+- **Numerical setting for flows in gullies and valleys resolved by the grid**: for avalanches (and likewise
+  debris flows and debris avalanches) in gullies or valleys where the flow is several cells wide or more, specify
+  `f_opening_dynamic = 0` of the shallow-water computation (no dynamic reassignment of blocked openings). The
+  default 3 is the closure of the passage widths for grid-wide channels whose diagonal neighbours are blocked by
+  the ground; in a V-shaped valley resolved by the grid it widens only the passage of the bottom rows in which a
+  thin flow advances, and the shape of the head of the flow depends on the direction of the valley
+  ([passage-width adjustment](passage_width.md) §7). In the comparison with the exact solution of a uniform
+  V-channel ([test/vchannel](../../../test/vchannel/en/README.md)), a computation with 0 gives a discharge 7 to
+  11 % too small for a flow 8 cells wide, with a spread of 3 % over the flow directions (it approaches the exact
+  solution as the grid is refined).
 - **What it cannot do (honest limits)**: (1) powder-snow
   avalanches are out of scope (an air suspension - outside the
   shallow-water approximation), (2) release is not predicted (the

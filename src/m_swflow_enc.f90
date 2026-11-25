@@ -4460,6 +4460,7 @@ end function
 !   振り替え済みの堤内地セル(have_bopen)は数えない(0)。それ以外は
 !   s = clamp((z_d − z_c)/h_c, 0, 1): 水面が斜め先の地盤より低ければ 1、
 !   地盤を越えた分は斜めが運ぶので地盤より下の水柱の割合だけ塞がる。
+!   h_c は流れの深さ(土砂流動モデルの計算では流動深 h + hs。2026-11-25 までは水深 h だけで測っていた。§128)。
 !   f_opening_dynamic = 3 では z_d − z_c を、面のもう一方の端 (io,jo) との差
 !   z_d − z_o(縦断の勾配を含まない)と、面の両側の 2 階差分 kap(局所の平面からの
 !   盛り上がり。平面の上で 0)で頭打ちにする(§68.41)。両岸が高い河道では
@@ -4496,7 +4497,10 @@ function sblk(g, s, ic, jc, id, jd, io, jo, kap) result(res)
   dz = s%z(ii,jj) - s%z(ic,jc)
   if (opt%f_opening_dynamic == 3 .and. present(kap)) dz = min(dz, s%z(ii,jj) - s%z(io,jo), kap)
   if (dz <= 0.0) return
-  hc = s%h(ic,jc)
+  ! 水柱 h_c は流れの深さ: 水だけの計算では水深 h、土砂流動モデルの計算では流動深 h + hs(flowdepth。流れの
+  ! 表面は z + h + hs。水深 h だけで測ると、キャリアの薄い流れが浸かっている斜め先まで塞がりと数え、
+  ! 流れ続けている斜めの辺と、振り替えを受けた軸の辺が、同じ通過幅を二重に数える。developer.md §128)
+  hc = flowdepth(s, ic, jc)
   if (hc <= dz) then
     res = 1.0
   else

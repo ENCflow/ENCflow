@@ -320,9 +320,9 @@
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "e14bc7d10cdbeb1ca8f3e2e9779972e88c8300525b412a13099c572888e28c01",
-      "target_sha256": "f9e21d5613da0a1abecd493d3e864c55abf5430e80d60c48a80365e5290adb5a",
-      "reviewer": "Claude (Claude Code session; the parts changed in section 5 (snow avalanches) for the entrainment-law options: the new item on the momentum of the entrained snow and entrainment by thin flow, limits (5) and (6), and the verified-example item, compared side by side with the Japanese source)",
+      "source_sha256": "49f6e7625ef30f6296e9cb1dc5b22f6fb924f83c84758b0ddffcc783994b90f6",
+      "target_sha256": "9c484457a7a0a9426cbc98a33ef8b93a53d36d94df213a7e334e5934839fe4b9",
+      "reviewer": "Claude (Claude Code session; the new item of §5 on the numerical setting for flows in gullies and valleys resolved by the grid (f_opening_dynamic = 0) written in both languages in the same work and compared side by side; the rest is as recorded before)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "d6e6faa44249b624b2aba8b6051105e87eb6f69074c3f3a84c0f3ef84d409b5e",
-      "target_sha256": "a147d39ac851cf88406599328790ae7bc0d2974c161b3b32f8370660615522de",
-      "reviewer": "Claude (Claude Code session; entrainment-law improvement (f_dbed = 5 Hungr law, db_hent, f_dbmom): section 3, the parameter table, the verification table rows of test/avalanche and examples/snow_avalanche and the references written in both languages in the same work and compared side by side; parameter names and numbers checked against the code and the test and example runs)",
+      "source_sha256": "45fd9a11f0e17147ba52eeed46d24d65d81406d55f10fe3f960cbf413b61e3e4",
+      "target_sha256": "eaceb32eb47ae5c4ff17178159590b85d44748e869556b8d14b8e0ead489df38",
+      "reviewer": "Claude (Claude Code session; the new verification row of test/vchannel compared side by side with the Japanese source; the rest is as recorded before)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -446,11 +446,11 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "1521e2ee68f41a51e6286219bd5a09664abad0fa510571c49b4180ac7cbfff44",
-      "target_sha256": "1aa8141ae21e5b3df076dd4b3a2b28b1d0d7c3a830a140ac6f23c9b313e1ea1e",
-      "reviewer": "Claude (Claude Code session; values of the v-shaped benchmark updated after the example was recomputed with the 2026-11-21 advection defaults; both files compared)",
+      "source_sha256": "3fe65a4c1104d83633223a6907c1b64eef7c102341c407919548864bd585e7fd",
+      "target_sha256": "2975ad1d3a5b1926a84da717a255701c44f1ae5493c48a89e9b3f5ec5f223a74",
+      "reviewer": "Claude (Claude Code session; blockage ratio measured with the flow depth in sediment-flow computations: the added sentence of §4.3, the history row of 2026-11-25, the new item of §7 on thin flows in a V-shaped valley resolved by the grid, the usage row of §8.1 and the verification row of test/vchannel written in both languages in the same work and compared side by side; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -689,11 +689,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "6cd2ef08b7933b6bea2c4dc377706b58d824dd9466538e31949d98b28cada8eb",
-      "target_sha256": "3aabeadc3c5eef84cc1114bc9389acb311fb71094a0ba16032bfd8c6eb5c9b85",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "e9021cfa6dfd4a41560a40b42152dc9295e106e59b2b7c085e271d427c9b0a68",
+      "target_sha256": "a92600d8d0f40ba07d02ddb212e4ff2faf2a1aa15605ab7a612c0f21ae574322",
+      "reviewer": "Claude (Claude Code session; the sentence added to the comment of f_opening_dynamic (0 recommended for sediment flows in valleys resolved by the grid) compared side by side; values, identifiers and enabled states are identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
@@ -4037,11 +4037,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "565f84723c4ba6fe7fe891a49409ee3e8ae96f7c2b7dca2ec57e305d77e17c38",
-      "target_sha256": "c594e6a24e96774c76652e77df08a55fed69980ca44d8aa82ecf5688a791650b",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "bfeff0022a44f55de68cae4cd52c8c017f2825693505ef613ce50008eaec3238",
+      "target_sha256": "52d90295e4f3293745668827d50d71db8b3904dae9b1f7f5ece73a1857e8facd",
+      "reviewer": "Claude (Claude Code session; the new row of test/vchannel compared side by side with the Japanese source; the other rows are as recorded before)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/avalanche/README.md",
@@ -5491,6 +5491,24 @@
       "reviewer": "Claude (Claude Code session; rerun of 2026-11-10 with the current defaults: the date and the velocity difference 1e-4 at width 1 compared against the Japanese source; the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
+    },
+    {
+      "source": "test/vchannel/README.md",
+      "target": "test/vchannel/en/README.md",
+      "source_sha256": "8f4e54dcf123c0cc65248f9bb678e6fdbf4c16532f35fbb783d472a72f2b762a",
+      "target_sha256": "86eab7014f92f74c4e680ff20faa9b0fe6d95ccf31624f15496791f87b4f2042",
+      "reviewer": "Claude (Claude Code session; new test: the Japanese source and the English mirror written in the same work and compared side by side; tables, formulas and numbers checked against the test run)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "test/vchannel/figs/vchannel.png",
+      "target": "test/vchannel/en/figs/vchannel.png",
+      "source_sha256": "6cf0b7dfb49e2b5342abcc5f5414632f4a333ff74cafe9126315c13ba3a1b757",
+      "target_sha256": "3461fee97097ca5d218bbb85fc4ed5c3441c4c2cfc7b6f830be203c8ea088036",
+      "reviewer": "Claude (Claude Code session; both figures drawn by the same Fig.py from the same results, differing only in the language of the labels)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/volcano/README.md",

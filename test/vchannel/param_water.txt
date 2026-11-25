@@ -1,0 +1,46 @@
+!======================================================================
+! vchannel(水の構成のひな形。構成 w の向き 0°)
+!   param_voellmy.txt と同じ V 字の水路に、同じ形(表面が横断方向に水平。谷底で 4.9 m、幅 40 m)の水を置く。
+!   区間の中央は流れの向きに一様で、各列の流速は自分の水深 h(n) だけで決まる(マニング則の厳密解):
+!     du/dt = g S − g n² u² / h^(4/3)  →  u = u_n tanh(g S t / u_n)、 u_n = h^(2/3) S^(1/2) / n
+!   make_init.py がこのファイルから p_<構成>_<向き>.txt を書く。合否は Check_vchannel.py
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.025                ! 0.005 Δx
+  t0 = 0
+  tt = 20                   ! 20 秒(ほぼ等流になる。区間の中央に両端からの希薄波が届く前)
+  dt_disp = 5
+  dt_file = 20              ! 分布出力は最後だけ
+  dt_recrd = 20
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = ''          ! 辺はすべて壁(流れは領域の端に届かない)
+  dir_data = 'data_r0'
+  dir_result = 'result_w_r0'
+  f_output_mode = 2         ! bil(単精度バイナリ)
+  f_out_u = 1               ! セルの流速の成分(u は東向き、v はファイルの行の進む向き = 南向きが正)
+  f_out_v = 1
+/
+
+&list_enc
+  f_gravity_correction = 0  ! 厳密解を水平の流速・鉛直の深さの式(上)で書くため、急勾配の補正を使わない
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hinit.txt'    ! 初期の水深 (m)
+/
+
+&list_geoinfo
+  lx = 1400.0
+  ly = 1400.0
+  nx = 280
+  ny = 280
+  f_ztype = 1
+  fn_z = 'z_bed.txt'        ! 基盤の標高
+  f_rntype = 0
+  rn0 = 0.1                 ! マニングの粗度 n(勾配 0.4 でも 20 秒でほぼ等流になる大きさ)
+/
