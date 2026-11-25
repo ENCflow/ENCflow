@@ -491,6 +491,7 @@ R が 10〜10⁴ のオーダーになり、実質的に地下水経由の輸送
 - [test/gwseep](../../test/gwseep/): 浸透同伴と地下側方流を経由した物質輸送の収支検算。
 - [test/damwq](../../test/damwq/): ダム完全混合放流とため池同伴の恒常検定。
 - [test/sewer_wq](../../test/sewer_wq/): 管路網をもつ市街地の下水噴出の収支検算(管路網の作り方は [examples/sewer_hybrid](../../examples/sewer_hybrid/))。
+- [examples/coastal_compound_flood](../../examples/coastal_compound_flood/)(補足のケース): 噴出した水に濃度 1 を付けた保存性のトレーサ(`wq_gwc_conc = 1`)で、浸水した水のうち下水道を通ってきた水の割合(地表の濃度 C)と、噴出した水の体積(`in_gwc_g`)を読む例。
 - [test/wqstruct](../../test/wqstruct/): ポンプ・カルバート・分水・内部ソースの吸い込み・井戸揚水が水と一緒に物質を運ぶことの検定(濃度・台帳の閉合・`out_intake_g`)。
 - 書式の実例: [examples/List_samples/list_wq.txt](../../examples/List_samples/list_wq.txt)
 - 地下水と併用すると浸透同伴・地下プールの追跡ができます
