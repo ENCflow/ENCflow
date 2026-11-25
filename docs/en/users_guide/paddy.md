@@ -381,6 +381,14 @@ levee height is the remaining free storage.
   Suspended sediment carried into the paddy fields by the flood is deposited on the field surface when combined with
   landform change ("Combination with landform change" below). Solutes are carried when it is combined with water quality
   ([Combination with water quality](#combination-with-water-quality-fn_wq) above).
+- **Paddy area fraction on coarse grids (A)**: a tank receives only the rain on the paddy part of the cell. Rain that
+  falls on farm roads and upland higher than the plots and flows into the paddy fields over the levees is not
+  represented; it becomes surface water of the cell. In districts with much of such rain, the water sent to the drains is
+  overestimated and the effect of paddy-field dams underestimated. Adding the area whose rain flows into the paddy fields
+  (the catchment) to the area fraction in the two-way mode comes closer to a computation that resolves the plots (it also
+  enlarges the tank area and the number of outlets; result 2 and the hints of the example
+  [paddy_dam](../../../examples/paddy_dam/en/README.md)). Where a decision is near a threshold, such as whether a
+  settlement floods, a difference of a few percent in the fraction changes the result.
 - The discharge coefficients of devices vary from 0.40 to 0.88 with the product and the installation
   [^yoshikawa2009][^minakawa2022]. The default 0.6 is the value of the calculation program of the guide and is a starting
   point for calibration.
@@ -502,7 +510,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | Case | Contents | Key points |
 |---|---|---|
 | [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode, resolved plots (B), combination with water quality and sediment | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). In B, the drainage of a plot of 3000 m² against the exact solution (weir, 8.7×10⁻⁴ relative) and a reference solution (hole, 2×10⁻⁷ relative), plots without outlets keep their water at the levees and checkerboard corners, and water conservation and levelling out with levee overflow, backflow through an outlet and inflow over the levees. For water quality, first-order decay of the tank concentration against the exact solution (4×10⁻¹³ relative), the concentration of the water entering by backflow equal to the surface concentration, and the mass balance of wq.csv closing to the digits of the output (5×10⁻⁸ relative). For sediment, the suspended sediment entering the tanks settles only on the paddy cells with the solids conserved (2×10⁻⁹ relative), and in B bed load does not cross the levees (total bed change of the plot 9×10⁻¹² m). Bit-identical for np = 1, 2, 4 |
-| [examples/paddy_dam](../../../examples/paddy_dam/en/README.md) | heavy rain on a lowland drainage district that can drain only through a pumping station (inland flooding) | the same district is solved with representation A (Δx = 30 m; one-way and two-way) and representation B (Δx = 10 m). With representation B, compares the inundation of a settlement with normal outlets and with paddy-field dams (all, the upstream half, the downstream half), and compares it with representation A under the same conditions |
+| [examples/paddy_dam](../../../examples/paddy_dam/en/README.md) | heavy rain on a lowland drainage district that can drain only through a pumping station (inland flooding) | the same district is solved with representation A (Δx = 30 m; one-way, two-way, and two-way with the catchment added) and representation B (Δx = 10 m). With representation B, compares the inundation of a settlement with normal outlets and with paddy-field dams (all, the upstream half, the downstream half), and compares it with representation A under the same conditions |
 
 ## References
 

@@ -7,7 +7,8 @@
   figs/representations.png  地区と 2 つの表現(入力だけ。計算結果を使わない): 表現 A の地区、表現 B の地区、表現 B の拡大
   figs/maps.png      結果 1: 表現 B の最大水深(N と D)
   figs/series.png    結果 1: 表現 B の雨、集落の浸水深、排水機場の前の水位、区画の平均水深(N・D・Du・Dd)
-  figs/scale.png     結果 2: 同じ条件の表現 B と表現 A(片方向・双方向)の比べ(集落の浸水深と水田の平均水深)
+  figs/scale.png     結果 2: 同じ条件の表現 B と表現 A(片方向・双方向・双方向で集水面積を足す)の比べ(集落の浸水深と
+                     水田の平均水深)
 数表(README の 2 つの表)は標準出力に Markdown で出す。引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は
 共通)。図のパネルの番号は (1)(2)… とする(表現 A・B の記号と紛れないように)。
 """
@@ -115,6 +116,13 @@ def fig_district():
     frac = np.loadtxt("data/frac30.txt")
     rw = np.loadtxt("data/rw30.txt")
     gv = np.loadtxt("data/gv30.txt")
+    catch = np.loadtxt("data/catch.txt", dtype=int)     # 水田へ流れ込むセル(make_district.py の catchment)
+    matplotlib.rcParams["hatch.color"] = INK2
+    matplotlib.rcParams["hatch.linewidth"] = 0.6
+
+    def hatch_catch(ax, ni, nj):
+        for j, i in zip(*np.nonzero(catch[:nj, :ni])):
+            ax.add_patch(plt.Rectangle((i * DX, j * DX), DX, DX, fill=False, hatch="////", lw=0))
     # 表現 B の土地利用: 1 農道・2 小排水路・3 支線・4 幹線・5 区画・6 集落・7 畑・8 台地
     cols = ["#b9b7b0", "#6da7ec", "#2a78d6", "#1c5cab", "#cfe7c9", "#eb6834", "#f2dca0", "#e8e6e0"]
     cmap = ListedColormap(cols)
@@ -143,7 +151,7 @@ def fig_district():
     names = [T("水田なし(農道・畑・台地)", "no paddy (roads, fields, upland)"),
              T("水田面積率 0〜0.2", "paddy fraction 0–0.2"), T("0.2〜0.4", "0.2–0.4"), T("0.4〜0.6", "0.4–0.6"),
              T("0.6〜0.8", "0.6–0.8"),
-             T("0.8〜0.95(上限)", "0.8–0.95 (cap)"), T("集落(建物の空隙率 < 1)", "settlement (void ratio < 1)"),
+             T("0.8〜0.99(上限)", "0.8–0.99 (cap)"), T("集落(建物の空隙率 < 1)", "settlement (void ratio < 1)"),
              T("河道のセル(サブグリッド幅 10 m)", "channel cell (subgrid width 10 m)")]
     hs = [plt.Rectangle((0, 0), 1, 1, fc=c, ec="none") for c in greens + ["#eb6834", "#2a78d6"]]
     ax.legend(hs, names, fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=2, frameon=False)
@@ -151,6 +159,7 @@ def fig_district():
     # (2) 表現 B の地区
     ax = axs[1]
     ax.imshow(use, cmap=cmap, vmin=0.5, vmax=8.5, extent=EXT, interpolation="nearest")
+    hatch_catch(ax, NX, NY)
     for j in range(NY):
         for i in range(NX):
             if plot[j, i] > 0:
@@ -173,6 +182,8 @@ def fig_district():
              T("幹線排水路", "main drain"), T("区画(水田)", "plot (paddy)"), T("集落", "settlement"),
              T("畑", "upland field"), T("台地・堤防", "upland / levee")]
     hs = [plt.Rectangle((0, 0), 1, 1, fc=c, ec="none") for c in cols]
+    hs.append(plt.Rectangle((0, 0), 1, 1, fill=False, hatch="////", lw=0))
+    names.append(T("斜線 = 雨が区画へ流れ込む所", "hatched = rain flows into plots"))
     hs.append(plt.Line2D([], [], ls="none", marker="s", ms=7, mfc=INK, mec="white"))
     names.append(T("排水機場(0.6 m³/s で域外へ)", "pumping station (0.6 m³/s out)"))
     hs.append(plt.Line2D([], [], ls="none", marker="o", ms=6, mfc="white", mec=INK))
@@ -183,6 +194,7 @@ def fig_district():
     ax = axs[2]
     sub = use[:24, :20]
     ax.imshow(sub, cmap=cmap, vmin=0.5, vmax=8.5, extent=[0, 20 * DX, 24 * DX, 0], interpolation="nearest")
+    hatch_catch(ax, 20, 24)
     for j in range(24):
         for i in range(20):
             p = plot[j, i]
@@ -287,10 +299,17 @@ def fig_series():
 
 
 # ---------------------------------------------------------------- 結果 2: 同じ条件の表現 B と表現 A
-# 表現ごとに色を分け(表現 B = 青、表現 A = オレンジ)、表現 A のやり取りは線種で(片方向 = 破線、双方向 = 実線)
+# 表現ごとに色を分け(表現 B = 青、表現 A = オレンジ)、表現 A の与え方は線種で(片方向 = 破線、双方向 = 実線、
+# 双方向で水田面積率に水田へ流れ込む面積を足したもの = 点線)
 REPS = [("B10_%s", REP_B, C1, "-"),
         ("A30_%s", T("%s・片方向" % REP_A, "%s, one-way" % REP_A), C2, "--"),
-        ("A30_%s2", T("%s・双方向" % REP_A, "%s, two-way" % REP_A), C2, "-")]
+        ("A30_%s2", T("%s・双方向" % REP_A, "%s, two-way" % REP_A), C2, "-"),
+        ("A30_%s2c", T("%s・双方向・集水面積を足す" % REP_A, "%s, two-way, catchment added" % REP_A), C2, ":")]
+
+
+def oneway(c):
+    """表現 A の片方向のケース(A30_N・A30_D)か(片方向は地表の水が水田に入らない)"""
+    return c in ("A30_N", "A30_D")
 
 
 def fig_scale():
@@ -320,7 +339,7 @@ def fig_scale():
     axs[1, 0].set_ylabel(T("平均水深 (mm)", "mean depth (mm)"), fontsize=8, color=INK2)
     for ax in axs.flat:
         style(ax)
-    axs[0, 0].legend(fontsize=7, frameon=False, loc="upper left")
+    axs[0, 1].legend(fontsize=7, frameon=False, loc="upper right")   # D のパネルは上が空いている
     fig.tight_layout()
     fig.savefig(os.path.join(FIGDIR, "scale.png"), dpi=130)
     plt.close(fig)
@@ -375,7 +394,7 @@ def table():
             if not have(c):
                 continue
             hx, tx, dur, lv, hm, p = stats(c)
-            if c.startswith("A30") and not c.endswith("2"):
+            if oneway(c):
                 back, levin = "—", "—"            # 片方向は地表の水が水田に入らない
             else:
                 back, levin = "%.0f" % p["inflow(m3)"][-1], "%.0f" % p["levee_in(m3)"][-1]
@@ -387,9 +406,9 @@ def table():
     print()
     print(T("表 3(48 h までの水の行き先 m³。地区に降った雨 %.0f m³)" % vrain,
             "Table 3 (where the water went up to 48 h, m³; rain on the district %.0f m³)" % vrain))
-    print(T("| 落水口 | 表現 | 水田の上に降った雨 | 水田でない所に降った雨 | 水田への流入(逆流 + 畦畔を越えた流入) | 水田に入った水の計 |",
-            "| Outlets | Representation | rain on the paddy fields | rain elsewhere | inflow into the paddy fields (backflow + over the levees) | total water into the paddy fields |"))
-    print("|---|---|---:|---:|---:|---:|")
+    print(T("| 落水口 | 表現 | 水田(タンク)の面積 ha | 水田の上に降った雨 | 水田でない所に降った雨 | 水田への流入(逆流 + 畦畔を越えた流入) | 水田に入った水の計 |",
+            "| Outlets | Representation | area of the paddy fields (tanks) ha | rain on the paddy fields | rain elsewhere | inflow into the paddy fields (backflow + over the levees) | total water into the paddy fields |"))
+    print("|---|---|---:|---:|---:|---:|---:|")
     for g in ["N", "D"]:
         for fmt, rname, _, _ in REPS:
             c = fmt % g
@@ -397,12 +416,13 @@ def table():
                 continue
             p = paddy(c)
             r = p["rain(m3)"][-1]
-            if c.startswith("A30") and not c.endswith("2"):
+            area = (p["area1(m2)"][-1] + p["area2(m2)"][-1]) / 1.0e4
+            if oneway(c):
                 inf, inf_s = 0.0, "—"
             else:
                 inf = p["inflow(m3)"][-1] + p["levee_in(m3)"][-1]
                 inf_s = "%.0f" % inf
-            print("| %s | %s | %.0f | %.0f | %s | %.0f |" % (g, rname, r, vrain - r, inf_s, r + inf))
+            print("| %s | %s | %.1f | %.0f | %.0f | %s | %.0f |" % (g, rname, area, r, vrain - r, inf_s, r + inf))
 
 
 if __name__ == "__main__":

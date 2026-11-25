@@ -83,7 +83,7 @@
 /
 
 &list_paddy
-  fn_pd_frac = 'frac30.txt'        ! 水田面積率(10 m の区画から。0.95 で頭打ち)
+  fn_pd_frac = 'frac30.txt'        ! 水田面積率(10 m の区画から。0.99 で頭打ち)
   fn_pd_adopt = 'adopt30_D.txt'    ! 取組率(D: 1)
   f_pd_exchange = 1                ! 双方向
 /

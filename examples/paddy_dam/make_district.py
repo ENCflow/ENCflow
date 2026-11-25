@@ -28,9 +28,11 @@
 #   class_Du.txt          北の 2 組(上流側の半分)だけ田んぼダム
 #   class_Dd.txt          南の 2 組(下流側の半分)だけ田んぼダム
 #   use.txt               土地利用の番号(図のため。1 農道・2 小排水路・3 支線・4 幹線・5 区画・6 集落・7 畑・8 台地)
-#   *30.txt               表現 A の 30 m 格子(10 m の値の 3 × 3 の平均): frac30(水田面積率)、z30(地盤高。
+#   catch.txt             水田へ流れ込むセル(1。農道・台地のうち、雨が区画へ流れ込むもの。catchment() でたどる)
+#   *30.txt               表現 A の 30 m 格子(10 m の値の 3 × 3 の平均): frac30(水田面積率。0.99 で頭打ち)、
+#                         frac30c(frac30 に水田へ流れ込む面積を足したもの。ケース A30_*2c)、z30(地盤高。
 #                         排水路を含むセルは排水路の底の最低)、rw30・w30(支線・幹線排水路のセルの河道マスクと
-#                         サブグリッド幅 m)、adopt30_N・D・Du・Dd(取組率)
+#                         サブグリッド幅 m)、gv30(空隙率)、adopt30_N・D・Du・Dd(取組率)
 import os
 import numpy as np
 
@@ -48,6 +50,41 @@ J_MAIN = 94                       # 幹線排水路
 I_SET2 = 22                       # 集落の東端の列
 UNIT_ROWS = 2 * PL + 2            # 組の行数(農道 + 区画 + 小排水路 + 区画)
 USE = {"road": 1, "drain": 2, "branch": 3, "main": 4, "plot": 5, "house": 6, "field": 7, "hill": 8}
+HLEV = 0.30                       # 畦畔高(param の pd_hlev の既定と同じ)
+
+
+def catchment(z, use, isp):
+    """水田へ流れ込む面積: 区画でも排水路でもない 10 m のセルから、8 近傍の最急の下り(区画のセルは畦畔の天端 =
+    田面 + 畦畔高を高さとする)をたどり、区画のセルに着くものを 1 とする。排水路に着くか、下りがなくなったら 0。
+    着いた区画のセルを dest に返す(独自の簡略な前処理。浅水流の分流は表さず、1 つの向きだけをたどる)"""
+    ny, nx = z.shape
+    isd = np.isin(use, [USE["drain"], USE["branch"], USE["main"]])
+    ze = np.where(isp, z + HLEV, z)
+    catch = np.zeros((ny, nx), dtype=int)
+    dest = np.full((ny, nx, 2), -1, dtype=int)
+    for j0 in range(ny):
+        for i0 in range(nx):
+            if isp[j0, i0] or isd[j0, i0]:
+                continue
+            j, i = j0, i0
+            for _ in range(ny * nx):
+                best, nxt = 0.0, None
+                for dj in (-1, 0, 1):
+                    for di in (-1, 0, 1):
+                        jj, ii = j + dj, i + di
+                        if (dj == 0 and di == 0) or not (0 <= jj < ny and 0 <= ii < nx):
+                            continue
+                        s = (z[j, i] - ze[jj, ii]) / (DX * (np.sqrt(2.0) if dj and di else 1.0))
+                        if s > best:
+                            best, nxt = s, (jj, ii)
+                if nxt is None or isd[nxt]:
+                    break
+                if isp[nxt]:
+                    catch[j0, i0] = 1
+                    dest[j0, i0] = nxt
+                    break
+                j, i = nxt
+    return catch, dest
 
 
 def main():
@@ -128,15 +165,27 @@ def main():
     zr = coarse(np.where(isb, z, np.inf), np.inf).min(axis=(1, 3))
     zc = np.where(rw > 0, zr, zc)
     frc = np.where(rw > 0, 0.0, frc)
-    # 区画だけの 30 m のセル(面積率 1)にも畦畔・小水路があるので 0.95 で頭打ちにする(双方向の水田でない面積の
-    # 割合の下限 0.05。30 m の水田の面積は 10 m より少し小さくなる)
-    frc = np.minimum(frc, 0.95)
+    # 区画だけの 30 m のセルは面積率 1 になるが、双方向は水田でない面積の割合 1 − a/gv を 0.01 以上にする必要が
+    # あるので 0.99 で頭打ちにする(表現 B の区画は畦畔を厚さのない壁にした面積なので、1 に近いほど B にそろう)
+    frc = np.minimum(frc, 0.99)
     np.savetxt(os.path.join(d, "frac30.txt"), frc, fmt="%.4f")
     np.savetxt(os.path.join(d, "z30.txt"), zc, fmt="%.4f")
     np.savetxt(os.path.join(d, "rw30.txt"), rw, fmt="%d")
     np.savetxt(os.path.join(d, "w30.txt"), wid, fmt="%.2f")
-    gvc = coarse(gv, 1.0).mean(axis=(1, 3))
-    np.savetxt(os.path.join(d, "gv30.txt"), np.maximum(gvc, frc), fmt="%.4f")
+    gvc = np.maximum(coarse(gv, 1.0).mean(axis=(1, 3)), frc)
+    np.savetxt(os.path.join(d, "gv30.txt"), gvc, fmt="%.4f")
+    # 水田へ流れ込む面積(集水面積)を足した面積率 frac30c(ケース A30_*2c)。流れ込む先を表現 B の地形でたどり、
+    # 流れ込む先の区画のセルを含む 30 m のセルの面積率に足す(同じく 0.99 で頭打ち)
+    catch, dest = catchment(z, use, isp)
+    np.savetxt(os.path.join(d, "catch.txt"), catch, fmt="%d")
+    add = np.zeros((nyc, nxc))
+    for j, i in zip(*np.nonzero(catch)):
+        add[dest[j, i, 0] // f, dest[j, i, 1] // f] += 1.0 / (f * f)
+    frcc = np.where(frc > 0, np.minimum(frc + add, 0.99 * gvc), frc)
+    np.savetxt(os.path.join(d, "frac30c.txt"), frcc, fmt="%.4f")
+    print("catchment: %.2f ha of roads and upland drain into plots; %.2f ha added to the 30 m fractions, "
+          "%.2f ha cut by the cap" % (catch.sum() * DX * DX / 1e4, ((frcc - frc) * f * f * DX * DX).sum() / 1e4,
+                                      (add.sum() - (frcc - frc).sum()) * f * f * DX * DX / 1e4))
     uc = coarse(unit * isp, 0).sum(axis=(1, 3)) / np.maximum(coarse(isp.astype(float), 0.0).sum(axis=(1, 3)), 1e-9)
     for tag, a in (("N", np.zeros((nyc, nxc))), ("D", np.ones((nyc, nxc))),
                    ("Du", np.where((uc > 0) & (uc <= 2.0), 1.0, 0.0)), ("Dd", np.where(uc > 2.0, 1.0, 0.0))):
