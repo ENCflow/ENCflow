@@ -50,6 +50,8 @@ module m_swflow_enc
   public :: m_swflow_enc_sdep_update     ! 河床変動後の σ 遷移深さ D の更新(§26)
   public :: m_swflow_enc_set_step_sect   ! 階段形の断面の登録(水田の二室化。m_paddy が呼ぶ。§26.3・§119.6)
   public :: m_swflow_enc_set_plot_walls  ! 水田の区画の畦畔・落水口の登録(表現 B。m_paddy が呼ぶ。§119.8)
+  public :: m_swflow_enc_plot_walls_on   ! 区画の畦畔があるか(m_geomorph の掃流砂の除外。§119.11)
+  public :: m_swflow_enc_plot_wall       ! エッジが区画の畦畔・落水口か(同上)
   public :: m_swflow_enc_edge_flux             ! 測線計測のエッジ流量の観測口(opt%have_edge_flux と対)
   public :: m_swflow_enc_nest_export, m_swflow_enc_nest_import   ! ネスティングのエッジ量の窓・帯(nesting_plan §3.5)
   public :: e_bc_wall                          ! m_nest が子の外縁条件(壁)を検査するため
@@ -4838,6 +4840,25 @@ end subroutine
 !   js-1..je に収まる。ハロは読まない)。(in,jn) が 8 近傍でなければ 0。
 !   閉じた境界面・乾いた対・通過幅ゼロのエッジは momentum/boundary_uvmn が
 !   mn を 0 にしているので、ここでは判定しない(continuous と同じ集合)。
+!----------------------------------------------------------------------
+! 水田の区画の畦畔・落水口のエッジの問い合わせ(表現 B。§119.8)。地形変化の掃流砂が区画の境を越えないように
+! m_geomorph_fluvial が使う(§119.11。河道の堤防の okbank と同じ扱い)。区画の解像がなければ常に .false.
+!----------------------------------------------------------------------
+logical function m_swflow_enc_plot_walls_on()
+  m_swflow_enc_plot_walls_on = chn%have_pwall
+end function
+
+
+logical function m_swflow_enc_plot_wall(g, i, j, k, in, jn)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j, k, in, jn      ! k は 1〜8(din/djn の向き)。(in, jn) = (i + din(k), j + djn(k))
+  real :: zc
+  m_swflow_enc_plot_wall = .false.
+  if (.not. chn%have_pwall) return
+  m_swflow_enc_plot_wall = pwall_kind(g, i, j, k, in, jn, zc) > 0
+end function
+
+
 !----------------------------------------------------------------------
 function m_swflow_enc_edge_flux(i, j, in, jn) result(q)
   integer, intent(in) :: i, j, in, jn

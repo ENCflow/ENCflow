@@ -8,6 +8,7 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_fluvial
   use m_parallel, only : par_info, par_stop, dcp, par_halo_cell
+  use m_swflow_enc, only : m_swflow_enc_plot_walls_on, m_swflow_enc_plot_wall   ! 区画の畦畔(§119.11)
   use m_swflow_enc, only : chn, bcs, bc_open_face, bc_neumann_cell, bc_inflow_nooutflow, &
                           slope_shear_on, slope_shear_factor, slope_shear_factor_e
   use m_util, only : rtoa
@@ -176,6 +177,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   real :: afx, tsce
   integer :: nclip, nfix
   logical :: okc, okbank
+  logical :: pwon                 ! 水田の区画の畦畔がある(表現 B。掃流砂は畦畔を越えない。§119.11)
   logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
 
   ! 沿岸の波浪場による攪拌と輸送(f_wfsed = 1。§90)は写しの手続きで(本手続きの命令列を
@@ -188,6 +190,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   nclip = 0
   nfix = 0
   ssh = slope_shear_on()
+  pwon = m_swflow_enc_plot_walls_on()
 
   ! --- ステップ頭のハロ交換(m_gwflow_lateral と同じ「冒頭に置く」理由) ---
   ! 界面エッジの冗長計算(ハロ行 je+1 の書き手)が読む u, v, vv, h は
@@ -234,6 +237,8 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
             if (g%bank_active) then
               okbank = ((g%rw(i,j) > 0) .eqv. (g%rw(in,jn) > 0))
             end if
+            ! 水田の区画の畦畔・落水口のエッジ(表現 B)も掃流砂を運ばない(§119.11。越流で運ばれるのは浮遊砂)
+            if (pwon .and. okbank) okbank = .not. m_swflow_enc_plot_wall(g, i, j, k, in, jn)
             ! エッジ水理量(両セル平均)と法線流速
             vve = (s%vv(i,j) + s%vv(in,jn)) / 2
             hhe = (s%h(i,j) + s%h(in,jn)) / 2
@@ -497,11 +502,13 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
   real :: usc, vsc, usn, vsn, vvc, tauc
   integer :: nclip, nfix
   logical :: okc, okbank, stk, asym
+  logical :: pwon                 ! 水田の区画の畦畔がある(表現 B。§119.11)
   logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
 
   nclip = 0
   nfix = 0
   ssh = slope_shear_on()
+  pwon = m_swflow_enc_plot_walls_on()
   ! 攪拌の流れは Euler 平均流速 u^E = u − r u^S(GLM のときだけ Stokes を引く。r は立ち上げの
   ! 係数)、τ* は波・流れの最大のせん断(wfsed_taumax)。土砂を運ぶ速度は u^E に波の歪度・
   ! 非対称の岸向きの速度 u_a ê_θ を加えた u_s
@@ -558,6 +565,8 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
             if (g%bank_active) then
               okbank = ((g%rw(i,j) > 0) .eqv. (g%rw(in,jn) > 0))
             end if
+            ! 水田の区画の畦畔・落水口のエッジ(表現 B)も掃流砂を運ばない(§119.11。越流で運ばれるのは浮遊砂)
+            if (pwon .and. okbank) okbank = .not. m_swflow_enc_plot_wall(g, i, j, k, in, jn)
             ! エッジの水深(両セル平均)。攪拌の流れの速さ vvc は Euler 平均流速 u^E、
             ! 輸送の速さ vve と向きは u_s = u^E + u_a ê_θ(両セルの平均)
             hhe = (s%h(i,j) + s%h(in,jn)) / 2

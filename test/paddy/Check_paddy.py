@@ -32,6 +32,9 @@ Gauss–Legendre の求積で直接求める(モデルは表と展開)。
   python3 Check_paddy.py wq_tw    result_wq_tw     水質: 双方向の逆流で水田に入る水の濃度と閉じた箱の質量の保存
   python3 Check_paddy.py wq_b     result_wq_b      水質: 区画の解像(B)の減水深の持ち出しを含む質量の収支
   python3 Check_paddy.py restart_wq <連続の結果> <再開の結果>   水質のプールの保存 → 再開のビット一致
+  python3 Check_paddy.py sed_tw   result_sed_tw    土砂: 双方向のタンクへ入る水の浮遊砂を田面に積む(固相の保存)
+  python3 Check_paddy.py b_sed    result_b_sed     土砂: 区画の解像で掃流砂が畦畔を越えない(区画ごとの河床の変化の合計 0)
+  python3 Check_paddy.py restart_sed <連続の結果> <再開の結果>  土砂: 堆積の記録の保存 → 再開のビット一致
 """
 import array
 import math
@@ -816,6 +819,66 @@ def check_wq_b(res):
         fail("no substance left with the percolation")
 
 
+
+# ---------------------------------------------------------------- 土砂(段 4b。§119.11)
+def read_map(name):
+    """data_paddy の整数・実数の分布(行 1 = j = 1)を (j − 1)·nx + (i − 1) の並びで返す"""
+    with open(os.path.join("data_paddy", name)) as f:
+        return [float(x) for line in f if line.strip() for x in line.split()]
+
+
+def check_sed_tw(res):
+    """双方向と浮遊砂: タンクへ入る水の浮遊砂を田面に積む。固相の保存(浮遊 + 河床の上昇 × (1 − λ) = 流し込んだ土砂)、
+    水田のセルの河床の上昇 × (1 − λ) = paddy.csv の sed(+ 沈降の分)、水田のないセルは沈降の分しか上がらない"""
+    nx, ny, area, lam = 10, 8, 100.0, 0.4
+    vin = 0.002 * 1.0 * 7200.0                        # 流入の土砂(体積濃度 × 流量 × 時間)
+    frac = read_map("frac_tw.txt")
+    z0 = read_bil(os.path.join(res, "Z0000.bil"), nx, ny)
+    z1 = read_bil(os.path.join(res, "Z0001.bil"), nx, ny)
+    hs = read_bil(os.path.join(res, "Hs0001.bil"), nx, ny)
+    dz = [z1[k] - z0[k] for k in range(nx * ny)]
+    tot = sum(hs) * area + sum(dz) * area * (1.0 - lam)
+    if abs(tot - vin) > 1e-6 * vin:
+        fail("solid volume %.9f m3 (suspended + deposited) differs from the inflow %.6f m3" % (tot, vin))
+    ok("solid volume conserved: suspended + deposited = %.9f m3 (inflow %.6f m3)" % (tot, vin))
+    settle = max(abs(dz[k]) for k in range(nx * ny) if frac[k] <= 0.0)
+    if settle > 1e-5:
+        fail("the bed of a cell without paddy fields rose by %.3e m (only settling is expected)" % settle)
+    dmin = min(dz[k] for k in range(nx * ny) if frac[k] > 0.0)
+    if not dmin > 1e-4:
+        fail("a paddy cell received no deposit (dz = %.3e m)" % dmin)
+    ok("deposit only on paddy cells (paddy cells >= %.3e m; cells without paddy fields <= %.1e m = settling)"
+       % (dmin, settle))
+    npd = sum(1 for k in range(nx * ny) if frac[k] > 0.0)
+    pad = sum(dz[k] for k in range(nx * ny) if frac[k] > 0.0) * area * (1.0 - lam)
+    sed = read_csv(os.path.join(res, "paddy.csv"))[-1]["sed(m3)"]
+    bound = 2.0 * settle * npd * area * (1.0 - lam) + 1e-6 * sed
+    if not (sed - 1e-6 * sed <= pad <= sed + bound):
+        fail("deposit on the paddy cells %.9f m3 differs from sed(m3) of paddy.csv %.9f m3 (settling bound %.1e)"
+             % (pad, sed, bound))
+    ok("deposit on the paddy cells %.6f m3 = sed(m3) %.6f m3 + settling (<= %.1e m3)" % (pad, sed, bound))
+
+
+def check_b_sed(res):
+    """区画の解像と掃流砂: 掃流砂は区画の畦畔・落水口のエッジを越えないので、区画ごとの河床の変化の合計は 0
+    (区画の中の移動だけ)。掃流砂が区画の中で働いていることも確かめる"""
+    nx, ny = 20, 20
+    pid = [int(round(v)) for v in read_map("b_back_plot.txt")]
+    z0 = read_bil(os.path.join(res, "Z0000.bil"), nx, ny)
+    z1 = read_bil(os.path.join(res, "Z0001.bil"), nx, ny)
+    for p in sorted(set(v for v in pid if v > 0)):
+        cells = [k for k in range(nx * ny) if pid[k] == p]
+        net = sum(z1[k] - z0[k] for k in cells)
+        moved = sum(abs(z1[k] - z0[k]) for k in cells)
+        if not moved > 1e-3:
+            fail("plot %d: the bed load did not act inside the plot (sum |dz| = %.3e m)" % (p, moved))
+        if abs(net) > 1e-6 * moved + 1e-9:
+            fail("plot %d: the bed of the plot changed by %.3e m in total (sum |dz| %.3e m): bed load crossed "
+                 "the levees" % (p, net, moved))
+        ok("plot %d: bed load moved inside the plot (sum |dz| = %.3e m) with no net change (%.1e m)"
+           % (p, moved, net))
+
+
 def main():
     if len(sys.argv) < 3:
         print(__doc__)
@@ -839,6 +902,9 @@ def main():
         check_restart(sys.argv[2], sys.argv[3])
     elif cmd == "restart_b":
         check_restart(sys.argv[2], sys.argv[3], files=("H9998.txt",))
+    elif cmd == "restart_sed":
+        check_restart(sys.argv[2], sys.argv[3], files=("H9998.txt", "Hpn9998.txt", "Hpd9998.txt", "Z9998.bil",
+                                                       "Hs9998.bil"))
     elif cmd == "restart_wq":
         check_restart(sys.argv[2], sys.argv[3], files=("H9998.txt", "Hpn9998.txt", "C9998.txt"))
         a = read_csv(os.path.join(sys.argv[2], "paddy.csv"))[-1]["c1(mg/L)"]
@@ -868,6 +934,10 @@ def main():
         check_wq_tw(sys.argv[2])
     elif cmd == "wq_b":
         check_wq_b(sys.argv[2])
+    elif cmd == "sed_tw":
+        check_sed_tw(sys.argv[2])
+    elif cmd == "b_sed":
+        check_b_sed(sys.argv[2])
     elif cmd in ("wash", "splash"):
         check_erosion(sys.argv[2], cmd)
     elif cmd == "tw_back":

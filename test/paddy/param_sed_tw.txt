@@ -1,0 +1,79 @@
+!======================================================================
+! paddy: 双方向(二室化)と浮遊砂(f_suspend)の併用(Check_paddy.py sed_tw。developer.md §119.11)
+!
+!   param_tw_flood.txt(四辺が壁の箱、面積率 0〜0.9 の分布、西端の列のセルから外水 1.0 m3/s を 2 h)の外水に
+!   体積濃度 0.002 の浮遊砂を乗せる。巻き上げなし(限界掃流力を非常に大きく)、沈降はほぼなし(沈降速度 1e-9 m/s)。
+!   確認: 地表から水田のタンクへ入った水(落水口の逆流・畦畔を越える満水)の浮遊砂が田面に積もること
+!   (固相の保存: 浮遊の量 + 河床の上昇 × (1 − 空隙率) = 流し込んだ土砂、paddy.csv の sed = 水田のセルの河床の
+!   上昇 × (1 − 空隙率)、水田のないセルの河床は(沈降の分しか)上がらない)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 1.0
+  t0 = 0
+  tt = 7200
+  dt_disp = 600
+  dt_file = 7200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  fn_geomorph = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_sed_tw'
+  f_out_hs = 1
+  f_out_z = 1
+  f_output_mode = 3         ! 単精度のバイナリ(Z・Hs の検定)も書く
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+&list_geoinfo
+  nx = 10
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 0
+  sd0 = 1.0
+/
+&list_bound_edge
+/
+&list_bound_inflow
+  inflow_cell(:,1,1) = 1, 4
+  inflow_val(:,1,1) = 0, 1.0
+  inflow_val(:,2,1) = 9999, 1.0
+  inflow_cs(1:2,1,1) = 0, 0.002
+  inflow_cs(1:2,2,1) = 9999, 0.002
+  inflow_dist(1) = 0
+/
+&list_paddy
+  fn_pd_frac = 'frac_tw.txt'
+  fn_pd_adopt = 'adopt_mix.txt'
+  pd_hlev = 0.30
+  pd_aplot = 300.0
+  f_pd_exchange = 1         ! 双方向(二室化)
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  fluv_porosity = 0.4
+  f_suspend = 1
+  f_esform = 1
+  susp_d50 = 0.0002
+  susp_tausc = 1.0e6        ! 巻き上げなし
+  susp_esa = 1.0e-4
+  susp_wf = 1.0e-9          ! 沈降はほぼなし
+/

@@ -62,12 +62,15 @@ module m_paddy
   ! 【併用】ENC のみ。ネスト(複数インスタンス)・淡塩とは init で停止する。水田のセルは
   !   海・河道(rw)・境界(水位規定・区間流入)・ソース・構造物のセルと、VZ・貯留関数の区画セルに
   !   置けない(雨の回収が boundary_h の式と一致する前提)。面積率は空隙率 gv を超えない。
-  !   蒸発散はタンクから引かない(段 4)。B は、A の制限に加えて、地形変化・蒸発散・地下水・
-  !   非静水圧と併用できず(init で停止)、区画のセルを格子の外周と海の隣にも置けない。
-  !   双方向は、家屋破壊の空隙率の帰還・浮遊砂・非静水圧と併用できず、
+  !   蒸発散はタンクから引かない(段 4)。B は、A の制限に加えて、蒸発散・地下水・非静水圧・土石流
+  !   (f_debris)と併用できず(init で停止)、区画のセルを格子の外周と海の隣にも置けない。B と地形変化の
+  !   掃流砂は区画の畦畔・落水口のエッジを越えない(m_geomorph_fluvial が m_swflow_enc_plot_wall で外す。§119.11)。
+  !   双方向は、家屋破壊の空隙率の帰還・土石流・非静水圧と併用できず、
   !   水田のセルをため池のセルに置けず、s ≥ 0.05 が要る(init で停止)。地形変化(fn_geomorph)と併用すると、雨滴侵食(f_wash の
   !   雨滴の項・f_splash)は水田の部分を外す(1 − a を掛ける。s%pdfr。§119.5)。流れによる侵食・
-  !   浮遊砂・掃流砂はセル全面のまま(タンクは土砂を運ばない)。
+  !   浮遊砂・掃流砂はセル全面のまま(タンクは土砂を運ばない)。双方向と浮遊砂(f_suspend)を併用すると、地表から
+  !   タンクへ入る水(落水口の逆流・畦畔を越える満水)の浮遊砂を hs から引いて s%pdsd に記録し、m_geomorph の
+  !   浮遊砂がそれを田面(z・sd)に積む(独自の簡略化。タンクから出る水は清水。§119.11)。
   ! ==========================================================================
   use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
@@ -93,9 +96,9 @@ module m_paddy
   public :: m_paddy_record
   public :: m_paddy_dispose
 
-  integer, parameter :: save_version = 2026112502 ! paddy.dat の形式の版(2026-11-25 に表現の印と、水質の
-                                                   !   タンクのプールを足した)
-  integer, parameter :: nrow = 7                   ! 台帳の行部分和の列数
+  integer, parameter :: save_version = 2026112503 ! paddy.dat の形式の版(2026-11-25 に表現の印、水質の
+                                                   !   タンクのプール、浮遊砂の堆積の記録を足した)
+  integer, parameter :: nrow = 8                   ! 台帳の行部分和の列数(8 = タンクへ入った浮遊砂の堆積。§119.11)
   real, parameter :: pd_smin = 0.05                ! 双方向の水田のセルの、水田でない面積の割合の下限(独自の目安)
   integer, parameter :: pid_max = 16777215         ! 区画番号の上限(単精度の実数で正確に読める 2^24 − 1)
   integer, parameter :: din8(1:8) = [-1, 0, 1, -1, 1, -1, 0, 1]   ! 8 近傍の向き(浅水流と同じ並び)
@@ -114,6 +117,8 @@ module m_paddy
     integer :: exch = 0                        ! 地表と水田のやり取り 0: 片方向、1: 双方向(二室化)
     integer :: rep = 0                         ! 表現 0: A(サブグリッドのタンク)、1: B(区画の解像)
     logical :: wq = .false.                    ! 水質(fn_wq)と併用する(物質のプールと減水深の持ち出し)
+    logical :: sed = .false.                   ! 双方向と浮遊砂(f_suspend)の併用: タンクへ入る水の浮遊砂を田面に
+                                               !   堆積させる(s%pdsd に記録し m_geomorph が積む。§119.11)
     real :: c0 = 0.0                           ! 事前の湛水の物質の濃度 (mg/L = g/m3)
     real :: aplot = 0.0                        ! 代表区画面積 (m2)
     real :: hlev = 0.0                         ! 畦畔高 (m)
@@ -176,6 +181,13 @@ subroutine m_paddy_init(pd, p, g, b, s, multi, vzr, sfr)
   call setup_maps(pd, p, g, b, s, list, vzr, sfr)
   call setup_devices(pd, p, list)
   if (pd%exch == 1) call setup_twoway(pd, g, s)
+  ! 双方向と浮遊砂(f_suspend)の併用(§119.11): タンクへ入る水の浮遊砂を田面に堆積させる記録
+  if (pd%exch == 1 .and. s%sed_active) then
+    pd%sed = .true.
+    allocate(s%pdsd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    call par_info("paddy: suspended sediment (f_suspend) carried into the paddy tanks by backflow and over the " &
+                  //"levees is deposited on the field surface (the outflow of the tanks is clear)")
+  end if
 
   ! 状態(その種類の水田がある格子だけ確保)と S の台帳の貯留
   allocate(s%pdv(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -324,10 +336,11 @@ subroutine m_paddy_record(pd, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: tot(1:nrow), st(1:2), fu(1:2), res, hm(1:2), ff(1:2), cm(1:2), cw(1:2), cc(1:2)
+  real(real64) :: tot(1:nrow), st(1:2), fu(1:2), res, hm(1:2), ff(1:2), cm(1:2), cw(1:2), cc(1:2), vals(1:19)
   real(real64), allocatable :: r1(:), srow(:,:)
   real :: hfull
-  integer :: i, j, k
+  integer :: i, j, k, nv
+  character(len=32) :: fmt
 
   if (.not. pd%enabled) return
   allocate(r1(dcp%js:dcp%je))
@@ -386,15 +399,19 @@ subroutine m_paddy_record(pd, p, g, s)
       ff(k) = fu(k) / pd%area(k)
     end if
   end do
-  if (pd%wq) then
-    write(pd%un_csv, '(f0.2,18(",",es23.15))') s%t, &
-          es_out([pd%area(1), pd%area(2), tot(1), tot(2), tot(3), tot(4), st(1), st(2), res, &
-                  tot(5) / real(p%dt, real64), hm(1), hm(2), ff(1), ff(2), tot(6), tot(7), cc(1), cc(2)])
-  else
-    write(pd%un_csv, '(f0.2,16(",",es23.15))') s%t, &
-          es_out([pd%area(1), pd%area(2), tot(1), tot(2), tot(3), tot(4), st(1), st(2), res, &
-                  tot(5) / real(p%dt, real64), hm(1), hm(2), ff(1), ff(2), tot(6), tot(7)])
+  vals(1:16) = [pd%area(1), pd%area(2), tot(1), tot(2), tot(3), tot(4), st(1), st(2), res, &
+                tot(5) / real(p%dt, real64), hm(1), hm(2), ff(1), ff(2), tot(6), tot(7)]
+  nv = 16
+  if (pd%wq) then                ! 種類ごとの平均濃度(§119.10)
+    vals(nv+1:nv+2) = cc(1:2)
+    nv = nv + 2
   end if
+  if (pd%sed) then               ! タンクへ入った水の浮遊砂を田面に積んだ累積(固相の体積。§119.11)
+    vals(nv+1) = tot(8)
+    nv = nv + 1
+  end if
+  write(fmt, '(a,i0,a)') '(f0.2,', nv, '(",",es23.15))'
+  write(pd%un_csv, fmt) s%t, es_out(vals(1:nv))
   flush(pd%un_csv)
 end subroutine
 
@@ -471,11 +488,12 @@ subroutine calc_twoway(pd, p, g, s)
   real :: dt, a, rain, gv, vh, vh0, hd, r, q, sp, pc, fill, wv, dtot, phi, vcrest
   real :: f(1:pd_nclass), tk(1:pd_nclass), qd(1:pd_nclass)
   real :: cqv, pl(1:pd_nclass), w                ! 水質: 地表の物質(cq の基底)、タンクのプール(セル面積基底)
+  real :: hsv, dep                               ! 浮遊砂: 地表の hs、タンクへ入って田面に積む分(§119.11)
   real(real64) :: rr(1:nrow)
 
   dt = p%dt
   !$omp parallel do schedule(dynamic) private(i, j, c, a, rain, gv, vh, vh0, hd, r, q, sp, pc, fill, wv, &
-  !$omp                                        dtot, phi, vcrest, f, tk, qd, rr, cqv, pl, w)
+  !$omp                                        dtot, phi, vcrest, f, tk, qd, rr, cqv, pl, w, hsv, dep)
   do j = dcp%js, dcp%je
     rr(:) = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
@@ -506,6 +524,11 @@ subroutine calc_twoway(pd, p, g, s)
         pl(:) = 0.0
         if (pd%have(1)) pl(1) = s%cpn(i,j)
         if (pd%have(2)) pl(2) = s%cpd(i,j)
+      end if
+      ! 浮遊砂(§119.11): 地表からタンクへ入る水(落水口の逆流・畦畔を越える満水)の浮遊砂を田面に積む
+      if (pd%sed) then
+        hsv = max(s%hs(i,j), 0.0)
+        dep = 0.0
       end if
       ! (2) 落水口(両向き。水位の高い側を上流として装置則を使う)。種類ごとにステップの初めの水位から求め、
       !     陽解法の上限は両側の貯留(タンク、地表 gv·σ(h))で水位差の半分(全水田の面積で数える)
@@ -538,6 +561,11 @@ subroutine calc_twoway(pd, p, g, s)
             cqv = cqv - w
             pl(c) = pl(c) + w * gv
           end if
+        end if
+        if (pd%sed .and. qd(c) < 0.0 .and. vh > 0.0) then  ! 逆流の水の浮遊砂を田面へ
+          w = hsv * min(-f(c) * qd(c) / gv / vh, 1.0)
+          hsv = hsv - w
+          dep = dep + w
         end if
         tk(c) = tk(c) - qd(c)
         vh = vh + f(c) * qd(c) / gv
@@ -577,6 +605,11 @@ subroutine calc_twoway(pd, p, g, s)
               cqv = cqv - w
               pl(c) = pl(c) + w * gv
             end if
+            if (pd%sed .and. vh > 0.0) then              ! 満たす水の浮遊砂を田面へ
+              w = hsv * min(f(c) * fill / gv / vh, 1.0)
+              hsv = hsv - w
+              dep = dep + w
+            end if
             if (phi >= 1.0) then
               tk(c) = pd%hlev
             else
@@ -613,10 +646,17 @@ subroutine calc_twoway(pd, p, g, s)
         if (pd%have(1)) s%cpn(i,j) = pl(1)
         if (pd%have(2)) s%cpd(i,j) = pl(2)
       end if
+      if (pd%sed) then
+        if (dep > 0.0) then
+          s%hs(i,j) = hsv
+          s%pdsd(i,j) = s%pdsd(i,j) + dep
+          rr(8) = rr(8) + real(dep, real64)
+        end if
+      end if
     end do
     pd%rows(j,1:4) = pd%rows(j,1:4) + rr(1:4) * pd%dxdy
     pd%rows(j,5) = rr(5) * pd%dxdy
-    pd%rows(j,6:7) = pd%rows(j,6:7) + rr(6:7) * pd%dxdy
+    pd%rows(j,6:8) = pd%rows(j,6:8) + rr(6:8) * pd%dxdy
   end do
   !$omp end parallel do
 end subroutine
@@ -638,8 +678,8 @@ subroutine setup_twoway(pd, g, s)
   ! 全ランク同値の判定
   if (s%gv_active) call par_stop("list_paddy: f_pd_exchange=1 cannot be combined with the feedback of building " &
       //"destruction on the void ratio (fn_bldgdebris): the non-paddy fraction 1 - a/gv of a cell would change")
-  if (s%sed_active) call par_stop("list_paddy: f_pd_exchange=1 cannot be combined with suspended sediment " &
-      //"(f_suspend / f_debris of fn_geomorph) yet: the sediment carried into the paddy tanks is not handled")
+  if (s%debris_active) call par_stop("list_paddy: f_pd_exchange=1 cannot be combined with debris flows " &
+      //"(f_debris of fn_geomorph): the mixture entering the paddy tanks is not handled")
   if (m_swflow_enc_nh_active()) call par_stop("list_paddy: f_pd_exchange=1 cannot be combined with the " &
       //"non-hydrostatic correction (f_nonhydrostatic=1): cells with a cross-section shape stay hydrostatic")
   ! 帯で: ため池のセルと、水田でない面積の割合の下限(誤りの種類とセルを 1 つの整数にまとめて全ランクの最大)
@@ -736,7 +776,8 @@ subroutine init_plots(pd, p, g, b, s, list, vzr, sfr)
   integer, allocatable :: pid(:,:), pod(:,:), pcl(:,:)
   integer :: i, j, c
 
-  call no_combo(p%fn_geomorph, "fn_geomorph", "the bed load is not kept from crossing the levees yet")
+  if (s%debris_active) call par_stop("list_paddy: fn_pd_plot cannot be combined with debris flows " &
+      //"(f_debris of fn_geomorph): the levee walls are not checked with the mixture flow")
   call no_combo(p%fn_evap, "fn_evap", "pd_perc_mmd is the daily decrease of the ponding depth and already " &
                 //"includes the evapotranspiration")
   call no_combo(p%fn_gwflow, "fn_gwflow", "the infiltration of gwflow and pd_perc_mmd would both drain the " &
@@ -1832,17 +1873,15 @@ end subroutine
 subroutine open_csv(pd, p)
   type(t_paddy), intent(inout) :: pd
   type(t_sysparam), intent(in) :: p
+  character(:), allocatable :: head
   if (.not. is_root) return
   open(newunit=pd%un_csv, file=trim(p%dir_result)//"/paddy.csv", status='replace')
-  if (pd%wq) then
-    write(pd%un_csv, '(a)') "time(s),area1(m2),area2(m2),rain(m3),outflow(m3),spill(m3),perc(m3),store1(m3)," // &
-                            "store2(m3),residual(m3),qsurf(m3/s),h1(mm),h2(mm),full1(-),full2(-)," // &
-                            "inflow(m3),levee_in(m3),c1(mg/L),c2(mg/L)"
-  else
-    write(pd%un_csv, '(a)') "time(s),area1(m2),area2(m2),rain(m3),outflow(m3),spill(m3),perc(m3),store1(m3)," // &
-                            "store2(m3),residual(m3),qsurf(m3/s),h1(mm),h2(mm),full1(-),full2(-)," // &
-                            "inflow(m3),levee_in(m3)"
-  end if
+  ! 水質(§119.10)・浮遊砂(§119.11)と併用するときだけ、その列を末尾に足す(既存の列の位置は変えない)
+  head = "time(s),area1(m2),area2(m2),rain(m3),outflow(m3),spill(m3),perc(m3),store1(m3)," // &
+         "store2(m3),residual(m3),qsurf(m3/s),h1(mm),h2(mm),full1(-),full2(-),inflow(m3),levee_in(m3)"
+  if (pd%wq) head = head // ",c1(mg/L),c2(mg/L)"
+  if (pd%sed) head = head // ",sed(m3)"
+  write(pd%un_csv, '(a)') head
 end subroutine
 
 
@@ -1859,7 +1898,7 @@ subroutine save_state(pd, p, s)
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/paddy.dat', form='unformatted', status='replace')
     write(un) save_version, dcp%nx_g, dcp%ny_g, merge(1, 0, pd%have(1)), merge(1, 0, pd%have(2)), pd%exch, &
-              pd%rep, merge(1, 0, pd%wq)
+              pd%rep, merge(1, 0, pd%wq), merge(1, 0, pd%sed)
   end if
   ! 湛水深はタンク(A)だけ。B の区画の水は浅水流の h(state.dat)にあり、ここはヘッダ(表現の印)だけ。
   ! 水質と併用する A はタンクのプールの物質も(§119.10。地表の物質は wq.dat)
@@ -1870,6 +1909,8 @@ subroutine save_state(pd, p, s)
       if (pd%have(1)) call restart_write_cell(un, s%cpn)
       if (pd%have(2)) call restart_write_cell(un, s%cpd)
     end if
+    ! 浮遊砂の堆積の記録(地形変化の刻み dt_geomorph の途中で保存したときに残る分。§119.11)
+    if (pd%sed) call restart_write_cell(un, s%pdsd)
   end if
   if (is_root) close(un)
 end subroutine
@@ -1884,7 +1925,7 @@ subroutine restore_state(pd, p, s)
   type(t_state), intent(inout) :: s
   character(:), allocatable :: fname
   logical :: found
-  integer :: un, hd(1:8)
+  integer :: un, hd(1:9), k
   fname = trim(p%dir_save)//'/paddy.dat'
   inquire(file=fname, exist=found)
   if (.not. found) call par_stop("paddy: state file not found (was fn_paddy enabled when saving): "//fname)
@@ -1894,14 +1935,9 @@ subroutine restore_state(pd, p, s)
     open(newunit=un, file=fname, form='unformatted', status='old', action='read')
     read(un) hd
   end if
-  call par_allreduce_maxi(hd(1))
-  call par_allreduce_maxi(hd(2))
-  call par_allreduce_maxi(hd(3))
-  call par_allreduce_maxi(hd(4))
-  call par_allreduce_maxi(hd(5))
-  call par_allreduce_maxi(hd(6))
-  call par_allreduce_maxi(hd(7))
-  call par_allreduce_maxi(hd(8))
+  do k = 1, 9
+    call par_allreduce_maxi(hd(k))
+  end do
   if (hd(1) /= save_version) then
     call par_stop("paddy: state file format version "//itoa(hd(1))//" does not match the version this " &
                   //"executable reads ("//itoa(save_version)//"): "//fname)
@@ -1922,6 +1958,9 @@ subroutine restore_state(pd, p, s)
     call par_stop("paddy: water quality (fn_wq) differs from the saved state (the paddy tanks carry the " &
                   //"substance only with fn_wq): "//fname)
   end if
+  if ((hd(9) > 0) .neqv. pd%sed) then
+    call par_stop("paddy: suspended sediment (f_suspend) with f_pd_exchange=1 differs from the saved state: "//fname)
+  end if
   if (pd%rep == 0) then
     if (pd%have(1)) call restart_read_cell(un, s%hpn)
     if (pd%have(2)) call restart_read_cell(un, s%hpd)
@@ -1929,6 +1968,7 @@ subroutine restore_state(pd, p, s)
       if (pd%have(1)) call restart_read_cell(un, s%cpn)
       if (pd%have(2)) call restart_read_cell(un, s%cpd)
     end if
+    if (pd%sed) call restart_read_cell(un, s%pdsd)
   end if
   if (is_root) close(un)
 end subroutine

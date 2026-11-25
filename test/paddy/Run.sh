@@ -20,10 +20,13 @@
 #                     6 h で保存 → 再開(連続計算とビット一致)
 #   param_wq_*.txt    水質(fn_wq。§119.10): タンクの濃度の一次減衰(厳密解)、雨の物質、双方向の逆流で入る水の
 #                     濃度、区画の解像の減水深の持ち出し(wq.csv の質量の収支)。wq_a は sed で 6 h で保存 → 再開
+#   param_sed_tw.txt  土砂(§119.11): 双方向のタンクへ入る水の浮遊砂を田面に積む(固相の保存)。地形変化の刻み 7 s
+#                     で 1 h で保存 → 再開
+#   param_b_sed.txt   土砂: 区画の解像で掃流砂が畦畔を越えない(区画ごとの河床の変化の合計 0)
 #   停止の確認: 河道セル・面積率 > 空隙率・取組率の範囲・型 0 の流出量調整板・
 #   面積率の二重指定・事前の湛水深 > 畦畔高・保存ファイルが残ったまま無効で再開、双方向の水田でない面積の割合
-#   < 0.05・ため池のセル・浮遊砂・非静水圧との併用・保存時とやり取りの方式が違う再開・保存時と水質の有無が違う
-#   再開、B の入力の誤り(外周の
+#   < 0.05・ため池のセル・土石流・非静水圧との併用・保存時とやり取りの方式が違う再開・保存時と水質の有無が違う
+#   再開・保存時と浮遊砂の有無が違う双方向の再開、B の入力の誤り(外周の
 #   区画のセル・同じ区画や区画でないセルの落水口・区画の中で違う種類・整数でない区画番号・天端より高い先・
 #   向かい合う落水口)と A だけの入力との併用、B と非静水圧、保存時と表現が違う再開
 # reference 比較は Log.txt(ULP=0)。paddy.csv は 16 桁で書くため CPU(-march=native のベクトル化)が
@@ -131,6 +134,24 @@ python3 Check_paddy.py restart_wq result_wq_a result_wq_restart || exit 1
 variant param.txt result_wq_mode "s|^  dir_result = 'result_wq_mode'|&\n  dir_save = 'save_wq'\n  f_state_restore = 1|;s/^  pd_perc_mmd = 0.0 .*/  pd_perc_mmd = 5.0/" > "$tmp"
 expect_stop wq_mode "$tmp" "water quality (fn_wq) differs from the saved state"
 
+# 土砂(§119.11): 双方向のタンクへ入る水の浮遊砂を田面に積む、区画の解像の掃流砂は畦畔を越えない
+for t in sed_tw b_sed; do
+    run $t param_$t.txt
+    python3 Check_paddy.py $t result_$t || exit 1
+done
+# 堆積の記録の保存 → 再開: 地形変化の刻みを 7 s にして(保存の時刻 1 h は刻みの途中)、連続計算とビット一致。
+# 浮遊砂を外した再開は停止
+rm -rf save_sed
+variant param_sed_tw.txt result_sed_cont "s/^  dt_geomorph = 0.0/  dt_geomorph = 7.0/" > "$tmp"
+run sed_cont "$tmp"
+variant param_sed_tw.txt result_sed_save "s/^  dt_geomorph = 0.0/  dt_geomorph = 7.0/;s/^  tt = 7200$/  tt = 3600/;s|^  dir_result = 'result_sed_save'|&\n  dir_save = 'save_sed'\n  f_state_save = 1|" > "$tmp"
+run sed_save "$tmp"
+variant param_sed_tw.txt result_sed_restart "s/^  dt_geomorph = 0.0/  dt_geomorph = 7.0/;s|^  dir_result = 'result_sed_restart'|&\n  dir_save = 'save_sed'\n  f_state_restore = 1|" > "$tmp"
+run sed_restart "$tmp"
+python3 Check_paddy.py restart_sed result_sed_cont result_sed_restart || exit 1
+variant param_tw_flood.txt result_sed_mode "s|^  dir_result = 'result_sed_mode'|&\n  dir_save = 'save_sed'\n  f_state_restore = 1|" > "$tmp"
+expect_stop sed_mode "$tmp" "suspended sediment (f_suspend) with f_pd_exchange=1 differs from the saved state"
+
 # 保存 → 再開(6 h で保存し 12 h まで)と、連続計算(12 h)のビット一致
 rm -rf save_rs
 variant param_steady.txt result_rs_cont "s/^  tt = 172800$/  tt = 43200/" > "$tmp"
@@ -160,8 +181,12 @@ variant param_tw_flood.txt result_tw_smin "s/'frac_tw.txt'/'frac_mix.txt'/" > "$
 expect_stop tw_smin "$tmp" "the non-paddy fraction 1 - a/gv of a paddy cell is below"
 variant param_tw_back.txt result_tw_pond "s|^  f_masktype = 0|&\n  fn_rscap = 'rscap_one.txt'|" > "$tmp"
 expect_stop tw_pond "$tmp" "a paddy cell is a pond cell"
-variant param_wash.txt result_tw_sed "s|^  pd_hlev = 0.30|&\n  f_pd_exchange = 1|" > "$tmp"
-expect_stop tw_sed "$tmp" "cannot be combined with suspended sediment"
+variant param_tw_back.txt result_tw_db "s|^  fn_paddy = '-'|&\n  fn_geomorph = '-'|;s|^  rn0 = 0.03|&\n  sd0 = 1.0|" > "$tmp"
+printf "\n&list_geomorph\n  f_debris = 1\n/\n" >> "$tmp"
+expect_stop tw_db "$tmp" "f_pd_exchange=1 cannot be combined with debris flows"
+variant param_b_back.txt result_b_db "s|^  fn_paddy = '-'|&\n  fn_geomorph = '-'|;s|^  rn0 = 0.03|&\n  sd0 = 1.0|" > "$tmp"
+printf "\n&list_geomorph\n  f_debris = 1\n/\n" >> "$tmp"
+expect_stop b_db "$tmp" "fn_pd_plot cannot be combined with debris flows"
 variant param_tw_back.txt result_tw_nh "s|^  fn_paddy = '-'|&\n  fn_enc = '-'|" > "$tmp"
 printf "\n&list_enc\n  f_nonhydrostatic = 1\n/\n" >> "$tmp"
 expect_stop tw_nh "$tmp" "cannot be combined with the non-hydrostatic correction"

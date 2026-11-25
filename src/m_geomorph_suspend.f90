@@ -76,6 +76,10 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
   logical :: spread, wsed, stk
   logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
 
+  ! 田んぼダムの双方向の水田のタンクへ入った水が運んだ浮遊砂(m_paddy の記録 s%pdsd)を田面に堆積させる
+  ! (§119.11。記録して読んでゼロに戻す契約。確保は双方向と f_suspend の併用のときだけ)
+  if (allocated(s%pdsd)) call deposit_paddy(gm, g, s)
+
   spread = (gm%wlw%nsm > 0)
   ! 波浪場の土砂への作用(段 W4・W5): τ* は Euler 平均流速 u^E の流れと波の最大のせん断
   wsed = (gm%f_wfsed > 0)
@@ -233,5 +237,31 @@ end subroutine
 
 
 
+
+!----------------------------------------------------------------------
+! 田んぼダム(fn_paddy)の双方向の水田のタンクへ入った浮遊砂の堆積(§119.11。独自の簡略化): 落水口の逆流と
+! 畦畔を越える満水で地表の水がタンクへ入るとき、その水の浮遊砂を m_paddy が hs から引いて s%pdsd に記録する。
+! ここでそれを田面(セルの河床 z と土層 sd。細粒分の帳簿 sf も)に E-D の沈降と同じ換算(× morfac × 1/(1 − λ))で
+! 積み、記録をゼロに戻す。セル単位で帯の中だけ
+!----------------------------------------------------------------------
+subroutine deposit_paddy(gm, g, s)
+  type(t_geomorph), intent(in) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: dzb
+  !$omp parallel do schedule(static) private(i, j, dzb)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (s%pdsd(i,j) == 0.0) cycle
+      dzb = s%pdsd(i,j) * gm%morfac * gm%poroi
+      s%z(i,j) = s%z(i,j) + dzb
+      s%sd(i,j) = s%sd(i,j) + dzb
+      if (gm%f_bedfines > 0) s%sf(i,j) = s%sf(i,j) + dzb
+      s%pdsd(i,j) = 0.0
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
 
 end submodule

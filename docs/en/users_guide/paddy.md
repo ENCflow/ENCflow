@@ -303,6 +303,7 @@ most half the difference of the levels of the two sides in one step (to prevent 
 | `H` (paddy cells in the two-way mode) | surface water depth (above the field surface): the depth on the non-paddy area while the level is below the levee crest, and the inundation depth over the whole cell above it |
 | S (S_surf) in the Log | surface water plus the storage of the paddy tanks (domain mean, m) |
 | c1 and c2 in `paddy.csv` (only with water quality) | mean concentration of the paddy water of each class (mg/L; total mass / total water). A: the tanks; B: the water of the plot cells |
+| sed in `paddy.csv` (only when the two-way mode is combined with suspended sediment `f_suspend`; the last column) | accumulated deposit on the field surface of the suspended sediment of the water that entered the tanks from the surface (m³, volume of solids) |
 | mass_paddy_g and out_paddy_perc_g in `wq.csv` (only in runs with paddy-field dams; the last 2 columns) | current mass of the pools of the tanks of A (g; 0 for B, whose plot water is counted in the surface `mass_surface_g`), accumulated substance that left the system with the decrease in depth (g) |
 
 The accumulated values in `paddy.csv` start at the beginning of the run (at the restart when restarted). The
@@ -377,9 +378,9 @@ levee height is the remaining free storage.
   rough estimate gives 4–12 minutes to fill a 100 m cell (80 % paddy) with an overflow depth of 5–10 cm, shorter than
   the time scale of a flood, but for shallow overflow lasting long the paddy fields fill too early. Below the levee
   crest, water flows only on the non-paddy area (the layout of drains and roads between the plots is not represented).
-  Sediment carried into the paddy fields by the flood is not represented (it cannot be combined with suspended
-  sediment). Solutes are carried when it is combined with water quality ([Combination with water quality](#combination-with-water-quality-fn_wq)
-  above).
+  Suspended sediment carried into the paddy fields by the flood is deposited on the field surface when combined with
+  landform change ("Combination with landform change" below). Solutes are carried when it is combined with water quality
+  ([Combination with water quality](#combination-with-water-quality-fn_wq) above).
 - The discharge coefficients of devices vary from 0.40 to 0.88 with the product and the installation
   [^yoshikawa2009][^minakawa2022]. The default 0.6 is the value of the calculation program of the guide and is a starting
   point for calibration.
@@ -395,9 +396,8 @@ levee height is the remaining free storage.
 - The drains and roads outside the plots are solved at the width of the grid. A small drain narrower than a cell flows as
   a channel as wide as the grid.
 - The evapotranspiration of the plot water is treated as part of the decrease in depth, so B cannot be combined with
-  evapotranspiration (`fn_evap`) or groundwater (`fn_gwflow`). It cannot be combined with landform change (`fn_geomorph`;
-  bed load is not yet kept from crossing the levees) or the non-hydrostatic correction (`f_nonhydrostatic = 1`) either
-  (stops at start-up).
+  evapotranspiration (`fn_evap`) or groundwater (`fn_gwflow`). It cannot be combined with the non-hydrostatic correction
+  (`f_nonhydrostatic = 1`) or debris flows (`f_debris` of `fn_geomorph`) either (stops at start-up).
 - Plot cells cannot be on the outermost rows and columns of the grid, next to sea cells or seaside cells (`fn_seaside`),
   nor on pond cells (`fn_rscap`) (stops at start-up). Plot numbers are integers from 0 to 16 777 215.
 
@@ -407,19 +407,28 @@ Paddy cells (area fraction > 0) cannot be on sea, channel (`fn_rw`), water level
 structure cells, nor on zone cells of [VZ](vz.md) or of the [storage function method](sfm.md). The area fraction cannot
 exceed the void ratio of buildings `fn_gv` (paddy fields and buildings are different parts of the same cell). The
 two-way mode cannot be combined with the feedback of building destruction on the void ratio (`fn_bldgdebris`),
-suspended sediment (`f_suspend`, `f_debris`) or the non-hydrostatic correction (`f_nonhydrostatic = 1`); paddy cells
+debris flows (`f_debris`) or the non-hydrostatic correction (`f_nonhydrostatic = 1`); paddy cells
 cannot be pond cells (`fn_rscap`); and the non-paddy share 1 − a/gv must be at least 0.05 (for levees, farm roads and
 drains) (stops at start-up). A state saved in the one-way mode cannot be restarted in the two-way mode, nor the reverse.
 
 **Combination with landform change** (`fn_geomorph`): the rain on paddy fields falls into the tanks (the ponded water on
 the fields), so erosion by raindrops (the raindrop term of `f_wash`, `f_splash`) is computed without the paddy part (the
 erosion rate is multiplied by "1 − area fraction"; ponded water nearly stops erosion by raindrop splash[^bako2016]). The
-paddy part is excluded even when a tank is empty (ponding depth 0) (an original simplification). Limits: the tanks carry
-no sediment and the water from the outlets is clear (turbid water such as the drainage after puddling is not
-represented). Erosion by flow (the sheet erosion term of `f_wash`, entrainment of suspended sediment, bed load) is
-computed over the whole cell, so the soil of the paddy part is also eroded by the surface flow. The rain amount for
-dissolution (`f_dissol`) is not changed (the settings driven by the rain amount count the rain on the paddy part, and the
-settings driven by the infiltration do not count the percolation of paddy fields).
+paddy part is excluded even when a tank is empty (ponding depth 0) (an original simplification). When the two-way mode is
+combined with suspended sediment (`f_suspend`), the suspended sediment of the water entering the paddy tanks from the
+surface (backflow through the outlets, filling over the levees) is deposited on the field surface (the bed) of the cell
+(with the same conversion as the settling of suspended sediment; an original simplification). The deposited amount is the
+sed column of `paddy.csv` (accumulated volume of solids, m³). Flood sediment remaining in paddy fields has been reported
+in the field[^manh2014]. When combined with resolved plots (B), bed load does not cross the edges of the levees and outlets
+(the same treatment as the virtual walls of river banks; the flow over the levees carries suspended sediment).
+Limits: the tanks carry no sediment and the water from the outlets is clear (turbid water such as the drainage after
+puddling is not represented). All suspended sediment entering a tank settles at once (no time for settling), and the bed
+of the whole cell rises (the paddy part and the rest are not distinguished). Erosion by flow (the sheet erosion term of
+`f_wash`, entrainment of suspended sediment, bed load) is computed over the whole cell, so the soil of the paddy part is
+also eroded by the surface flow. In B too, hillslope creep, avalanching at the angle of repose and slope failure do not
+see the levees (soil moves across the plot boundaries). The rain amount for dissolution (`f_dissol`) is not changed (the
+settings driven by the rain amount count the rain on the paddy part, and the settings driven by the infiltration do not
+count the percolation of paddy fields).
 
 **Limits of the combination with water quality** (`fn_wq`; [Combination with water quality](#combination-with-water-quality-fn_wq) above)
 
@@ -492,7 +501,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Contents | Key points |
 |---|---|---|
-| [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode, resolved plots (B), combination with water quality | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). In B, the drainage of a plot of 3000 m² against the exact solution (weir, 8.7×10⁻⁴ relative) and a reference solution (hole, 2×10⁻⁷ relative), plots without outlets keep their water at the levees and checkerboard corners, and water conservation and levelling out with levee overflow, backflow through an outlet and inflow over the levees. For water quality, first-order decay of the tank concentration against the exact solution (4×10⁻¹³ relative), the concentration of the water entering by backflow equal to the surface concentration, and the mass balance of wq.csv closing to the digits of the output (5×10⁻⁸ relative). Bit-identical for np = 1, 2, 4 |
+| [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode, resolved plots (B), combination with water quality and sediment | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). In B, the drainage of a plot of 3000 m² against the exact solution (weir, 8.7×10⁻⁴ relative) and a reference solution (hole, 2×10⁻⁷ relative), plots without outlets keep their water at the levees and checkerboard corners, and water conservation and levelling out with levee overflow, backflow through an outlet and inflow over the levees. For water quality, first-order decay of the tank concentration against the exact solution (4×10⁻¹³ relative), the concentration of the water entering by backflow equal to the surface concentration, and the mass balance of wq.csv closing to the digits of the output (5×10⁻⁸ relative). For sediment, the suspended sediment entering the tanks settles only on the paddy cells with the solids conserved (2×10⁻⁹ relative), and in B bed load does not cross the levees (total bed change of the plot 9×10⁻¹² m). Bit-identical for np = 1, 2, 4 |
 | [examples/paddy_dam](../../../examples/paddy_dam/en/README.md) | heavy rain on a lowland drainage district that can drain only through a pumping station (inland flooding) | the same district is solved with representation A (Δx = 30 m; one-way and two-way) and representation B (Δx = 10 m). With representation B, compares the inundation of a settlement with normal outlets and with paddy-field dams (all, the upstream half, the downstream half), and compares it with representation A under the same conditions |
 
 ## References
@@ -509,3 +518,4 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^saha2023]: Saha et al. (2023): *Sustainability*, 15(8), 6604. doi:10.3390/su15086604
 [^bako2016]: Nouhou Bako et al. (2016): *Earth Surface Processes and Landforms*, 41, 1199–1210. doi:10.1002/esp.3894 (water depth and the transport of soil by raindrop splash)
 [^tebakari2023]: Tebakari et al. (2023): Proceedings of the Annual Conference of the Japan Society of Hydrology and Water Resources, 36, 170. doi:10.11520/jshwr.36.0_170 (in Japanese; resolution of DEMs and the error of the storage of paddy plots)
+[^manh2014]: Manh et al. (2014): *Hydrology and Earth System Sciences*, 18, 3033–3053. doi:10.5194/hess-18-3033-2014 (deposition of flood sediment in diked paddy compartments)

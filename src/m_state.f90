@@ -176,6 +176,9 @@ module m_state
     real, allocatable :: cpd(:,:)   ! 田んぼダムの落水口の水田のタンクの物質 (g/m2。同上)
     real, allocatable :: pdfa(:,:,:) ! 種類ごとの水田面積率 (ish:ieh, jsh:jeh, 1:2。m_wq が水田の上の雨の物質を
                                     ! タンクへ入れるのに使う)
+    real, allocatable :: pdsd(:,:)  ! 双方向の水田のタンクへ入った水が運んだ浮遊砂(hs と同じ柱状量 m。m_paddy が足し、
+                                    ! m_geomorph の浮遊砂が田面 z・sd に堆積させてゼロに戻す。fxr と同じ契約。
+                                    ! 双方向と浮遊砂 f_suspend の併用のときだけ m_paddy_init が確保。§119.11)
     real, allocatable :: fmpd(:,:)  ! 減水深で系外へ出た物質 (g/m2。セル面積基底。m_paddy が足し、m_wq が
                                     ! 台帳に積んでゼロに戻す。fxr と同じ契約)
     real :: pdmean = 0.0     ! 領域平均の水田の貯留(m)。pd_active 時のみ更新
@@ -1128,6 +1131,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%cpd)) deallocate(s%cpd)
   if (allocated(s%pdfa)) deallocate(s%pdfa)
   if (allocated(s%fmpd)) deallocate(s%fmpd)
+  if (allocated(s%pdsd)) deallocate(s%pdsd)
   if (allocated(s%wvh)) deallocate(s%wvh)
   if (allocated(s%wvdir)) deallocate(s%wvdir)
   if (allocated(s%wvub)) deallocate(s%wvub)

@@ -428,8 +428,8 @@
     {
       "source": "docs/users_guide/paddy.md",
       "target": "docs/en/users_guide/paddy.md",
-      "source_sha256": "7f8292e08dca4354d6ea5286d66bcf930483933c4858079fb066cc1225029e00",
-      "target_sha256": "77c9c70e9341724b49a322c9f8f4e1a42ba4b01cb6872c38ec58de46637e274f",
+      "source_sha256": "99fc508e7fe1f34306d710e045a2888ff8cec6968bb257c4ea3d965f1dc3c74c",
+      "target_sha256": "712501fb701135b40da21c167e5fb74b52d5d42b35f068870da5ba4f6dd0614c",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -491,11 +491,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "a212d4c8f2f02826b03543542b3e2dd597b824fdfea920aca9e2a297262d1510",
-      "target_sha256": "85bac4139967eeb505163b5fd69b8bef70c0356ee1629f1b9abd5f22d57ee4d7",
-      "reviewer": "Claude (Claude Code session; reviewed the added paddy sentences of sections 5 and 6 against the Japanese source; the rest is unchanged since the previous record)",
+      "source_sha256": "0e0490ef32485e388bf12594fcf2e9defbd7ec7ed35324f57ab5722140194597",
+      "target_sha256": "83ea0ac9f9667cbfef659af58c3915d7a40ef94eba47fe610c2effa5a81a9a5f",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/sfm.md",
@@ -4829,8 +4829,8 @@
     {
       "source": "test/paddy/README.md",
       "target": "test/paddy/en/README.md",
-      "source_sha256": "a65a512e8afe20660ca2024d33fcdd08f71d0e96d11ac113da3b76a64388d6c7",
-      "target_sha256": "a2a7bd804a924151c0382f91f7c606934bfdfd07aa2bfbb67e93b6d8ab16e3e8",
+      "source_sha256": "71b82e5fc732456461f160359de70463f5c85ad3712e2dda46d759838f476a8a",
+      "target_sha256": "d1b7e888658b0fd45965c8e580b4fa81237708790a335b38d86139e2a5fac4d4",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"

@@ -48,23 +48,26 @@ overflow, the backflow and the conservation of water with inflow from outside.
 | `param_wq_rain.txt` | water quality, part 2: param_steady.txt (constant rain of 20 mm/h for 48 h) with a rain concentration of 2 mg/L | `wq_rain`: the tank concentrations of both classes approach 2 mg/L monotonically, mass balance (input = substance of the rain) |
 | `param_wq_tw.txt` | water quality, part 3: param_tw_back.txt (backflow in the two-way mode) with an initial concentration `wq_c0` = 5 mg/L of the surface water | `wq_tw`: concentration of the water entering by backflow = initial surface concentration (initial mass / volume of the surface water), mass conserved in the closed box |
 | `param_wq_b.txt` | water quality, part 4: param_b_over.txt (overflow of resolved plots, closed domain) with a concentration of the ponding before the run of 10 mg/L and a rain concentration of 2 mg/L | `wq_b`: concentration of the plot water between 2 and 10 mg/L, mass balance (substance taken out by the decrease in depth > 0) |
+| `param_sed_tw.txt` | sediment (landform change `fn_geomorph`), part 1: param_tw_flood.txt (two-way mode, 1.0 m³/s of flood water for 2 h) with suspended sediment at a volume concentration of 0.002 in the flood water (no entrainment, practically no settling) | `sed_tw`: solids conserved (suspended + rise of the bed × (1 − porosity) = sediment fed in), the suspended sediment of the water entering the tanks settles only on the paddy cells, in the amount of sed in paddy.csv. Run.sh also checks bit identity between save at 1 h → restart and a continuous run with a landform step of 7 s, and the stop of a restart without suspended sediment |
+| `param_b_sed.txt` | sediment, part 2: param_b_ext.txt (the outside level rises above the crest and water flows into the plot for 2 h) with bed load (d50 1 mm, soil depth 1 m) | `b_sed`: total bed change of the plot = 0 (bed load does not cross the edges of the levees and outlets), bed load acts inside the plot |
 
 In addition, `Run.sh` checks bit identity between a run saved at 6 h and restarted to 12 h and a continuous run
 (`restart`), and the following stops: paddy fields on a channel cell, area fraction > void ratio, adoption ratio out
 of range, outflow control plate given for type 0, area fraction given both as a
 map and as a uniform value, ponding depth before the run > levee height, restart with the feature disabled while the
-saved file remains, and in the two-way mode a non-paddy share below 0.05, a pond cell, combination with suspended sediment
-or the non-hydrostatic correction, and restart with a different exchange mode from the saved state; and for the resolved
+saved file remains, and in the two-way mode a non-paddy share below 0.05, a pond cell, combination with debris flows
+or the non-hydrostatic correction, restart with a different exchange mode from the saved state, and restart with
+suspended sediment enabled differently from the saved state; and for the resolved
 plots, input errors (a plot cell on the outer rows and columns, an outlet pointing to the same plot or given on a cell that
 is not a plot cell, different classes within a plot, a non-integer plot number, an outlet pointing to a cell higher than
-the crest, outlets facing each other), combination with inputs of A only or with the non-hydrostatic correction,
-restart with a different representation from the saved state, and restart with water quality enabled differently from
+the crest, outlets facing each other), combination with inputs of A only, with the non-hydrostatic correction or with
+debris flows, restart with a different representation from the saved state, and restart with water quality enabled differently from
 the saved state.
 
 | File | Contents |
 |---|---|
 | `Run.sh` | compares Log.txt of param.txt with the reference (ULP = 0) → checks of each setting, save → restart and stops |
-| `Run_MPI.sh [np]` | the same comparison with MPI (ULP = 0 against the serial reference), byte identity of paddy.csv, maps and paddy.dat with np = 1, conservation in the closed domain, the two checks of raindrop erosion (the ground elevation also byte-identical with np = 1), the three checks of the two-way mode (paddy.csv, Log, depth and ponding depth byte-identical with np = 1), the seven checks of the resolved plots (paddy.csv, Log and depth byte-identical with np = 1; plots, outlets and checkerboard corners cross the band boundaries), the three checks of water quality (paddy.csv, Log and wq.csv byte-identical with np = 1) and save → restart of the pools, stops found by rank 0 and in the bands |
+| `Run_MPI.sh [np]` | the same comparison with MPI (ULP = 0 against the serial reference), byte identity of paddy.csv, maps and paddy.dat with np = 1, conservation in the closed domain, the two checks of raindrop erosion (the ground elevation also byte-identical with np = 1), the three checks of the two-way mode (paddy.csv, Log, depth and ponding depth byte-identical with np = 1), the seven checks of the resolved plots (paddy.csv, Log and depth byte-identical with np = 1; plots, outlets and checkerboard corners cross the band boundaries), the three checks of water quality (paddy.csv, Log and wq.csv byte-identical with np = 1) and save → restart of the pools, the two checks of sediment (paddy.csv, Log and ground elevation byte-identical with np = 1), stops found by rank 0 and in the bands |
 | `Check_paddy.py` | checks (Python standard library only) |
 | `make_plots.py` | makes the inputs of the resolved plots (Python standard library only) |
 | `data_paddy/` | maps for param_mix.txt and param_tw_flood.txt and for the checks of stops (the `b_*.txt` of the resolved plots are made by `make_plots.py`) |
@@ -94,12 +97,15 @@ the saved state.
 | water quality: first-order decay of the tank concentration vs exact solution | 4.4×10⁻¹³ | 1×10⁻⁹ |
 | water quality: concentration of the water entering by backflow vs initial surface concentration | 0 | 1×10⁻⁶ |
 | water quality: mass balance of wq.csv (largest of the 4 settings) | 5.1×10⁻⁸ | 1×10⁻⁶ |
+| sediment: conservation of solids (suspended + deposited vs sediment fed in) | 1.7×10⁻⁹ | 1×10⁻⁶ |
+| sediment: total bed change of the plot (bed load) | 9.1×10⁻¹² m | 1×10⁻⁶ of the movement inside the plot (3.2×10⁻² m) |
 
 The difference from the exact solutions is the time-step error of the explicit scheme (dt = 2 s; the time scale of the
 ponding depth is hours). The difference of the weir of the resolved plots is the drawdown of the water surface where the
 flow gathers to the outlet cell (a systematic difference of about 3×10⁻⁵ m; the resolved plot drains a little more
-slowly). The results of the resolved plots are from 2026-11-25. The results of water quality are also from 2026-11-25, and the
-difference of the mass balance is the rounding to the 8 significant digits of wq.csv. The difference for raindrop erosion
+slowly). The results of the resolved plots are from 2026-11-25. The results of water quality and sediment are also from 2026-11-25; the
+difference of the mass balance is the rounding to the 8 significant digits of wq.csv, and that of the conservation of
+solids the rounding of the single-precision binaries of the ground elevation and the suspended sediment. The difference for raindrop erosion
 is the rounding when the ground elevation is written as a single-precision binary. MPI np = 1, 2, 4 agree with the serial reference with ULP = 0, and paddy.csv is byte-identical
 with np = 1. With -Og -fcheck=all all checks also pass, and np = 2 is bit-identical with the serial run.
 
@@ -117,3 +123,5 @@ human visual check (handoff 00ae).
   messages exist; the stops are not checked).
 - Water quality: settling in the pools of the tanks (`wq_vs`), combination with two-phase partitioning (`wq_kd`), and
   comparison of the concentrations of A and B for the same district.
+- Sediment: deposit in the tanks while entrainment and settling of suspended sediment act (the check stops
+  entrainment), and hillslope creep and slope failure at the levees.

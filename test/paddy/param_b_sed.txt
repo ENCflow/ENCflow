@@ -1,0 +1,77 @@
+!======================================================================
+! paddy: 区画の解像(B)と地形変化の掃流砂(f_fluvial)の併用(Check_paddy.py b_sed。developer.md §119.11)
+!
+!   param_b_ext.txt(外の水位 0.40 m が畦畔の天端 0.30 m を越えて区画へ流れ込む 2 h)に、掃流砂(d50 1 mm、
+!   限界掃流力 0.05、土層厚 1 m、空隙率 0.4)を足す。
+!   確認: 掃流砂は区画の畦畔・落水口のエッジを越えないので、区画ごとの河床の変化の合計は 0(区画の中の移動だけ)、
+!   区画の外の河床は変わる(掃流砂が働いていること)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 7200
+  dt_disp = 3600
+  dt_file = 7200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  fn_geomorph = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_b_sed'
+  f_out_z = 1
+  f_disp_debug = 1
+  f_check_cfl = 0
+  f_output_mode = 3
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+
+&list_initial
+  f_htype = 3               ! 水位ファイル
+  fn_hinit = 'b_ext_e.txt'
+/
+
+&list_geoinfo
+  nx = 20
+  ny = 20
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'b_back_z.txt'
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 0
+  sd0 = 1.0
+/
+
+&list_bound_edge
+/
+
+&list_paddy
+  fn_pd_plot = 'b_back_plot.txt'
+  fn_pd_outlet = 'b_back_out.txt'
+  pd_hlev = 0.30
+  pd_h0 = 0.05
+  pd_perc_mmd = 0.0
+  pd_dev_type(1) = 0
+  pd_board_h(1) = 0.03
+  pd_board_w(1) = 0.30
+  pd_cw(1) = 0.6
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.001
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+/
