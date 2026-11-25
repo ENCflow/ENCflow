@@ -165,10 +165,13 @@ puts that rain into the tanks as well.
   non-paddy share 1 − a/gv) stay those of a. Unlike adding the catchment to the area fraction, the ponding depth and the
   number of outlets do not change.
 - c is counted in the cell where the rain falls (the model does not trace the terrain). From high-resolution terrain and a
-  plot map, follow the steepest descent from cells that are neither plots nor drains, and aggregate the area that reaches a
-  plot over the coarse cell where the rain falls (`catchment()` in `make_district.py` of the example
-  [paddy_dam](../../../examples/paddy_dam/en/README.md)). When the area fraction a is given as the field surfaces
-  (without the levees), include the area of the levees in c.
+  plot map, trace the rain of cells that are neither plots nor drains by dividing it equally among the lower neighbouring
+  cells, and aggregate the share that reaches a plot over the coarse cell where the rain falls (`catchment()` in
+  `make_district.py` of the example [paddy_dam](../../../examples/paddy_dam/en/README.md)). The rain is divided equally
+  because the flow falling from farm roads and upland higher than the plots and drains does not depend on how deep the
+  receiving side is (following the single steepest descent or dividing in proportion to the slope sends most of the rain
+  on a farm road between paddy fields and a drain to the drain). When the area fraction a is given as the field surfaces
+  (without the levees), include the area of the levees (also the part cut from the area fraction by a cap) in c.
 - The rain sent into the paddy fields does not infiltrate or evaporate on the way. For a catchment that infiltrates (fields,
   upland), give its area multiplied by a runoff coefficient as c.
 - The receiving paddy fields are taken to be "within one cell". On grids much coarser than the plots the rain is shared
@@ -435,10 +438,10 @@ levee height is the remaining free storage.
   paddy fields over the levees becomes surface water, and in districts with much of such rain the water sent to the drains
   is overestimated and the effect of paddy-field dams underestimated (result 2 of the example
   [paddy_dam](../../../examples/paddy_dam/en/README.md)). The value of the catchment fraction depends on how it is traced
-  in preprocessing (a single steepest descent; the division of shallow water flow is not represented), and the rain of the
-  catchment enters the paddy fields of the surrounding 3 × 3 cells in proportion to their area without travel time (the
-  shape of the plots is not represented). Where a decision is near a threshold, such as whether a settlement floods, a
-  difference of a few percent in the area fraction or the catchment fraction changes the result.
+  in preprocessing (the example uses a simple equal division among the lower neighbours and does not solve shallow water
+  flow), and the rain of the catchment enters the paddy fields of the surrounding 3 × 3 cells in proportion to their area
+  without travel time (the shape of the plots is not represented). Where a decision is near a threshold, such as whether a
+  settlement floods, a difference of a few percent in the area fraction or the catchment fraction changes the result.
 - The discharge coefficients of devices vary from 0.40 to 0.88 with the product and the installation
   [^yoshikawa2009][^minakawa2022]. The default 0.6 is the value of the calculation program of the guide and is a starting
   point for calibration.

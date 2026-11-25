@@ -116,13 +116,14 @@ def fig_district():
     frac = np.loadtxt("data/frac30.txt")
     rw = np.loadtxt("data/rw30.txt")
     gv = np.loadtxt("data/gv30.txt")
-    catch = np.loadtxt("data/catch.txt", dtype=int)     # 水田へ流れ込むセル(make_district.py の catchment)
+    catch = np.loadtxt("data/catch.txt")                # 雨が区画へ流れ込む割合(make_district.py の catchment)
     matplotlib.rcParams["hatch.color"] = INK2
     matplotlib.rcParams["hatch.linewidth"] = 0.6
 
-    def hatch_catch(ax, ni, nj):
-        for j, i in zip(*np.nonzero(catch[:nj, :ni])):
-            ax.add_patch(plt.Rectangle((i * DX, j * DX), DX, DX, fill=False, hatch="////", lw=0))
+    def hatch_catch(ax, ni, nj):      # 細かい斜線 = 半分以上、粗い斜線 = 半分未満が区画へ流れ込む
+        for j, i in zip(*np.nonzero(catch[:nj, :ni] > 0.0)):
+            ax.add_patch(plt.Rectangle((i * DX, j * DX), DX, DX, fill=False, lw=0,
+                                       hatch="////" if catch[j, i] >= 0.5 else "//"))
     # 表現 B の土地利用: 1 農道・2 小排水路・3 支線・4 幹線・5 区画・6 集落・7 畑・8 台地
     cols = ["#b9b7b0", "#6da7ec", "#2a78d6", "#1c5cab", "#cfe7c9", "#eb6834", "#f2dca0", "#e8e6e0"]
     cmap = ListedColormap(cols)
@@ -183,7 +184,9 @@ def fig_district():
              T("畑", "upland field"), T("台地・堤防", "upland / levee")]
     hs = [plt.Rectangle((0, 0), 1, 1, fc=c, ec="none") for c in cols]
     hs.append(plt.Rectangle((0, 0), 1, 1, fill=False, hatch="////", lw=0))
-    names.append(T("斜線 = 雨が区画へ流れ込む所", "hatched = rain flows into plots"))
+    names.append(T("斜線 = 雨の半分以上が区画へ流れ込む所", "hatched = half or more of the rain flows into plots"))
+    hs.append(plt.Rectangle((0, 0), 1, 1, fill=False, hatch="//", lw=0))
+    names.append(T("粗い斜線 = 半分未満が流れ込む所", "sparse hatch = less than half flows into plots"))
     hs.append(plt.Line2D([], [], ls="none", marker="s", ms=7, mfc=INK, mec="white"))
     names.append(T("排水機場(0.6 m³/s で域外へ)", "pumping station (0.6 m³/s out)"))
     hs.append(plt.Line2D([], [], ls="none", marker="o", ms=6, mfc="white", mec=INK))
