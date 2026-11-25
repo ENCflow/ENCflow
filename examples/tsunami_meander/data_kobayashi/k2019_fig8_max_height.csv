@@ -1,0 +1,38 @@
+# 小林大祐・内田龍彦・河原能久 (2019): 蛇行水路における段波の伝播特性に関する実験的研究, 河川技術論文集, 25, 249-254. doi:10.11532/river.25.0_249
+# 図-8 の実験値: 両岸沿い(岸から 0.02 m)の最大波高の縦断分布。断面 1〜8
+# 図のベクタ図形の座標を extract_figs.py で読んだ値(手作業の読み取りではない)。軸は図の枠と目盛線で校正
+# s_over_L = 蛇行の始点(ゲート)からの中心線に沿う距離 / 蛇行長、hmax = 最大波高 / h_t0
+# 読み取りの分解能: hmax 約 0.005
+bore,section,bank,s_over_L,hmax
+breaking,1,left,0.1241,1.1599
+breaking,2,left,0.2500,1.1902
+breaking,3,left,0.3759,1.4508
+breaking,4,left,0.4992,1.2023
+breaking,5,left,0.6251,1.3357
+breaking,6,left,0.7510,1.1417
+breaking,7,left,0.8743,1.2084
+breaking,8,left,1.0002,1.0326
+breaking,1,right,0.1241,1.2872
+breaking,2,right,0.2500,1.2750
+breaking,3,right,0.3759,1.0144
+breaking,4,right,0.4992,0.9175
+breaking,5,right,0.6251,1.1356
+breaking,6,right,0.7510,1.1902
+breaking,7,right,0.8743,1.0205
+breaking,8,right,1.0002,1.5599
+undular,1,left,0.1263,1.2158
+undular,2,left,0.2500,1.3006
+undular,3,left,0.3763,1.7975
+undular,4,left,0.5000,2.1975
+undular,5,left,0.6263,2.0036
+undular,6,left,0.7500,1.6884
+undular,7,left,0.8763,1.4036
+undular,8,left,1.0000,1.1915
+undular,1,right,0.1263,1.9006
+undular,2,right,0.2500,1.8218
+undular,3,right,0.3763,1.4521
+undular,4,right,0.5000,1.2521
+undular,5,right,0.6263,1.3309
+undular,6,right,0.7500,1.5067
+undular,7,right,0.8763,2.0218
+undular,8,right,1.0000,2.3187

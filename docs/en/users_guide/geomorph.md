@@ -1443,7 +1443,7 @@ Verified test cases exist per process:
 [test/creep](../../../test/creep/en/README.md) (analytical-solution benchmark),
 [test/fluvial](../../../test/fluvial/en/README.md), [test/bankface](../../../test/bankface/en/README.md) (bank-face blocking and supply limiter), [test/bendsed](../../../test/bendsed/en/README.md) (bed-load direction correction in a bend), [test/berode](../../../test/berode/en/README.md) (bank erosion), [test/repose](../../../test/repose/en/README.md) (angle-of-repose avalanching), the examples [examples/meander](../../../examples/meander/en/README.md) and [examples/meander_cutoff](../../../examples/meander_cutoff/en/README.md) (deformation of a meandering channel and a neck cutoff), [test/suspend](../../../test/suspend/en/README.md),
 [test/wash](../../../test/wash/en/README.md), [test/debris](../../../test/debris/en/README.md),
-[test/slide](../../../test/slide/en/README.md), [test/avalanche](../../../test/avalanche/en/README.md),
+[test/slide](../../../test/slide/en/README.md), [test/avalanche](../../../test/avalanche/en/README.md) and the example [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md) (entrainment of track snow by an avalanche down a gully, and a deflecting dam),
 [test/sedinflow](../../../test/sedinflow/en/README.md) (boundary sediment supply),
 [test/bedslide](../../../test/bedslide/en/README.md) (moving bed layer: analytic
 velocity, grid-dependence detection on a 45-degree slope, plunge into a

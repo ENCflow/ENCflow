@@ -1,0 +1,10 @@
+# gen_data.py が作る入力マップと各ケースの設定(python3 gen_data.py で作り直せる)
+data/
+data_*/
+param_*.txt
+# 計算結果
+result_*/
+Screen_*.log
+encflow
+encflow_mpi
+__pycache__/

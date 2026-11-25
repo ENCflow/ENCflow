@@ -290,6 +290,17 @@ $`s_{slot} = s_y/50`$ are those of an urban branch network (D = 0.4 m, cover
 [test/conduit](../../../test/conduit/en/README.md) (analytical equilibrium
 reproduced to all printed digits).
 
+**A pipe laid as a one-cell-wide line.** The conversion $`c_{nd} = C \times`$ pipes / cell
+width above is for a network spread over an area (the axial and diagonal edges together carry
+$`c_{nd}\,\Delta`$ at a given gradient). For a pipe laid as a one-cell-wide line, such as a
+trunk, the flow along the line passes only through the axial edge (passing width
+$`(1-d)\Delta`$; $`0.414\Delta`$ with the default `gwc_diagratio`), and the diagonal edges take
+the smaller conductance density of the two cells (the min rule). To make the line carry the
+full-pipe conveyance $`C`$ itself, give the cells of the line the conductance density
+$`c_{nd} = C/((1-d)\Delta)`$ (given as $`C/\Delta`$, the line has 0.41 times its capacity;
+confirmed with a steady full-pipe flow). An example of the conversion is gen_data.py of
+[examples/coastal_compound_flood](../../../examples/coastal_compound_flood/en/README.md).
+
 ## 7. Well pumping (f_gwpump = 1)
 
 The demand $`Q_n(t)`$ of well $`n`$ is shared equally among its $`N_n`$ cells
@@ -432,6 +443,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/gwbed](../../../test/gwbed/en/README.md) | throttling, cut-off and replacement by the streambed exchange limit | the per-step loss of the floodplain cells matches S_grnd to all 14 digits; gaining increments match the analytical rate |
 | [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md) | trunk + branch network conversion | cell-wise sy map |
 | [examples/qanat](../../../examples/qanat/en/README.md) | conduit layer + layer 2 + well pumping | collection, conveyance and outlet of a gallery; reduction of its flow by a pumping well |
+| [examples/coastal_compound_flood](../../../examples/coastal_compound_flood/en/README.md) | conduit layer (branch network + trunk + pump well) + sea outfall + Green-Ampt + pumping station | flooding of a coastal town whose outfall is closed by the tide; closure of the water budget; sensitivity to the time step, the pseudo-slot and the grid |
 
 ## References
 

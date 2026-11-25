@@ -415,6 +415,26 @@ similar entrained amount with f_dbed = 4, $`\delta_e \approx E_r \times`$ (a
 representative flow depth) is a guide. **f_dbed = 0** is no exchange
 (equivalent fluid).
 
+**Accuracy limits of the velocity-proportional entrainment.** (1) The law has no threshold on the flow depth or
+on the strength of the entrainable layer. The concentration condition $`C \ge c_{\min}`$ does not act on the thin
+flow at the margins (thin flow has the same concentration as the body). All of the layer that the flow touches is
+taken, so if the entrainable layer is placed over the whole slope, thin flow that leaves the margin for a
+neighbouring cell takes up the layer there and becomes thick flow, and the area that is entrained spreads
+sideways. The spreading stops at the threshold depth `dd` ([shallow-water flow](swflow.md): the sediment in a cell
+whose surface water falls below `dd` is fixed on the spot), so the entrained amount ends up being set by `dd` (in
+the example [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md), the avalanche with snow placed
+everywhere is 2.5 times the release for `dd` = 1 mm, 10.9 times for 0.1 mm and 14.1 times for 0.01 mm). Give the
+entrainable layer over a chosen area, such as a band of the width the flow covers. With Hungr's law above, the
+entrainment rate is proportional to the flow depth, so thin flow takes up almost nothing. (2) What is taken up
+joins the flow at the local flow velocity. The momentum equation is solved for the velocity and erosion and
+entrainment only add $`h_s`$, so the momentum needed to accelerate the entrained mass (a deceleration
+$`-\mathbf{V}E/h_t`$, with $`E`$ the rate at which the flow depth grows) is not counted. For a 0.5 m layer
+released at once on a uniform slope of 0.5 and taking up the layer below with $`\delta_e = 0.02`$ (μ = 0.2,
+ξ = 1500 m/s²), the velocity after 8 s is 14.3 m/s, larger than the 9.3 m/s of the solution of the
+momentum-conserving ordinary differential equation (developer.md §126.5). Erosion with f_dbed = 1 to 3 is
+treated in the same way, but the difference is small because the erosion rate is small compared with the flow
+depth.
+
 **Stopping (f_dbstop = 1).** In cells with $`|\mathbf{V}| < v_{stop}`$ and
 $`C > C_\infty`$ the excess concentration is transferred to the bed at the
 rate $`w_{stop}`$ (m/s of bed depth). The stopped material stays in $`z`$ and
@@ -770,6 +790,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md) | rock avalanche, hand-over, submarine landslide | four patterns compared |
 | [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) | ash fall → rain → lahar, check dam | the lahar setting pattern (infiltration capacity, f_dbwet=2) |
 | [examples/debris_fan](../../../examples/debris_fan/en/README.md) | slope failure → valley → residential area on the fan (Takahashi–Nakagawa stony type); grid spacings 40-2.5 m, the valley at 0°, 22.5° and 45°, four-neighbour control | grid dependence: with eight neighbours the valley orientation changes the results by a few % at 5 m, and the sediment reaches the fan even at 40 m (coarser than the valley floor); with four neighbours sediment stays in oblique valleys at 20 m and above |
+| [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md) | a dense snow avalanche down a gully (Voellmy + velocity-proportional entrainment); track snow of 0, 1 and 2 m, a deflecting dam, friction coefficients, grid spacing, gully direction and time step, threshold depth, snow everywhere | the avalanche setting pattern (exchange of the carrier f_dbwet=1, threshold depth 0.1 mm). With the entrainable snow given as a band, the amount taken up is set by the amount placed and does not depend on the time step; placed everywhere, it is set by the threshold depth (2.5 to 14 times the release) |
 
 ## References
 
