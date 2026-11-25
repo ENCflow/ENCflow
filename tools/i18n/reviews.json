@@ -428,8 +428,8 @@
     {
       "source": "docs/users_guide/paddy.md",
       "target": "docs/en/users_guide/paddy.md",
-      "source_sha256": "499dca5ab4f81fb04a49218c1433f15372b9ea43b7cab7f06c84e4fd5032c8df",
-      "target_sha256": "14afbb65938a381e10828f462915ca852c73132eba513496e81b59ffc28daca1",
+      "source_sha256": "e22a9832f4091a856d2e5f1d66ab6402ce55c14346c0d45553d2a837398c80fd",
+      "target_sha256": "1e6be93f1a64380b9750de85e39a700da3b31c55f5d5932e25002f4103f32f03",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -923,11 +923,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "4428c19914ad1fd137dd27f7a797560ec1b36381b6c880ae558ba09eb8c227f0",
-      "target_sha256": "5b4ed7561784efbce87a0d4feb8d101b5c7864b70a9b775166b95b2a2a8e48a7",
-      "reviewer": "Claude (Claude Code session; the description of debris_dam in the table shortened in both versions; both diffs read side by side)",
+      "source_sha256": "d04483d7a32cf56ec693637a71f082b5f00662ab11d77ed2a7ee03427dec9f70",
+      "target_sha256": "8d9ca7046af1e5cc769a56830cc58ef4755a26c7a2dc75d8c7153a95289aa590",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -2973,6 +2973,15 @@
       "reviewed_on": "2026-11-23"
     },
     {
+      "source": "examples/paddy_dam/README.md",
+      "target": "examples/paddy_dam/en/README.md",
+      "source_sha256": "870de1028419623f07a1e592bd1347a20ec2f55c8540c0b7e1020b34e408fad9",
+      "target_sha256": "ae7bb7302f82f2268d335254e455fb9950447758064cbbb93fd71b1e5cd543c7",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
       "source_sha256": "b35b6089be65fedc8c06f53431a02c53aab82d3234f57e22aaacfe5bf61a93da",
@@ -4820,8 +4829,8 @@
     {
       "source": "test/paddy/README.md",
       "target": "test/paddy/en/README.md",
-      "source_sha256": "625a097c3bbb65010bf4a7de05ed31c53922969531ca7bae47a18dc2bd819faa",
-      "target_sha256": "42a5b7afd7c2e79e62843c8e365219eeafae7907f64efe18ce886b561489d558",
+      "source_sha256": "85172a30543edff4a5c7d0319861f863a2573b0042dc29b5958d29e8a6e256d3",
+      "target_sha256": "1d95deb7aa7ea31125d11d1113d3863f4fce66ec3b658da598d99e951c0444dc",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"

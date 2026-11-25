@@ -102,7 +102,7 @@ human visual check (handoff 00ae).
 - Situations strongly coupled with the shallow water flow (deep surface water with the outlets of many cells submerged
   or stopped): param_mix.txt checks water conservation, but there is no check of the accuracy of the submerged
   formulas themselves.
-- The size of the effect in real basins and drainage districts (the example is planned; docs/paddy_plan.md §8).
+- The size of the effect in real basins and drainage districts (the example [examples/paddy_dam](../../../examples/paddy_dam/en/README.md) uses schematic values on synthetic terrain).
 - Resolved plots: outlets pointing to channel cells (without banks), the stop for outlets on diagonals with
   p_diagratio = 0, and the stops for combination with landform change, evapotranspiration and groundwater (only the
   messages exist; the stops are not checked).

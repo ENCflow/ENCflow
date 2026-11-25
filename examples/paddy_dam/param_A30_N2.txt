@@ -1,0 +1,88 @@
+!======================================================================
+! examples/paddy_dam: 同じ排水区を 30 m の格子と表現 A(サブグリッドの水田タンク)で解く比べ
+!   A30_N2: 全て通常の落水口、双方向(f_pd_exchange = 1。外水・内水も落水口と畦畔から水田に入る)
+!   30 m のセル(10 m の 3 × 3)の水田面積率・地盤高は make_district.py が 10 m の値から作る。支線・幹線排水路は
+!   河道のセル(サブグリッド幅 10 m)、小排水路は表さない(セルの地表を流れる)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt_c = '48h'
+  dt_disp_c = '1h'
+  dt_file_c = '1h'
+  dt_recrd_c = '10m'
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = '-'
+  fn_channel = '-'
+  fn_structure = '-'
+  fn_record = '-'
+  fn_paddy = '-'
+  dir_data = 'data'
+  dir_result = 'result_A30_N2'
+  f_out_h = 1
+  f_out_hmax = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 21
+  ny = 32
+  dx = 30.0
+  dy = 30.0
+  f_ztype = 1
+  fn_z = 'z30.txt'          ! 10 m の 3 × 3 の平均(排水路のセルは排水路の底の最低)
+  fn_rw = 'rw30.txt'        ! 支線・幹線排水路
+  rn0_rw = 0.03
+  f_rntype = 0
+  rn0 = 0.045
+  fn_gv = 'gv30.txt'        ! 集落の建物の空隙率の平均
+/
+
+&list_channel
+  fn_width = 'w30.txt'      ! 排水路の幅 10 m(サブグリッド)
+/
+
+&list_bound_edge
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 4
+  prval(1:2,2) = 360, 4
+  prval(1:2,3) = 360.001, 12
+  prval(1:2,4) = 540, 12
+  prval(1:2,5) = 540.001, 25
+  prval(1:2,6) = 720, 25
+  prval(1:2,7) = 720.001, 12
+  prval(1:2,8) = 900, 12
+  prval(1:2,9) = 900.001, 4
+  prval(1:2,10) = 1440, 4
+  prval(1:2,11) = 1440.001, 0
+  prval(1:2,12) = 99999, 0
+/
+
+&list_struct_pump
+  pump_in_cell(:,1,1) = 1, 32      ! 幹線排水路の西端を含む 30 m のセル
+  f_pump_ref(1) = 1
+  pump_rule(:,1,1) = 0.3, 0.0
+  pump_rule(:,2,1) = 0.6, 0.6
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 4, 31         ! 集落(10 m の (12, 92) を含むセル)
+  pbxy(:,2) = 1, 32         ! 幹線排水路の西端
+/
+
+&list_paddy
+  fn_pd_frac = 'frac30.txt'        ! 水田面積率(10 m の区画から。0.95 で頭打ち)
+  fn_pd_adopt = 'adopt30_N.txt'    ! 取組率(N: 0)
+  f_pd_exchange = 1                ! 双方向
+/

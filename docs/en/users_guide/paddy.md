@@ -436,6 +436,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | Case | Contents | Key points |
 |---|---|---|
 | [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode, resolved plots (B) | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). In B, the drainage of a plot of 3000 m² against the exact solution (weir, 8.7×10⁻⁴ relative) and a reference solution (hole, 2×10⁻⁷ relative), plots without outlets keep their water at the levees and checkerboard corners, and water conservation and levelling out with levee overflow, backflow through an outlet and inflow over the levees. Bit-identical for np = 1, 2, 4 |
+| [examples/paddy_dam](../../../examples/paddy_dam/en/README.md) | heavy rain on a lowland drainage district that can drain only through a pumping station (inland flooding) | with the plots resolved on a 10 m grid (B), compares the inundation of a settlement with normal outlets and with paddy-field dams (all, the upstream half, the downstream half), and with the same district solved by A on a 30 m grid (one-way and two-way) |
 
 ## References
 
