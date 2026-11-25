@@ -1,6 +1,6 @@
 !======================================================================
 ! examples/paddy_dam: 低平地の排水区の内水と田んぼダム(区画の解像 = 表現 B、Δx = 10 m)
-!   Du: 北の 2 組(上流側の半分、76 区画)だけ田んぼダム
+!   B10_Du: 北の 2 組(上流側の半分、76 区画)だけ田んぼダム
 !   入力は make_district.py が data/ に作る(make)。地形と設定の説明は README.md
 !======================================================================
 &list_sysparam
@@ -18,7 +18,7 @@
   fn_record = '-'
   fn_paddy = '-'            ! 田んぼダム(区画の解像)
   dir_data = 'data'
-  dir_result = 'result_Du'
+  dir_result = 'result_B10_Du'
   f_out_h = 1
   f_out_hmax = 1
   f_check_cfl = 0

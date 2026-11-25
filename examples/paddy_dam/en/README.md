@@ -1,4 +1,4 @@
-# paddy_dam — inland flooding of a lowland drainage district and paddy-field dams
+# paddy_dam — inland flooding of a lowland drainage district and paddy-field dams (the same district solved with representations A and B)
 
 > English mirror of examples/paddy_dam/README.md. The Japanese file is the master copy.
 
@@ -10,10 +10,21 @@ and the peaks of the drains and rivers downstream are lowered (MAFF 2026). This 
 lowland drainage district that is surrounded by levees and can let water out only through the pumps of a pumping
 station because the outer river is high (inland flooding), and compares how the inundation of a settlement changes when
 all paddy fields have normal outlets and when they are made into paddy-field dams (all of them, the upstream half, the
-downstream half). It solves the district with representation B, which resolves the plots on a 10 m grid (levees =
-virtual walls, outlets = notches in them), and compares the result with the same district solved on a 30 m grid with
-subgrid paddy tanks (representation A). The values are schematic, chosen to make the phenomena easy to see; they do
-not reproduce a particular district.
+downstream half).
+
+**The same district, the same rain and the same pumping station are computed with the two ways (representations) in
+which ENCflow represents paddy-field dams.**
+
+- **Representation A (Δx = 30 m)**: a representation that does not resolve the plots (for coarse grids). The paddy
+  fields in a cell are represented as subgrid tanks set by the paddy area fraction and the adoption ratio.
+- **Representation B (Δx = 10 m)**: a representation that resolves the plots with the grid (for fine grids). Each of the
+  152 plots is solved as a group of cells, with the levees as walls on the plot boundaries and the outlets as notches in
+  the walls, and the water of the paddy fields is also computed by the shallow water flow.
+
+[Result 1](#result-1-effect-of-paddy-field-dams-representation-b-δx--10-m) studies the effect of paddy-field dams with
+representation B, and [result 2](#result-2-the-same-district-solved-with-representation-a-δx--30-m) solves the same
+district with representation A to see how far a coarse grid gives the same answer. The values are schematic, chosen to
+make the phenomena easy to see; they do not reproduce a particular district.
 
 ## What happens with real paddy-field dams
 
@@ -31,106 +42,121 @@ not reproduce a particular district.
 - **A precedent of resolving the plots**: in a 2D computation at 10 m, full paddy fields behaved like ground raised by
   0.3 m and deepened the inundation near a confluence (Hayazaki et al. 2022).
 
-## Mechanisms needed
+## The district (common to both representations)
 
-| Real phenomenon | Representation in ENCflow | Settings |
-|---|---|---|
-| Plots of paddy fields and their levees | map of plot numbers; virtual walls of levees on every edge between cells with different plot numbers (crest = field surface + 0.30 m; above it the levee overflows both ways by the Homma formula) | `fn_pd_plot`, `pd_hlev` |
-| Outlets and the plates of paddy-field dams | device law of the outlet on the edge between the outlet cell and the cell in its direction (normal = weir of a water-level board 0.03 m high and 0.30 m wide; paddy-field dam = separated type (water-level board + hole φ50)); water flows both ways from the side with the higher level | `fn_pd_outlet`, `fn_pd_class` (default devices) |
-| Decrease in depth | 5 mm/d leaves the system | `pd_perc_mmd` (default) |
-| Small drains, branch drain, main drain | excavation in the terrain (cell width 10 m) | `fn_z` (make_district.py) |
-| Pumping station (the outer river is high and no gravity drainage is possible) | pump out of the district (starts at a pit depth of 0.3 m, 0.6 m³/s at 0.6 m and above) | `&list_struct_pump` |
-| Settlement | building porosity 0.7, mean house size 10 m | `fn_gv`, `fn_bb` |
-| Rain | uniform (207 mm in 24 h) | `&list_precip` |
+`make_district.py` builds the district as a 10 m raster. Representation B uses this raster as it is, and representation
+A uses it aggregated by 3 × 3 cells (30 m).
 
-The ponding of a plot is the water depth of the shallow water flow itself, and water enters or leaves a plot only by the
-overflow of its levees and through its outlet. When the level of a drain becomes higher than the level in a plot, the
-water flows back into the plot through the outlet, and above the crest it flows in over the levees ("Resolved plots (B)"
-in the user guide chapter [Paddy-field dams](../../../docs/en/users_guide/paddy.md)).
-
-## District and settings
-
-![District](figs/district.png)
-
-(a) Land use of the drainage district (thin green lines = plot boundaries, white circles = probes, black square =
-pumping station). (b) North-west corner enlarged (green lines = levees, arrows = outlets and their directions).
-
-630 m × 960 m, Δx = 10 m (63 × 96 cells). A lowland falling from north to south at 1/1000, closed by upland and levees
-all around (water leaves only through the pumping station).
-
-- **Plots**: 30 m × 100 m (3 × 10 cells; a plot width of 3 cells is the lower limit of resolution for representation B),
-  4 groups × 2 rows × 19 = 152 plots (45.6 ha of paddies, about 75 % of the district). The field surface is flat within
-  a plot. The outlet is at the middle of the short side of a plot facing the small drain, and points to the drain.
+- **Extent and terrain**: 630 m × 960 m. A lowland falling from north to south at 1/1000, closed by upland and levees all
+  around (water leaves only through the pumping station).
+- **Paddy fields**: plots of 30 m × 100 m (30 a), 4 groups × 2 rows × 19 = 152 plots (45.6 ha, about 75 % of the
+  district). The field surface is flat within a plot, and the outlet is at the middle of the short side of a plot facing
+  the small drain. The levee height is 0.30 m for all plots.
 - **Drains**: small drains between the rows of plots (flowing east) → branch drain along the east edge (south) → main
   drain along the south edge (west) → pumping station in the south-west. The drain beds are 0.5–1.3 m below the field
   surfaces, and the farm roads are 0.45 m above them (higher than the levee crests).
 - **Settlement**: the western part of the strip north of the main drain (210 m × 30 m). It is the lowest place in the
-  district (ground 0.18 m) and is flooded first when the main drain overflows.
-- **Pumping station**: a specific drainage capacity of about 1 m³/s/km² (0.6 m³/s). This is much smaller than the peak of
-  the rain (25 mm/h = 4.2 m³/s over the district), and the water stored in the drains and plots is pumped out slowly
-  after the rain.
+  district (ground 0.18 m) and is flooded first when the main drain overflows. Building void ratio 0.7.
+- **Pumping station**: the pumps start at a pit depth of 0.3 m and remove 0.6 m³/s out of the district at 0.6 m and above
+  (a specific drainage capacity of about 1 m³/s/km²). This is much smaller than the peak of the rain (25 mm/h =
+  4.2 m³/s over the district), and the water stored in the drains and paddy fields is pumped out slowly after the rain.
 - **Rain and the state before it**: uniform rain of 207 mm in 24 h (4 mm/h for 6 h, 12 mm/h for 3 h, 25 mm/h for 3 h,
-  12 mm/h for 3 h, 4 mm/h for 9 h), computed to 48 h. The plots start ponded to the level at which the outlet starts to
-  drain (the crest of the water-level board, 0.03 m).
-- The computation uses dt = 1 s.
+  12 mm/h for 3 h, 4 mm/h for 9 h), computed to 48 h. The paddy fields start ponded to the level at which the outlet
+  starts to drain (the crest of the water-level board, 0.03 m), and the decrease in depth is 5 mm/d.
+- **Four outlet scenarios**: N (all normal outlets = a weir of a water-level board 0.03 m high and 0.30 m wide), D (all
+  paddy-field dams = separated type, water-level board + hole φ50), Du (paddy-field dams only in the two northern groups
+  = the upstream half, 76 plots), Dd (only in the two southern groups = the downstream half, 76 plots).
 
-| Case | Settings file | Representation | Outlets |
+## The two representations
+
+![The district and the two representations](figs/district.png)
+
+(1) The district as solved by representation A (Δx = 30 m). The white lines are the boundaries of the 30 m cells; the
+shade of green is the paddy area fraction, blue the channel cells (branch and main drains) and orange the settlement. The
+rows that contain the small drains and farm roads appear as bands of lower paddy fraction. (2) The same district as
+solved by representation B (Δx = 10 m). The thin green lines are the plot boundaries (levees), white circles are probes,
+the black square is the pumping station and the dashed box is the extent of (3). (3) The north-west corner of
+representation B enlarged. Green lines are levees, arrows are outlets and their directions.
+
+In **representation A (Δx = 30 m)**, neither the plots nor the small drains appear in the grid. Each 30 m cell holds a
+tank of paddy fields with normal outlets and a tank of paddy-field dams, set by the paddy area fraction (the share of plot
+cells within the 3 × 3 cells, capped at 0.95 since cells made only of plots also have levees and small ditches) and the
+adoption ratio. The outflow of a tank is set by the same device law of the outlet (one outlet per representative plot
+area of 3000 m²), goes to the surface of that cell and flows over the surface to the channel cells (branch and main
+drains). The exchange between the surface water and the paddy fields can be chosen in two ways. The **one-way** mode
+puts only the rain on the paddy fields into the tanks (the water of the drains does not return to the paddy fields). The
+**two-way** mode (`f_pd_exchange = 1`) also lets water enter the paddy fields by backflow through the outlets and when
+the surface level rises above the levees ("Relation to the surface water" in the user guide chapter
+[Paddy-field dams](../../../docs/en/users_guide/paddy.md)). This example solves representation A in both modes.
+
+In **representation B (Δx = 10 m)**, the ponding of a plot is the water depth of the shallow water flow itself. Water
+enters or leaves a plot only by overflow above the levee crest (field surface + 0.30 m) and through its outlet. When the
+level of a drain becomes higher than the level in a plot, the water flows back into the plot through the outlet, and
+above the crest it flows in over the levees. The small, branch and main drains are all in the terrain as excavations
+10 m (one cell) wide.
+
+| | Representation A (Δx = 30 m) | Representation B (Δx = 10 m) |
+|---|---|---|
+| Grid | 21 × 32 cells (3 × 3 cells of 10 m make one cell) | 63 × 96 cells |
+| Paddy fields | tanks of each class set by the paddy area fraction and the adoption ratio of the cell (43.9 ha of paddies; 4 % less than representation B because of the cap of the fraction) | each of the 152 plots solved as a group of cells (maps of plot numbers, outlets and classes; 45.6 ha of paddies) |
+| Paddy water | ponding depth of the tank (the same for all paddy fields of a class in a cell) | water depth of the shallow water flow (the slope of the water surface within a plot is also solved) |
+| Levees | upper limit of the ponding depth of the tank; the excess goes to the surface at once | walls on the edges of the plot boundaries; above the crest, overflow by the Homma formula |
+| Outlets | one device law per representative plot area of 3000 m²; the outflow goes to the surface of the cell | one per plot, a device law on an edge of the outlet cell (both directions) |
+| Water returning from the drains to the paddy fields | one-way: none; two-way: backflow through the outlets and instantaneous filling over the levees | backflow through the outlets and inflow over the levees, solved by the shallow water flow |
+| Small drains | not represented as channels (smoothed into the mean ground elevation of the 3 × 3 cells) | excavations 10 m (one cell) wide |
+| Branch and main drains | channel cells (subgrid width 10 m; the bed is the lowest drain bed within the cell) | excavations 10 m (one cell) wide |
+| Farm roads | smoothed into the mean ground elevation of the 3 × 3 cells | ridges 0.45 m above the field surfaces |
+| Roughness | surface 0.045, channel cells 0.03 | drains 0.03, plots 0.05, others 0.04 |
+| Time step and run time (4 cores) | 2 s, about 2 min per case | 1 s, 10–20 min per case |
+
+## Cases
+
+| Outlets | Representation A (Δx = 30 m), one-way | Representation A (Δx = 30 m), two-way | Representation B (Δx = 10 m) |
 |---|---|---|---|
-| N | param_N.txt | B 10 m | all normal |
-| D | param_D.txt | B 10 m | all paddy-field dams |
-| Du | param_Du.txt | B 10 m | paddy-field dams only in the two northern groups (upstream half, 76 plots) |
-| Dd | param_Dd.txt | B 10 m | paddy-field dams only in the two southern groups (downstream half, 76 plots) |
-| A30_N, A30_D | param_A30_N.txt, param_A30_D.txt | A 30 m one-way | all normal, all paddy-field dams |
-| A30_N2, A30_D2 | param_A30_N2.txt, param_A30_D2.txt | A 30 m two-way | all normal, all paddy-field dams |
+| N: all normal outlets | param_A30_N.txt | param_A30_N2.txt | param_B10_N.txt |
+| D: all paddy-field dams | param_A30_D.txt | param_A30_D2.txt | param_B10_D.txt |
+| Du: upstream half dams | — | — | param_B10_Du.txt |
+| Dd: downstream half dams | — | — | param_B10_Dd.txt |
 
-A on 30 m uses the paddy area fraction (the mean over 3 × 3 cells of 10 m, capped at 0.95 since cells made only of
-plots also have levees and small ditches) and the ground elevation from the 10 m values, gives the branch and main
-drains as channel cells (subgrid width 10 m), and does not represent the small drains (the water flows over the surface
-of the cells; 43.9 ha of paddies). The one-way mode puts only the rain on the paddy fields into the tanks, and the
-two-way mode also lets the water of the drains and the surface enter the paddy fields through the outlets and over the
-levees ("Relation to the surface water" in [Paddy-field dams](../../../docs/en/users_guide/paddy.md)).
+In the names of the settings files, A30 stands for representation A (Δx = 30 m), B10 for representation B (Δx = 10 m),
+and a trailing 2 for the two-way mode. The results are written to `result_<name>/`.
 
 ## How to run
 
 ```
 cd examples/paddy_dam
-make            # links and inputs (make_district.py writes data/)
-make run        # computes the 8 cases in turn (on a 4-core machine, B 10–20 min per case, A about 2 min)
-make figs       # figs/*.png, en/figs/*.png and the table (standard output)
+make            # links and inputs (make_district.py writes the 10 m and 30 m inputs to data/)
+make run        # computes the 8 cases in turn (on a 4-core machine, representation A about 2 min per case, B 10–20 min)
+make figs       # figs/*.png, en/figs/*.png and the two tables (standard output)
 ```
 
-## Results
+## Result 1: effect of paddy-field dams (representation B, Δx = 10 m)
 
-![Maximum depth](figs/maps.png)
+All of this section is computed with representation B.
 
-Maximum water depth of the resolved plots on 10 m (B). Left: all normal outlets (N); right: all paddy-field dams (D). The
-orange line is the settlement.
+![Maximum depth with representation B](figs/maps.png)
 
-![Time series](figs/series.png)
+Maximum water depth with representation B. (1) All normal outlets (N), (2) all paddy-field dams (D). The orange line is
+the settlement.
 
-(a) Rain, (b) inundation depth in the settlement (probe 1), (c) water level of the main drain at the pumping station
-(probe 2; the dashed line is the ground of the settlement), (d) mean water depth of all 152 plots. The 4 cases of B.
+![Time series with representation B](figs/series.png)
 
-![B on 10 m and A on 30 m](figs/scale.png)
+(1) Rain (common to both representations), (2) inundation depth in the settlement (probe 1), (3) water level of the main
+drain at the pumping station (probe 2; the dashed line is the ground of the settlement), (4) mean water depth of all 152
+plots.
 
-The same district solved with B on 10 m and with A on 30 m (one-way and two-way). Top: inundation depth in the
-settlement; bottom: mean water depth of the paddy fields.
+Table 1 (representation B, Δx = 10 m)
 
-| Case | max settlement depth m (time) | hours with settlement depth > 0.1 m | max level at the pumping station m | max mean depth of plots/paddies mm | backflow through outlets m³ | inflow over the levees m³ | outflow over the levees m³ |
+| Outlets | max settlement depth m (time) | hours with settlement depth > 0.1 m | max level at the pumping station m | max mean depth of the plots mm | backflow through outlets m³ | inflow over the levees m³ | outflow over the levees m³ |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | N: all normal outlets | 0.51(24.0 h) | 37 or more (still at 48 h) | 0.70 | 135 | 11453 | 11921 | 2821 |
 | D: all paddy-field dams | 0.01(9.5 h) | 0 | -0.09 | 210 | 0 | 10707 | 578 |
 | Du: upstream half dams | 0.33(24.0 h) | 25 | 0.51 | 155 | 1031 | 10521 | 367 |
 | Dd: downstream half dams | 0.41(23.2 h) | 25 | 0.60 | 153 | 311 | 10586 | 267 |
-| A 30 m one-way, normal | 0.44(24.2 h) | 36 or more (still at 48 h) | 0.63 | 118 | — | — | 0 |
-| A 30 m one-way, dams | 0.08(16.0 h) | 0 | 0.27 | 191 | — | — | 0 |
-| A 30 m two-way, normal | 0.54(24.0 h) | 37 or more (still at 48 h) | 0.72 | 143 | 13707 | 455 | 1781 |
-| A 30 m two-way, dams | 0.16(15.2 h) | 6 | 0.35 | 194 | 413 | 0 | 0 |
 
-Backflow, inflow and outflow are accumulated up to 48 h. A in the one-way mode lets no surface water into the paddy
-fields, hence "—". Most of the inflow over the levees in B is the rain on the farm roads and the upland, which are higher
-than the plots, flowing into the neighbouring plots (in D, too, the water level of the drains stayed below the plots).
-Where the settlement (0.63 ha) was flooded, all of it was flooded deeper than 0.1 m.
+Backflow, inflow and outflow are accumulated up to 48 h. Most of the inflow over the levees is the rain on the farm roads
+and the upland, which are higher than the plots, flowing into the neighbouring plots (in D, too, the water level of the
+drains stayed below the plots). Where the settlement (0.63 ha) was flooded, all of it was flooded deeper than 0.1 m.
 
 **Normal outlets (N)**: a normal outlet passes the water above the water-level board (a weir 0.30 m wide) as it comes, so
 the water depth of the plots rises only while the rain is intense (mean maximum 135 mm), and most of the rain soon goes to
@@ -156,41 +182,78 @@ plots are on higher ground and drain regardless of the water level of the drains
 has a larger effect. This order can change with the slope of the district, the layout of the drains and the capacity of
 the pumping station.
 
-**B on 10 m and A on 30 m**:
+## Result 2: the same district solved with representation A (Δx = 30 m)
 
-- With normal outlets, A in the two-way mode (settlement 0.54 m) is close to B (0.51 m), and A in the one-way mode
-  (0.44 m) comes out smaller. In the one-way mode the surface water also spreads over the paddy part of the cells, so the
-  flood level is underestimated ("Limits of accuracy" in the user guide chapter
-  [Paddy-field dams](../../../docs/en/users_guide/paddy.md)). The two-way mode returns the water of the drains into the
-  paddy fields through the outlets (backflow 14,000 m³; 11,000 m³ in B), and the mean water depth of the paddy fields is
-  also close to B (maximum 143 mm and 135 mm; in the one-way mode it falls soon after the rain).
-- With paddy-field dams, the settlement was flooded by A on 30 m in both modes of exchange (one-way 0.08 m, two-way
-  0.16 m). The difference from B comes from two flow paths that 30 m does not represent. One is the storage of the small
-  drains: B on 10 m has the small drains as channels 10 m wide, which can store about 14,000 m³ below the field surfaces
-  (5–10 times the actual width of 1–2 m), while A on 30 m has no small drains, and the paddy water flows over the surface
-  of the cells to the branch and main drains. The other is where the rain on the farm roads and the upland goes: in B part
-  of it (about 11,000 m³) enters the neighbouring plots and is stored behind the paddy-field dams, while in A it flows to
-  the drains. A real district lies in between, and whether paddy-field dams prevent the flooding of the settlement is
+N and D are compared between representation B (Δx = 10 m) and representation A (Δx = 30 m; one-way and two-way). The
+district, the rain, the pumping station and the devices of the outlets are the same; only the ways of representation
+listed in the table of "The two representations" above differ.
+
+![Representation B and representation A under the same conditions](figs/scale.png)
+
+(1)(2) Inundation depth in the settlement (probe 1; in representation A the 30 m cell containing the settlement), (3)(4)
+mean water depth of the paddy fields. Left: N; right: D.
+
+Table 2 (representation B and representation A under the same conditions)
+
+| Outlets | Representation | max settlement depth m (time) | hours with settlement depth > 0.1 m | max level at the pumping station m | max mean depth of the paddies mm | backflow through outlets m³ | inflow over the levees m³ |
+|---|---|---:|---:|---:|---:|---:|---:|
+| N | representation B (Δx = 10 m) | 0.51(24.0 h) | 37 or more (still at 48 h) | 0.70 | 135 | 11453 | 11921 |
+| N | representation A (Δx = 30 m), one-way | 0.44(24.2 h) | 36 or more (still at 48 h) | 0.63 | 118 | — | — |
+| N | representation A (Δx = 30 m), two-way | 0.54(24.0 h) | 37 or more (still at 48 h) | 0.72 | 143 | 13707 | 455 |
+| D | representation B (Δx = 10 m) | 0.01(9.5 h) | 0 | -0.09 | 210 | 0 | 10707 |
+| D | representation A (Δx = 30 m), one-way | 0.08(16.0 h) | 0 | 0.27 | 191 | — | — |
+| D | representation A (Δx = 30 m), two-way | 0.16(15.2 h) | 6 | 0.35 | 194 | 413 | 0 |
+
+Representation A in the one-way mode lets no surface water into the paddy fields, hence "—". The inflow over the levees
+of representation B includes the rain on the farm roads and the upland entering the neighbouring plots (representation A
+has no such path).
+
+- **Normal outlets (N)**: representation A in the two-way mode (settlement 0.54 m) is close to representation B
+  (0.51 m), and representation A in the one-way mode (0.44 m) comes out smaller. In the one-way mode the surface water
+  also spreads and is stored over the paddy part of the cells, so the flood level is underestimated ("Limits of accuracy"
+  in the user guide chapter [Paddy-field dams](../../../docs/en/users_guide/paddy.md)). The two-way mode keeps the
+  surface water below the levee crest on the non-paddy area only and also represents the water of the drains returning
+  into the paddy fields through the outlets (backflow 14,000 m³; 11,000 m³ in representation B), so it comes close to
+  representation B. The mean water depth of the paddy fields is also close to representation B in the two-way mode
+  (maximum 143 mm and 135 mm), while in the one-way mode it falls soon after the rain.
+- **Paddy-field dams (D)**: the settlement was not flooded with representation B, but it was flooded with representation
+  A in both modes of exchange (one-way 0.08 m, two-way 0.16 m). The difference comes from two flow paths that
+  representation A does not represent. One is the storage of the small drains: representation B has the small drains as
+  channels 10 m wide, which can store about 14,000 m³ below the field surfaces (5–10 times the actual width of 1–2 m),
+  while representation A has no small drains, and the paddy water flows over the surface of the cells to the branch and
+  main drains. The other is where the rain on the farm roads and the upland goes: in representation B part of it (about
+  11,000 m³) enters the neighbouring plots and is stored behind the paddy-field dams, while in representation A it flows
+  to the drains. A real district lies in between, and whether paddy-field dams prevent the flooding of the settlement is
   sensitive to how the drains and roads are represented.
 
 ## Limitations and accuracy
 
+**Common to both representations**
+
 - The values are schematic on synthetic terrain and do not reproduce a particular district. The results change much with
   the specific drainage capacity, the rain and the arrangement of the plots.
-- On a 10 m grid the small drains (actually 1–2 m wide) become channels as wide as a cell (10 m), so their storage and
-  conveyance come out large (about 14,000 m³ below the field surfaces in this district). The water levels of the drains
-  come out low in all cases, and whether paddy-field dams prevent the flooding of the settlement is sensitive to this
-  storage ("B on 10 m and A on 30 m" above). A plot width of 3 cells is the lower limit for representation B, and the
-  slope of the water surface within a plot is represented only coarsely.
 - The pumping station is only pumps; gravity drainage through sluices and the level of the outer river (backflow) are not
   represented.
 - The levee height is the same 0.30 m for all plots; overflow from low points of the levees, leakage or collapse of the
   levees and clogging of the plates are not represented.
 - The decrease in depth is constant (5 mm/d), the rain is uniform and the ponding before the rain is the same in all
   plots.
-- A on 30 m does not represent the small drains, and the water of the paddy fields goes to the surface of its own cell
-  and flows over the surface to the channel cells. With the paddy area fraction capped at 0.95, the paddy area is 4 %
-  smaller than in B on 10 m.
+
+**Representation A (Δx = 30 m)**
+
+- The small drains and farm roads are not represented, and the paddy water goes to the surface of its own cell and flows
+  over the surface to the channel cells.
+- With the paddy area fraction capped at 0.95, the paddy area is 4 % smaller than in representation B.
+- In the one-way mode the water of the drains does not return to the paddy fields, and in the two-way mode the inflow over
+  the levees is instantaneous (without an overflow length).
+
+**Representation B (Δx = 10 m)**
+
+- The small drains (actually 1–2 m wide) become channels as wide as a cell (10 m), so their storage and conveyance come
+  out large (about 14,000 m³ below the field surfaces in this district). The water levels of the drains come out low in
+  all cases, and whether paddy-field dams prevent the flooding of the settlement is sensitive to this storage (result 2).
+- A plot width of 3 cells is the lower limit for representation B, and the slope of the water surface within a plot is
+  represented only coarsely.
 
 ## References
 

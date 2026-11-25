@@ -1,14 +1,15 @@
 # ENCflow/examples/paddy_dam/Makefile
 #   make        ../../bin/ の実行ファイルへのリンクと入力(data/。make_district.py)を作る
-#   make run    10 m の区画の解像(B)の 4 ケース(N・D・Du・Dd)と、30 m の表現 A の 4 ケース(片方向・双方向 ×
-#               通常・田んぼダム)を順に計算する(4 コアの計算機で B は 1 ケース 10〜20 分、A は 2 分前後)
+#   make run    同じ地区を、表現 A(Δx = 30 m。サブグリッドの水田タンク)の 4 ケース(A30_*: 片方向・双方向 ×
+#               通常・田んぼダム)と表現 B(Δx = 10 m。区画の解像)の 4 ケース(B10_*: N・D・Du・Dd)で順に計算する
+#               (4 コアの計算機で表現 A は 1 ケース 2 分前後、表現 B は 10〜20 分)
 #   make figs   図(figs/・en/figs/)と数表(標準出力)
 #   make clean  リンクと生成物を削除する
 
 TOPDIR	= ../..
 BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
-CASES	= N D Du Dd A30_N A30_D A30_N2 A30_D2
+CASES	= A30_N A30_D A30_N2 A30_D2 B10_N B10_D B10_Du B10_Dd
 
 all: links inputs
 
