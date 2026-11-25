@@ -281,11 +281,17 @@ snow is fixed into the terrain by f_dbstop. Panel (b) summarizes the setup below
   preprocessing), (5) the friction coefficients μ and ξ are one pair for the whole domain (the tables of
   operational models, which vary them with terrain class and altitude, cannot be used as they are), (6) the
   shape of the head of the flow in a gully (maximum flow depth, maximum speed, arrival time) changes with the
-  orientation of the gully to the grid and with the grid spacing (the Voellmy law has no stress across the
-  flow, so the grid sets the width of the fast core along the thalweg). For a flow that takes up no snow and
-  in computations with `f_dbmom = 0` it changes by 10 to 30 % and does not converge when the grid is refined;
-  for a flow that takes up snow with `f_dbmom = 1` it stays at about 10 %. The flow upstream of the head and
-  the tip of the deposit hardly change. The numbers for (5) and (6) are in the example
+  orientation of the gully to the grid and with the grid spacing. The 8-neighbour grid estimates the flow in a
+  gully a few cells wide somewhat too slow (the 7 to 11 % of the item above); where the gully runs along a grid
+  axis the head comes out thick and slow, and where it runs diagonally, thin and fast. In the computations of
+  the example, which specify `f_opening_dynamic = 0`, the arrival time at the gully mouth and the maximum speed
+  in the gully change by about 10 % with the grid spacing (10 to 2.5 m), the maximum flow depth in the gully
+  and the area and width of the deposit by about 10 % with the gully direction, and the thickness of the head
+  of a flow that takes up no snow by about 20 % with the direction (a factor of 1.7 if the default 3 is kept).
+  Under grid refinement the difference of the front position shrinks but that of the thickness of the head
+  remains. The flow upstream of the head and the tip of the deposit hardly change (the tip of the deposit
+  stays within 1 m for the direction and within −18 to +14 m for the grid spacing). The numbers for (5) and
+  (6) are in the example
   [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md).
 - A verified example is [test/avalanche](../../../test/avalanche/en/README.md)
   (release → entrained solids grow to 1.97 times the released solids → stopping on the flat;
@@ -297,7 +303,8 @@ snow is fixed into the terrain by f_dbstop. Panel (b) summarizes the setup below
   resistance law). A worked example is
   [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md) (an avalanche down a gully: how the
   amount of snow on the track changes its size and runout, a comparison of the runout with an empirical
-  relation, a deflecting dam on the fan, and the dependence on the grid and the time step). Comparison with
+  relation, a deflecting dam on the fan, and the dependence on the grid, the gully direction and the time
+  step). Comparison with
   observed avalanche runouts has not
   been done. The "avalanche redistribution" in the glacier module is a
   slow slope redistribution of snow for accumulation - a different

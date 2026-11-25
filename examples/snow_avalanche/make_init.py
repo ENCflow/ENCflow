@@ -156,6 +156,12 @@ CASES = {
     "r45": case(theta=45.0),
     "dt2": case(dt="0.05"),
     "dthalf": case(dt="0.0125"),
+    # 塞がれた開口の動的振り替え(param.txt は使わない = 0。既定は 3)と沢の向き。雪を取り込まない流れの頭で差が出る
+    "nosnow_r45": case(track=0.0, theta=45.0),
+    "open3": case(f_opening_dynamic="3"),
+    "open3_r45": case(theta=45.0, f_opening_dynamic="3"),
+    "nosnow_open3": case(track=0.0, f_opening_dynamic="3"),
+    "nosnow_open3_r45": case(track=0.0, theta=45.0, f_opening_dynamic="3"),
     # 連行の与え方と限界: 限界水深、全面の雪
     "dd3": case(dd="0.001"),
     "dd3_dthalf": case(dd="0.001", dt="0.0125"),

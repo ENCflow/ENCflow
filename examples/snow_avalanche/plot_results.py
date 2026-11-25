@@ -570,7 +570,7 @@ def fig_entrain():
         ax.legend(handles=[Line2D([], [], color="k", lw=1.0, ls=":", label=T("運動量を数えない(f_dbmom = 0)", "momentum not counted (f_dbmom = 0)"))],
                   fontsize=7.5, frameon=False, loc="lower right")
     ax.axhline(M.S_A, color="k", lw=0.7, ls=":")
-    ax.text(118, M.S_A + 12, T("扇頂", "fan apex"), fontsize=8)
+    ax.text(118, M.S_A - 12, T("扇頂", "fan apex"), fontsize=8, ha="right", va="top")
     ax.set_xlim(0, 120)
     ax.set_ylim(0, 1400)
     ax.set_xlabel(T("時間 (s)", "time (s)"))
@@ -593,7 +593,8 @@ def fig_entrain():
           Line2D([], [], color="k", lw=1.0, ls="--", label=T("最大流動深", "maximum depth"))]
     if nomom:
         hd.append(Line2D([], [], color="k", lw=1.0, ls=":", label=T("最大流速(f_dbmom = 0)", "maximum speed (f_dbmom = 0)")))
-    ax.legend(handles=hd, fontsize=7, frameon=False, loc="lower left", bbox_to_anchor=(0.2, 0.36))
+    ax.set_ylim(0, 40)
+    ax.legend(handles=hd, fontsize=7, frameon=False, loc="upper right")
     ax.set_title(T("(c) 横断の最大値の縦断", "(c) cross-sectional maxima along the path"), fontsize=9.5, loc="left")
     save(fig, "entrain.png")
 
@@ -640,7 +641,7 @@ def fig_runout():
         yl = 52.0 + 13.0 * i
         ax.plot([st["tip"]] * 2, [zt, yl], color=COL[nm], lw=1.0)
         ax.plot(st["tip"], zt, "o", ms=5, color=COL[nm], zorder=5)
-        ax.text(st["tip"] + 6, yl, f"{label(nm)}: {st['tip']:.0f} m", fontsize=8, color=COL[nm], va="center",
+        ax.text(st["tip"] + 6, yl, f"{label(nm)}: {math.floor(st['tip'] + 0.5):.0f} m", fontsize=8, color=COL[nm], va="center",
                 bbox=dict(boxstyle="round,pad=0.1", fc="white", ec="none", alpha=0.75))
     ax.set_xlim(850, 1800)
     ax.set_ylim(0, 140)
@@ -719,7 +720,9 @@ def fig_grid():
              [("base", "0°", "#1f5f8b"), ("r22p5", "22.5°", "#d08c00"), ("r45", "45°", "#2b8a3e")]),
             (T("(c) 時間刻み(格子 5 m)", "(c) time step (5 m grid)"),
              [("dt2", "0.05 s", "#d08c00"), ("base", "0.025 s", "#1f5f8b"), ("dthalf", "0.0125 s", "#2b8a3e")]))
-    fig, axs = plt.subplots(1, 3, figsize=(11.5, 4.5), gridspec_kw=dict(left=0.055, right=0.99, top=0.92, bottom=0.12, wspace=0.08))
+    fig = plt.figure(figsize=(11.5, 7.6))
+    gsm = fig.add_gridspec(1, 3, left=0.055, right=0.99, top=0.955, bottom=0.465, wspace=0.08)
+    axs = [fig.add_subplot(gsm[0, k]) for k in range(3)]
     cb = get("base")
     for ax, (ttl, items) in zip(axs, sets):
         relief(ax, cb.s, cb.n, cb.zb, cb.mask, levels=10.0, alpha=0.6)
@@ -742,6 +745,33 @@ def fig_grid():
     axs[0].set_ylabel("n (m)")
     for ax in axs[1:]:
         ax.set_yticklabels([])
+    # (d)・(e) 塞がれた開口の動的振り替え(param.txt は使わない = 0。既定は 3)と沢の向き: 横断の最大流動深の縦断
+    gsl = fig.add_gridspec(1, 2, left=0.055, right=0.975, top=0.37, bottom=0.075, wspace=0.14)
+    sets2 = ((T("(d) 走路に雪のない流れ: 最大流動深の縦断", "(d) flow on a track without snow: maximum flow depth along the gully"),
+              [("nosnow", T("0°・振り替えなし(この例題)", "0°, no reassignment (this example)"), "#1f5f8b", "-"),
+               ("nosnow_r45", T("45°・振り替えなし", "45°, no reassignment"), "#2b8a3e", "-"),
+               ("nosnow_open3", T("0°・既定の振り替え", "0°, default reassignment"), "#1f5f8b", "--"),
+               ("nosnow_open3_r45", T("45°・既定の振り替え", "45°, default reassignment"), "#2b8a3e", "--")]),
+             (T("(e) 基本ケース(走路の雪 1 m): 最大流動深の縦断", "(e) base case (1 m of track snow): maximum flow depth along the gully"),
+              [("base", T("0°・振り替えなし(この例題)", "0°, no reassignment (this example)"), "#1f5f8b", "-"),
+               ("r45", T("45°・振り替えなし", "45°, no reassignment"), "#2b8a3e", "-"),
+               ("open3", T("0°・既定の振り替え", "0°, default reassignment"), "#1f5f8b", "--"),
+               ("open3_r45", T("45°・既定の振り替え", "45°, default reassignment"), "#2b8a3e", "--")]))
+    for k, (ttl, items) in enumerate(sets2):
+        ax = fig.add_subplot(gsl[0, k])
+        for nm, lab, col, ls in items:
+            if not have(nm):
+                continue
+            sv, _vv, dv = along_axis(get(nm))
+            ax.plot(sv, dv, color=col, ls=ls, lw=1.4, label=lab)
+        ax.axvline(M.S_A, color="0.5", lw=0.8, ls=":")
+        ax.set_xlim(250, 1100)
+        ax.set_ylim(0, None)
+        ax.set_xlabel("s (m)")
+        ax.set_ylabel(T("最大流動深 (m)", "maximum flow depth (m)"))
+        ax.grid(alpha=0.3)
+        ax.legend(fontsize=7.5, frameon=True, loc="upper right" if k == 0 else "lower center", ncol=1 if k == 0 else 2)
+        ax.set_title(ttl, fontsize=9.5, loc="left")
     save(fig, "grid.png")
 
 
@@ -749,9 +779,9 @@ def fig_limits():
     fig = plt.figure(figsize=(11.5, 8.8))
     gsl = fig.add_gridspec(3, 1, left=0.055, right=0.6, top=0.955, bottom=0.065, hspace=0.1)
     gs = fig.add_gridspec(3, 1, left=0.68, right=0.985, top=0.955, bottom=0.065, hspace=0.5)
-    rows = (("allsnow", T("速度比例・下限なし", "velocity-proportional, no minimum depth")),
-            ("allsnow_t", T("速度比例・連行する流動深の下限 0.3 m", "velocity-proportional, minimum depth 0.3 m")),
-            ("allsnow_h", T("Hungr の則(E_r = 0.01 /m)", "Hungr's law (E_r = 0.01 /m)")))
+    rows = (("allsnow_dd5", T("速度比例・下限なし", "velocity-proportional, no minimum depth")),
+            ("allsnow_t_dd5", T("速度比例・連行する流動深の下限 0.3 m", "velocity-proportional, minimum depth 0.3 m")),
+            ("allsnow_h_dd5", T("Hungr の則(E_r = 0.01 /m)", "Hungr's law (E_r = 0.01 /m)")))
     for i, (nm, lab) in enumerate(rows):
         ax = fig.add_subplot(gsl[i, 0])
         if have(nm):
@@ -767,8 +797,8 @@ def fig_limits():
         else:
             ax.set_xlabel("s (m)")
         if i == 0:
-            ax.set_title(T("(a) 扇頂より上の全面に雪 0.5 m を置いた計算の最大流動深(限界水深 0.1 mm)",
-                           "(a) maximum flow depth with 0.5 m of snow everywhere above the apex (threshold depth 0.1 mm)"), fontsize=9.5, loc="left")
+            ax.set_title(T("(a) 扇頂より上の全面に雪 0.5 m を置いた計算の最大流動深(限界水深 0.01 mm)",
+                           "(a) maximum flow depth with 0.5 m of snow everywhere above the apex (threshold depth 0.01 mm)"), fontsize=9.5, loc="left")
     # (b) 限界水深と流れた雪の量
     ax = fig.add_subplot(gs[0, 0])
     dds = (1e-3, 1e-4, 1e-5)
@@ -813,7 +843,7 @@ def fig_limits():
             tt, uu, _ = sheet_ode(0.5, mu, xi, de, inertia)
             ax.plot(tt, uu, color=col, lw=1.4, ls=ls)
     ax.set_xlim(0, 10)
-    ax.set_ylim(0, None)
+    ax.set_ylim(0, 20)
     ax.set_xlabel(T("時間 (s)", "time (s)"))
     ax.set_ylabel(T("水平の流速 (m/s)", "horizontal speed (m/s)"))
     ax.legend(handles=[Line2D([], [], color="#7a7a7a", lw=1.4, label=T("連行なし", "no entrainment")),
@@ -933,7 +963,7 @@ def main():
         fig_dam()
     if all(have(nm) for nm in ("base", "dx10", "r45")):
         fig_grid()
-    if all(have(nm) for nm in ("base", "allsnow")):
+    if all(have(nm) for nm in ("base", "allsnow_dd5")):
         fig_limits()
     table()
 

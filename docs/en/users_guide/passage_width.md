@@ -505,7 +505,9 @@ conveyance.
   axis is 1.5 to 1.9 times that with the gully along the diagonal (5 m and
   2.5 m grids) and does not shrink under grid refinement. With
   `f_opening_dynamic = 0` it stays within 1.1 to 1.2 times and approaches the
-  solution of 4 neighbours along the grid (developer.md §128.4). For flows much
+  solution of 4 neighbours along the grid (developer.md §128.4; a runnable
+  comparison is in the example
+  [snow_avalanche](../../../examples/snow_avalanche/en/README.md#grid-spacing-gully-direction-and-time-step)). For flows much
   deeper than the rise the difference is small: in a uniform V-channel (flow
   8 cells wide, flow depth 4.9 m) the spread of the discharge over the
   directions is 8 % with 3 and 3 % with 0
