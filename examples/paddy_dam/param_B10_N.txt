@@ -2,6 +2,7 @@
 ! examples/paddy_dam: 低平地の排水区の内水と田んぼダム(区画の解像 = 表現 B、Δx = 10 m)
 !   B10_N: 全ての区画が通常の落水口(水位調整板 0.03 m × 幅 0.30 m)
 !   入力は make_district.py が data/ に作る(make)。地形と設定の説明は README.md
+!   水質(結果 3): 雨の前の湛水(10 mg/L)に溶けた減衰しない物質の行方を追う。雨と地表の水は 0 mg/L
 !======================================================================
 &list_sysparam
   f_gridsystem = 0
@@ -17,6 +18,7 @@
   fn_structure = '-'        ! 排水機場のポンプ
   fn_record = '-'
   fn_paddy = '-'            ! 田んぼダム(区画の解像)
+  fn_wq = '-'               ! 水質(雨の前の湛水に溶けた物質。結果 3)
   dir_data = 'data'
   dir_result = 'result_B10_N'
   f_out_h = 1
@@ -85,4 +87,9 @@
   fn_pd_plot = 'plot.txt'          ! 区画番号(152 区画。30 m × 100 m = 3 × 10 セル)
   fn_pd_outlet = 'outlet.txt'      ! 落水口の向き(区画の小排水路側の短い辺の中央)
   fn_pd_class = 'class_N.txt'      ! 落水口の種類(N: 全て通常)
+  pd_wq_c0 = 10.0                  ! 雨の前の湛水に溶けた物質の濃度 (mg/L。結果 3)
+/
+
+&list_wq
+  wq_c0 = 0.0                      ! 地表の水の初めの濃度 (mg/L)。雨の濃度も 0(既定)、減衰・沈降なし
 /
