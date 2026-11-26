@@ -268,7 +268,7 @@ module m_state
                                         !   f_dbmom = 1 のときだけ確保する。calc_debris が毎ステップ書き、
                                         !   次のステップの運動方程式(m_swflow_enc の calc_kth_flux)が
                                         !   辺の両セルの平均を半陰の抵抗に足す。私有 save は
-                                        !   geomorph_debris.dat(developer.md §127)
+                                        !   geomorph_debris.dat(developer.md §129)
     real, allocatable :: hb(:,:)        ! 動く底層の厚さ (m。かさ体積 = 間隙込み。s%z と
                                         ! s%sd の内数で常に土層の最上部にある。m_geomorph
                                         ! の f_bedslide が確保・更新・私有保存する。無効

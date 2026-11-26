@@ -486,7 +486,7 @@ grid-wide channels correctly
   30.1 m/s), and the flow upstream of the head and the tip of the deposit hardly change. In a computation
   on an orthogonal grid along the gully (4 neighbours) the head is thin and fast. The head of the
   8-neighbour computation at 0° is thicker and slower than that; under grid refinement the difference
-  of the front position shrinks but that of the thickness of the head remains (developer.md §128.4).
+  of the front position shrinks but that of the thickness of the head remains (developer.md §130.4).
 - **How to read the results**: the tip of the deposit stays within ±5 m for the gully direction and the
   time step and within −18 to +14 m for the grid spacing (±0.2° in the sight angle), less than the
   differences due to the amount of track snow (30 to 75 m) and the friction coefficients (170 to 235 m).

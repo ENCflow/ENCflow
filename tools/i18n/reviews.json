@@ -446,11 +446,11 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "5953a433ce0ebeb34038a4ac7d4dfde1d70818e103ef82ef8cd7e875749abeee",
-      "target_sha256": "c3c03e1dc5f2daa28ba5d8f5aeb206288fc9f71aab6521184c7d7ca22a275336",
-      "reviewer": "Claude (Claude Code session; section 7: a pointer to the runnable comparison in the example snow_avalanche added in both languages in the same work; the changed sentence compared side by side, the rest unchanged since the previous record)",
+      "source_sha256": "e9f19cbcc7c8d6b33284c1d0ff17d61449e3778394fa9b589d9e65340c92ce74",
+      "target_sha256": "25f3af47777f12dde3db98faaf17057a8a3c2e63d51f0c3cd4f608b892609d73",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -3245,11 +3245,11 @@
     {
       "source": "examples/snow_avalanche/README.md",
       "target": "examples/snow_avalanche/en/README.md",
-      "source_sha256": "2bb8c449c2b9e58a6f5e010882d47ea29b4f0420356eab39bef63dac46e465e2",
-      "target_sha256": "0f05d2c87d72c5d82a79774a31bf3bd690ac18f6a20b40c530d714d95f0b284c",
-      "reviewer": "Claude (Claude Code session; rewritten after recomputing all 33 cases with f_opening_dynamic = 0 and the corrected blockage ratio: section structure (21 sections; bullets, table rows, figures, links and code spans per section) and all numbers per section compared with the Japanese source by script; numbers checked against the example runs)",
+      "source_sha256": "825eee850054062f2aea504c30c347f21fd420532928cfbc5d26695947b4020b",
+      "target_sha256": "9388e7f5dc616f2fdf65300b66251b364f9d7a878cc6c5b60d3d6312462b1d0d",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/snow_avalanche/figs/dam.png",
@@ -4046,11 +4046,11 @@
     {
       "source": "test/avalanche/README.md",
       "target": "test/avalanche/en/README.md",
-      "source_sha256": "e8176309aafc6106c17cf969b836903b9e3934315ee8f38feb0339f704e8227c",
-      "target_sha256": "da442bc1bc1bc1fc2ca63c9afd17cee851d3f35ae5344eda888312dec580c0bd",
-      "reviewer": "Claude (Claude Code session; values changed by the correction of the blockage ratio (flow depth instead of water depth, developer.md §128) updated in the table, the text and the history note of both languages in the same work and compared side by side; numbers taken from the test run)",
+      "source_sha256": "83dd4f8fe74974f097107a6cef431ba86febcd1404879d99d03b9d8041286927",
+      "target_sha256": "eb1f08fbbd5d5c9d35fb8c12e751c122df506082bfc73406034b68ce47f5c14c",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/avalanche/figs/avalanche.png",
@@ -4109,11 +4109,11 @@
     {
       "source": "test/bedslide/README.md",
       "target": "test/bedslide/en/README.md",
-      "source_sha256": "a113647e9e0f9e781c100d773d74b5fa758a56dd97fae15eb37086e9a7bee655",
-      "target_sha256": "63cecc21d6779fd34f0576a0a3bc7e0307ee97f3b71e4d6906e88f312018cdcd",
-      "reviewer": "Claude (Claude Code session; values changed by the correction of the blockage ratio (flow depth instead of water depth, developer.md §128) updated in the table, the text and the history note of both languages in the same work and compared side by side; numbers taken from the test run)",
+      "source_sha256": "28728978ed83c8466e16a247eabe6a5e502c8bc0d9eeb3596499c61a5a24f95d",
+      "target_sha256": "86b9c225186257917fa2ad6543234ef4933f517859c1720c858fb7bc3edb25dc",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/bedslide/figs/bench.png",
@@ -5225,11 +5225,11 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "a4a263c5659dbd254faab4a17ec3e8c66e75e6ae49a349816facd99940889275",
-      "target_sha256": "2a5338e8a118429ae71b04139785ce56f0f3a1b771da09d8b005aa6a905ad8e2",
-      "reviewer": "Claude (Claude Code session; values changed by the correction of the blockage ratio (flow depth instead of water depth, developer.md §128) updated in the table, the text and the history note of both languages in the same work and compared side by side; numbers taken from the test run)",
+      "source_sha256": "e1b51fc99fba0f71c26f99c162de237f510355cfc53c7b84f8787fe5e4b645af",
+      "target_sha256": "1711aae665162029f62a82a94c29d86902ba4c2823a9d0afda54b34c913fc26d",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/slide/figs/fslide.png",
@@ -5306,11 +5306,11 @@
     {
       "source": "test/splashslide/README.md",
       "target": "test/splashslide/en/README.md",
-      "source_sha256": "1fa59fb57fe4c2739b5524f56759b0b307756fe9265d949d0c59b6ea7ac57687",
-      "target_sha256": "02c88d2d942cfc3de6ba6d67587f5c1f57d431931f8ddd81caadadc41e4dfad8",
-      "reviewer": "Claude (Claude Code session; values changed by the correction of the blockage ratio (flow depth instead of water depth, developer.md §128) updated in the table, the text and the history note of both languages in the same work and compared side by side; numbers taken from the test run)",
+      "source_sha256": "e4e014805320514fbb4f656e7e315c0d04bd2c14a03b4a845740a11bbb6e8ac7",
+      "target_sha256": "dfe49d2bc135b707335b55315edfc7331abf413559f2a77c46436b6498d84535",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/splashslide/figs/splashslide.png",
@@ -5495,11 +5495,11 @@
     {
       "source": "test/vchannel/README.md",
       "target": "test/vchannel/en/README.md",
-      "source_sha256": "8f4e54dcf123c0cc65248f9bb678e6fdbf4c16532f35fbb783d472a72f2b762a",
-      "target_sha256": "86eab7014f92f74c4e680ff20faa9b0fe6d95ccf31624f15496791f87b4f2042",
-      "reviewer": "Claude (Claude Code session; new test: the Japanese source and the English mirror written in the same work and compared side by side; tables, formulas and numbers checked against the test run)",
+      "source_sha256": "d47c1dc82f83e59992652299dc125346138ac655adbeccea583fb8bae8507c93",
+      "target_sha256": "d6daf7451113d3644c3bee774e4cb060de36cc976b2d794025804f81db450a64",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/vchannel/figs/vchannel.png",
@@ -5513,11 +5513,11 @@
     {
       "source": "test/volcano/README.md",
       "target": "test/volcano/en/README.md",
-      "source_sha256": "5b48c94c67db1ba87c93975ade99756e35a1247535fa0c7b7b6dfbe6f8a1319b",
-      "target_sha256": "b4faf75f9d09c5598f24b69b51af27a5b470e93a0f2e1e8fa66439466ffcc751",
-      "reviewer": "Claude (Claude Code session; values changed by the correction of the blockage ratio (flow depth instead of water depth, developer.md §128) updated in the table, the text and the history note of both languages in the same work and compared side by side; numbers taken from the test run)",
+      "source_sha256": "c5fe0c37e16a008408ffd9fa1f50a5da854dd3ee7ad0346482f839d6b02f6a01",
+      "target_sha256": "45e77ce76fe45d34a0a9782749f42cdb18dd539b5b549306f61e18dd34974f50",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/volcano/figs/tauy.png",

@@ -269,7 +269,7 @@ judge-only mode).
   configuration 4 has the deposit outside from +0.30 to +0.29 m and the retained-water term from 16.8 to
   17.1 m³, and the dry case has the lowering of the collapse area from 0.84 to 0.83 m, the deposit outside
   from +0.65 to +0.54 m, the retained-water term from 17.9 to 18.3 m³ and the shortfall from 0.18 to 0.09 m³
-  (developer.md §128). The table and the figures show these values.
+  (developer.md §130). The table and the figures show these values.
 
 ## Related documents
 

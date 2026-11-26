@@ -279,7 +279,7 @@ surface is then z + h + hs.
 | 2026-10-29 | 2 | 3, which measures the rise above the local plane, was added | §68.41, opening_plan.md |
 | 2026-10-31 | **3** | After comparing all 86 tests and the examples, the default was switched to 3 | §68.41, opening_plan.md §8 |
 | 2026-10-31 to 11-01 | 3 | Found after the switch: specify 2 for longshore currents along a uniform beach (§7). A run that stopped in a deep impoundment of a tutorial was caused not by the reassignment but by an inconsistent lateral-face flux of the advection term, which was fixed | §68.41 to §68.43 |
-| 2026-11-25 | 3 | In computations with the sediment-flow model, the water column of the blockage ratio is now measured with the flow depth h + hs. Until then it was measured with the water depth h alone, so that even diagonal neighbours submerged by a flow with a thin carrier (one tenth of the flow depth in the avalanche settings) counted as blocking, and the diagonal edges that kept flowing and the axis edges that received the reassignment counted the same passage width twice (discharge 21 % too large in a uniform V-channel; [test/vchannel](../../../test/vchannel/en/README.md)) | §128 |
+| 2026-11-25 | 3 | In computations with the sediment-flow model, the water column of the blockage ratio is now measured with the flow depth h + hs. Until then it was measured with the water depth h alone, so that even diagonal neighbours submerged by a flow with a thin carrier (one tenth of the flow depth in the avalanche settings) counted as blocking, and the diagonal edges that kept flowing and the axis edges that received the reassignment counted the same passage width twice (discharge 21 % too large in a uniform V-channel; [test/vchannel](../../../test/vchannel/en/README.md)) | §130 |
 
 In retrospect, each step widened "the situations where the virtual passage
 widths match the actual shape of the flow": levee walls → banks of the
@@ -505,7 +505,7 @@ conveyance.
   axis is 1.5 to 1.9 times that with the gully along the diagonal (5 m and
   2.5 m grids) and does not shrink under grid refinement. With
   `f_opening_dynamic = 0` it stays within 1.1 to 1.2 times and approaches the
-  solution of 4 neighbours along the grid (developer.md §128.4; a runnable
+  solution of 4 neighbours along the grid (developer.md §130.4; a runnable
   comparison is in the example
   [snow_avalanche](../../../examples/snow_avalanche/en/README.md#grid-spacing-gully-direction-and-time-step)). For flows much
   deeper than the rise the difference is small: in a uniform V-channel (flow

@@ -38,7 +38,7 @@ The tables above are configuration 1 (`param.txt`).
 
 ### Configurations 2 to 5: a sheet released at once on a uniform slope (momentum of the entrained snow, Hungr's law, minimum flow depth for entrainment)
 
-These configurations compare the options of the entrainment law (developer.md §127) with the solutions of
+These configurations compare the options of the entrainment law (developer.md §129) with the solutions of
 ordinary differential equations in time only. Over the whole of a uniform slope of S = 0.5 (600 m × 40 m,
 Δx = 2 m), a layer of snow D = 0.5 m thick starts to move at t = 0 and takes up the snow below (3 m thick).
 Nothing varies along the flow, so the velocity u (horizontal) and the flow depth h_t = h + hs (vertical) at
@@ -154,7 +154,7 @@ snow is still flowing (remaining hs).
   restored it is 1.95); restoring only f_advection_donor or only f_advection_lateral to the old value gives
   1.77, and restoring f_dry_head_cap to 3 keeps 1.81. After the blockage ratio of the dynamic reassignment
   of blocked openings was corrected on 2026-11-25 to be measured with the flow depth h + hs, it is 1.97
-  (entrained solid 42.6, remaining 0.000, largest deposit 0.56 m; developer.md §128. How far the snow
+  (entrained solid 42.6, remaining 0.000, largest deposit 0.56 m; developer.md §130. How far the snow
   surface on both sides of the path lowered by entrainment counts as a blockage is now set by the flow depth
   instead of the water depth of the carrier. The largest scoured depth per column is 0.43, 0.37, 0.26 and
   0.15 m at x = 14.5, 19.5, 24.5 and 28.5 m). The table, the values in the text and the figures are from
@@ -183,5 +183,5 @@ snow is still flowing (remaining hs).
 ## Related documents
 
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md) — setup pattern for (dense-flow) avalanches, customary ranges of μ/ξ, table of reinterpretations
-- developer.md §28.8 (equivalent-fluid mode, velocity-proportional entrainment f_dbed=4, design decisions for the avalanche application), §127 (Hungr's law f_dbed=5, minimum flow depth for entrainment db_hent, momentum of the entrained mass f_dbmom)
+- developer.md §28.8 (equivalent-fluid mode, velocity-proportional entrainment f_dbed=4, design decisions for the avalanche application), §129 (Hungr's law f_dbed=5, minimum flow depth for entrainment db_hent, momentum of the entrained mass f_dbmom)
 - [test/volcano](../../volcano/en/README.md) (analytical solution of Voellmy uniform flow), [test/slide](../../slide/en/README.md) (instantaneous fluidization)

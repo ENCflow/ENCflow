@@ -106,7 +106,7 @@ for the unconsolidated cliff it decays × 0.78.
   from × 0.77 to × 0.76 and the sediment leaving the cliff is 33.2 m³ (developer.md §114). After the
   blockage ratio of the dynamic reassignment of blocked openings was corrected on 2026-11-25 to be measured
   with the flow depth h + hs, the consolidated cliff stays at × 1.24, the unconsolidated cliff goes from
-  × 0.76 to × 0.78 and the sediment leaving the cliff is 33.6 m³ (developer.md §128). The table and the
+  × 0.76 to × 0.78 and the sediment leaving the cliff is 33.6 m³ (developer.md §130). The table and the
   figures show these values.
 
 ## Related documents

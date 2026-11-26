@@ -84,7 +84,7 @@ python3 Fig.py    # figs/splashslide.png(引数 en で英語版を en/figs/ に)
   (f_advection_donor = 4・f_advection_bend = 2・f_advection_lateral = 2・f_dry_head_cap = 4)を既定にした後は、
   固結の崖は × 1.24 のまま、未固結の崖が × 0.77 → × 0.76、崖から出ていく土砂が 33.2 m³(developer.md §114)。
   2026-11-25 に、塞がれた開口の動的振り替えの塞がり率を流動深 h + hs で測るように直した後は、固結の崖は × 1.24 の
-  まま、未固結の崖が × 0.76 → × 0.78、崖から出ていく土砂が 33.6 m³(developer.md §128)。表と図はこの値。
+  まま、未固結の崖が × 0.76 → × 0.78、崖から出ていく土砂が 33.6 m³(developer.md §130)。表と図はこの値。
 
 ## 関連文書
 

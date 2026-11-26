@@ -9,7 +9,7 @@
 (雪崩の設定の型)の両方を扱います。
 
 塞がれた開口の動的振り替え(`f_opening_dynamic`。[通過幅の調整](../../docs/users_guide/passage_width.md))の
-塞がり率が、土砂流動の計算で流動深でなく水深で測られていた不具合(developer.md §128)を見つけた検定で、
+塞がり率が、土砂流動の計算で流動深でなく水深で測られていた不具合(developer.md §130)を見つけた検定で、
 その再発を防ぐ役目も持ちます。
 
 ## 構成
@@ -92,13 +92,13 @@ python3 Fig.py    # figs/vchannel.png(引数 en で英語版を en/figs/ に)
 
 **精度の限界**: 流れの幅が 8 セルのこの水路では、8 近傍の計算の流量は厳密解より 2〜16 % 小さく出ます。誤差は
 格子間隔にほぼ比例して縮みます(Δx = 2.5 m で、Voellmy 則・`f_opening_dynamic = 0` が 0.95・0.91(0°・45°)、
-水が 0.91・0.93。developer.md §128.2・§128.6)。格子で解像された谷を流れる土砂流動では、向きによる幅の小さい
+水が 0.91・0.93。developer.md §130.2・§130.6)。格子で解像された谷を流れる土砂流動では、向きによる幅の小さい
 `f_opening_dynamic = 0` を使います(例題 [snow_avalanche](../../examples/snow_avalanche/README.md))。
 
 ## 関連文書
 
 - [通過幅の調整](../../docs/users_guide/passage_width.md)(塞がれた開口の動的振り替えと塞がり率)
 - [土石流・斜面崩壊・動く底層の解説](../../docs/users_guide/massflow.md)(Voellmy 則)
-- developer.md §128(沢の向きへの依存の原因と、この検定の形)、§68.14・§68.41(動的振り替え)
+- developer.md §130(沢の向きへの依存の原因と、この検定の形)、§68.14・§68.41(動的振り替え)
 - [test/vshaped](../vshaped/)(V 字流域の降雨流出を 0° と 45° で理論解と比べる検定)
 - [test/volcano](../volcano/)(一様な斜面の Voellmy 則の等流)

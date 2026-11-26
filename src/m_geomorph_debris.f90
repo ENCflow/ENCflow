@@ -174,7 +174,7 @@ module subroutine init_debris(gm, p, g, list)
         call par_stop("list_geomorph: db_cmin must be in (0, C*)")
       end if
       gm%f_dbed = list%f_dbed
-    case (5)            ! Hungr の連行則(E = E_r・h_t・|V|。developer.md §127)
+    case (5)            ! Hungr の連行則(E = E_r・h_t・|V|。developer.md §129)
       if (list%db_cmin <= 0.0 .or. list%db_cmin >= gm%db_cstar) then
         call par_stop("list_geomorph: db_cmin must be in (0, C*)")
       end if
@@ -187,7 +187,7 @@ module subroutine init_debris(gm, p, g, list)
                     // " 2(Egashira-Ashida), 3(Takahashi-Nakagawa 1991)," &
                     // " 4(velocity-proportional entrainment) or 5(Hungr's entrainment law)")
   end select
-  ! 連行則の追加の選択子(developer.md §127。どれも既定は従来のまま)
+  ! 連行則の追加の選択子(developer.md §129。どれも既定は従来のまま)
   !   db_er   : Hungr の則の成長率 E_r(f_dbed = 5 だけが使う)
   !   db_hent : 連行する流動深の下限(f_dbed = 4・5。ほかの式で指定されたら止める)
   !   f_dbmom : 侵食・連行で加わる質量を静止から加速する分を数える(f_dbed = 1〜5。配列の確保は init_debris_state)
@@ -529,8 +529,8 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   real :: wdf                                 ! 保持水の不足(f_dbwet = 3。層の平面の水深 m)
   real(real64) :: vd, wd
   logical :: rkd, gcorr, wret
-  logical :: hent                             ! 連行する流動深の下限があるか(db_hent > 0。§127)
-  logical :: mom                              ! 加わる質量の運動量を数えるか(f_dbmom = 1。§127)
+  logical :: hent                             ! 連行する流動深の下限があるか(db_hent > 0。§129)
+  logical :: mom                              ! 加わる質量の運動量を数えるか(f_dbmom = 1。§129)
   real :: m0                                  ! 交換の前の流動体の質量(水の厚さに換算。h + (1 + s) hs)
 
   ! --- f_dbed=3 の流動面勾配は近傍の h・hs を読む。両者のハロは
@@ -592,14 +592,14 @@ module subroutine calc_debris(gm, p, g, s, dtw)
             fx = gm%db_cstar * gm%db_delte * s%vv(i,j) * dtw
             ! 可動層クランプ(連行可能層 = sd。雪崩では雪の厚さ)
             fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
-            ! 連行する流動深の下限(db_hent > 0 のときだけ。§127)
+            ! 連行する流動深の下限(db_hent > 0 のときだけ。§129)
             if (hent) then
               if (hm < gm%db_hent) fx = 0.0
             end if
           end if
         else if (gm%f_dbed == 5) then
           ! Hungr の連行則(E = E_r・h_t・|V|。河床の低下速度が流動深と流速に比例する。Hungr 1995・
-          ! McDougall & Hungr 2005 の DAN3D の形。§127)。連行だけで堆積はなく、停止・堆積は f_dbstop、
+          ! McDougall & Hungr 2005 の DAN3D の形。§129)。連行だけで堆積はなく、停止・堆積は f_dbstop、
           ! 連行可能層は sd、密な流動体(C >= db_cmin)だけが連行するのは 4 と同じ
           fx = 0.0
           cinf = 0.0
@@ -753,7 +753,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   area = g%dx * g%dy
   bdm = 0.0
   wret = (gm%f_dbwet == 3 .and. s%gw_active)   ! 保持水の授受(§28.17)
-  mom = (gm%f_dbmom == 1)                      ! 加わる質量の運動量(§127)
+  mom = (gm%f_dbmom == 1)                      ! 加わる質量の運動量(§129)
   !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg, dhw, fwh, bd, vd, wd, wdf, m0) &
   !$omp   reduction(max: bdm)
   do j = dcp%js, dcp%je
@@ -838,7 +838,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
           end if
         end if
       end if
-      ! 侵食・連行で加わった質量の相対的な増加率 ṁ/m(f_dbmom = 1。§127)。加わった質量は、固体 (1 + s) fx と、
+      ! 侵食・連行で加わった質量の相対的な増加率 ṁ/m(f_dbmom = 1。§129)。加わった質量は、固体 (1 + s) fx と、
       ! 一緒に地表へ出た間隙水(f_dbwet = 1〜3 の授受の正味)で、交換の前後の質量の差で数える。次のステップの
       ! 運動方程式が、辺の両セルの平均を半陰の抵抗に足す(静止していた質量を流速まで加速する分の減速
       ! −u ṁ/m。u ← u m/(m + Δm) に当たる)。堆積(fx < 0)は流速を変えない(運動量を持って出ていく)
@@ -1504,7 +1504,7 @@ end function
 
 
 !----------------------------------------------------------------------
-! 侵食・連行で加わる質量の増加率 s%dbmr(f_dbmom = 1。developer.md §127)
+! 侵食・連行で加わる質量の増加率 s%dbmr(f_dbmom = 1。developer.md §129)
 !   確保は帯 + ハロ(辺の両セルを読む。ハロはステップ頭に m_swflow_enc が交換する)。値は calc_debris が
 !   毎ステップ書き、次のステップの運動方程式が読むので、リスタートをまたいで同じ結果にするために
 !   私有ファイル geomorph_debris.dat に保存する(契約5。§7。書き並びは restore と同時に更新)

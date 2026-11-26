@@ -150,7 +150,7 @@ After the blockage ratio of the dynamic reassignment of blocked openings was cor
 measured with the flow depth h + hs, the handover of configuration 4 goes from 17,534 to 17,333 m³, the
 lake-bed deposit from 5.107 to 5.065 m and the speed of the mixture from 2.92 to 2.85 m/s (how far the ground
 on both sides of the mixture flowing on land counts as a blockage is now set by the flow depth instead of the
-water depth; configurations 1 to 3 do not change; developer.md §128.)
+water depth; configurations 1 to 3 do not change; developer.md §130.)
 
 - The 45°-rotated benchmark is a detector for a wrong normalization of the
   8-direction distribution, which makes the passage speed come out √2 times

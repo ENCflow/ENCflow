@@ -164,7 +164,7 @@ released amount (99.5% has been fixed to the bed).
   (developer.md §114). After the blockage ratio of the dynamic reassignment of blocked openings was corrected
   on 2026-11-25 to be measured with the flow depth h + hs, the lowering of the release area stays at 1.59 m,
   the deposit on the flat part goes from 0.439 to 0.438 m and the remaining fraction from 0.005 to 0.006
-  (developer.md §128). The values of the table and the text and the figures are from this computation.
+  (developer.md §130). The values of the table and the text and the figures are from this computation.
 
 ## Related documents
 
