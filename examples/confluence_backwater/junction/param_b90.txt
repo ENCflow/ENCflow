@@ -1,0 +1,72 @@
+!======================================================================
+! confluence_backwater 補足「合流の形と水位」: 合流角 90°(Δx = 10 m。本川 300・支川 700 m3/s)
+!   背水の弱い定常の流れ(岸は河床 + 10 m の高台で、水はあふれない)。入力は make_junction.py が data/ に作る
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt_c = '2h'
+  dt_disp_c = '30m'
+  dt_file_c = '30m'         ! 最後の 2 つの出力で定常を確かめる
+  dt_recrd_c = '10m'
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  dir_data = 'data'
+  dir_result = 'result_b90'
+  f_out_h = 1
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+/
+&list_initial
+  f_htype = 1
+  fn_hinit = 'h_b90.txt' ! 流量に合う等流水深
+/
+&list_geoinfo
+  nx = 360
+  ny = 135
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z_b90.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+&list_bound_stage
+  stage_cell(:,1,1) = 360, 121
+  stage_cell(:,2,1) = 360, 122
+  stage_cell(:,3,1) = 360, 123
+  stage_cell(:,4,1) = 360, 124
+  stage_cell(:,5,1) = 360, 125
+  stage_cell(:,6,1) = 360, 126
+  stage_cell(:,7,1) = 360, 127
+  stage_cell(:,8,1) = 360, 128
+  stage_cell(:,9,1) = 360, 129
+  stage_cell(:,10,1) = 360, 130
+  stage_eta(1) = 10.2622  ! 下流端の等流水深の水位
+/
+&list_bound_inflow
+  inflow_cell(:,1,1) = 1, 121
+  inflow_cell(:,2,1) = 1, 122
+  inflow_cell(:,3,1) = 1, 123
+  inflow_cell(:,4,1) = 1, 124
+  inflow_cell(:,5,1) = 1, 125
+  inflow_cell(:,6,1) = 1, 126
+  inflow_cell(:,7,1) = 1, 127
+  inflow_cell(:,8,1) = 1, 128
+  inflow_cell(:,9,1) = 1, 129
+  inflow_cell(:,10,1) = 1, 130
+  inflow_val(:,1,1) = 0, 300.0   ! 本川
+  inflow_val(:,2,1) = 999, 300.0
+  inflow_dist(1) = 0
+  inflow_cell(:,1,2) = 148, 1
+  inflow_cell(:,2,2) = 149, 1
+  inflow_cell(:,3,2) = 150, 1
+  inflow_cell(:,4,2) = 151, 1
+  inflow_cell(:,5,2) = 152, 1
+  inflow_val(:,1,2) = 0, 700.0   ! 支川
+  inflow_val(:,2,2) = 999, 700.0
+  inflow_dist(2) = 0
+/

@@ -1,0 +1,93 @@
+!======================================================================
+! confluence_backwater 補足: 同じ地区を Δx = 100 m の粗い格子で表す(ケース main: 本川だけの出水)
+!   本編の param_main.txt と同じ流量
+!   流域規模の計算での表し方: 本川(幅 200 m)は 2 セル前後の解像した河道、狭窄部は 1 セル、支川(幅 80 m)は
+!   1 セルのサブグリッド河道(fn_width = 80 m)。堤防は地形で表せないので、河道の堤防(仮想壁面)の天端を
+!   絶対標高で与える(fn_bank、f_bank_datum = 2)。地形の式と流量は本編と同じ。入力は make_coarse.py が
+!   data_coarse/ に作る
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0                  ! 時間刻み (s)(Δx = 100 m)
+  t0 = 0
+  tt_c = '14h'
+  dt_disp_c = '30m'
+  dt_file_c = '30m'
+  dt_recrd_c = '5m'
+  fn_geoinfo = '-'
+  fn_enc = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_channel = '-'          ! 河道(サブグリッド河道幅・堤防の仮想壁面)
+  fn_record = '-'
+  dir_data = 'data_coarse'
+  dir_result = 'result_coarse_main'
+  f_out_h = 1
+  f_out_hmax = 1
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'h0.txt'       ! 本川に平水 300 m3/s、支川に 20 m3/s の等流水深(支川は幅の中の水深)
+/
+
+&list_enc
+  f_exflux_reduction = 1
+/
+
+&list_geoinfo
+  nx = 60
+  ny = 74
+  dx = 100.0
+  dy = 100.0
+  f_ztype = 1
+  fn_z = 'z.txt'            ! 河道のセルは河床、ほかは堤内地の地盤高(本編と同じ式をセルの中心で評価)
+  f_rntype = 1
+  fn_rn = 'rn.txt'          ! 本川 0.03、支川 0.035、堤内地 0.05
+  f_masktype = 1
+  fn_mask = 'mask.txt'
+  fn_rw = 'rw.txt'          ! 河道マスク(本川と支川)
+/
+
+&list_channel
+  fn_bank = 'bank.txt'      ! 堤防の天端(河道のセルに絶対標高。本川 = 河床 + 8.5 m、支川 = 河床 + 4.5 m)
+  f_bank_datum = 2
+  fn_width = 'width.txt'    ! 河道幅(本川は 9999 = 解像扱い、支川は 80 m)
+/
+
+&list_bound_stage
+  fn_stage_cell(1) = 'cells_out.txt'
+  fn_stage_val(1) = 'stage_flood_base.txt'   ! 本編と同じ流量の等流水深(粗い格子の下流端の河床から)
+/
+&list_bound_inflow
+  fn_inflow_cell(1) = 'cells_main.txt'
+  fn_inflow_val(1) = 'q_main_flood.txt'
+  inflow_dist(1) = 2
+  fn_inflow_cell(2) = 'cells_trib.txt'
+  fn_inflow_val(2) = 'q_trib_base.txt'
+  inflow_dist(2) = 2
+/
+
+!======================================================================
+! 計測: 本編と同じ場所(セル番号は粗い格子)。支川の中心 x = 2,600 m は粗い格子の列 26(中心 2,550 m)に置く。
+!   測線は 1 支川の口(行 63)、2 支川の水位観測所(口から 2 km)、3〜5 本川(本編の 4〜6 と同じ位置)。
+!   支川の測線は東隣の堤内地のセルを含む(1 セルの測線は書けない。口の行の東隣は本川の堤防に接し、流れはない)
+!======================================================================
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 26, 64
+  pbxy(:,2) = 26, 65
+  pbxy(:,3) = 17, 67
+  pbxy(:,4) = 26, 62
+  pbxy(:,5) = 26, 44
+  pbxy(:,6) = 26, 24
+  pbxy(:,7) = 23, 60
+  pbxy(:,8) = 29, 60
+  pbxy(:,9) = 26, 63
+  flxytype = 0
+  flxy(:,1) = 26, 63, 27, 63
+  flxy(:,2) = 26, 44, 27, 44
+  flxy(:,3) = 20, 69, 20, 66
+  flxy(:,4) = 33, 69, 33, 66
+  flxy(:,5) = 57, 69, 57, 66
+/
