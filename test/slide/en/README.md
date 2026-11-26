@@ -31,8 +31,9 @@ of the treatment of pore water on mobilization (developer.md §28.1, §28.9,
 4. **Options of the slope stability test** (`p_fs_*.txt` written by `make_fs.py`): the safety
    factor with the seepage force from the total-head gradient `f_slide_seep`, the upper limit of
    the judged and mobilized depth `slide_dmax`, only failures caused by pore pressure
-   `f_slide_wet`, and no test under a dense mixture `f_slide_noflow` (2 judges the cells whose
-   mixture is thin). On a plane slope of uniform gradient, the output of the safety factor is
+   `f_slide_wet`, and no test under a dense mixture `f_slide_noflow` (the cells whose mixture is thin
+   are still judged; the default is 1 when the stability test is used). On a plane slope of uniform
+   gradient, the output of the safety factor is
    compared with the value of the formula.
 
 Pass or fail is decided not by a reference comparison but by the
@@ -54,7 +55,7 @@ low-speed consolidation.
 | 5 seep | `p_fs_u0`, `_u1`, `p_fs_g0`, `_g1`, `p_fs_l0`, `_l1`, `p_fs_lq1`, `_le1`, `p_fs_m1`, `_m0`, `p_fs_gdyn` | `f_slide_seep` 0 and 1 (below). Judge only (`f_slide = 2`). `p_fs_gdyn` mobilizes | dt 0.05 s, 1 s (gdyn 5 s) |
 | 6 dmax | `p_fs_d2`, `p_fs_d1` | `slide_dmax = 0.5` m. Soil depth 2 m, saturation 0.9. `_d2` is judge only, `_d1` mobilizes | 1 s |
 | 7 wet | `p_fs_w1`, `_w0`, `_w2` | `f_slide_wet` 1 and 0 (φs = 20°; Fs < 1 even when dry), and 1 with φs = 25° | 1 s |
-| 8 noflow | `p_fs_n1`, `_n0`, `_n2`, `p_fs_f1`, `_f2`, `_f0`, `p_fs_k2`, `_k0` | `f_slide_noflow` 1, 0 and 2. `_n*` are `_d1` of configuration 6 with two bed updates. `_f*` and `_k*` are an unstable layer under a thin film (below), with three updates | 2 s (3 s for `_f*` and `_k*`) |
+| 8 noflow | `p_fs_n1`, `_n0`, `p_fs_f1`, `_f0`, `p_fs_k1`, `_k0` | `f_slide_noflow` 1 and 0. `_n*` are `_d1` of configuration 6 with two bed updates. `_f*` and `_k*` are an unstable layer under a thin film (below), with three updates | 2 s (3 s for `_f*` and `_k*`) |
 
 The terrain of configurations 5 to 8 is a plane of uniform gradient, z = 30 − 0.30 x − 0.25 y
 (40 m × 30 m, Δx = 1 m). The steepest slope is tanθ = 0.3905 and its direction matches none of the
@@ -100,19 +101,17 @@ safety factor can be compared directly with the value of the formula.
   `_w2` with φs = 25° (dry Fs = 1.19) reaches Fs = 0.58 through pore pressure, so it mobilizes even
   with 1.
 - **Configuration 8** (`f_slide_noflow`). The first update mobilizes 0.5 m and leaves a dense
-  mixture (hs = 0.3 m) on the cell. With 1 the second update does not judge that cell, so the soil
-  depth stays 1.5 m; with 0 another 0.5 m is mobilized, leaving 1.0 m. With 2 the cell is not judged
-  either while its own mobilized mass (0.5 m as a deposit, the same amount as the judged depth) lies
-  on it, and the state is identical to 1 (`_n2`).
-  - An unstable layer under a thin film (`_f*`, `_k*`; developer.md §28.24). With a soil depth of
+  mixture (hs = 0.3 m) on the cell. With 1 the cell is not judged while its own mobilized mass (0.5 m
+  as a deposit, the same amount as the judged depth) lies on it, so the soil depth stays 1.5 m in the
+  second update; with 0 another 0.5 m is mobilized, leaving 1.0 m.
+  - An unstable layer under a thin film (`_f*`, `_k*`; developer.md §28.24, §135). With a soil depth of
     2 m and a saturation of 0.8, the saturated thickness within the top 0.5 m is 0.1 m and the layer
     is stable at first (Fs = 1.07). Mobilizing a thin layer everywhere at the end of the first update
     (`fn_dbinit`) brings the water table closer to the surface and makes the layer unstable
     (Fs = 0.95 for a depth of 0.1 m, 0.70 for 0.3 m), with the mobilized soil lying on it as a film.
-    In the second update, 1 does not judge the cell and nothing is mobilized (`_f1`; soil depth 2 m).
-    With 2, a film of 0.2 times the judged depth (`_f2`) is judged and 0.5 m is mobilized, and the
-    third update does not judge the cell under its own mass (1.5 m); a film of 0.6 times (`_k2`) is
-    not judged (2 m). With 0 both are mobilized in the second and the third update (`_f0`, `_k0`;
+    With 1, a film of 0.2 times the judged depth (`_f1`) is judged in the second update and 0.5 m is
+    mobilized, and the third update does not judge the cell under its own mass (1.5 m); a film of
+    0.6 times (`_k1`) is not judged (2 m). With 0 both are mobilized in the second and the third update (`_f0`, `_k0`;
     1.0 m). Together they show that the ratio below which the cell is judged (the constant 0.5 in
     the code) lies between 0.2 and 0.6. The film is soil without water, so the erosion and
     deposition step of the second update returns it to the slope (after the judgement).
@@ -124,7 +123,7 @@ safety factor can be compared directly with the value of the formula.
 | `make_fs.py` | Writes the inputs `d_fs/` (terrain, soil depth, initial depth of the lake) and the settings `p_fs_*.txt` of configurations 5 to 8 (Run.sh and Run_MPI.sh call it; the argument `list` prints the case names) |
 | `Check_slide_fs.py fs <case>` | Configurations 5 and 6: the safety factor of the interior cells (excluding one column at the edges; in the lake cases, cells whose 8 neighbours and themselves are all lake or all land) agrees with the formula within a relative 2e-6 (round-off of the single-precision output) |
 | `Check_slide_fs.py pair <case1> <case0> same\|differ` | Configuration 5: the safety factors of two cases are the same (within 2e-6) or differ by 2 % or more (detection power) |
-| `Check_slide_fs.py dmax1\|wet\|noflow\|film\|ledger …` | Configuration 6: the lowering of the elevation, the soil depth, hs, hg and h agree with the exact values within 1e-12 m, and the ledgers of solids and water. Configurations 7 and 8: the soil depths described above (`film` is for the thin-film cases and reads the number of mobilizations from the range of the soil depth; the state of `_n2` is identical to `_n1`). `ledger` checks the ledgers of solids and water (1e-9) and the activity of `_gdyn` of configuration 5 |
+| `Check_slide_fs.py dmax1\|wet\|noflow\|film\|ledger …` | Configuration 6: the lowering of the elevation, the soil depth, hs, hg and h agree with the exact values within 1e-12 m, and the ledgers of solids and water. Configurations 7 and 8: the soil depths described above (`film` is for the thin-film cases and reads the number of mobilizations from the range of the soil depth). `ledger` checks the ledgers of solids and water (1e-9) and the activity of `_gdyn` of configuration 5 |
 | `Fig.py` | The figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
@@ -150,12 +149,14 @@ area over the slope break onto the flat part as a fan.
 ![Slope stability test](figs/fslide.png)
 
 Configuration 2 (left three panels) and 3 (right). Left: the run minimum
-safety factor Fs9999. Fs < 1 over the whole slope (minimum 0.493), and
+safety factor Fs9999. Fs < 1 over the whole slope (minimum 0.459), and
 only the gentle part near the slope break has Fs > 1. Center left: the
-final soil thickness sd. Many cells on the slope reach sd = 0 (failed and
-bedrock exposed; 474 cells), and stripes of failed sediment that flowed
-down and redeposited are also visible. Center right: the maximum flow
-depth D9999 (maximum 0.43 m). Right: Fs9999 of configuration 3. Since
+final soil thickness sd. The layer fails down to bedrock (sd = 0) in 40
+cells, in the bands at x = 2–4 m and 11–15 m. The other cells of the
+slope are not judged while the dense mixture flowing down from upslope
+lies on them (the default 1 of `f_slide_noflow`), and erosion and
+deposition leave 0.15–0.65 m of soil (0.5 m at first). Center right: the
+maximum flow depth D9999 (maximum 0.34 m). Right: Fs9999 of configuration 3. Since
 nothing is mobilized, the minimum of Fs stays at 0.943, and only the
 detection of the hazardous range (< 1) takes place (the hazard map of the
 judge-only mode).
@@ -165,7 +166,7 @@ judge-only mode).
 | Configuration | Total solid | Co-moving update | Water budget / activity | Result |
 |---|---|---|---|---|
 | 1 release | about 1e-12 or less | about 1e-13 or less | Σh = 52.8000 (expected λ relsat ΣD = 52.8000) / collapse area min dz −0.98 m, deposition outside the area +0.31 m | PASS |
-| 2 fslide | about 1e-11 or less (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | about 1e-13 or less | slope min sd = 0 (474 cells failed) / min Fs9999 0.493, D9999 ≥ H9999 | PASS |
+| 2 fslide | about 1e-11 or less (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | about 1e-13 or less | slope min sd = 0 (40 cells failed) / min Fs9999 0.459, D9999 ≥ H9999 | PASS |
 | 3 fsdiag | — | — | z, sd and hs unchanged; min Fs 0.943 < 1 detected (600 cells evaluated) | PASS |
 | 4 wet (saturated) | about 1e-13 or less | about 1e-13 or less | residual of the water ledger 3e-12 (initial subsurface storage 1200 m³, retained-water term 17.1 m³, shortfall 0) / collapse area min dz −0.97 m, deposition outside the area +0.29 m | PASS |
 | 4 wet (dry) | about 1e-12 or less | about 1e-13 or less | residual of the water ledger 3e-12 (retained-water term 18.3 m³, shortfall 0.09 m³) / collapse area min dz −0.83 m, deposition outside the area +0.54 m | PASS |
@@ -269,7 +270,12 @@ judge-only mode).
   configuration 4 has the deposit outside from +0.30 to +0.29 m and the retained-water term from 16.8 to
   17.1 m³, and the dry case has the lowering of the collapse area from 0.84 to 0.83 m, the deposit outside
   from +0.65 to +0.54 m, the retained-water term from 17.9 to 18.3 m³ and the shortfall from 0.18 to 0.09 m³
-  (developer.md §130). The table and the figures show these values.
+  (developer.md §130). After `f_slide_noflow = 1`, which does not judge cells under a dense mixture, became
+  the default of the stability test on 2026-11-26 (the former test of 2 replaced 1; developer.md §135),
+  configuration 2 goes from 474 to 40 cells, from 0.493 to 0.459 and from 0.43 to 0.34 m (the cells under
+  the mixture flowing down from upslope are no longer judged; configuration 3 has no flow and does not
+  change). In configuration 8 the former cases of 2 take the names of 1 (`_n2`, `_f2`, `_k2` → `_n1`,
+  `_f1`, `_k1`; the former cases of 1 are gone). The table and the figures show these values.
 
 ## Related documents
 

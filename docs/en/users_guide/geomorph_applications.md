@@ -396,9 +396,8 @@ that make the breach rapid).
     within about 0.3 times the grid spacing, since a larger value lets the fluidisation propagate to the
     neighbouring cells, but not shallower than the slip surface of the layer that is to fail; §4 of the
     [explanation](massflow.md)), `f_slide_wet = 1` stops the cascade at
-    steps, and `f_slide_noflow` skips the bed under flowing sediment (1 or 2; 2 judges the layer
-    under a thin film, and is the one to use when `slide_dmax` is shallower than the layer that is to
-    fail).
+    steps. `f_slide_noflow = 1`, which skips the bed under flowing sediment, is the default when the
+    stability test is used (the layer under a thin film is still judged).
   - Erosion by the overflow: a dam deposited by a debris flow is saturated, so the saturated-bed erosion
     formula (coefficient `db_delte`) acts. Use `f_dbimm = 1` for the equilibrium concentration on gentle
     slopes and bed load, `f_fluvial = 1`, for the transport on gentle reaches (effective-shear ratio

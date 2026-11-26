@@ -378,7 +378,7 @@ module m_geomorph
                                      !   ときだけ確保。評価のたびに作り直す作業面。§28.19)
     integer :: nslgeo = 0            ! Fs < 1 だが間隙水圧なしでも不安定なので流動化しなかった回数
                                      !   (f_slide_wet = 1。セル × 評価。ランク局所の診断)
-    integer :: nslflow = 0           ! 濃い混合体が載るので判定しなかった回数(f_slide_noflow = 1, 2。同上)
+    integer :: nslflow = 0           ! 濃い混合体が載るので判定しなかった回数(f_slide_noflow = 1。同上)
     real(real64), allocatable :: wdrow(:)  ! 保持水の不足(f_dbwet = 3。堆積のとき地表水・地下貯留から
                                      !   取れなかった保持水のかさ体積 m3)の行部分和 (js:je)。
                                      !   f_dbwet = 3 のときだけ確保し、dispose が決定的な総和で報告する(§28.17)
@@ -530,8 +530,9 @@ module m_geomorph
     real :: sl_gamma = 0.0           ! 飽和単位体積重量 γt (N/m3)
     integer :: f_slide_seep = 0      ! 安全率の駆動に浸透力を全水頭の勾配で入れる(0:無効, 1:有効。§28.19)
     integer :: f_slide_wet = 0       ! 間隙水圧がなくても Fs < 1 のセルは流動化しない(0:無効, 1:有効。同上)
-    integer :: f_slide_noflow = 0    ! 濃い混合体(C >= db_cmin)が載るセルを判定しない(0:無効, 1:有効,
-                                     !   2:載っている土砂が判定する層に比べて薄くないセルだけ。同上・§28.24)
+    integer :: f_slide_noflow = 0    ! 濃い混合体(C >= db_cmin)が載り、載っている土砂が判定する層に比べて
+                                     !   薄くないセルを判定しない(0:無効, 1:有効。f_slide を使うときの既定
+                                     !   は 1。同上・§28.24・§135)
     real :: sl_dmax = 0.0            ! 判定・流動化する深さの上限 (m。slide_dmax。0 = 全層。同上)
     integer :: f_wthr = 0            ! 基岩風化=土層生成(0:無効, 1:有効。§32)
     real :: wp0 = 0.0                ! 裸岩生成速度 (m/s。mm/kyr から換算)
@@ -2136,9 +2137,9 @@ subroutine m_geomorph_dispose(gm, p, g, s)
       call par_warn("geomorph: slide cells with Fs < 1 left to f_repose because they are unstable " &
                     // "without pore pressure (f_slide_wet=1) = " // itoa(gm%dbr%nslgeo) // " cell-evaluations")
     end if
-    if (gm%f_slide_noflow >= 1) then
-      call par_warn("geomorph: slide cells not judged under a dense mixture (f_slide_noflow=" &
-                    // itoa(gm%f_slide_noflow) // ") = " // itoa(gm%dbr%nslflow) // " cell-evaluations")
+    if (gm%f_slide_noflow == 1) then
+      call par_warn("geomorph: slide cells not judged under a dense mixture (f_slide_noflow=1) = " &
+                    // itoa(gm%dbr%nslflow) // " cell-evaluations")
     end if
   end if
   ! 保持水の不足の台帳(f_dbwet = 3。§28.17。全域の決定的な総和。確保は f_dbwet = 3 のとき =

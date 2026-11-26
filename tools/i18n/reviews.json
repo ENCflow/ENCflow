@@ -311,18 +311,18 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "e1c0744a79e59947fb47eb144af9e461311cc4cbe0f9ffcd1653888c3ab2537d",
-      "target_sha256": "77b8820efe778f285812309896d60ecfef8ff6db8fe2a261731a43b2e0791918",
-      "reviewer": "Claude (Claude Code session; the parts changed for the entrainment-law options: the f_dbed and db_delte rows and the new rows db_er, db_hent and f_dbmom of the debris-flow parameter table, compared side by side with the Japanese source)",
+      "source_sha256": "7dc99f803fc27b76d83af1b7b0c57dc5abb33157180b59cc3c9a6fd7b567bef2",
+      "target_sha256": "db0e72113c9e53d60a72fcd30155759f87e73bd5420afde54674e95d7db68281",
+      "reviewer": "Claude (Claude Code session; f_slide_noflow default changed to 1 with the former test of 2, developer.md §135: Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "a11ca4d5b2cca1c6e63f1a75c5c4022ad5dd0505cc4a9b95b5325f27d164766c",
-      "target_sha256": "7cf4a41fa1c104684ff81da458758792296c4c02df049e1224dc509fb8f5fac9",
-      "reviewer": "Claude (Claude Code session; the scope of the recommendation f_opening_dynamic = 0 narrowed to V-shaped gullies, and the limit for valleys with a flat floor added, in both languages in the same work (comparison on the example debris_fan, developer.md §130.11); the changed passages compared side by side and their numbers checked against the comparison runs; the rest unchanged since the previous record)",
+      "source_sha256": "f13f70deba082f59ba9ab8db9b7cfe290690f20e54893cf090c7ecea20e3c8a2",
+      "target_sha256": "46f9bb36ed72cd72be46bbe769e5fd337226624c1c5ca24fc219277c9aa95bc1",
+      "reviewer": "Claude (Claude Code session; f_slide_noflow default changed to 1 with the former test of 2, developer.md §135: Japanese and English compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -392,11 +392,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "a77a9ab3863073985e649b9c06df0a8f15caa147b55674c1a1ba6dbdf4c3e068",
-      "target_sha256": "fd0c675b0fb465e50ef4d7d02e817c505ab77dcde37c7a8f4c0513a09914d847",
-      "reviewer": "Claude (Claude Code session; the snow_avalanche citation in section 3 and the verification-table row updated to the recomputed values in both languages in the same work; the changed passages compared side by side, the rest unchanged since the previous record)",
+      "source_sha256": "327302cee064535bc6d1222c4da67118262c7de66ef657a46972bfc57e86e276",
+      "target_sha256": "a76f6f5817c72f8406fbc2b439f56129d13d04fdbcbbc773bc21479a88fdcf0b",
+      "reviewer": "Claude (Claude Code session; f_slide_noflow default changed to 1 with the former test of 2, developer.md §135: Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -725,11 +725,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "9cac8bcd6ff3f151e46077978f562504b66b36b3469e4f31fcba51dec7c31da5",
-      "target_sha256": "fc768ed33071de2a91d65690e0e3f8fc1368a4bf660a3a445b3ae4f4baf112d3",
-      "reviewer": "Claude (Claude Code session; the changed comment of f_dbed and db_delte and the new lines db_er, db_hent and f_dbmom: values and identifiers identical, comments compared with the Japanese source)",
+      "source_sha256": "d5c6f52798065e049f48c8d7efaec0e3bead50a7532bd1e34c624d9c62fc7f39",
+      "target_sha256": "9a4d310d326f5dc9f54117bfb82aeb591efa260cb6c0df65125e97ec35bda971",
+      "reviewer": "Claude (Claude Code session; f_slide_noflow default changed to 1 with the former test of 2, developer.md §135: Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -5387,20 +5387,20 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "e1b51fc99fba0f71c26f99c162de237f510355cfc53c7b84f8787fe5e4b645af",
-      "target_sha256": "1711aae665162029f62a82a94c29d86902ba4c2823a9d0afda54b34c913fc26d",
-      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
+      "source_sha256": "d123c0d6d79812910bbdf7631757bd5e5b194224b44a3e2e0e49ba1185fb1c41",
+      "target_sha256": "6e4b72f30554338d1b523024d8e337d8d755d4d4e132efe2f85ad18fdb637ba4",
+      "reviewer": "Claude (Claude Code session; f_slide_noflow default changed to 1 with the former test of 2, developer.md §135: Japanese and English compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/slide/figs/fslide.png",
       "target": "test/slide/en/figs/fslide.png",
-      "source_sha256": "86a41811a28ddc27e897b63ed411c7f3957e006b7ae4d538c50c2e7a3bd29f40",
-      "target_sha256": "8421b2d6203ffb9e40c9e3bd9a7e5922cea1359c3542c001d22a8a36a395268b",
-      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
+      "source_sha256": "154ec551f9623c3831e126e5b8dd0802f6d56887766e68703995f90e27c22956",
+      "target_sha256": "e55e9146d3c69a87111f586ccde21f400ffd2e36d3c11d65dd071a8ca59e9028",
+      "reviewer": "Claude (Claude Code session; figure redrawn by Fig.py from the rerun results, same data as the Japanese figure, English labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/slide/figs/release.png",
@@ -5468,20 +5468,20 @@
     {
       "source": "test/splashslide/README.md",
       "target": "test/splashslide/en/README.md",
-      "source_sha256": "e4e014805320514fbb4f656e7e315c0d04bd2c14a03b4a845740a11bbb6e8ac7",
-      "target_sha256": "dfe49d2bc135b707335b55315edfc7331abf413559f2a77c46436b6498d84535",
-      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
+      "source_sha256": "66da03c5792308e1cfb804afb2d4b8c535bd10931c8971cac30c8ae2d206c400",
+      "target_sha256": "9f13c642b92ef10401cdeea28c4bc0c6d867921cb07024babff6d8d5873bba2a",
+      "reviewer": "Claude (Claude Code session; f_slide_noflow default changed to 1 with the former test of 2, developer.md §135: Japanese and English compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/splashslide/figs/splashslide.png",
       "target": "test/splashslide/en/figs/splashslide.png",
-      "source_sha256": "3e6f2f2062f520a2374ae35f409aad9b0973e52c2a3808258356337111eb23d9",
-      "target_sha256": "0405ea9c18a96cb2f584a8f21f7d2c74433ed6b829c2879389aaa086b43ad148",
-      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
+      "source_sha256": "b62d03a5fb204b5b3f7b8146824eec24dc16ebe89e0acb6ce90e6a76fb964f55",
+      "target_sha256": "e134786e616037ddf4455dbac82430d3e19775bf82480e7e2ae29ba906596a2a",
+      "reviewer": "Claude (Claude Code session; figure redrawn by Fig.py from the rerun results, same data as the Japanese figure, English labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/splashstrata/README.md",
