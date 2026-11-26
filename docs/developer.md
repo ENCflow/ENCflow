@@ -83,7 +83,7 @@
 ### 河道
 
 - 現行: [河道](users_guide/channel.md)・[河道の解説](users_guide/channel_models.md)。設計の文書は docs/channel_model.md
-- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)・[§128](developer/128.md)(堤防の越流の上限が読む af のハロ)・[§131](developer/131.md)(サブグリッド河道の支川の背水曲線、粗い格子の湾曲部の階段、セル幅の倍数でない川幅の表し方)・[§134](developer/134.md)(移流項が仮想壁面の向こうのセルを数えない)
+- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)・[§128](developer/128.md)(堤防の越流の上限が読む af のハロ)・[§131](developer/131.md)(サブグリッド河道の支川の背水曲線、粗い格子の湾曲部の階段、セル幅の倍数でない川幅の表し方)・[§134](developer/134.md)(移流項が仮想壁面の向こうのセルを数えない)・[§135](developer/135.md)(粗い格子で川を表す表し方と通水の精度: 川幅・向き・屈曲・河道マスクの連結。例題 coarse_channel)
 
 ### 内部水理構造物・堤防・家屋
 
@@ -173,7 +173,7 @@
 ### 例題・教材・データ
 
 - 現行: examples/README.md・tutorials/
-- 記録: [§104](developer/104.md)(examples/benchmark の再構築)・[§109](developer/109.md)・[§111](developer/111.md)・[§115](developer/115.md)・[§117](developer/117.md)(例題 source_area の作成と検討)・[§120](developer/120.md)(例題 joganji_flume。公開の実験データとの比較)・[§124](developer/124.md)(例題 tsunami_meander。論文の図から読んだ計測値との比較)・[§125](developer/125.md)(例題 coastal_compound_flood。沿岸の町の複合浸水)・[§126](developer/126.md)(例題 snow_avalanche。雪崩の設定の型の見直し)・[§131](developer/131.md)(例題 confluence_backwater。合流点の背水による支川の氾濫)
+- 記録: [§104](developer/104.md)(examples/benchmark の再構築)・[§109](developer/109.md)・[§111](developer/111.md)・[§115](developer/115.md)・[§117](developer/117.md)(例題 source_area の作成と検討)・[§120](developer/120.md)(例題 joganji_flume。公開の実験データとの比較)・[§124](developer/124.md)(例題 tsunami_meander。論文の図から読んだ計測値との比較)・[§125](developer/125.md)(例題 coastal_compound_flood。沿岸の町の複合浸水)・[§126](developer/126.md)(例題 snow_avalanche。雪崩の設定の型の見直し)・[§131](developer/131.md)(例題 confluence_backwater。合流点の背水による支川の氾濫)・[§135](developer/135.md)(例題 coarse_channel。粗い格子で川を表す表し方の系統的な確かめ)
 ## 全節の一覧
 
 - [§1](developer/001.md) 実数精度の方針
@@ -310,3 +310,4 @@
 - [§132](developer/132.md) ダムの運転則の拡張: 実績の再生(放流量・貯水位の時系列)と、履歴を持たない実務の操作規則(制限水位・洪水調節開始流量・放流量の上限)(2026-11-26 設計合意・実装。無効時はビット一致)
 - [§133](developer/133.md) ダムの量の BMI 公開と外部運転(f_dam_mode = 6): ダムの点の格子と目標放流量の set(2026-11-26 設計合意・実装。無効時はビット一致)
 - [§134](developer/134.md) 移流項の近傍の判定に河道の堤防の仮想壁面を見せる: 壁の向こうの湛水が河道を減速させない(handoff 00al。2026-11-26 設計合意・実装。仮想壁面を使わない計算と、壁の向こうが乾いている計算はビット一致)
+- [§135](developer/135.md) 例題 examples/coarse_channel: 粗い格子で川を表す表し方(川幅・向き・屈曲・河道マスクの連結・河道の脇の水)と通水の精度の系統的な確かめ(2026-11-26。利用者の依頼。計算本体は §134.10 の修正だけ)

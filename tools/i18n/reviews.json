@@ -923,9 +923,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "990bf631a9090f9a52361b750685dc2207233c1aeda16fb402bf1fb767c59f07",
-      "target_sha256": "0e500cd66cd5c5f13ebe2102407ced39fe9d05c3cea1df4989be0440445db511",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "8097fa4165e670913a14eba8688b3f23700ff8592397551ecf5ca9611834676b",
+      "target_sha256": "253d92e1d1aa0df1cf0286fffb07b922c407e05b706cf5795624bf1ba5ec6a3a",
+      "reviewer": "Claude (Claude Code session; the coarse_channel row added to the table in both files and compared; the rest unchanged)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -1774,6 +1774,96 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
       "method": "assistant",
       "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/coarse_channel/README.md",
+      "target": "examples/coarse_channel/en/README.md",
+      "source_sha256": "8c8beb824115963940396d13f4058a65d10f1cc37b0dd4b6319c76830299f43c",
+      "target_sha256": "653cc1022b0ced8d510ec189b7adff5c0dd8b7ffa67796c65813d39c9237774c",
+      "reviewer": "Claude (Claude Code session; new English mirror written from the Japanese master and compared section by section, including the summary, the tables of the details block (numeric rows checked to be identical by script), the anchors and the relative links)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-26"
+    },
+    {
+      "source": "examples/coarse_channel/figs/axis.png",
+      "target": "examples/coarse_channel/en/figs/axis.png",
+      "source_sha256": "fea0f06d31982ab8289a13b0098ee679978f2b283f950805584c77d2483c6f63",
+      "target_sha256": "29e30e73309f177e809dc7a5da2398210f0b6c181a201e12dd8675938998e7e1",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-26"
+    },
+    {
+      "source": "examples/coarse_channel/figs/bend.png",
+      "target": "examples/coarse_channel/en/figs/bend.png",
+      "source_sha256": "2040706942b08375d202521f49517d1b7a5820ca8ab434a8eaa78f83a2286129",
+      "target_sha256": "834ff4c030395b31ae45fd1a7803c70a1d03ec880b865fcfbe25a5a3a332141e",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-26"
+    },
+    {
+      "source": "examples/coarse_channel/figs/mask.png",
+      "target": "examples/coarse_channel/en/figs/mask.png",
+      "source_sha256": "5bcbc912de1d725a246794a2fcd1e66c28d6e101fad1acd6dac70ef56edb9fc1",
+      "target_sha256": "da12772495a2e4159bc2763964390f93ad0b029342871d9403fee5a5651da639",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-26"
+    },
+    {
+      "source": "examples/coarse_channel/figs/oblique.png",
+      "target": "examples/coarse_channel/en/figs/oblique.png",
+      "source_sha256": "c5cba5cae8dfc5482e7a128bc50dcab685a450f203fa885596285e3c46cf0f25",
+      "target_sha256": "fa5689a89f03c5700838febb7dbb48ab4fa69d1f67ac279ff0a21b337a33264a",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-26"
+    },
+    {
+      "source": "examples/coarse_channel/figs/reps.png",
+      "target": "examples/coarse_channel/en/figs/reps.png",
+      "source_sha256": "98c3a6e813153e9eab7fe4e89c60442635c5d7ee7b4233beac0c679b6126a4fe",
+      "target_sha256": "7853bda0a68d50823d04865e42afa83a2289bd2db1395a577d4045ed840d1821",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-26"
+    },
+    {
+      "source": "examples/coarse_channel/figs/setup.png",
+      "target": "examples/coarse_channel/en/figs/setup.png",
+      "source_sha256": "28f1d74832d88cac018afc289320408639de4ff4ca9e2836ea365a4babe78a14",
+      "target_sha256": "31cc96c836f7f0c524a7b56d0438e2c775f53754ced4ac086fb6678fcdb68f6c",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-26"
+    },
+    {
+      "source": "examples/coarse_channel/figs/waists.png",
+      "target": "examples/coarse_channel/en/figs/waists.png",
+      "source_sha256": "1e2c875a894bb791dc7c8c39a83284e973bd6be8d383ebcd454d1f7b2d3293ff",
+      "target_sha256": "548d51fb7bfad583664e425cbd0c8fe3d95b0aebd0dab3f3b080df7a829d408c",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-26"
+    },
+    {
+      "source": "examples/coarse_channel/figs/wet.png",
+      "target": "examples/coarse_channel/en/figs/wet.png",
+      "source_sha256": "96eb5b254222392956f0e649b3c125b6929a19181010399efdc7c0195e318a8a",
+      "target_sha256": "f68ef4448177954ca8523a864ab295e3da15657d8aee47f0706db6a04a61be1a",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-26"
+    },
+    {
+      "source": "examples/coarse_channel/figs/wide.png",
+      "target": "examples/coarse_channel/en/figs/wide.png",
+      "source_sha256": "75ea17c65275a9fbbe08e8195555ffcc7614c98400bbbf3adb79dfd0834f1f9a",
+      "target_sha256": "f8ec93f2dd5d72af327d7c5405c34a832ba9e3012aa7db8dc05dd3b464233439",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/coastal_compound_flood/README.md",
