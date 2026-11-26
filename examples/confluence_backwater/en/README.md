@@ -130,6 +130,7 @@ make                    # links and inputs (data/, data_coarse/, junction/data/)
 make run                # the 6 cases of the main part (about 6 minutes per case with 4 threads)
 make coarse             # supplement 1: the 3 coarse-grid cases (about 2 minutes in total)
 make coarse_check       # supplement 1: the 13 cases that locate the coarse-grid difference, and the table (about 5 minutes in total)
+make coarse_oblique     # supplement 1: the 47 cases on representing oblique channels, and the table (about 20 minutes in total)
 make steady             # supplement 2: the steady case on the main grid (about 3 minutes with 4 threads)
 make junction           # supplement 3: the 9 junction-shape cases (about 2 minutes per case with 4 threads)
 make junction_fine      # supplement 3: the 2 grid-check cases (about 10 minutes per case with 4 threads)
@@ -137,7 +138,7 @@ python3 plot_results.py # figs/*.png and tables (argument en draws the English v
 ```
 
 The settings files are written by make_params.py (main part and supplements 1 and 2), coarse_check/make_check.py
-(the checks of supplement 1) and junction/make_junction.py (supplement 3).
+and oblique.py (the checks of supplement 1) and junction/make_junction.py (supplement 3).
 
 ## Results
 
@@ -293,13 +294,44 @@ Stage at the confluence location for the straight main river with the narrows. A
 - With the southern cell resolved and the northern cell a subgrid channel of the remaining 20 m, the diagonal edges are
   also limited by the 20 m width (0.28), and the result agrees with Δx = 20 m within 0.04 m.
   - Channel cells side by side are outside the assumption of the subgrid channel (a channel one cell wide along a
-    line). This is a result checked for the form of this example (a straight reach), not for oblique channels.
+    line). For oblique channels there are directions where it does not agree (next table).
+
+**For oblique channels, the shape of the band of cells on the coarse grid changes the conveyance**
+
+A straight channel of uniform width is laid obliquely to the grid axes, and the conveyance width back-calculated from
+the steady uniform-flow depth is compared with the channel width (coarse_check/oblique.py).
+
+| Direction | n resolved rows | n+1 resolved rows | resolved + remainder | equal split | Δx = 20 m |
+|---|---:|---:|---:|---:|---:|
+| 0° | 0.83 / 1.00 | 1.67 / — | 0.97 / — | 1.37 / — | 1.00 / 1.00 |
+| 18.4° (1:3) | 0.71 / 0.73 | 0.53 / 0.95 | 0.61 / 0.79 | 0.13 / 0.50 | 0.91 / 0.95 |
+| 26.6° (1:2) | 0.68 / 0.73 | 0.96 / 1.01 | 1.05 / 0.89 | 0.62 / 0.73 | 0.95 / 0.98 |
+| 33.7° (2:3) | 0.40 / 0.80 | 0.93 / 1.03 | 0.55 / 0.82 | 0.30 / 0.56 | 0.95 / 0.97 |
+| 45° | 0.59 / 0.76 | 1.26 / 1.11 | 1.08 / 1.05 | 1.11 / 1.02 | 1.02 / 1.01 |
+
+Conveyance width ÷ channel width (120 m / 200 m wide). Cell centres lie in rows whose spacing depends on the direction
+of the channel (100 m at 0°, 71 m at 45°, 45 m at 26.6°, and so on), and n is the number of rows that fit in the
+channel width. Δx = 20 m is divided by the width it represents. At 0°, 200 m is exactly 2 resolved rows.
+
+- **Resolved + remainder agrees at 0° and 45°**: the deviation is within 10 %.
+- **In other directions the band develops "waists" and conveys too little**: runs of a few cells side by side are
+  connected to each other only through an overlap of one cell or through a corner. The flow turns and is squeezed
+  there.
+  - How large the shortfall is varies irregularly with the direction and the width. Resolved + remainder does not fix
+    the waists and scatters between 0.55 and 1.05 times. An equal split is worse still.
+- **Even on the fine grid (6–10 cells across the channel) the directions 18.4–33.7° convey 2–9 % too little**: the
+  banks become staircases.
+- **The higher stage in the bend on the coarse grid (the breakdown above) is consistent with this shortfall**: the bend
+  in this example slopes at up to 30° and is a band 2 cells per column.
+- With resolved + remainder, the storage of the remainder cells is larger than their share of the width, because the
+  channel length counts the neighbouring channel cells as well; the storage width is 1.3 times the channel width at 0°.
+  This does not affect the steady stage, but it does affect the delay and attenuation of a flood wave.
 
 When looking at backwater flooding on a coarse grid, check the main-river stage at the confluence first. The backwater
 profile of the tributary itself agrees well with 1-D theory even on the coarse grid (supplement 2). Most of the error
 enters the stage at the confluence through the representation of the main river. It is safe to compare the
-representation of the bends and of widths that are not a multiple of the cell size with a finer grid or a 1-D
-calculation, and to match it to observed stages before reading the results.
+representation of the bends and oblique reaches, and of widths that are not a multiple of the cell size, with a finer
+grid or a 1-D calculation, and to match it to observed stages before reading the results.
 
 ## Supplement 2: how far up the tributary the backwater reaches (steady backwater profile)
 
@@ -410,7 +442,9 @@ the mouth. The downstream uniform-flow velocity is 2.59 m/s.
   represent, such as the size of the separation zone and secondary currents, is not included.
 - **On a coarse grid the representation of the main river governs the result**: as in supplement 1, the staircase of
   the bend raises the stage at the confluence by 0.2–0.4 m, which roughly doubles the overtopping volume. For a
-  width that is not a multiple of the cell size, the representation changes the stage by more than 1 m.
+  width that is not a multiple of the cell size, the representation changes the stage by more than 1 m. A channel
+  1–2 cells wide laid in a direction other than the axes and 45° conveys up to 60 % too little because of the waists
+  in the band (choosing the representation does not fix this).
 - **The downstream stage is the normal depth of the sum of the inflows**: the drop of the stage when flooding reduces
   the main-river discharge, and the delay by storage in the channels, are not counted.
 - **Sediment does not move**: bed changes by deposition and scour at the confluence are not computed.
