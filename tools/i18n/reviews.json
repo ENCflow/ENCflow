@@ -31,11 +31,11 @@
     {
       "source": "bmi/README.md",
       "target": "bmi/README.en.md",
-      "source_sha256": "f3ed072cdfc2a49e1ce2d6c7263076fd1bd433eaa423e646e468a1ef190a4e09",
-      "target_sha256": "d78147ef1ace9cbcc5d516488e010a0dc8e00b6094fa2c38ce0dfe85a8f39bbf",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "9b25f76f4d740516496001edee7e3e3c6ca1cd13cc8d0be13a40e40f3eab7614",
+      "target_sha256": "7b737d865d59f00eda70d79fd3b4d3ec3ecdd5b8d5ef7c896fd0b75b226a92af",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "docs/ai_guide.md",
@@ -356,9 +356,9 @@
     {
       "source": "docs/users_guide/hydraulics.md",
       "target": "docs/en/users_guide/hydraulics.md",
-      "source_sha256": "d1580b9eb267b03f2bae07bf7d0eb9207b2ac27f55e8fac4f24235db558bfc70",
-      "target_sha256": "b70f767a26fe6fccb13f6cf3333f8882d01a05c960954b2ec3ce52b1e3278fc7",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
+      "source_sha256": "b76b5e2eb76d324b7a48c6ab95c147cf851bcac91c0b7548d314db20978ad969",
+      "target_sha256": "ab31b7e5beded275a038399d6027d35dbac14fd43969ad82fb496770114a7939",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -527,9 +527,9 @@
     {
       "source": "docs/users_guide/structure.md",
       "target": "docs/en/users_guide/structure.md",
-      "source_sha256": "f4440fcfbd7cc3dadda3ab658d41272125c6739b198435b52bab47c9768700c5",
-      "target_sha256": "2c9608c61fc7938e366cd5cd88da5ba1f2d9898b68153297a9ad80a940fc21a0",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
+      "source_sha256": "8a24f99ec80f957dff091e81cc0d0de2b98055879490dd66c87d3904f9ad49b5",
+      "target_sha256": "f1b47c3674dd99ffca05a185d1ddd1ca204f61a60c040a9dd17496df787d72f2",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -851,9 +851,9 @@
     {
       "source": "examples/List_samples/list_structure.txt",
       "target": "examples/List_samples/en/list_structure.txt",
-      "source_sha256": "a9909efc220c3b2e461291ab5314a9d3704df716575125b0f539bdd6f71cb855",
-      "target_sha256": "9301cff612c4d20982fc13932e719ff51039cf9b85a37fe119007bfb68999302",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
+      "source_sha256": "1d46f63acab3a2b2cc7af2f894200f286d338462718c62582f6d5f6d0d4a4f6d",
+      "target_sha256": "b3817b72bf4e797a45315146358c78d7f5dbcaa9d076701f03c01f8a415404c6",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -4154,9 +4154,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "852ec1208b5b1bbee66bb0b8f528546d7710d908af9f81349182ddfbfa90b8c1",
-      "target_sha256": "5107677216a0e3a61c4f5f8df5cedf6ffb53bb7dc90de974f7030c9dd93a683e",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
+      "source_sha256": "5fc1a703ef2325246f80cc5bcc74cd38b968f11e200bbe23ed18477fe1d8e8f3",
+      "target_sha256": "9f6955d3f682e17e9296865c9318676be4b2bc58d75d2785c578554bb3cdf044",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -4330,6 +4330,15 @@
       "reviewer": "Claude (Claude Code session; new verification case for the building drag term (developer.md §107): Japanese and English written together; theory equations, settings, the table of the three configurations and the five checks compared line by line; values taken from the measured runs of Check_bldgdrag.py)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
+    },
+    {
+      "source": "test/bmi_dam/README.md",
+      "target": "test/bmi_dam/en/README.md",
+      "source_sha256": "811e679a64622b7d50a3e6d1979aa682e6b7429861eca4dd0913fd873e0d4604",
+      "target_sha256": "77dfbf1d958d4efb3310be5b905e52c079f2eba00471d63d8f3f1f6371f9f5b2",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/bmi_nest/README.md",

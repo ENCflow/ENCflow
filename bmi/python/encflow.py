@@ -22,6 +22,12 @@ surface_water~grid1__depth)。model.grids が格子 id の一覧、
 model.shape_of(k) 等が格子ごとの情報、get / get2d / set は名前から格子を
 判別する。update はルートの 1 歩(子はその中でサブステップ)。
 
+ダム・湖沼(&list_struct_dam)があるケースでは、ルート格子のダムの量
+(VAR_RESERVOIR_*)がダムの点の格子(model.dam_grid。ダムの番号順の 1 次元、
+大きさ model.ndam、座標 model.dam_xy())に載る。外部運転(f_dam_mode = 6)の
+ダムは VAR_RESERVOIR_TARGET の set で放流量を与える(次の set まで持続。
+developer.md §133)。
+
 1 プロセス 1 モデル(モデル状態は Fortran 側の単一 component)。
 """
 
@@ -55,6 +61,15 @@ VAR_SUSPENDED_SEDIMENT = "surface_water_sediment~suspended__volume-per-area"  # 
 VAR_SOLUTE_CONC = "surface_water_solute__mass_concentration"  # 輸送物質濃度 (mg/L)。get のみ
 VAR_ICE_THICKNESS = "glacier_ice__thickness"                # 氷厚 (m)。get のみ
 VAR_LAVA_THICKNESS = "lava__thickness"                      # 溶岩厚 (m)。get のみ
+# ダム・湖沼(&list_struct_dam があるケースにだけ存在。ルート格子のダムを番号順に
+# 並べた 1 次元で、格子はダムの点の格子 model.dam_grid。developer.md §133)。
+# 値はその時点で終わっている歩の量(initialize 直後の流入・放流は 0)
+VAR_RESERVOIR_LEVEL = "reservoir_water_surface__elevation"          # 貯水位 (m)。get のみ
+VAR_RESERVOIR_VOLUME = "reservoir_water__volume"                    # 貯水量 (m3)。get のみ
+VAR_RESERVOIR_INFLOW = "reservoir_water~incoming__volume_flow_rate"  # 流入 (m3/s)。get のみ
+VAR_RESERVOIR_OUTFLOW = "reservoir_water~outgoing__volume_flow_rate"  # 放流 (m3/s。死水・床で頭打ちした実際の値)。get のみ
+VAR_RESERVOIR_SPILL = "reservoir_water~spilled__volume_flow_rate"    # サーチャージ超過のスピル (m3/s)。get のみ
+VAR_RESERVOIR_TARGET = "reservoir_water~outgoing~target__volume_flow_rate"  # 目標放流量 (m3/s)。外部運転(f_dam_mode = 6)のダムがあるときだけ存在。set は外部運転のダムだけに効き、ほかの要素は無視
 
 
 def var_on_grid(name, grid):
@@ -105,11 +120,17 @@ class ENCflow:
             self._lib.encflow_bmi_initialize(str(param_file).encode()),
             f"initialize({param_file})",
         )
-        # 格子の一覧(出力変数の grid id から集める)と各格子の形
+        # 格子の一覧(出力変数の grid id から集める)と各格子の形。ダムの点の
+        # 格子(非構造)は形を持たないので別に覚える(§133)
         self._shapes = {}
+        self.dam_grid = None
         for name in self.output_var_names:
             gid = self.var_grid(name)
-            if gid not in self._shapes:
+            if gid in self._shapes or gid == self.dam_grid:
+                continue
+            if self.grid_type(gid) == "unstructured":
+                self.dam_grid = gid
+            else:
                 self._shapes[gid] = self.shape_of(gid)
         self.ny, self.nx = self._shapes[0]
 
@@ -139,6 +160,10 @@ class ENCflow:
         lib.encflow_bmi_get_grid_size.argtypes = [c_int, pi]
         lib.encflow_bmi_get_value_double.argtypes = [c_char_p, pd, c_int]
         lib.encflow_bmi_set_value_double.argtypes = [c_char_p, pd, c_int]
+        lib.encflow_bmi_get_grid_type.argtypes = [c_int, c_char_p, c_int]
+        lib.encflow_bmi_get_grid_node_count.argtypes = [c_int, pi]
+        lib.encflow_bmi_get_grid_x.argtypes = [c_int, pd, c_int]
+        lib.encflow_bmi_get_grid_y.argtypes = [c_int, pd, c_int]
 
     @staticmethod
     def _check(status, what):
@@ -263,8 +288,47 @@ class ENCflow:
         )
         return (y0.value, x0.value)
 
+    def grid_type(self, grid):
+        """格子 grid の種類("uniform_rectilinear" か、ダムの点の格子 "unstructured")。"""
+        buf = ctypes.create_string_buffer(2048)
+        self._check(self._lib.encflow_bmi_get_grid_type(int(grid), buf, len(buf)),
+                    f"get_grid_type({grid})")
+        return buf.value.decode()
+
+    @property
+    def ndam(self):
+        """ルート格子のダム・湖沼の数(ダムがなければ 0)。"""
+        if self.dam_grid is None:
+            return 0
+        return self.size_of(self.dam_grid)
+
+    def dam_xy(self):
+        """ダムの代表点の座標 (x, y)(m。番号順の numpy 配列)。
+
+        代表点は捕捉集合の先頭セル(追加の放流工は放流セルの先頭)の中心。
+        座標は格子と同じ系(get_grid_origin の左下隅が原点、x 東・y 北)。
+        """
+        n = self.ndam
+        x = np.zeros(n)
+        y = np.zeros(n)
+        if n > 0:
+            pd_ = ctypes.POINTER(ctypes.c_double)
+            self._check(self._lib.encflow_bmi_get_grid_x(int(self.dam_grid),
+                        x.ctypes.data_as(pd_), n), "get_grid_x")
+            self._check(self._lib.encflow_bmi_get_grid_y(int(self.dam_grid),
+                        y.ctypes.data_as(pd_), n), "get_grid_y")
+        return x, y
+
+    def _length(self, name):
+        """変数 name の 1 次元の長さ(ラスタは nx*ny、ダムの量はダム数)。"""
+        gid = self.var_grid(name)
+        if gid == self.dam_grid:
+            return self.size_of(gid)
+        ny, nx = self._shapes[gid]
+        return nx * ny
+
     def size_of(self, grid):
-        """格子 grid のセル数(= nx*ny)。"""
+        """格子 grid のセル数(= nx*ny)。ダムの点の格子ではダムの数。"""
         n = ctypes.c_int()
         self._check(self._lib.encflow_bmi_get_grid_size(int(grid), ctypes.byref(n)),
                     f"get_grid_size({grid})")
@@ -303,9 +367,9 @@ class ENCflow:
         BMI 標準形(要素 0 = 南西隅、行は南→北、x は西→東)。
         origin(左下)+ spacing と整合しており、Landlab の
         RasterModelGrid ノード配列とは無変換で 1:1 対応する。
+        ダムの量(VAR_RESERVOIR_*)はダムの番号順の 1 次元(長さ ndam)。
         """
-        ny, nx = self._shapes[self.var_grid(name)]
-        n = nx * ny
+        n = self._length(name)
         dest = np.empty(n, dtype=np.float64)
         self._check(
             self._lib.encflow_bmi_get_value_double(
@@ -339,13 +403,18 @@ class ENCflow:
           有効セル全体に適用(河道セルの rn0_rw も上書きされる。現に
           効いている場は get で得られる)。initialize 後は入力値に戻る
           ので、再開時は再度 set する。STG 格子系と負値は BmiError。
+        - VAR_RESERVOIR_TARGET (m3/s): 外部運転(f_dam_mode = 6)のダムの
+          目標放流量(ダムの番号順の 1 次元、長さ ndam)。次の set まで持続し、
+          次の 1 歩から効く。外部運転でないダムの要素は無視される。死水の
+          下限とサーチャージ超過のスピルはモデルが守る(実際の放流は
+          VAR_RESERVOIR_OUTFLOW)。負値は BmiError。save されない(再開時は
+          dam_q0 に戻る)。
         """
-        ny, nx = self._shapes[self.var_grid(name)]
         arr = np.ascontiguousarray(values, dtype=np.float64).ravel()
-        n = nx * ny
+        n = self._length(name)
         if arr.size != n:
             raise ValueError(
-                f"set({name}): size {arr.size} != nx*ny = {n}")
+                f"set({name}): size {arr.size} != {n} (nx*ny, or the number of dams)")
         self._check(
             self._lib.encflow_bmi_set_value_double(
                 name.encode(),
