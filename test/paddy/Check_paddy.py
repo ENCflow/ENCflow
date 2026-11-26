@@ -31,6 +31,7 @@ Gauss–Legendre の求積で直接求める(モデルは表と展開)。
   python3 Check_paddy.py wq_rain  result_wq_rain   水質: 雨の物質でタンクの濃度が雨の濃度へ近づくことと質量の収支
   python3 Check_paddy.py wq_tw    result_wq_tw     水質: 双方向の逆流で水田に入る水の濃度と閉じた箱の質量の保存
   python3 Check_paddy.py wq_b     result_wq_b      水質: 区画の解像(B)の減水深の持ち出しを含む質量の収支
+  python3 Check_paddy.py wq_vs    result_wq_vs     水質: タンクの沈降(離散式の厳密解、湛水深で割る)と質量の収支
   python3 Check_paddy.py restart_wq <連続の結果> <再開の結果>   水質のプールの保存 → 再開のビット一致
   python3 Check_paddy.py sed_tw   result_sed_tw    土砂: 双方向のタンクへ入る水の浮遊砂を田面に積む(固相の保存)
   python3 Check_paddy.py b_sed    result_b_sed     土砂: 区画の解像で掃流砂が畦畔を越えない(区画ごとの河床の変化の合計 0)
@@ -813,6 +814,47 @@ def check_wq_tw(res):
     wq_closure(res, m0)
 
 
+def check_wq_vs(res):
+    """タンクのプールの沈降(wq_vs = 0.05 m/d だけ。閉じた箱で落水・雨・減水深・減衰なし): 種類ごとの濃度 =
+    10 × (1 − vs·Δt/h)^n(n = t/Δt。m_wq の沈降の離散式 c·(1 − vs·Δt/h) の厳密解。h は種類 1 が 0.10 m、種類 2 が
+    0.20 m)。連続の解 10 × exp(−vs·t/h) との差は時間の離散化の誤差 n·x²/2 = vs²·t·Δt/(2h²) に一致する。湛水深は
+    変わらず、地表の物質は 0 のまま、沈降した量は wq.csv の settle_g に入る(質量の収支)"""
+    vs = 0.05 / 86400.0
+    dt = 2.0
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    for key, h in (("h1(mm)", 100.0), ("h2(mm)", 200.0)):
+        worst = max(abs(r[key] - h) for r in rows) / h
+        if worst > 1e-12:
+            fail("%s changes (relative %.3e from %.1f mm): the tanks should neither drain nor fill" % (key, worst, h))
+    last = rows[-1]
+    for c, h in ((1, 0.10), (2, 0.20)):
+        key = "c%d(mg/L)" % c
+        x = vs * dt / h
+        worst = 0.0
+        for r in rows:
+            ex = 10.0 * (1.0 - x) ** round(r["time(s)"] / dt)
+            worst = max(worst, abs(r[key] - ex) / ex)
+        if worst > 1e-10:
+            fail("class %d: tank concentration vs 10 x (1 - vs dt/h)^n: relative difference %.3e" % (c, worst))
+        t = last["time(s)"]
+        dc = abs(last[key] - 10.0 * math.exp(-vs * t / h)) / (10.0 * math.exp(-vs * t / h))
+        pred = vs * vs * t * dt / (2.0 * h * h)
+        if abs(dc - pred) > 0.01 * pred:
+            fail("class %d: difference from the continuous solution %.4e is not the time-discretisation error %.4e"
+                 % (c, dc, pred))
+        ok("class %d (h = %.2f m): tank concentration = 10 x (1 - vs dt/h)^n (max relative difference %.1e), "
+           "%.6f mg/L after %.0f h; the continuous solution differs by %.3e = vs^2 t dt/(2h^2)"
+           % (c, h, worst, last[key], t / 3600.0, dc))
+    m0 = 10.0 * (0.5 * 0.10 + 0.5 * 0.20) * 8000.0
+    w = wq_closure(res, m0)
+    if max(abs(r["mass_surface_g"]) for r in w) > 0.0:
+        fail("substance appeared on the surface (the tanks neither drain nor spill)")
+    if not w[-1]["settle_g"] > 0.0:
+        fail("no settling counted in settle_g")
+    ok("settled %.4f g of %.1f g (counted in settle_g); the surface stays free of the substance"
+       % (w[-1]["settle_g"], m0))
+
+
 def check_wq_b(res):
     """B: 区画の事前の湛水 10 mg/L・雨 2 mg/L・減水深の持ち出し: 閉じた領域の質量の収支、区画の水の濃度は 2〜10"""
     rows = read_csv(os.path.join(res, "paddy.csv"))
@@ -1081,6 +1123,8 @@ def main():
         check_wq_tw(sys.argv[2])
     elif cmd == "wq_b":
         check_wq_b(sys.argv[2])
+    elif cmd == "wq_vs":
+        check_wq_vs(sys.argv[2])
     elif cmd == "sed_tw":
         check_sed_tw(sys.argv[2])
     elif cmd == "b_sed":

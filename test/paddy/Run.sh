@@ -19,7 +19,8 @@
 #                     越える外からの流入、畦畔と河川堤防が重なるエッジ、区画から区画への落水口(田越し)。b_back は sed で
 #                     6 h で保存 → 再開(連続計算とビット一致)
 #   param_wq_*.txt    水質(fn_wq。§127.10): タンクの濃度の一次減衰(厳密解)、雨の物質、双方向の逆流で入る水の
-#                     濃度、区画の解像の減水深の持ち出し(wq.csv の質量の収支)。wq_a は sed で 6 h で保存 → 再開
+#                     濃度、区画の解像の減水深の持ち出し(wq.csv の質量の収支)、タンクの沈降(離散式の厳密解。
+#                     §127.18)。wq_a は sed で 6 h で保存 → 再開
 #   param_sed_tw.txt  土砂(§127.11): 双方向のタンクへ入る水の浮遊砂を田面に積む(固相の保存)。地形変化の刻み 7 s
 #                     で 1 h で保存 → 再開
 #   param_b_sed.txt   土砂: 区画の解像で掃流砂が畦畔を越えない(区画ごとの河床の変化の合計 0)
@@ -126,8 +127,8 @@ python3 Check_paddy.py restart_b result_b_back result_b_restart || exit 1
 variant param_b_back.txt result_b_mode "s|^  dir_result = 'result_b_mode'|&\n  dir_save = 'save_b'\n  f_state_restore = 1|;s|^  fn_pd_plot = .*|  pd_frac = 0.5|;/^  fn_pd_outlet = /d" > "$tmp"
 expect_stop b_mode "$tmp" "the representation of the paddy fields differs from the saved state"
 
-# 水質(fn_wq。§127.10): タンクのプール(A の片方向・双方向)と区画の解像(B)の減水深の持ち出し
-for t in wq_a wq_rain wq_tw wq_b; do
+# 水質(fn_wq。§127.10): タンクのプール(A の片方向・双方向)と区画の解像(B)の減水深の持ち出し、タンクの沈降(§127.18)
+for t in wq_a wq_rain wq_tw wq_b wq_vs; do
     run $t param_$t.txt
     python3 Check_paddy.py $t result_$t || exit 1
 done

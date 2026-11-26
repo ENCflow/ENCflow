@@ -6,7 +6,8 @@
 # 雨滴侵食から水田の部分を外す検定(param_wash.txt・param_splash.txt。地盤高も np=1 とバイト比較)、
 # 双方向(二室化)の検定(param_tw_back・tw_flood・tw_drain。np=1 とバイト比較)、
 # 区画の解像(表現 B。§127.8。param_b_*.txt。区画・落水口・市松の角が帯の境にかかる。np=1 とバイト比較)、
-# 水質と併用するタンクのプールと区画の解像の減水深の持ち出し(param_wq_a・wq_tw・wq_b。np=1 とバイト比較)と
+# 水質と併用するタンクのプールと区画の解像の減水深の持ち出し、タンクの沈降(param_wq_a・wq_tw・wq_b・wq_vs。
+# np=1 とバイト比較)と
 # その保存 → 再開、土砂(param_sed_tw・b_sed。np=1 とバイト比較)、集水面積率(param_catch の片方向・双方向と
 # 水質、param_catch_sp の近傍へ配る雨が帯の境をまたぐ片方向・双方向。np=1 とバイト比較)、
 # 保存 → 再開(np=1 とバイト比較)、rank0 が見つける停止と帯で見つける停止(全ランク同時の par_stop)も
@@ -106,7 +107,7 @@ for t in b_drain b_tight b_over b_back b_ext b_bank b_chain; do
 done
 
 # 水質(§127.10): 解析検定と np=1 とのバイト一致(タンクのプールと減水深の持ち出しの記録)
-for t in wq_a wq_tw wq_b; do
+for t in wq_a wq_tw wq_b wq_vs; do
     run "$np" $t param_$t.txt
     python3 Check_paddy.py $t result_$t || exit 1
     if [ "$np" != 1 ]; then
