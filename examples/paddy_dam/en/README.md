@@ -24,8 +24,9 @@ which ENCflow represents paddy-field dams.**
 [Result 1](#result-1-effect-of-paddy-field-dams-representation-b-δx--10-m) studies the effect of paddy-field dams with
 representation B, and [result 2](#result-2-the-same-district-solved-with-representation-a-δx--30-m) solves the same
 district with representation A to see how far a coarse grid gives the same answer and how the inputs should be given to
-come closer. The values are schematic, chosen to make the phenomena easy to see; they do not reproduce a particular
-district.
+come closer. [Result 3](#result-3-where-the-substance-dissolved-in-the-ponding-before-the-rain-goes) compares where the
+substance dissolved in the ponding before the rain goes in the two representations. The values are schematic, chosen to
+make the phenomena easy to see; they do not reproduce a particular district.
 
 ## What happens with real paddy-field dams
 
@@ -63,7 +64,8 @@ A uses it aggregated by 3 × 3 cells (30 m).
   4.2 m³/s over the district), and the water stored in the drains and paddy fields is pumped out slowly after the rain.
 - **Rain and the state before it**: uniform rain of 207 mm in 24 h (4 mm/h for 6 h, 12 mm/h for 3 h, 25 mm/h for 3 h,
   12 mm/h for 3 h, 4 mm/h for 9 h), computed to 48 h. The paddy fields start ponded to the level at which the outlet
-  starts to drain (the crest of the water-level board, 0.03 m), and the decrease in depth is 5 mm/d.
+  starts to drain (the crest of the water-level board, 0.03 m), and the decrease in depth is 5 mm/d. A substance that
+  does not decay is dissolved at 10 mg/L in the ponding (result 3; the rain and the surface water carry 0 mg/L).
 - **Four outlet scenarios**: N (all normal outlets = a weir of a water-level board 0.03 m high and 0.30 m wide), D (all
   paddy-field dams = separated type, water-level board + hole φ50), Du (paddy-field dams only in the two northern groups
   = the upstream half, 76 plots), Dd (only in the two southern groups = the downstream half, 76 plots).
@@ -123,7 +125,9 @@ above the crest it flows in over the levees. The small, branch and main drains a
 
 In the names of the settings files, A30 stands for representation A (Δx = 30 m), B10 for representation B (Δx = 10 m),
 a trailing 2 for the two-way mode, and 2c for the two-way mode with the catchment fraction `fn_pd_catch`
-(`data/catch30.txt`; result 2). The results are written to `result_<name>/`.
+(`data/catch30.txt`; result 2). The results are written to `result_<name>/`. Every case also computes water quality
+(`fn_wq`; result 3). Water quality does not affect the water, so the water values of results 1 and 2 are the same
+without it.
 
 ## How to run
 
@@ -131,7 +135,7 @@ a trailing 2 for the two-way mode, and 2c for the two-way mode with the catchmen
 cd examples/paddy_dam
 make            # links and inputs (make_district.py writes the 10 m and 30 m inputs to data/)
 make run        # computes the 10 cases in turn (on a 4-core machine, representation A 2–3 min per case, B 10–20 min)
-make figs       # figs/*.png, en/figs/*.png and the three tables (standard output)
+make figs       # figs/*.png, en/figs/*.png and the four tables (standard output)
 ```
 
 ## Result 1: effect of paddy-field dams (representation B, Δx = 10 m)
@@ -279,6 +283,56 @@ Table 3 (where the water went up to 48 h, m³; rain on the district 125,194 m³)
     example, capping the paddy area fraction at 0.95 in `make_district.py` (1.4 ha less paddy, 3,000 m³ less rain on the
     paddy fields) gives a settlement depth of 0.16 m in the two-way mode and 0.08 m in the one-way mode.
 
+## Result 3: where the substance dissolved in the ponding before the rain goes
+
+Assume that a substance that does not decay is dissolved at 10 mg/L in the ponding before the rain (0.03 m). It is a
+generic substance, thought of as the field water after fertilizing, for example; the rain and the surface water carry
+0 mg/L. The two representations of the same district are compared for how much of this substance the pumping station
+takes out of the district during and after the heavy rain, and how much stays in the paddy fields.
+
+![Where the substance dissolved in the ponding before the rain goes](figs/wq.png)
+
+(1)(2) Share of the initial substance pumped out of the district. (3)(4) Share remaining in the paddy fields (the tanks
+for representation A, the plot water for representation B). (5)(6) Concentration at the pumping station (probe 2). Blue
+is representation B and orange representation A; the line style shows how representation A is given (dashed = one-way,
+solid = two-way, dotted = two-way with the catchment fraction).
+
+Table 4 (where the substance dissolved in the ponding before the rain (10 mg/L) went, % of the initial mass)
+
+| Outlets | Representation | initial mass kg | pumped out 24 h / 48 h | in the paddies 24 h / 48 h | percolated 48 h | on the surface 48 h | max concentration at the pumping station mg/L (time) | max concentration of the settlement flooding mg/L |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| N | representation B (Δx = 10 m) | 136.8 | 47 / 78 | 28 / 5 | 5 | 11 | 3.31(7.0 h) | 1.63 |
+| N | representation A (Δx = 30 m), one-way | 135.8 | 31 / 66 | 22 / 12 | 6 | 16 | 1.76(14.2 h) | 1.53 |
+| N | representation A (Δx = 30 m), two-way | 135.8 | 27 / 61 | 43 / 18 | 7 | 14 | 1.32(9.7 h) | 1.01 |
+| N | representation A (Δx = 30 m), two-way, catchment fraction | 135.8 | 32 / 64 | 40 / 17 | 6 | 12 | 1.82(9.8 h) | 1.26 |
+| D | representation B (Δx = 10 m) | 136.8 | 28 / 50 | 64 / 41 | 7 | 3 | 2.78(7.0 h) | — |
+| D | representation A (Δx = 30 m), one-way | 135.8 | 19 / 39 | 67 / 46 | 7 | 8 | 1.13(15.8 h) | — |
+| D | representation A (Δx = 30 m), two-way | 135.8 | 16 / 37 | 73 / 52 | 7 | 4 | 1.11(9.0 h) | 0.23 |
+| D | representation A (Δx = 30 m), two-way, catchment fraction | 135.8 | 21 / 39 | 70 / 51 | 7 | 4 | 1.30(9.8 h) | — |
+
+- **Paddy-field dams keep the substance in the fields longer**: the share pumped out by 48 h falls from 78 % for N to
+  50 % for D in representation B. It also falls from 61–66 % to 37–39 % in representation A, and the drop (24–28
+  points) is about the same in both representations.
+- **Representation A gives a smaller and later export and concentration peak**: the share pumped out by 48 h is 11–17
+  points smaller than in representation B, and the maximum concentration at the pumping station is 40–60 % of that of
+  representation B (N 3.3 mg/L and D 2.8 mg/L at 7 h), arriving 2–9 h later.
+  - In representation B, the plot water leaves through the outlets into the small drains and soon reaches the pumping
+    station. The drains are dry at the start, so the first water to arrive is the concentrated plot water.
+  - In representation A, the outflow of a tank goes to the surface of its cell, mixes with the rain on the non-paddy
+    part, and flows over the surface of the 30 m cells to the channel cells (the small drains are not represented).
+- **In representation B, water passing through the plots flushes them**: with normal outlets (N), the rain on the farm
+  roads that enters a plot over the levees passes through it and leaves by the outlet. At 24 h the concentration of the
+  plots ranges widely from 0.007 to 1.08 mg/L, and 5 % of the substance remains in the plots at 48 h (12–18 % in
+  representation A).
+  - Paddy-field dams (D) throttle the outflow, so less water passes through, and the concentration of the plots at 24 h is
+    0.35 to 1.01 mg/L.
+  - A tank of representation A has one concentration per cell and class and mixes at once with the water that enters it
+    (fully mixed). The catchment fraction (A30_*2c) brings the maximum concentration at the pumping station a little
+    closer to representation B, but most of the difference remains.
+- **The flood water of the settlement also carries the substance of the paddy fields**: when the settlement is flooded in
+  N, the concentration of the flood water reaches 1.63 mg/L in representation B and 1.01–1.53 mg/L in representation A,
+  because the water overflowing the main drain contains the substance that left the paddy fields.
+
 ## Hints for using representation A on coarse grids
 
 From result 2, here are hints for making inputs of representation A by coarsening high-resolution land use and terrain.
@@ -320,6 +374,10 @@ From result 2, here are hints for making inputs of representation A by coarsenin
   (5–10 m) and the same part with representation A, compare the water entering the paddy fields (rain, inflow and
   levee_in of `paddy.csv`) and the water levels of the drains, and choose how to give the inputs above. This example is
   an instance of that procedure.
+- **Check concentrations and loads with representation B**: as result 3 shows, representation A cannot represent the
+  concentrated water that leaves first or the flushing by water passing through the plots, and gives a smaller and later
+  export and concentration peak. The difference is larger than for the water, so when concentrations or loads are
+  evaluated, solve a representative part with representation B and compare.
 
 ## Limitations and accuracy
 
@@ -333,6 +391,9 @@ From result 2, here are hints for making inputs of representation A by coarsenin
   levees and clogging of the plates are not represented.
 - The decrease in depth is constant (5 mm/d), the rain is uniform and the ponding before the rain is the same in all
   plots.
+- Water quality is the generic form that does not specify the substance, and only one substance dissolved in the ponding
+  before the rain is followed. Decay, settling and the exchange of the substance with the soil of the field surface and
+  the rice plants are not included.
 
 **Representation A (Δx = 30 m)**
 
@@ -344,6 +405,8 @@ From result 2, here are hints for making inputs of representation A by coarsenin
 - With the paddy area fraction capped at 0.99, the paddy area is 0.3 ha smaller than in representation B.
 - In the one-way mode the water of the drains does not return to the paddy fields, and in the two-way mode the inflow over
   the levees is instantaneous (without an overflow length).
+- The substance in a tank is fully mixed; the concentrated water that leaves a plot first and the flushing by water
+  passing through the plots are not represented (result 3).
 
 **Representation B (Δx = 10 m)**
 
