@@ -1325,9 +1325,13 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       call par_stop("list_struct_dam: dam_hlim of dam "//itoa(id)//" applies to f_dam_mode=1 or 2")
     end if
     if (list%dam_tadashigaki(id) > -9998.0 .and. (list%f_dam_mode(id) == 4 &
-        .or. list%f_dam_mode(id) == 5 .or. list%f_dam_mode(id) == 6)) then
+        .or. list%f_dam_mode(id) == 5)) then
       call par_stop("list_struct_dam: dam_tadashigaki of dam "//itoa(id)//" does not apply to " &
-                    //"f_dam_mode=4, 5 or 6 (the release is given from outside the rule)")
+                    //"f_dam_mode=4 or 5 (the time series already contains the actual operation)")
+    end if
+    if (list%dam_tadashigaki(id) > -9998.0 .and. list%f_dam_mode(id) == 6) then
+      call par_stop("list_struct_dam: dam_tadashigaki of dam "//itoa(id)//" does not apply to " &
+                    //"f_dam_mode=6 (the release is given from outside)")
     end if
 
     !--- 放流セルなし = 水位固定湖沼(流入は全量消失、水位は dam_h_init で

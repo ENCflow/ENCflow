@@ -40,8 +40,10 @@ release is not listed, and set raises BmiError).
 operated dams 2 and 3 at their initial storage (final level 104 m ± 10 cm). The
 static driver `test_encflow_bmi` runs to the end while it sets, before every
 step, a deterministic control that brings the volume back to its initial value,
-when the target release is in the input list. The input data in data_bmi_dam/
-can be regenerated with `python3 make_data.py`.
+when the target release is in the input list. It also checks that settings
+that do not fit the external operation (`dam_tadashigaki` in mode 6, a negative
+`dam_q0`) stop `encflow` at start-up. The input data in data_bmi_dam/ can be
+regenerated with `python3 make_data.py`.
 
 MPI: after `cd bmi && make clean && make MODE=mpi`, the result/dams/*.csv and
 result/Log.txt of `mpirun -np N ../../bmi/test_encflow_bmi_mpi param.txt` must

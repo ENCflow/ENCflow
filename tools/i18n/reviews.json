@@ -4334,8 +4334,8 @@
     {
       "source": "test/bmi_dam/README.md",
       "target": "test/bmi_dam/en/README.md",
-      "source_sha256": "811e679a64622b7d50a3e6d1979aa682e6b7429861eca4dd0913fd873e0d4604",
-      "target_sha256": "77dfbf1d958d4efb3310be5b905e52c079f2eba00471d63d8f3f1f6371f9f5b2",
+      "source_sha256": "c12d5284a1241b061cbfab7d1cb1f3f2f2385370b889777d932616d0390b60a1",
+      "target_sha256": "64c895308a28e27e7492e3ccd001be9dd06cb83c701a0b2314df4cbdad12e6b2",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
