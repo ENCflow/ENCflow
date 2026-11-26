@@ -4,8 +4,8 @@
   python3 Check_wallpond.py        全ケースの結果(result_<case>/)を判定して数表を書く
 
 判定(どれも 3 時間の終わり = E0003・H0003。2 時間の結果 E0002 と比べて定常も確かめる):
-  1. 仮想壁面 + 湛水と、仮想壁面 + 乾いた堤内地の河道の水位の差が 1 mm 以下(形 ax2・ax1・dg1 の 4 構成と、海岸堤防の
-     ax2・dg1)
+  1. 仮想壁面 + 湛水と、仮想壁面 + 乾いた堤内地の河道の水位の差が 1 mm 以下(形 ax2・ax1・dg1 の 4 構成・ob2 と、
+     海岸堤防の ax2・dg1)
   2. ax2 の乾いた堤内地と、堤内地を計算しない構成・解像した堤防 + 湛水の構成・海岸堤防 + 乾いた陸の河道の水位の差が
      1 mm 以下(海岸堤防は、開口の動的な振り替えで壁の向こうを塞がっていると数えること = §134.9 の見張りを兼ねる)
   3. 湛水の水位が初めの値(地盤 + 1.5 m)から 1 mm 以内で、2 → 3 時間に 1 mm 以上変わらない(壁から水が漏れない)
@@ -60,7 +60,7 @@ def main():
     print("== 1. 仮想壁面の向こうの湛水と河道の水位(湛水 − 乾いた堤内地。河道セルの最大の差)")
     pairs = [("ax2_dry", "ax2_wet"), ("ax1_dry", "ax1_wet")] + \
             [(f"dg1_{o}_dry", f"dg1_{o}_wet") for o in mw.OPTS] + \
-            [("ax2_sdry", "ax2_swet"), ("dg1_o4_sdry", "dg1_o4_swet")]
+            [("ax2_sdry", "ax2_swet"), ("dg1_o4_sdry", "dg1_o4_swet"), ("ob2_dry", "ob2_wet")]
     for dry, wet in pairs:
         d = float(np.abs(chan_levels(wet) - chan_levels(dry)).max())
         check(d <= TOL_SAME, f"{wet:14s} − {dry:14s}: {d:.4f} m(許容 {TOL_SAME * 1000:.0f} mm)")

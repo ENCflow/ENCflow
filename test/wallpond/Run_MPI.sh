@@ -1,7 +1,7 @@
 #!/bin/bash
 # wallpond: MPI 実行(N ランク)+ 検定(developer.md §134)
 #   ./Run_MPI.sh [N](既定 2。N <= 4。計算する行が 2 行だけの ax2_mask は 2 ランクまでで回す)
-# 全ケースを N ランクで回して Check_wallpond.py で判定し、湛水の 4 ケース(make_wallpond.py mpi)は 1 ランク
+# 全ケースを N ランクで回して Check_wallpond.py で判定し、湛水の 7 ケース(make_wallpond.py mpi)は 1 ランク
 # (同じ実行ファイル)でも回して、Log.txt・水位 E0003・水深 H0003 をバイト比較する。帯の境は河道と堤防を横切る
 # (仮想壁面の判定が読む隣のセルがハロの行に入る)
 

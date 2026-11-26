@@ -122,9 +122,9 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "83b75a9e54990de24006cb657c8c7ad3d3d6d5b2971d4e50c425379615338716",
-      "target_sha256": "a8d8b4c2d0df425cbaa2de95d69f21618afbbf957652615dbbc9410b264ccac4",
-      "reviewer": "Claude (Claude Code session; the §4.4 item on virtual walls extended to seawalls (heading, definition of the wall edge) in both files; compared sentence by sentence, the rest unchanged)",
+      "source_sha256": "63033b75eddfa83a6aecfa454208bb134b34fad5cdf02a31b165f9933f8f06fe",
+      "target_sha256": "9e1508cc35271c2688f9b58fbf890f9d84646a5aec7fcf480dc61804f0090fd6",
+      "reviewer": "Claude (Claude Code session; the test/wallpond entry in the list of tests gained the 26.6° thickened two-cell band in both files and was compared; the rest unchanged)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -4154,9 +4154,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "6877e001d53b1b45ea9c217088084afef4c2af12054775ad06c69ff4db72adac",
-      "target_sha256": "f6f9f84052a2afbe9be9430ffd02e0b658d443a8940a90aa6b4bdcb267efcb17",
-      "reviewer": "Claude (Claude Code session; the wallpond row extended to seawalls in both files and compared; the rest unchanged)",
+      "source_sha256": "11ebe7ee9e9e86070d812fb7c833208eff5e6feaf86f0e1741b47297081bd815",
+      "target_sha256": "bd2f2a2ddbf21ae06babe8af1a7c527f05ce26b42c62af76d66143bf156159e7",
+      "reviewer": "Claude (Claude Code session; the wallpond row gained the 26.6° thickened two-cell band and the §134.10 merge judgement in both files and was compared; the rest unchanged)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -5729,9 +5729,9 @@
     {
       "source": "test/wallpond/README.md",
       "target": "test/wallpond/en/README.md",
-      "source_sha256": "e75382845a5ed3ed09def5b87550368e4caede3d70d84c80f4e30009b31244f5",
-      "target_sha256": "7f0a9e669032ba6524d36df7b467549b5bb5cbfa9f94c42d5d2ed67466e68a7e",
-      "reviewer": "Claude (Claude Code session; seawall cases added to the purpose, configuration, file and result tables and the unchecked items in both files; terms use seawall as in the English guide; compared section by section)",
+      "source_sha256": "d480c01a6a6dad10439b7ef8d5b9377f35fa011b4d6f6ae0bf940d4277387275",
+      "target_sha256": "d8cc0e0bc92a0f48b9dc3d554a29d6083d9d0c53e62891b5bc2f83a56aee7d01",
+      "reviewer": "Claude (Claude Code session; the ob2 shape (26.6° two-cell band thickened at the steps, §134.10) added to the purpose, configuration, file and result tables in both files; compared section by section, the rest unchanged)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },

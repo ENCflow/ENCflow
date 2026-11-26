@@ -1209,8 +1209,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   and that mirrored grid orientations give the same values; the values with 0
   are displayed as limits (`Check_tjunction.py`).
 - **[test/wallpond](../../../test/wallpond/en/README.md)** -- straight channels with a still pond behind the
-  virtual walls of the levees (an axis-aligned two-cell resolved channel and one-cell subgrid channel, and a 45°
-  one-cell staircase). Judges that the channel level agrees with the runs whose landside behind the walls is dry,
+  virtual walls of the levees (an axis-aligned two-cell resolved channel and one-cell subgrid channel, a 45°
+  one-cell staircase, and a 26.6° two-cell band thickened at the steps). Judges that the channel level agrees with the runs whose landside behind the walls is dry,
   whose landside is not computed, and with a resolved levee (three combinations of the advection rules and scheme 1;
   `Check_wallpond.py`).
 - **[test/hillslope](../../../test/hillslope/en/README.md)** -- smooth hillslope and V-shaped catchment. Confirms

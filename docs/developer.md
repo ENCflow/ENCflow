@@ -63,7 +63,7 @@
 ### 移流項
 
 - 現行: [移流項のスキーム](users_guide/advection.md)・[1 セル幅の河道と移流項の風上供給元](users_guide/advection_donor.md)・[高い地盤へ登るエッジ水深の頭打ち](users_guide/dry_head_cap.md)。既定のスキーム f_advection_scheme = 3 は [§68.19](developer/068.md) の既定昇格、f_advection_donor = 4・f_advection_bend = 2・f_advection_lateral = 2・f_dry_head_cap = 4 は [§114](developer/114.md)、それぞれの値の定義は [§113](developer/113.md)
-- 記録: [§21](developer/021.md)・[§68](developer/068.md)(2026-10-01〜11-03 の改良の全体)・[§78](developer/078.md)(スカラー輸送の MUSCL)・[§102](developer/102.md)(f_advection_donor = 2, 3)・[§110](developer/110.md)(屈曲直後の辺の慣性と側方面のブレーキ)・[§118](developer/118.md)(§110 の続き)・[§111](developer/111.md)(窪地処理の平坦区間の振動)・[§112](developer/112.md)(深くて遅い隣のセルの規則の試作)・[§113](developer/113.md)・[§114](developer/114.md)・[§131](developer/131.md)(解像した合流の損失の格子依存、側方面の扱いが仮想壁面を見ず濡れた堤内地が河道を減速させる件 §131.12。例題 confluence_backwater)・[§134](developer/134.md)(近傍の判定で仮想壁面の向こうのセルを数えない。§131.12 の修正)
+- 記録: [§21](developer/021.md)・[§68](developer/068.md)(2026-10-01〜11-03 の改良の全体)・[§78](developer/078.md)(スカラー輸送の MUSCL)・[§102](developer/102.md)(f_advection_donor = 2, 3)・[§110](developer/110.md)(屈曲直後の辺の慣性と側方面のブレーキ)・[§118](developer/118.md)(§110 の続き)・[§111](developer/111.md)(窪地処理の平坦区間の振動)・[§112](developer/112.md)(深くて遅い隣のセルの規則の試作)・[§113](developer/113.md)・[§114](developer/114.md)・[§131](developer/131.md)(解像した合流の損失の格子依存、側方面の扱いが仮想壁面を見ず濡れた堤内地が河道を減速させる件 §131.12。例題 confluence_backwater)・[§134](developer/134.md)(近傍の判定で仮想壁面の向こうのセルを数えない。§131.12 の修正。側方面の合流の判定の漏れ = §134.10)
 
 ### 急勾配の重力補正と斜面の勾配
 

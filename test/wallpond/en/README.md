@@ -18,13 +18,15 @@ landside, and the channel levels must agree. The levee crest is the bed + 10 m a
 behind the wall receives neither water nor momentum from the channel, so physically the flow in the channel does not
 depend on whether the landside is wet.
 
-There are three channel shapes. In a straight channel along a grid axis, the edges of a two-cell resolved channel
+There are four channel shapes. In a straight channel along a grid axis, the edges of a two-cell resolved channel
 read the cells behind the wall as the upwind donor of a flow-direction face, the parallel link of a lateral face and
 the opening of a diagonal edge. When a 45° channel is represented as a four-connected one-cell staircase (the same
 type as the channel mask of tutorials/chichibu), the same happens at the steps. The staircase is run with three
 combinations of the advection rules and with scheme 1 (cell-centre gradient), which pass through the branches of the
 rules (`lateral_u`, `lateral_u_w`, `lateral_u_j`, the branches of `axis_open`, `bend_face`, `path_value` and the
-gradient of scheme 1). For the seawalls the channels of `ax2` and `dg1` are replaced by strips of sea-side cells
+gradient of scheme 1). When a 26.6° channel is represented as a two-cell band thickened so that adjacent columns
+share two rows at each step, the lateral-face rule reads the cell behind the wall as the upstream neighbour on the
+line when it judges a merge (§134.10). For the seawalls the channels of `ax2` and `dg1` are replaced by strips of sea-side cells
 and the channel levees by seawalls; besides the agreement of the dry and the ponded land, the case checks that the
 dry land agrees with the configuration that does not compute the land (the reassignment of openings).
 
@@ -42,6 +44,7 @@ dry land agrees with the configuration that does not compute the land (the reass
 | `ax2` | Straight along a grid axis, a two-cell (200 m wide) resolved channel. 4 km long | 1,000 m³/s (uniform-flow depth 2.55 m) | `mask` (landside not computed), `dry`, `wet`, `levee` (pond behind a one-cell resolved levee) |
 | `ax1` | The same channel as a one-cell subgrid channel (80 m wide; `fn_width`) | 1,000 m³/s (uniform-flow depth 4.41 m) | `dry`, `wet` |
 | `dg1` | A 45° straight line as a four-connected one-cell staircase (resolved), 40 columns from the west edge to the east edge | 300 m³/s | `dry` and `wet` for each of the configurations `o4`, `o3l0`, `o0` and `s1` |
+| `ob2` | A 26.6° (slope 1:2) straight channel 200 m wide, represented by the band of four rows of cells whose centres lie within the channel width, thickened so that the two rows nearest the centreline are channel cells in both columns at each column boundary (resolved; the same as "2 rows shared at steps" in examples/coarse_channel). 40 columns from the west edge to the east edge | 1,000 m³/s | `dry` and `wet` with the default configuration `o4` |
 | Seawall | The channels of `ax2` and `dg1` (configuration `o4`) as strips of sea-side cells (`fn_seaside`; ordinary cells, not `sw`), with seawalls (`seawall0 = 35` m, absolute elevation) on the land on both sides. `&list_channel` is not used | same as `ax2` and `dg1` | `ax2_sdry`, `ax2_swet`, `dg1_o4_sdry`, `dg1_o4_swet` |
 
 Every advection configuration states the five switches of `&list_enc` explicitly (it does not rely on the defaults).
@@ -57,8 +60,8 @@ The values are, in order, `f_advection_scheme`, `f_advection_donor`, `f_advectio
 
 | File | Content |
 |---|---|
-| `Run.sh` | Runs the 18 cases serially and judges them with `Check_wallpond.py` (about 35 s with one thread) |
-| `Run_MPI.sh [N]` | Runs all cases with N ranks (default 2; N ≤ 4; `ax2_mask`, which computes only two rows, with at most 2 ranks) and judges them, and runs the six ponded cases (`ax2_wet`, `ax1_wet`, `dg1_o4_wet`, `dg1_s1_wet`, `ax2_swet`, `dg1_o4_swet`) also with one rank (same executable), comparing Log.txt, the water level E0003 and the depth H0003 byte by byte. The band boundaries cross the channel and the levees |
+| `Run.sh` | Runs the 20 cases serially and judges them with `Check_wallpond.py` (about 40 s with one thread) |
+| `Run_MPI.sh [N]` | Runs all cases with N ranks (default 2; N ≤ 4; `ax2_mask`, which computes only two rows, with at most 2 ranks) and judges them, and runs the seven ponded cases (`ax2_wet`, `ax1_wet`, `dg1_o4_wet`, `dg1_s1_wet`, `ax2_swet`, `dg1_o4_swet`, `ob2_wet`) also with one rank (same executable), comparing Log.txt, the water level E0003 and the depth H0003 byte by byte. The band boundaries cross the channel and the levees |
 | `Check_wallpond.py` | Judgement: (1) the channel level differs by at most 1 mm between the ponded and the dry landside, (2) the channel level of `ax2` with a dry landside differs by at most 1 mm from `mask`, `levee` and `sdry` (seawall with dry land), (3) the pond level stays within 1 mm of its initial value and does not change from 2 to 3 hours, (4) the channel level changes by at most 2 mm from 2 to 3 hours, (5) the depth at mid-reach of `ax2` and `ax1` is within 1 % of the Manning uniform-flow depth |
 | `make_wallpond.py` | Writes the input (ground, roughness, mask, initial depth, channel mask, channel width, crest, sea-side mask, boundary tables) and the settings `p_<case>.txt` |
 
@@ -76,9 +79,11 @@ Maximum difference of the water level over the channel cells between the ponded 
 | `dg1_s1` (scheme 1) | 0.073 m | 0.000 m |
 | `ax2_s` (seawall, two-cell strip) | 0.354 m | 0.000 m |
 | `dg1_o4_s` (seawall, staircase) | 0.133 m | 0.000 m |
+| `ob2` (26.6° thickened two-cell band) | 0.042 m | 0.000 m |
 
-The version just before the fix fails judgement (1) in these seven cases (for the two coastal-levee cases, the version
-before the seawalls were included in the advection term and the reassignment of openings; §134.9). In that version
+The version just before the fix fails judgement (1) in these eight cases (for the two seawall cases, the version
+before the seawalls were included in the advection term and the reassignment of openings; §134.9; for `ob2`, the version
+in which the merge judgement of the lateral-face rule read the depth of the pond behind the wall; §134.10). In that version
 `ax2` with a seawall and dry land also differed by 0.252 m from the configuration that does not compute the land
 (conveyance width 0.919 times, because there was no reassignment of openings for seawalls) and failed judgement (2). In the ponded `ax2` case the conveyance
 width back-calculated from the uniform-flow depth and the surface slope was 0.919 times the channel width (1.000
