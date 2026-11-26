@@ -6,7 +6,7 @@
 
 This case verifies the operation rules of the dams of the structure module
 (`&list_struct_dam`) by agreement with the formulas at every recorded row and
-by the volume conservation of a closed system (developer.md Sec. 131). It covers
+by the volume conservation of a closed system (developer.md Sec. 132). It covers
 
 - the constant-release method (mode 1 + the restricted level `dam_hlim`)
 - the constant-rate constant-release method up to the peak (mode 2 + the

@@ -115,7 +115,7 @@
       "target": "docs/en/users_guide.md",
       "source_sha256": "e986eee437ff1ddc744282d0e638db238c1d35c185cd17b8b93e4a4438d95544",
       "target_sha256": "9d4829a3a804c9863866e19c0716ec24bf0bdc45d19dd01fae621f4e659ff09d",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §131; both files compared)",
+      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -358,7 +358,7 @@
       "target": "docs/en/users_guide/hydraulics.md",
       "source_sha256": "d1580b9eb267b03f2bae07bf7d0eb9207b2ac27f55e8fac4f24235db558bfc70",
       "target_sha256": "b70f767a26fe6fccb13f6cf3333f8882d01a05c960954b2ec3ce52b1e3278fc7",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §131; both files compared)",
+      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -448,7 +448,7 @@
       "target": "docs/en/users_guide/params_index.md",
       "source_sha256": "b6134932acd9c3341dfa72771f4204fa808248c8a80ac15866dd076d85dc18ea",
       "target_sha256": "850d9088d09cca3b63662b8c9c9fc9ed27c61cef3ea8a7a36c3e08aece4b8ad3",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §131; both files compared)",
+      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -529,7 +529,7 @@
       "target": "docs/en/users_guide/structure.md",
       "source_sha256": "f4440fcfbd7cc3dadda3ab658d41272125c6739b198435b52bab47c9768700c5",
       "target_sha256": "2c9608c61fc7938e366cd5cd88da5ba1f2d9898b68153297a9ad80a940fc21a0",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §131; both files compared)",
+      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -583,7 +583,7 @@
       "target": "docs/en/users_guide/usecases.md",
       "source_sha256": "f702d3be3a31293e8f3dd001c36b45f603d2fabd9de349e6282fd1039b8d09ed",
       "target_sha256": "397d5fcade8e2cbbb0adc20b1f9a947a96e9ce7369393e579d0dada1d4300852",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §131; both files compared)",
+      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -853,7 +853,7 @@
       "target": "examples/List_samples/en/list_structure.txt",
       "source_sha256": "a9909efc220c3b2e461291ab5314a9d3704df716575125b0f539bdd6f71cb855",
       "target_sha256": "9301cff612c4d20982fc13932e719ff51039cf9b85a37fe119007bfb68999302",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §131; both files compared)",
+      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -4066,7 +4066,7 @@
       "target": "test/README.en.md",
       "source_sha256": "852ec1208b5b1bbee66bb0b8f528546d7710d908af9f81349182ddfbfa90b8c1",
       "target_sha256": "5107677216a0e3a61c4f5f8df5cedf6ffb53bb7dc90de974f7030c9dd93a683e",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §131; both files compared)",
+      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -4487,9 +4487,9 @@
     {
       "source": "test/damops/README.md",
       "target": "test/damops/en/README.md",
-      "source_sha256": "d8c75d78438cf176a01634de00247a9cba8a35d0e5729eb2e1361a6e767c11ad",
-      "target_sha256": "7b41305b0f9eca71a417e34c261f3e1a696f1c4b361413b7d4da272bc9adf8cd",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §131; both files compared)",
+      "source_sha256": "349a01dda9b98db2ea44f119745d88481813f5889d73216bd34b130089f74e91",
+      "target_sha256": "2bb137343f0c7bb090d8c3548ff7b759a2c78ea5ef7bfe4a07e35bf8d0bd2b0c",
+      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },

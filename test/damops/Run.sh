@@ -1,5 +1,5 @@
 #!/bin/bash
-# damops: 逐次実行 + 回帰テスト(ダムの運転則。developer.md §131)
+# damops: 逐次実行 + 回帰テスト(ダムの運転則。developer.md §132)
 #   ./Run.sh [-u]
 # 回帰(Log.txt と 7 基のダム CSV)に加えて reference 非依存の検定を行う:
 #   Check_damops.py rules : 運転則の式・時系列との一致、流入 = 1 歩前のソースの流量、

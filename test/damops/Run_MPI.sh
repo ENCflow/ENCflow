@@ -1,5 +1,5 @@
 #!/bin/bash
-# damops: MPI 実行 + 回帰テスト(ダムの運転則。developer.md §131)
+# damops: MPI 実行 + 回帰テスト(ダムの運転則。developer.md §132)
 #   ./Run_MPI.sh [ランク数] [-u]
 # 逐次 reference との比較は ULP=1(reference を作ったマシンと CPU の違うマシンでは、Log.txt の S の
 # 最終桁が変わり得る。Run.sh の注)。同じマシンでは

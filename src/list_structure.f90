@@ -14,7 +14,7 @@ module list_structure
   !                          fn_dam_map / dam_hmin / dam_hsur / 水位固定
   !                          湖沼は 2026-08-20。lake_plan.md。実績の再生の
   !                          時系列モード 4・5 と制限水位・洪水調節開始流量は
-  !                          2026-11-26 = developer.md §131)
+  !                          2026-11-26 = developer.md §132)
   ! グループ不在は正常(その型なし。present_* が偽のまま)。
   ! 構文エラー(iostat>0)は par_stop。
   use m_sysparam, only : t_sysparam
@@ -83,13 +83,13 @@ module list_structure
                                                    !   最低2点(最低水位・サーチャージ)
     integer :: f_dam_mode(1:nstmax) = 0            ! 運転モード (1:一定量, 2:一定率カット,
                                                    !   3:自然調節, 4:放流量の時系列,
-                                                   !   5:貯水位の時系列。§131)
+                                                   !   5:貯水位の時系列。§132)
     real :: dam_q0(1:nstmax) = -9999.0             ! モード1: 一定放流量 (m3/s)
     real :: dam_rate(1:nstmax) = -9999.0           ! モード2: 放流率 r (0-1)
     real :: dam_qon(1:nstmax) = -9999.0            ! モード2: 洪水調節開始流量 (m3/s。流入が
-                                                   !   これ以下は流入を流す。§131)
+                                                   !   これ以下は流入を流す。§132)
     real :: dam_hlim(1:nstmax) = -9999.0           ! モード1,2: 制限水位 (標高 m。運転の放流は
-                                                   !   この水位より下げない。省略時=最低水位。§131)
+                                                   !   この水位より下げない。省略時=最低水位。§132)
     real, allocatable :: dam_qout_val(:,:,:)       ! モード4: 放流量の時系列 (時刻 min, m3/s)
     real, allocatable :: dam_h_val(:,:,:)          ! モード5: 貯水位の時系列 (時刻 min, 標高 m)
     real, allocatable :: dam_hq_rule(:,:,:)        ! モード3(a): H-Q 折れ線 (水位 m, m3/s)
@@ -99,7 +99,7 @@ module list_structure
     real :: dam_ori_ce(1:nstmax) = -9999.0         ! モード3(b): 流入損失係数 (省略時 0.5)
     real :: dam_qmax(1:nstmax) = -9999.0           ! 計画最大放流量 (m3/s)。モード3(c): サーチャージ
                                                    !   時の放流量(√則で自動構成)。モード2: 放流量の
-                                                   !   上限(§131)
+                                                   !   上限(§132)
     real :: dam_zbase(1:nstmax) = -9999.0          ! モード3(c): √則の敷高 (m。省略時=最低水位)
     real :: dam_tadashigaki(1:nstmax) = -9999.0    ! 但し書き開始水位 (m。モード1,2。
                                                    !   省略時=最低+0.9×(サーチャージ−最低))

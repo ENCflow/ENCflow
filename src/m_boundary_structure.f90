@@ -1066,17 +1066,17 @@ end subroutine
 !     3: 自然調節 = 水位—放流の rating。指定は3段階(優先順):
 !        (a) dam_hq_rule 折れ線 / (b) オリフィス諸元 →係数前計算 /
 !        (c) dam_qmax(計画最大放流量)1点アンカーの √則(要サーチャージ)
-!     4: 放流量の時系列 dam_qout_val / fn_dam_qout_val(実績の再生。§131)
+!     4: 放流量の時系列 dam_qout_val / fn_dam_qout_val(実績の再生。§132)
 !     5: 貯水位の時系列 dam_h_val / fn_dam_h_val(各歩の終わりの貯水量を
 !        目標水位の貯水量に合わせる放流。dam_h_init の省略時は時系列の
-!        計算開始時刻 t0 の値。湖沼参照構造物からの参照は不可。§131)
+!        計算開始時刻 t0 の値。湖沼参照構造物からの参照は不可。§132)
 !   モード1,2 の制限水位 dam_hlim: 運転の放流はこの水位の貯水量 vfl より
 !   下げない(省略時 vfl = Vmin = 従来の死水の下限)。モード2 の洪水調節
 !   開始流量 dam_qon と放流量の上限 dam_qmax: 流入 ≤ Qon は Qon を目標
 !   (床では流入をそのまま流し、床より上なら Qon で戻す)、流入 > Qon は
 !   min(Qon + r(Qin − Qon), Qmax)= 一定率一定量放流方式のピークまでの形
 !   (ピーク後の一定量は履歴が要るので持たない)。どちらも指定がなければ
-!   従来の一定率カットの経路(ビット一致。§131)
+!   従来の一定率カットの経路(ビット一致。§132)
 !   放流セルなし(dam_out_cell / fn_dam_out_cell とも未指定)は
 !   水位固定湖沼: 流入は全量消失、水位は dam_h_init(必須)で一定。
 !   HV・運転モードの指定は矛盾としてエラー。dmode=0 で標識
@@ -1264,7 +1264,7 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       end if
       ! 貯水位の時系列(モード5)は主放流が湖水位を決めるので、追加の放流工が
       ! 同じ湖から引くと水位が目標からずれる。2 つの運転が同じ水位を決め合う
-      ! 組み合わせは止める(§131)
+      ! 組み合わせは止める(§132)
       if (b%struct(itgt)%dmode == 5) then
         call par_stop("list_struct_dam: structure "//itoa(id)//" cannot reference lake " &
                       //itoa(list%dam_lake(id))//" operated by a water-level time series " &
@@ -1302,7 +1302,7 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       have_base = .true.
     end if
 
-    !--- 時系列・制限水位・洪水調節開始流量とモードの対応(§131)。対応しない
+    !--- 時系列・制限水位・洪水調節開始流量とモードの対応(§132)。対応しない
     !    モード(水位固定湖沼の 0 を含む)への指定は黙って捨てずに止める ---
     have_qts = len_trim(list%fn_dam_qout_val(id)) > 0 .or. list%dam_qout_val(1,1,id) > -9998.0
     have_hts = len_trim(list%fn_dam_h_val(id)) > 0 .or. list%dam_h_val(1,1,id) > -9998.0
@@ -1440,7 +1440,7 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
                         //" (mode 1) requires dam_q0 >= 0")
         end if
         b%struct(ist)%geom(4) = list%dam_q0(id)
-      case (2)      ! 一定率カット(+洪水調節開始流量・放流量の上限。§131)
+      case (2)      ! 一定率カット(+洪水調節開始流量・放流量の上限。§132)
         if (list%dam_rate(id) < 0.0 .or. list%dam_rate(id) > 1.0) then
           call par_stop("list_struct_dam: dam "//itoa(id) &
                         //" (mode 2) requires dam_rate (release ratio in [0,1])")
@@ -1518,7 +1518,7 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
           call par_stop("list_struct_dam: dam "//itoa(id)//" (mode 3 = natural regulation) " &
                         //"requires one of dam_hq_rule, orifice parameters, or dam_qmax")
         end if
-      case (4)      ! 放流量の時系列(実績の再生。§131)
+      case (4)      ! 放流量の時系列(実績の再生。§132)
         call read_dam_series(p, list%fn_dam_qout_val(id), list%dam_qout_val, id, &
                              "dam_qout_val", b%struct(ist)%nts, b%struct(ist)%ts)
         do k = 1, b%struct(ist)%nts
@@ -1527,7 +1527,7 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
                           //" must be >= 0")
           end if
         end do
-      case (5)      ! 貯水位の時系列(実績の再生。§131)
+      case (5)      ! 貯水位の時系列(実績の再生。§132)
         call read_dam_series(p, list%fn_dam_h_val(id), list%dam_h_val, id, &
                              "dam_h_val", b%struct(ist)%nts, b%struct(ist)%ts)
         do k = 1, b%struct(ist)%nts
@@ -1547,7 +1547,7 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
     ! モード1,2の但し書き・スピルはサーチャージ水位を要する(例外:
     ! 素通し rate=1.0 は貯留が動かないため不要。lake_plan.md §3.3)。
     ! モード2 の放流量の上限(dam_qmax)は上限を超えた流入を貯めるので、
-    ! rate=1.0 でもサーチャージ水位を要する(§131)
+    ! rate=1.0 でもサーチャージ水位を要する(§132)
     if (.not. have_sur) then
       if (b%struct(ist)%dmode == 1 .or. &
           (b%struct(ist)%dmode == 2 .and. b%struct(ist)%geom(5) < 1.0)) then
@@ -1588,7 +1588,7 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
     end if
 
     !--- 制限水位(モード1,2。運転の放流が下げない床。省略時は Vmin =
-    !    従来の死水の下限で、clamp の式も値も従来と同じ = ビット一致。§131)。
+    !    従来の死水の下限で、clamp の式も値も従来と同じ = ビット一致。§132)。
     !    但し書きの開始水位より低いこと(床の上で但し書きが始まる順序) ---
     b%struct(ist)%vfl = b%struct(ist)%geom(1)
     if (list%dam_hlim(id) > -9998.0) then
@@ -1611,7 +1611,7 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
     end if
 
     !--- 初期水位(省略時=最低水位=空虚。貯水位の時系列(モード5)は時系列の
-    !    計算開始時刻 t0 の値 = 記録の水位から立ち上がりなく追従する。§131。
+    !    計算開始時刻 t0 の値 = 記録の水位から立ち上がりなく追従する。§132。
     !    参照構造物は貯留を持たない) ---
     if (.not. is_ref) then
       if (list%dam_h_init(id) > -9998.0) then
@@ -1633,7 +1633,7 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       end if
       b%struct(ist)%geom(8) = struct_v_of_h(b%struct(ist), hini)
 
-      ! 設定の見落としの注意(表示だけで結果は変えない。§131):
+      ! 設定の見落としの注意(表示だけで結果は変えない。§132):
       ! (1) 一定量放流(モード1)と洪水調節開始流量つきのモード2は、流入が
       !     少ない間も放流して床まで下げる。初期水位が最低水位より高いのに
       !     床(dam_hlim)がなければ、洪水の前に最低水位まで下げる
@@ -1714,7 +1714,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! ダムの時系列(モード4: 放流量、モード5: 貯水位。§131)を読む。
+! ダムの時系列(モード4: 放流量、モード5: 貯水位。§132)を読む。
 !   ファイル指定(各行 "時刻(min) 値")が namelist より優先(境界条件の
 !   時系列と同じ規約)。時刻は秒に換算する。補間は interp_series(線形。
 !   範囲外は端の値)。同じ時刻の点を重ねると、その時刻で値が段に変わる
@@ -1758,7 +1758,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! モード2 の洪水調節開始流量・放流量の上限つきの目標放流体積(§131)。
+! モード2 の洪水調節開始流量・放流量の上限つきの目標放流体積(§132)。
 !   流入 Qin ≤ Qon: Qon(床では呼び出し側の clamp で流入をそのまま流す
 !                   = 貯水位を保つ。床より上なら Qon で床まで戻す)
 !   流入 Qin > Qon: min(Qon + r(Qin − Qon), Qmax)(一定率一定量放流方式の
@@ -1933,7 +1933,7 @@ end subroutine
 !   但し書き(モード1,2): V_tad→Vmax の間で放流を流入へ線形漸増。
 !   サーチャージ超過は強制スピル。引き落とし下限は床 vfl(制限水位
 !   dam_hlim の貯水量。省略時は Vmin = 死水)。
-!   時系列モード(§131): 4 = その時刻の放流量、5 = この歩の終わりの貯水量を
+!   時系列モード(§132): 4 = その時刻の放流量、5 = この歩の終わりの貯水量を
 !   目標水位の貯水量に合わせる放流(流入が足りなければ 0)。時刻は s%t
 !   (この歩の終わりの時刻。境界条件の時系列と同じ時相)。但し書きなし
 !----------------------------------------------------------------------
@@ -1974,13 +1974,13 @@ module subroutine dam_operate(b, ist, p, g, s, vabs_row, vrow, vdraw)
         vt = reff * a
       else
         ! 洪水調節開始流量・放流量の上限つき(一定率一定量放流方式のピークまでの形。
-        ! §131)+但し書き
+        ! §132)+但し書き
         vt = dam_rate_target(b%struct(ist), a, p%dt)
         vt = vt + ramp * max(a - vt, 0.0)
       end if
-    case (4)      ! 放流量の時系列(実績の再生。§131)
+    case (4)      ! 放流量の時系列(実績の再生。§132)
       vt = max(interp_series(b%struct(ist)%ts, b%struct(ist)%nts, s%t), 0.0) * p%dt
-    case (5)      ! 貯水位の時系列(この歩の終わりの貯水量 = 目標水位の貯水量。§131)
+    case (5)      ! 貯水位の時系列(この歩の終わりの貯水量 = 目標水位の貯水量。§132)
       vt = max(vnow - struct_v_of_h(b%struct(ist), &
                interp_series(b%struct(ist)%ts, b%struct(ist)%nts, s%t)), 0.0)
     case default  ! 3: 自然調節 = rating(H(V))
@@ -2085,11 +2085,11 @@ module subroutine dam_draw(b, ist, p, g, s, vdraw)
         reff = b%struct(ist)%geom(5) + (1.0 - b%struct(ist)%geom(5)) * ramp
         vt = reff * a
       else
-        ! 洪水調節開始流量・放流量の上限つき(湖沼の流入 A に対して。§131)+但し書き
+        ! 洪水調節開始流量・放流量の上限つき(湖沼の流入 A に対して。§132)+但し書き
         vt = dam_rate_target(b%struct(ist), a, p%dt)
         vt = vt + ramp * max(a - vt, 0.0)
       end if
-    case (4)      ! 放流量の時系列(取水量などの実績の再生。§131)
+    case (4)      ! 放流量の時系列(取水量などの実績の再生。§132)
       vt = max(interp_series(b%struct(ist)%ts, b%struct(ist)%nts, s%t), 0.0) * p%dt
     case default  ! 3: 自然調節 = rating(H(V))(5 は init が止める)
       hh = struct_h_of_v(b%struct(ist), vnow)
