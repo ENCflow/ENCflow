@@ -9,8 +9,7 @@
   figs/village.png    集落の最大流動深と家屋の破壊率(基本・粗い土砂・仮排水路)
   figs/spread.png     流入量を少し変えた計算の流量(結果の幅。連鎖の基本ケース、天端が水平な堤体、天端が傾いた堤体の
                       10 m 格子と 5 m 格子)と、天端の横断形
-  figs/formation.png  堤体のできかたの比較(間隙水の扱い・斜面安定判定の選択子・格子間隔)
-  figs/film.png       薄い膜の下に残る土層(f_slide_noflow の 1 と 2、slide_dmax、格子間隔)
+  figs/formation.png  堤体のできかたの比較(間隙水の扱い・斜面安定判定の選択子・格子間隔・判定する深さ)
   figs/breach.png     堤体をはじめから置く系列の流量(湛水量・堤体の形・粒径・流入量・下流の勾配と格子・式)
   figs/breach_sum.png 同じ系列のピーク流量と立ち上がりの時間、経験式との比較
 数表(標準出力): 各ケースの指標。README の表はここから写す。
@@ -45,20 +44,15 @@ TERRAIN = ListedColormap(plt.get_cmap("gist_earth")(np.linspace(0.35, 0.95, 256)
 COL = {"water": "#1f5f8b", "dep": "#8b4a10", "mix": "#c0392b", "rain": "#4a7fb5", "crest": "#5b3a1a"}
 CHAIN = ("base", "drain", "coarse", "q80")
 TDAM = 60.0     # 堤体を置く系列で、残った堤体の高さと水位を比べる時刻(分。最も短いケースの計算時間)
-FORM = ("base", "wet0", "wet2", "slide0", "g5", "dmax15")
-FILM = ("base", "noflow2", "dmax15", "dmax15_n2", "dmax15_n2_dx5")   # 薄い膜の下に残る土層の比較
-FILM_DAM = (("dam_ref", "noflow2_ref"), ("dam_face25", "noflow2_face25"))   # 同、決壊の段階(f_slide_noflow の 1 と 2)
+FORM = ("base", "wet0", "wet2", "slide0", "noflow0", "g5", "dmax15", "dmax15_dx5")
 LAB = {   # ケースの呼び名
     "base": ("基本", "base"), "drain": ("仮排水路", "drain"), "coarse": ("粗い土砂(10 cm)", "coarse (10 cm)"),
     "q80": ("流量 2 倍(80 m³/s)", "double inflow (80 m³/s)"),
     "norain": ("雨なし", "no rain"), "wet0": ("間隙水を連行しない", "no pore-water entrainment"),
     "wet2": ("保持水を授受しない", "no retained water"), "slide0": ("安定判定の選択子なし", "no stability options"),
+    "noflow0": ("濃い混合体の下も判定", "judged under a dense mixture"),
     "g5": ("5 m 格子", "5 m grid"), "dmax15": ("slide_dmax = 1.5 m", "slide_dmax = 1.5 m"),
-    "noflow2": ("f_slide_noflow = 2", "f_slide_noflow = 2"),
-    "dmax15_n2": ("slide_dmax = 1.5 m、f_slide_noflow = 2", "slide_dmax = 1.5 m, f_slide_noflow = 2"),
-    "dmax15_n2_dx5": ("slide_dmax = 1.5 m、f_slide_noflow = 2、5 m 格子", "slide_dmax = 1.5 m, f_slide_noflow = 2, 5 m grid"),
-    "noflow2_ref": ("基準の堤体、f_slide_noflow = 2", "reference dam, f_slide_noflow = 2"),
-    "noflow2_face25": ("法面 0.25 の堤体、f_slide_noflow = 2", "dam with faces 0.25, f_slide_noflow = 2"),
+    "dmax15_dx5": ("slide_dmax = 1.5 m、5 m 格子", "slide_dmax = 1.5 m, 5 m grid"),
     "dam_ref": ("基準(法面 0.12、盆地 150 m)", "reference (faces 0.12, basin 150 m)"),
     "dam_face25": ("法面 0.25(1:4)", "faces 0.25 (1:4)"), "dam_crest40": ("法面 0.25、天端 40 m", "faces 0.25, crest 40 m"),
     "dam_small": ("湛水量 小(峡谷だけ)", "small lake (gorge only)"), "dam_large": ("湛水量 大(盆地 300 m)", "large lake (basin 300 m)"),
@@ -678,10 +672,10 @@ def fig_village(cases):
 
 def fig_formation(cases, tmin=28.0):
     """堤体のできかたの比較(堤体ができた後の縦断と、堆積の平面)。"""
-    fig = plt.figure(figsize=(13.0, 7.6))
+    fig = plt.figure(figsize=(max(13.0, 1.9 * len(cases)), 7.6))
     gs = fig.add_gridspec(2, len(cases), height_ratios=[1.0, 1.15], hspace=0.3, wspace=0.12)
     ax = fig.add_subplot(gs[0, :])
-    cols = ["#c0392b", "#1f5f8b", "#2e8b57", "#8b6a10", "#4d4d4d", "#7d3c98"]
+    cols = ["#c0392b", "#1f5f8b", "#2e8b57", "#8b6a10", "#e67e22", "#4d4d4d", "#7d3c98", "#17becf"]
     c0 = cases[0]
     sel = (c0.xc > 650) & (c0.xc < 1200)
     ax.plot(c0.xc[sel], c0.thalweg(c0.z0)[sel], color="k", lw=1.0, label=T("元の河床", "original bed"))
@@ -713,64 +707,6 @@ def fig_formation(cases, tmin=28.0):
     fig.colorbar(im, cax=cax).set_label(T("堆積の厚さ (m)", "deposit thickness (m)"), fontsize=8)
     fig.text(0.125, 0.475, T("(b) 堆積の厚さ", "(b) Deposit thickness"), fontsize=10)
     fig.savefig(f"{FIGDIR}/formation.png", dpi=130, bbox_inches="tight")
-    plt.close(fig)
-
-
-def film_setting(c):
-    """崩壊の判定の設定 (f_slide_noflow, slide_dmax m, 格子間隔 m)。基本ケースの値は param.txt のもの。"""
-    return int(c.rep.get("f_slide_noflow", "1")), float(c.rep.get("slide_dmax", "3.0")), c.dx
-
-
-def fig_film(cases, tmin=28.0):
-    """薄い膜の下に残る土層: 堤体ができた後の本川の縦断と、崩壊斜面に残る土層の厚さ。"""
-    fig = plt.figure(figsize=(13.0, 7.2))
-    gs = fig.add_gridspec(2, len(cases), height_ratios=[1.0, 1.25], hspace=0.5, wspace=0.12)
-    ax = fig.add_subplot(gs[0, :])
-    cols = ["#c0392b", "#1f5f8b", "#8b6a10", "#2e8b57", "#7d3c98"]
-    c0 = cases[0]
-    sel = (c0.xc > 650) & (c0.xc < 1200)
-    ax.plot(c0.xc[sel], c0.thalweg(c0.z0)[sel], color="k", lw=1.0, label=T("元の河床", "original bed"))
-
-    def name(c):
-        n, d, dx = film_setting(c)
-        return T(f"f_slide_noflow = {n}、slide_dmax = {d:g} m、Δx = {dx:g} m",
-                 f"f_slide_noflow = {n}, slide_dmax = {d:g} m, Δx = {dx:g} m")
-
-    for c, col in zip(cases, cols):
-        k, t = c.nearest(tmin)
-        sel = (c.xc > 650) & (c.xc < 1200)
-        ax.plot(c.xc[sel], c.thalweg(c.frame("Z", k))[sel], color=col, lw=1.6, label=f"{c.name}: {name(c)}")
-    ax.set_xlabel("x (m)")
-    ax.set_ylabel(T("標高 (m)", "elevation (m)"))
-    ax.set_ylim(top=74.0)                                  # 凡例を堤体の上に置く
-    ax.legend(fontsize=8, ncol=2, loc="upper right")
-    ax.grid(alpha=0.25)
-    ax.set_title(T(f"(a) {tmin:.0f} 分の本川の縦断(谷を横切る最低点)", f"(a) Long profile of the main river at {tmin:.0f} min (lowest point across the valley)"), fontsize=10, loc="left")
-    for n, c in enumerate(cases):
-        ax = fig.add_subplot(gs[1, n])
-        k, t = c.nearest(tmin)
-        ii = (c.xc >= 760.0) & (c.xc <= 1040.0)
-        jj = (c.yc >= 340.0) & (c.yc <= 670.0)
-        ext = [c.xc[ii][0] - c.dx / 2, c.xc[ii][-1] + c.dx / 2, c.yc[jj][-1] - c.dx / 2, c.yc[jj][0] + c.dx / 2]
-        z = c.frame("Z", k)[np.ix_(jj, ii)]
-        sd = c.frame("Sd", k)[np.ix_(jj, ii)]
-        ax.imshow(hillshade(z, c.dx), cmap="gray", extent=ext, vmin=0, vmax=1)
-        im = ax.imshow(np.ma.masked_less(sd, 0.05), cmap="YlOrBr", extent=ext, vmin=0, vmax=4, alpha=0.9)
-        ax.contour(c.xc[ii], c.yc[jj], c.slab[np.ix_(jj, ii)].astype(float), levels=[0.5], colors="k", linewidths=0.7)
-        nf, d, dx = film_setting(c)
-        ax.set_title(f"{c.name}\nf_slide_noflow = {nf}\nslide_dmax = {d:g} m, Δx = {dx:g} m", fontsize=7.5)
-        ax.tick_params(labelsize=6)
-        if n:
-            ax.set_yticklabels([])
-        else:
-            ax.set_ylabel("y (m)", fontsize=7)
-            top = ax.get_position()
-        ax.set_xlabel("x (m)", fontsize=7)
-    cax = fig.add_axes([0.92, top.y0, 0.012, top.height])
-    fig.colorbar(im, cax=cax, extend="max").set_label(T("土層の厚さ (m)", "soil depth (m)"), fontsize=8)
-    fig.text(top.x0, top.y1 + 0.075, T("(b) 崩壊斜面に残る土層の厚さ(黒い線は崩積土を置いた範囲。はじめは 3 m)",
-                                     "(b) Soil depth left on the failure slope (black line: extent of the colluvium, 3 m at the start)"), fontsize=10)
-    fig.savefig(f"{FIGDIR}/film.png", dpi=130, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -919,32 +855,6 @@ def table_formation(cases, tmin=28.0):
         print(f"| {c.name} | {f(fail_time(s), '%.0f')} | {s[i, 5]:.1f} | {s[i, 7]:.0f} | {s[i, 2] / 1e4:.1f} | {s[i, 3] / 1e4:.1f} | {s[i, 1] / 1e4:.1f} |")
 
 
-def table_film(cases, tmin=28.0):
-    print("\n| ケース | f_slide_noflow | slide_dmax (m) | 格子間隔 (m) | 斜面に残る崩積土 (万 m³) | 土層の残るセルの割合 (%) | 堤体の高さ (m) | 本川の堆積 (万 m³) | 支流の堆積 (万 m³) |")
-    print("|---|---|---|---|---|---|---|---|---|")
-    for c in cases:
-        s = series(c)
-        i = int(np.argmin(np.abs(s[:, 0] - tmin)))
-        n, d, dx = film_setting(c)
-        sd = c.frame("Sd", c.frames[i][0])
-        frac = 100.0 * (c.slab & (sd > 0.01)).sum() / c.slab.sum()
-        print(f"| {c.name} | {n} | {d:g} | {dx:g} | {s[i, 1] / 1e4:.1f} | {frac:.0f} | {s[i, 5]:.1f} | {s[i, 2] / 1e4:.1f} | {s[i, 3] / 1e4:.1f} |")
-
-
-def table_film_dam(done, mets):
-    """決壊の段階での f_slide_noflow の 1 と 2 の違い(堤体をはじめから置く、天端が水平な 2 ケース)。"""
-    rows = [(a, b) for a, b in FILM_DAM if a in done and b in done and mets[a]["qpk"] and mets[b]["qpk"]]
-    if not rows:
-        return
-    print("\n| ケース | f_slide_noflow | ピーク流量 (m³/s) | 1 との差 (%) | 越流の開始からピークまで (分) | 集落のピーク流量 (m³/s) | 60 分の堤体の高さ (m) |")
-    print("|---|---|---|---|---|---|---|")
-    for a, b in rows:
-        for n in (a, b):
-            m = mets[n]
-            diff = "—" if n == a else f"{(m['qpk'] / mets[a]['qpk'] - 1.0) * 100.0:+.1f}".replace("-", "−")
-            print(f"| {n} | {film_setting(done[n])[0]} | {m['qpk']:.0f} | {diff} | {m['tpk'] - m['tov']:.1f} | {m['qpk_v']:.0f} | {m['hdam1']:.1f} |")
-
-
 def main():
     fig_setup()
     cases = {n: Case(n) for n in M.CASES}
@@ -982,11 +892,6 @@ def main():
     if len(form) > 1:
         fig_formation(form)
         table_formation(form)
-    film = [done[n] for n in FILM if n in done]
-    if len(film) > 1:
-        fig_film(film)
-        table_film(film)
-    table_film_dam(done, mets)
     dams = {n: done[n] for n in M.DAMS if n in done}
     if dams:
         fig_breach(dams)
