@@ -923,9 +923,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "431ea35414d53124e166e70778307972d4861e56fa407cea7df7eac7fa0423cd",
-      "target_sha256": "29a7fd5b7af7ef902b9f9646f2567611f9a72bc65cfb2d485e6322f5502ed19a",
-      "reviewer": "Claude (Claude Code session; merge of main into the confluence_backwater branch: both languages carry the changes of both sides (main's rows and the new confluence_backwater row); merged lines compared side by side, the rest unchanged since the records of the two sides)",
+      "source_sha256": "990bf631a9090f9a52361b750685dc2207233c1aeda16fb402bf1fb767c59f07",
+      "target_sha256": "0e500cd66cd5c5f13ebe2102407ced39fe9d05c3cea1df4989be0440445db511",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
