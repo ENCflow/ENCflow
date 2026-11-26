@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "6f70d13a23c596dcc0d01a2e5a852d4c67ec5d9fdd8886e23779467af8ee6024",
-      "target_sha256": "52cf7af2fa89c0275fe376d4177de0f44e4d95061a464f1f0bbe911a6eb147de",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "c1fea572d2bb55ebca7b913227473baf5ccbd8cf929d98afe5ffaac5e3117210",
+      "target_sha256": "356039d99771aff6f03bf41107c5209acad2f9fc6407f59e04feecce0d198a08",
+      "reviewer": "Claude (Claude Code session; the row of volcanic flows and snow avalanches (path entrainment by the velocity-proportional or the Hungr law, momentum of the entrained mass) compared side by side with the Japanese source; the other rows are as recorded before)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/developer.md",
@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "6930f8569678edeb89b4d5dd20e103e3e1272387ffd08b9dd0867a55af5f39e5",
-      "target_sha256": "96db640ca4829a8ea2caa16dbc4bcf7f1cd430d9dd735baf2a03919bd2a9fa62",
-      "reviewer": "Claude (Claude Code session; merge of main and the paddy-dam branch: both sides changes present in both files, parameter count 862 checked, no model execution)",
+      "source_sha256": "1fa989667b38ac8f03a0ae3ce06beebf7ab3a5ea724dd1e6aee82652885fa203",
+      "target_sha256": "b4e7455f160a59d5e23d647338f38ae44b256a03116dbd5095a7aee953f1cc72",
+      "reviewer": "Claude (Claude Code session; merge of main (paddy-field dams) into the work branch: both languages carry the additions of both sides (the paddy rows from main, and the snow-avalanche, entrainment-parameter and test/vchannel rows of this branch); merged lines compared side by side, parameter count 865 checked by tools/params_index; the rest unchanged since the records of the two sides)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -311,20 +311,20 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "baff2e41378d1bb85cb057e768df1562c626ff2be07fd0ca15223820e8d61f30",
-      "target_sha256": "5eb0cdf42abaeb7f35c98d78338111955f2ddb1066211140bdfe32fd94ac7753",
-      "reviewer": "Claude (Claude Code session; the part changed for the example snow_avalanche: the link added to the list of verified cases and examples, compared side by side with the Japanese source)",
+      "source_sha256": "e1c0744a79e59947fb47eb144af9e461311cc4cbe0f9ffcd1653888c3ab2537d",
+      "target_sha256": "77b8820efe778f285812309896d60ecfef8ff6db8fe2a261731a43b2e0791918",
+      "reviewer": "Claude (Claude Code session; the parts changed for the entrainment-law options: the f_dbed and db_delte rows and the new rows db_er, db_hent and f_dbmom of the debris-flow parameter table, compared side by side with the Japanese source)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "ce33d051c9b8eda60900239f28130e7cc90fc94da01af253ce660e9ffa2fffd0",
-      "target_sha256": "2afc50e9fe42f270494701d9c2d0bf1f03572c6667a0541d14768bb5eeda5b63",
-      "reviewer": "Claude (Claude Code session; the parts changed for the example snow_avalanche in section 5 (snow avalanches): the new item on exchanging the carrier with the snow (f_dbwet = 1, db_satbed = db_relsat, threshold depth dd), limits (5) to (7) and the link to the example, compared side by side with the Japanese source)",
+      "source_sha256": "a11ca4d5b2cca1c6e63f1a75c5c4022ad5dd0505cc4a9b95b5325f27d164766c",
+      "target_sha256": "7cf4a41fa1c104684ff81da458758792296c4c02df049e1224dc509fb8f5fac9",
+      "reviewer": "Claude (Claude Code session; the scope of the recommendation f_opening_dynamic = 0 narrowed to V-shaped gullies, and the limit for valleys with a flat floor added, in both languages in the same work (comparison on the example debris_fan, developer.md §130.11); the changed passages compared side by side and their numbers checked against the comparison runs; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "edb8e1b001f1d094a10ac79f244dee65865fa3a594dfe8dcdc33e3a0f12b3787",
-      "target_sha256": "91bd3a3779b7631944e84275138de53f38da5502f8085921a5978c95a3b74ecf",
-      "reviewer": "Claude (Claude Code session; the parts changed for the example snow_avalanche: the new paragraph on the accuracy limits of the velocity-proportional entrainment (developer record section 126.5) and the new row of the table of verification cases, compared side by side with the Japanese source)",
+      "source_sha256": "a77a9ab3863073985e649b9c06df0a8f15caa147b55674c1a1ba6dbdf4c3e068",
+      "target_sha256": "fd0c675b0fb465e50ef4d7d02e817c505ab77dcde37c7a8f4c0513a09914d847",
+      "reviewer": "Claude (Claude Code session; the snow_avalanche citation in section 3 and the verification-table row updated to the recomputed values in both languages in the same work; the changed passages compared side by side, the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -446,20 +446,20 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "06a093531ded01e66cf4336c5b013d8d01afb2bbd196dae77ef217c3fa4d0892",
-      "target_sha256": "3e64312642c60262460975b7164d9450af6ae99b075103b4f57ae59b99c6417d",
-      "reviewer": "Claude (Claude Code session; merge of main and the paddy-dam branch: both sides changes present in both files, parameter count 862 checked, no model execution)",
+      "source_sha256": "c25894593b12a4049a1fbcc8ac8b300a993f654c9fcb66013128510441ec61ef",
+      "target_sha256": "cf1952c1d6c031f28b5bda81f1b3002ff249e7109dca3a3a3e67884353e3f05e",
+      "reviewer": "Claude (Claude Code session; merge of main (paddy-field dams) into the work branch: both languages carry the additions of both sides (the paddy rows from main, and the snow-avalanche, entrainment-parameter and test/vchannel rows of this branch); merged lines compared side by side, parameter count 865 checked by tools/params_index; the rest unchanged since the records of the two sides)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "1521e2ee68f41a51e6286219bd5a09664abad0fa510571c49b4180ac7cbfff44",
-      "target_sha256": "1aa8141ae21e5b3df076dd4b3a2b28b1d0d7c3a830a140ac6f23c9b313e1ea1e",
-      "reviewer": "Claude (Claude Code session; values of the v-shaped benchmark updated after the example was recomputed with the 2026-11-21 advection defaults; both files compared)",
+      "source_sha256": "6284ee152f8a672717db61cba0aa56ea94d06c8f8b00ef46c2a1c725da11f824",
+      "target_sha256": "a9c84ca8aafa4682762f22a4b0149e262d85f126a6f9332bbd820a3493c9291a",
+      "reviewer": "Claude (Claude Code session; the scope of the recommendation f_opening_dynamic = 0 narrowed to V-shaped gullies, and the limit for valleys with a flat floor added, in both languages in the same work (comparison on the example debris_fan, developer.md §130.11); the changed passages compared side by side and their numbers checked against the comparison runs; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -581,9 +581,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "868c40df15f417ca1c749d1c0df6202b7bf96ebb46c3b036bac981b473f17ba3",
-      "target_sha256": "88a5cdfe735f6c6f9fa39fabe53231e2104454f327aff8c38265be2322fc7618",
-      "reviewer": "Claude (Claude Code session; row for the new example confluence_backwater added in both files and compared)",
+      "source_sha256": "ecc3e4df82d544fe39e8ac4e44032a062ddf682ca7f492fac39d32b2a0ed0d19",
+      "target_sha256": "9a10df18e1cb74af725e0fcc5f8c888fb6222639929489f2b693aac73498c8b4",
+      "reviewer": "Claude (Claude Code session; merge of main into the confluence_backwater branch: both languages carry the changes of both sides (main's rows and the new confluence_backwater row); merged lines compared side by side, the rest unchanged since the records of the two sides)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -698,11 +698,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "6cd2ef08b7933b6bea2c4dc377706b58d824dd9466538e31949d98b28cada8eb",
-      "target_sha256": "3aabeadc3c5eef84cc1114bc9389acb311fb71094a0ba16032bfd8c6eb5c9b85",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "0898b2976f4aef4ece4788d16f15deb8d7abdbc204307e26666d632409318981",
+      "target_sha256": "c5d8797228ac319695f4222bb3c8d3e57ed45b7caddb3c7302fc107865a33e92",
+      "reviewer": "Claude (Claude Code session; the scope of the recommendation f_opening_dynamic = 0 narrowed to V-shaped gullies, and the limit for valleys with a flat floor added, in both languages in the same work (comparison on the example debris_fan, developer.md §130.11); the changed passages compared side by side and their numbers checked against the comparison runs; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
@@ -725,11 +725,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "22ed51daa26dbfe891851c3179d190553bd6fa717ec07bbdc3b52a48d4d0f272",
-      "target_sha256": "fab8ef704a07cb3db49aff9d84a63118b6b43150b605e7427983b5ac10217e9b",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "9cac8bcd6ff3f151e46077978f562504b66b36b3469e4f31fcba51dec7c31da5",
+      "target_sha256": "fc768ed33071de2a91d65690e0e3f8fc1368a4bf660a3a445b3ae4f4baf112d3",
+      "reviewer": "Claude (Claude Code session; the changed comment of f_dbed and db_delte and the new lines db_er, db_hent and f_dbmom: values and identifiers identical, comments compared with the Japanese source)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -923,9 +923,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "28e777205b26faf4c7448d9e2b675666f41dde04077207197ae679141ecabd0f",
-      "target_sha256": "a140c2a0aabf6417a743007670e4e2399a0114f58499e39c45c86097ae02a1c8",
-      "reviewer": "Claude (Claude Code session; row for the new example confluence_backwater added in both files and compared)",
+      "source_sha256": "431ea35414d53124e166e70778307972d4861e56fa407cea7df7eac7fa0423cd",
+      "target_sha256": "29a7fd5b7af7ef902b9f9646f2567611f9a72bc65cfb2d485e6322f5502ed19a",
+      "reviewer": "Claude (Claude Code session; merge of main into the confluence_backwater branch: both languages carry the changes of both sides (main's rows and the new confluence_backwater row); merged lines compared side by side, the rest unchanged since the records of the two sides)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -3362,54 +3362,54 @@
     {
       "source": "examples/snow_avalanche/README.md",
       "target": "examples/snow_avalanche/en/README.md",
-      "source_sha256": "8daac354ce9e3e70321a5895caf51d380896348a753f7a6bedca2a6fe5dfa75c",
-      "target_sha256": "dbc5b92b61575f083ea111bd5a4881df000aced98e085fca10e193430453d801",
-      "reviewer": "Claude (Claude Code session; new example written and translated in the same session: structure, tables and numbers compared with the Japanese source; numbers checked against the example runs)",
+      "source_sha256": "59fee480bbaa1da7ea5e6e57ce059420129cd7fd50181991414a097b998490cf",
+      "target_sha256": "6d99bfcf408de7e5352dd8131c3639a80046dd19c72c8dbc4542f433efdb2b73",
+      "reviewer": "Claude (Claude Code session; the scope of the recommendation f_opening_dynamic = 0 narrowed to V-shaped gullies, and the limit for valleys with a flat floor added, in both languages in the same work (comparison on the example debris_fan, developer.md §130.11); the changed passages compared side by side and their numbers checked against the comparison runs; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/snow_avalanche/figs/dam.png",
       "target": "examples/snow_avalanche/en/figs/dam.png",
-      "source_sha256": "8c023f7d6299230d7abc98e63b533f3603fb23de1da8c3fb430146fa3311e080",
-      "target_sha256": "8ad28fd8ae0bf6ff7273822627047b36c2b11995f4a866c26204aac4ec4585e4",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "source_sha256": "27cc99e544f47eb11bf9e8cbe0992b1c7a008663f0e2e7e493c2321789c66bf3",
+      "target_sha256": "cc3e4c5bf93c4c107424c8ae6f936f75435f7a3d6c1b2728ca08d8fb0bea5b75",
+      "reviewer": "Claude (Claude Code session; both language versions redrawn by plot_results.py from the recomputed runs; the English figure was viewed and its labels and values compared with the Japanese figure)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/snow_avalanche/figs/entrain.png",
       "target": "examples/snow_avalanche/en/figs/entrain.png",
-      "source_sha256": "86d1ad0fb74b7524cad1500a1b43d78a44d4008d3c17d605e38ad4c68143095e",
-      "target_sha256": "9754aa596b2a6162217d845885eedc8967032d7dbe7f15c1b730787a36c185c7",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "source_sha256": "ff22f393d6eba0fd92651008f964e70192c1ccad86c1531e3be3d764348ffa5b",
+      "target_sha256": "4eb80603d20fc8c5571cddc5df8c73d12f990080168a80f022179723f3166d54",
+      "reviewer": "Claude (Claude Code session; both language versions redrawn by plot_results.py from the recomputed runs; the English figure was viewed and its labels and values compared with the Japanese figure)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/snow_avalanche/figs/flow.png",
       "target": "examples/snow_avalanche/en/figs/flow.png",
-      "source_sha256": "49f7c1d927130f26eb5456919ce8134b22182c92f4541f5ee772a5b9499fe268",
-      "target_sha256": "7d0c3d07b5f8c2c2b3ed44c714446031bcffb387ebff427116f274c50bbef0c6",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "source_sha256": "f3ecc897dea280cf369743aae766bbaa37cb8cc87a5ee53285d544ed1a0ea956",
+      "target_sha256": "38bfd1b033329b1ff4ae60f2d63a88e8b0426f2ce030636f8ec633e4da6a5490",
+      "reviewer": "Claude (Claude Code session; both language versions redrawn by plot_results.py from the recomputed runs; the English figure was viewed and its labels and values compared with the Japanese figure)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/snow_avalanche/figs/grid.png",
       "target": "examples/snow_avalanche/en/figs/grid.png",
-      "source_sha256": "24c823e0d75bef90552b140a8986bdfe9f6834286f1a57f748ebba2e036a9c3c",
-      "target_sha256": "974abbd52fa9a270b69a013ceb83e28a390b0577db77bdc85b6ac31cafcd5cf2",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "source_sha256": "9aeddc7cf51178162ef80fb3057fb2df41cbc837d1955bff6c06b8a06a9b028d",
+      "target_sha256": "2f02ba9152a62e3d212e24328c6f4e772a8d4d5f2c422ab4337cef77a5ebb2dc",
+      "reviewer": "Claude (Claude Code session; both language versions redrawn by plot_results.py from the recomputed runs; the English figure was viewed and its labels and values compared with the Japanese figure)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/snow_avalanche/figs/limits.png",
       "target": "examples/snow_avalanche/en/figs/limits.png",
-      "source_sha256": "d4f43a3f53e449c22553a74a0b0048e1ad2af174e816f5ee1c5c25d6a0dbf2fd",
-      "target_sha256": "1dcecda0cbba83536b37730a90939365c1be6ae5b4e9a7b596efee9f9cbc76de",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "source_sha256": "4438deae22a387400d2a37666a44b64bc0bca2f672f12d32c09ac2c7c6a75e12",
+      "target_sha256": "4670d3f448eb3b458ae1fa0d967582d62c0f4ce942320740f43e4a0039e7c47f",
+      "reviewer": "Claude (Claude Code session; both language versions redrawn by plot_results.py from the recomputed runs; the English figure was viewed and its labels and values compared with the Japanese figure)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -3425,9 +3425,9 @@
     {
       "source": "examples/snow_avalanche/figs/runout.png",
       "target": "examples/snow_avalanche/en/figs/runout.png",
-      "source_sha256": "d69ef62276c132dfc13c9fe9754e8898ccf8b5f92e9baf328d68b216c8c1c0f7",
-      "target_sha256": "f9ad619b58fea585c3bbf69169d4b625d98b150a06b66921aeeff1e90f4fc136",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "source_sha256": "75c51915efa109204b5c28f6ffa8385f688205e5c7dbc68315e4893a285e9a34",
+      "target_sha256": "5bf1b31d857eeea377f67546cdc91d9a6a9d2c7ff0afdfdbbceb36df5b0ca586",
+      "reviewer": "Claude (Claude Code session; both language versions redrawn by plot_results.py from the recomputed runs; the English figure was viewed and its labels and values compared with the Japanese figure)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -4154,29 +4154,29 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "418adb549d1d8bbd75f5d024c65cfcc39ee1d430c5d5747b84c3986ca8e91255",
-      "target_sha256": "8349d6900efdcb02bdd2ae7fece2a46b44a55d64c7a58337e22a816042525b7b",
-      "reviewer": "Claude (Claude Code session; merge of main and the paddy-dam branch: both sides changes present in both files, parameter count 862 checked, no model execution)",
+      "source_sha256": "d166b383ea4202e99d77575c9b3d570a62f7ef38b597cbeb42c88e59267ebef1",
+      "target_sha256": "01f25f94dcbd2e02ab6389a5e0494cc8dc3ce49919bb50a2684fdf66ff5c40fb",
+      "reviewer": "Claude (Claude Code session; merge of main (paddy-field dams) into the work branch: both languages carry the additions of both sides (the paddy rows from main, and the snow-avalanche, entrainment-parameter and test/vchannel rows of this branch); merged lines compared side by side, parameter count 865 checked by tools/params_index; the rest unchanged since the records of the two sides)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/avalanche/README.md",
       "target": "test/avalanche/en/README.md",
-      "source_sha256": "ccda3da1b329812f846c02a4c2cf34906f61c0909ee20ef87394994c62d98ab1",
-      "target_sha256": "e564789353b490af640377c74b00fea4ccb72720fc73f340019fa67dfcd81c82",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "83dd4f8fe74974f097107a6cef431ba86febcd1404879d99d03b9d8041286927",
+      "target_sha256": "eb1f08fbbd5d5c9d35fb8c12e751c122df506082bfc73406034b68ce47f5c14c",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/avalanche/figs/avalanche.png",
       "target": "test/avalanche/en/figs/avalanche.png",
-      "source_sha256": "9284f1e1574d97c433971370633303d03177f92194bc5370267dc8b7a8529da4",
-      "target_sha256": "5caba9bfcb2992ea0fce2e3e1d49203e2ae9b30e8e10d2499918cd3c0f61796b",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
+      "source_sha256": "5a1bf661a30e4a0f0ff8cee3b0a196920ddbb078c950a1a29b0ca65cba6849a2",
+      "target_sha256": "d3311c3ad0ff1ee6c3a2d35b2a847789127950d6d8f39d73e2c304ed7f5ced09",
+      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/bankcap/README.md",
@@ -4235,11 +4235,11 @@
     {
       "source": "test/bedslide/README.md",
       "target": "test/bedslide/en/README.md",
-      "source_sha256": "4164e681869778af62c7c80681d1c686bd024804b120453a5e4588830aadc183",
-      "target_sha256": "f40f4f31b145045f8e36985567999201822661dd698dfb6f0701a4f87011c487",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "28728978ed83c8466e16a247eabe6a5e502c8bc0d9eeb3596499c61a5a24f95d",
+      "target_sha256": "86b9c225186257917fa2ad6543234ef4933f517859c1720c858fb7bc3edb25dc",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/bedslide/figs/bench.png",
@@ -4253,11 +4253,11 @@
     {
       "source": "test/bedslide/figs/plunge.png",
       "target": "test/bedslide/en/figs/plunge.png",
-      "source_sha256": "f1ba03e568a25ef6721f6816977e2bee23f83b5f24a33b3d8507bf05330b2ffb",
-      "target_sha256": "e050ca41684f260010891fc5cec37369843490f046ed9bca5acbfacbd1b5099d",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
+      "source_sha256": "0a41e5b13fcf150af49a87c15c62f665cda22a42fda2bb925633ae681155b3a0",
+      "target_sha256": "6ce9d9161199a37dc73d602582712042afc146a12deeae15fe5f525f5fd30522",
+      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/bedslide/figs/tsunami.png",
@@ -5360,29 +5360,29 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "8df621efc676f2fe5a0c145435cf28b6bc24a122a3a6880eabe07a7e0271e63c",
-      "target_sha256": "1e287fc18740a9ba1d7647c0de94250d5ac11fac35f419fbbeaf547ef3a89aae",
-      "reviewer": "Claude (Claude Code session; the parts changed for the new test cases of f_slide_noflow = 2 in configuration 8: the option list, the case table, the description of the thin-film cases and the check table; both diffs were read side by side)",
+      "source_sha256": "e1b51fc99fba0f71c26f99c162de237f510355cfc53c7b84f8787fe5e4b645af",
+      "target_sha256": "1711aae665162029f62a82a94c29d86902ba4c2823a9d0afda54b34c913fc26d",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/slide/figs/fslide.png",
       "target": "test/slide/en/figs/fslide.png",
-      "source_sha256": "2d79304ac47e89230a76923e6b1f2e44c67eb64f44ed798f5ce4d699bb4b506a",
-      "target_sha256": "7ba2ba8cf5aefeab45d621be19b14e87669f3d6ecd81dbb44fc8ae904ef24606",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
+      "source_sha256": "86a41811a28ddc27e897b63ed411c7f3957e006b7ae4d538c50c2e7a3bd29f40",
+      "target_sha256": "8421b2d6203ffb9e40c9e3bd9a7e5922cea1359c3542c001d22a8a36a395268b",
+      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/slide/figs/release.png",
       "target": "test/slide/en/figs/release.png",
-      "source_sha256": "1a3a3d99397b84b818e08e0b906c95e7d7a22a06cba7c6eb653f04491e66bdb5",
-      "target_sha256": "423c826fde17915bdf7347c154a50805a2eaaba139d030dfd3e4f6b683e1eef9",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
+      "source_sha256": "cb34145a04f212100ed64490cfed8eb3382c74a0c8829b339ba25dd36b570f19",
+      "target_sha256": "1e6dceb5268bff6705f51c16fdcda2d2b64e02df19d0c7fdfbc51bb5cb82ad7d",
+      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/slopefric/README.md",
@@ -5441,20 +5441,20 @@
     {
       "source": "test/splashslide/README.md",
       "target": "test/splashslide/en/README.md",
-      "source_sha256": "e52140b79edd1862623cbed39b0ded4f8751d29bbafbc9a56ae798ec03409df4",
-      "target_sha256": "d585f807d09940c48bf056212c89491425d8a3639a284c26b06665c8dc51f166",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "e4e014805320514fbb4f656e7e315c0d04bd2c14a03b4a845740a11bbb6e8ac7",
+      "target_sha256": "dfe49d2bc135b707335b55315edfc7331abf413559f2a77c46436b6498d84535",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/splashslide/figs/splashslide.png",
       "target": "test/splashslide/en/figs/splashslide.png",
-      "source_sha256": "a29aa17abf3308ee8354b97ded86dbb15d6357fc3a7c2f508ba9c2740a5caea0",
-      "target_sha256": "eb541ab122bc8fbf80bff8684018d18f615d5aac261df1decb05c98f5d150061",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
+      "source_sha256": "3e6f2f2062f520a2374ae35f409aad9b0973e52c2a3808258356337111eb23d9",
+      "target_sha256": "0405ea9c18a96cb2f584a8f21f7d2c74433ed6b829c2879389aaa086b43ad148",
+      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/splashstrata/README.md",
@@ -5628,22 +5628,40 @@
       "reviewed_on": "2026-11-10"
     },
     {
+      "source": "test/vchannel/README.md",
+      "target": "test/vchannel/en/README.md",
+      "source_sha256": "597c77d9e1e55e6dc41dbf940ec6a4a8817613ebd10c625bb40ebe6ef4988892",
+      "target_sha256": "4e725f192fe0b5dcb19829fc66acdd5ba2524dfb856d2adef248f1888e9d8a6b",
+      "reviewer": "Claude (Claude Code session; the scope of the recommendation f_opening_dynamic = 0 narrowed to V-shaped gullies, and the limit for valleys with a flat floor added, in both languages in the same work (comparison on the example debris_fan, developer.md §130.11); the changed passages compared side by side and their numbers checked against the comparison runs; the rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-26"
+    },
+    {
+      "source": "test/vchannel/figs/vchannel.png",
+      "target": "test/vchannel/en/figs/vchannel.png",
+      "source_sha256": "6cf0b7dfb49e2b5342abcc5f5414632f4a333ff74cafe9126315c13ba3a1b757",
+      "target_sha256": "3461fee97097ca5d218bbb85fc4ed5c3441c4c2cfc7b6f830be203c8ea088036",
+      "reviewer": "Claude (Claude Code session; both figures drawn by the same Fig.py from the same results, differing only in the language of the labels)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
       "source": "test/volcano/README.md",
       "target": "test/volcano/en/README.md",
-      "source_sha256": "5c88d696bd0386954595fb1643c782885eecd5d4fb9dbb7c74d3bcd6153b5660",
-      "target_sha256": "6b1a77e3e8a190f926019ceedb0987e546e4abff9d0e2dd290c2659184eea7ae",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "c5fe0c37e16a008408ffd9fa1f50a5da854dd3ee7ad0346482f839d6b02f6a01",
+      "target_sha256": "45e77ce76fe45d34a0a9782749f42cdb18dd539b5b549306f61e18dd34974f50",
+      "reviewer": "Claude (Claude Code session; only the developer-record numbers were renumbered in both languages (§127 → §129, §128 → §130, because main took the same numbers); checked by script that the diffs of both files contain nothing else; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/volcano/figs/tauy.png",
       "target": "test/volcano/en/figs/tauy.png",
-      "source_sha256": "f7b90ab4dc81c44005b0ec3e5456aae27619ac2d6ef188fb9b1c0ec36369cd9b",
-      "target_sha256": "9a14d7032af910960329f943e4fa0f2be3622584225fd540d5fe790ce7fba7fb",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
+      "source_sha256": "da0eb78b01620f5b41f01c88f5f439bd2dd276c803e0887f8f78164c8b0d80c5",
+      "target_sha256": "906ff4f19c4381f886dd174625fd348e4f6373034bafe1f5a6d4db60dcb43f2f",
+      "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/volcano/figs/voellmy.png",

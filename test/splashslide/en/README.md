@@ -57,13 +57,13 @@ eroded more deeply in the hollows of the perturbation (deepening of
 valleys); on the unconsolidated cliff the whole cliff collapses and deposits
 at the foot of the slope (red). Right: y-direction relief of the columns in
 the cliff-face band. For the consolidated cliff the amplitude grows × 1.24;
-for the unconsolidated cliff it decays × 0.76.
+for the unconsolidated cliff it decays × 0.78.
 
 ## Findings
 
 | Check | Consolidated cliff | Unconsolidated cliff | Result |
 |---|---|---|---|
-| Growth rate of the relief | × 1.24 (≥ 1.15) | × 0.76 (≤ 0.9) | PASS |
+| Growth rate of the relief | × 1.24 (≥ 1.15) | × 0.78 (≤ 0.9) | PASS |
 | Plateau interior \|Δz\| | 0.0 | 0.0 | PASS |
 | Minimum elevation z | 0.00 m | −1.30 m (≥ −1.5) | PASS |
 
@@ -103,8 +103,11 @@ for the unconsolidated cliff it decays × 0.76.
   sediment leaving the cliff is 31.4 m³ (developer.md §110.32). After the four values of the advection
   term (f_advection_donor = 4, f_advection_bend = 2, f_advection_lateral = 2, f_dry_head_cap = 4)
   became the default on 2026-11-21, the consolidated cliff stays at × 1.24, the unconsolidated cliff goes
-  from × 0.77 to × 0.76 and the sediment leaving the cliff is 33.2 m³ (developer.md §114). The table and
-  the figures show these values.
+  from × 0.77 to × 0.76 and the sediment leaving the cliff is 33.2 m³ (developer.md §114). After the
+  blockage ratio of the dynamic reassignment of blocked openings was corrected on 2026-11-25 to be measured
+  with the flow depth h + hs, the consolidated cliff stays at × 1.24, the unconsolidated cliff goes from
+  × 0.76 to × 0.78 and the sediment leaving the cliff is 33.6 m³ (developer.md §130). The table and the
+  figures show these values.
 
 ## Related documents
 

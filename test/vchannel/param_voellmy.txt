@@ -1,0 +1,71 @@
+!======================================================================
+! vchannel(Voellmy 則の構成のひな形。構成 vo の向き 0°)
+!   一様な勾配 0.4 の斜面に置いた V 字の水路(壁の勾配 0.6)の、長さ 600 m の区間で、表面が横断方向に
+!   水平になる厚さの雪(谷底で 4.9 m、幅 40 m)が一斉に動き出す。区間の中央は流れの向きに一様で、
+!   各列の流速は自分の流動深 h(n) だけで決まる(横断方向の応力のない Voellmy 則の厳密解):
+!     du/dt = g (S − μ) − g u² / (ξ h(n))  →  u = u_t tanh(g (S − μ) t / u_t)、 u_t = sqrt(ξ h (S − μ))
+!   make_init.py がこのファイルから、向き(dir_data・dir_result)と構成(f_opening_dynamic・p_diagratio・
+!   摩擦係数・計算時間)を差し替えた p_<構成>_<向き>.txt を書く。合否は Check_vchannel.py
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.025                ! 0.005 Δx
+  t0 = 0
+  tt = 20                   ! 20 秒(区間の中央に両端からの希薄波が届く前)
+  dt_disp = 5
+  dt_file = 20              ! 分布出力は最後だけ
+  dt_recrd = 20
+  dd = 0.0001               ! 限界水深 0.1 mm(キャリアは雪の厚さの 1 割。雪崩の設定の型)
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = ''          ! 辺はすべて壁(流れは領域の端に届かない)
+  dir_data = 'data_r0'
+  dir_result = 'result_vo_r0'
+  f_output_mode = 2         ! bil(単精度バイナリ)
+  f_out_hs = 1              ! 土砂柱状量 Hs(流動深は H + Hs)
+  f_out_u = 1               ! セルの流速の成分(u は東向き、v はファイルの行の進む向き = 南向きが正)
+  f_out_v = 1
+/
+
+&list_enc
+  f_gravity_correction = 0  ! 厳密解を水平の流速・鉛直の深さの式(上)で書くため、急勾配の補正を使わない
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 初期の水なし(キャリアは発生のときに雪と一緒に入る)
+/
+
+&list_geoinfo
+  lx = 1400.0
+  ly = 1400.0
+  nx = 280
+  ny = 280
+  f_ztype = 1
+  fn_z = 'z_snow.txt'       ! 雪面の標高(基盤 + 雪)
+  f_rntype = 0
+  rn0 = 0.03                ! マニングの粗度(Voellmy 則が置き換えるので、結果に効かない)
+  f_sdtype = 1
+  fn_sd = 'sd.txt'          ! 土層厚 = 動き出す雪の厚さ
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 毎ステップ更新
+  morfac = 1.0
+  f_debris = 1
+  f_dbres = 4               ! 抵抗則: Voellmy(見かけ摩擦 μ + 乱流抵抗 g V²/(ξ h))
+  db_mu = 0.25
+  db_xi = 1750.0
+  f_dbed = 0                ! 連行・堆積なし(等価流体)
+  db_cmin = 0.02            ! Voellmy 則を適用する濃度の下限(この計算の濃度は一定の 0.9)
+  f_dbstop = 0              ! 停止・堆積なし
+  fluv_porosity = 0.1       ! キャリアの割合 λ(雪の厚さのうち地表水 h として運ぶ分)
+  f_dbwet = 1               ! キャリアを雪と一緒に授受する(雪崩の設定の型。流れの縁で地形に固定される薄い雪が
+  db_satbed = 1.0           !   キャリアを引き取る。db_satbed = db_relsat にそろえる)
+  fn_dbinit = 'dbinit.txt'  ! 動き出す雪の厚さ (m)
+  db_reltime = 0.0          ! 計算開始と同時に発生
+  db_relsat = 1.0           ! 発生した雪のキャリア(λ × 厚さを地表水に置く。h + hs = 厚さ)
+/

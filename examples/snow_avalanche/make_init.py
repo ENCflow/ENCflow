@@ -156,6 +156,12 @@ CASES = {
     "r45": case(theta=45.0),
     "dt2": case(dt="0.05"),
     "dthalf": case(dt="0.0125"),
+    # 塞がれた開口の動的振り替え(param.txt は使わない = 0。既定は 3)と沢の向き。雪を取り込まない流れの頭で差が出る
+    "nosnow_r45": case(track=0.0, theta=45.0),
+    "open3": case(f_opening_dynamic="3"),
+    "open3_r45": case(theta=45.0, f_opening_dynamic="3"),
+    "nosnow_open3": case(track=0.0, f_opening_dynamic="3"),
+    "nosnow_open3_r45": case(track=0.0, theta=45.0, f_opening_dynamic="3"),
     # 連行の与え方と限界: 限界水深、全面の雪
     "dd3": case(dd="0.001"),
     "dd3_dthalf": case(dd="0.001", dt="0.0125"),
@@ -163,6 +169,17 @@ CASES = {
     "allsnow": case(track=0.5, allsnow=True),
     "allsnow_dd3": case(track=0.5, allsnow=True, dd="0.001"),
     "allsnow_dd5": case(track=0.5, allsnow=True, dd="0.00001"),
+    # 連行した雪の運動量を数えない(f_dbmom = 0)
+    "nomom": case(f_dbmom="0"),
+    "deep_nomom": case(track=2.0, f_dbmom="0"),
+    # Hungr の連行則(f_dbed = 5)と、連行する流動深の下限(db_hent)
+    "hungr": case(f_dbed="5", db_er="0.01"),
+    "allsnow_h": case(track=0.5, allsnow=True, f_dbed="5", db_er="0.01"),
+    "allsnow_h_dd3": case(track=0.5, allsnow=True, f_dbed="5", db_er="0.01", dd="0.001"),
+    "allsnow_h_dd5": case(track=0.5, allsnow=True, f_dbed="5", db_er="0.01", dd="0.00001"),
+    "allsnow_t": case(track=0.5, allsnow=True, db_hent="0.3"),
+    "allsnow_t_dd3": case(track=0.5, allsnow=True, db_hent="0.3", dd="0.001"),
+    "allsnow_t_dd5": case(track=0.5, allsnow=True, db_hent="0.3", dd="0.00001"),
 }
 BASE = "base"
 MAIN = ("nosnow", "base", "deep", "dam", "deep_dam")
