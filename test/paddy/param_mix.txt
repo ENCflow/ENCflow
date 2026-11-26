@@ -1,0 +1,65 @@
+!======================================================================
+! paddy: 面積率・取組率・空隙率の分布と、閉じた領域の水収支(Check_paddy.py mix)
+!   四辺は壁(水は領域の外へ出ない)。列ごとに面積率(0〜1)・取組率(0〜1)・家屋の空隙率
+!   (0.6〜1)を変える(面積率 ≤ 空隙率)。雨 10 mm/h を 2 h、その後 2 h は雨なし。
+!   確認: Log の S(地表の水 + 水田の貯留)= 降った雨の累積(領域平均)、台帳の閉合。
+!   地表の水が溜まり、通常の落水口が潜る・止まる場合を含む。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt = 14400
+  dt_disp = 600
+  dt_file = 14400
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_precip = '-'
+  fn_paddy = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_mix'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 10
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+  fn_gv = 'gv_mix.txt'      ! 家屋の空隙率(列ごと 0.6〜1)
+  fn_bb = 'bb_mix.txt'      ! 家屋の平均寸法 10 m
+/
+
+&list_bound_edge
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 10
+  prval(1:2,2) = 120, 10
+  prval(1:2,3) = 120.001, 0
+  prval(1:2,4) = 99999, 0
+/
+
+&list_paddy
+  fn_pd_frac = 'frac_mix.txt'
+  fn_pd_adopt = 'adopt_mix.txt'
+  pd_hlev = 0.30
+  pd_aplot = 300.0          ! 落水を速めた検定用の値(地表の水深が落水口の高さに届く)
+/

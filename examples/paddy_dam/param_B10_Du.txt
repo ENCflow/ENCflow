@@ -1,0 +1,88 @@
+!======================================================================
+! examples/paddy_dam: 低平地の排水区の内水と田んぼダム(区画の解像 = 表現 B、Δx = 10 m)
+!   B10_Du: 北の 2 組(上流側の半分、76 区画)だけ田んぼダム
+!   入力は make_district.py が data/ に作る(make)。地形と設定の説明は README.md
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 1.0                  ! 時間刻み (s)(排水路の √(gh) ≈ 3.5 m/s、Δx = 10 m)
+  t0 = 0
+  tt_c = '48h'              ! 雨 24 h + 雨の後 24 h
+  dt_disp_c = '1h'
+  dt_file_c = '1h'
+  dt_recrd_c = '10m'
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = '-'
+  fn_structure = '-'        ! 排水機場のポンプ
+  fn_record = '-'
+  fn_paddy = '-'            ! 田んぼダム(区画の解像)
+  dir_data = 'data'
+  dir_result = 'result_B10_Du'
+  f_out_h = 1
+  f_out_hmax = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 区画は事前の湛水深(既定 = 流れ始める高さ 0.03 m)から、ほかは乾いた状態から
+/
+
+&list_geoinfo
+  nx = 63
+  ny = 96
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 1
+  fn_rn = 'rn.txt'          ! 排水路 0.03、区画 0.05、農道・畑・集落・台地 0.04
+  fn_gv = 'gv.txt'          ! 集落の建物の空隙率 0.7
+  fn_bb = 'bb.txt'          ! 家屋の平均寸法 10 m
+/
+
+&list_bound_edge
+/
+
+&list_precip
+  prtype = 1                ! 一様な雨(時刻 min, mm/h)。24 h で 207 mm、ピーク 25 mm/h
+  prval(1:2,1) = 0, 4
+  prval(1:2,2) = 360, 4
+  prval(1:2,3) = 360.001, 12
+  prval(1:2,4) = 540, 12
+  prval(1:2,5) = 540.001, 25
+  prval(1:2,6) = 720, 25
+  prval(1:2,7) = 720.001, 12
+  prval(1:2,8) = 900, 12
+  prval(1:2,9) = 900.001, 4
+  prval(1:2,10) = 1440, 4
+  prval(1:2,11) = 1440.001, 0
+  prval(1:2,12) = 99999, 0
+/
+
+&list_struct_pump
+  pump_in_cell(:,1,1) = 2, 94      ! 幹線排水路の西端(排水機場の吸水槽)
+  f_pump_ref(1) = 1                ! 運転の基準 = 吸水槽のセルの水深
+  pump_rule(:,1,1) = 0.3, 0.0      ! (水深 m, 流量 m3/s): 0.3 m で起動、0.6 m 以上で 0.6 m3/s(域外へ)
+  pump_rule(:,2,1) = 0.6, 0.6
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 12, 92        ! 集落の中央
+  pbxy(:,2) = 3, 94         ! 幹線排水路の西端(排水機場の前)
+  pbxy(:,3) = 61, 60        ! 支線排水路
+  pbxy(:,4) = 31, 13        ! 北の組の小排水路
+  pbxy(:,5) = 31, 7         ! 北の組の区画(上流側)
+  pbxy(:,6) = 31, 84        ! 南の組の区画(下流側)
+  flxytype = 0
+  flxy(:,1) = 5, 95, 5, 93       ! 幹線排水路の横断(排水機場の手前)
+  flxy(:,2) = 62, 60, 60, 60     ! 支線排水路の横断
+/
+
+&list_paddy
+  fn_pd_plot = 'plot.txt'          ! 区画番号(152 区画。30 m × 100 m = 3 × 10 セル)
+  fn_pd_outlet = 'outlet.txt'      ! 落水口の向き(区画の小排水路側の短い辺の中央)
+  fn_pd_class = 'class_Du.txt'     ! 落水口の種類(Du)
+/

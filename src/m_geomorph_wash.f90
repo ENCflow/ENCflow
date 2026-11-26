@@ -21,6 +21,9 @@
 !   斜面の表層浸食が s%sd を直接減らすため、「土層が薄くなり早く飽和して
 !   流出が早まる」結合(plan §2.5 のユーザー要件)がそのまま現れる。
 !   sd=0 まで削れたセルは岩盤露出となり浸食が止まる(badland の挙動)
+!   田んぼダム(fn_paddy)の水田の部分(面積率 a = s%pdfr)の雨は田面の湛水(タンク)に落ちるので、
+!   雨滴侵食の項に 1 − a を掛ける(湛水は雨滴の飛沫による侵食をほぼ止める。§127.5)。
+!   面状侵食の項はセル全面のまま
 !======================================================================
 submodule(m_geomorph) m_geomorph_wash
   use m_parallel, only : par_info, par_stop, dcp, par_halo_cell
@@ -73,9 +76,11 @@ module subroutine calc_wash(gm, p, g, s, dtw)
   real :: hh, taus, er, fx, dzb, cap, fxg
   logical :: spread
   logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
+  logical :: pdx                  ! 水田の部分の雨滴侵食を外す(fn_paddy と併用。§127.5)
 
   spread = (gm%wlw%nsm > 0)
   ssh = slope_shear_on()
+  pdx = allocated(s%pdfr)
   !$omp parallel do schedule(static) private(i, j, hh, taus, er, fx, dzb, cap, fxg)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
@@ -85,6 +90,7 @@ module subroutine calc_wash(gm, p, g, s, dtw)
       if (s%h(i,j) <= p%dd) cycle       ! 乾燥セルは空回りのため対象外
       ! 浸食レート: 雨滴 + 面状(超過せん断線形)
       er = gm%wkr * s%pre(i,j)
+      if (pdx) er = er * (1.0 - s%pdfr(i,j))   ! 水田の部分の雨は田面の湛水へ(§127.5)
       if (gm%wkf > 0.0) then
         hh = max(s%h(i,j), p%dv)
         taus = g%rn(i,j)**2 * s%vv(i,j)**2 / (gm%sgrav * gm%sd50 * hh**(1.0/3.0))

@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "2bad81202b194de01f8e38186f915cce005b7dfae7f6f133712aa136328e8618",
-      "target_sha256": "ccdfe05762e682f2f2a5bfad3d265ffef21850ed79935cde4ed0debf02109e50",
-      "reviewer": "Claude (Claude Code session; the changed line: the number of entries of the parameter index, 833 to 836)",
+      "source_sha256": "1fa989667b38ac8f03a0ae3ce06beebf7ab3a5ea724dd1e6aee82652885fa203",
+      "target_sha256": "b4e7455f160a59d5e23d647338f38ae44b256a03116dbd5095a7aee953f1cc72",
+      "reviewer": "Claude (Claude Code session; merge of main (paddy-field dams) into the work branch: both languages carry the additions of both sides (the paddy rows from main, and the snow-avalanche, entrainment-parameter and test/vchannel rows of this branch); merged lines compared side by side, parameter count 865 checked by tools/params_index; the rest unchanged since the records of the two sides)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -374,11 +374,11 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "1f006d4bfdc564ebbe670a89e485809e52d81e2617678dd578528acac310d41e",
-      "target_sha256": "22233861b5902d52bce3ef256aaad1e44fc1b824365f0565f5f9e9c8f4fa7866",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 1 (f_bedmix): new and changed sections compared side by side with the Japanese source; parameters and numbers checked against the code and the test runs)",
+      "source_sha256": "66d4624e88cbd9a467d6bb8d3611268b7977608b430874c756713a7446dc574f",
+      "target_sha256": "2881f6dfb9f2bcd835c6f0b4c805aea5c4c0473e0af2fa1500eb50ec88288d96",
+      "reviewer": "Claude (Claude Code session; merge of main and the paddy-dam branch: both sides changes present in both files, parameter count 862 checked, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/lavaflow.md",
@@ -426,6 +426,15 @@
       "reviewed_on": "2026-11-25"
     },
     {
+      "source": "docs/users_guide/paddy.md",
+      "target": "docs/en/users_guide/paddy.md",
+      "source_sha256": "0a2e3c25bafeffdc15010abe8f2ae77cdcfcb07d742d9659f85868f0387b0163",
+      "target_sha256": "d67bf45feb7ad577b29f2e165ea95501e45203e6a185b8a7e3e719b28a0b9c14",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
       "source": "docs/users_guide/parallel.md",
       "target": "docs/en/users_guide/parallel.md",
       "source_sha256": "315897952d16c2084d237fd36cdc02a3b327aba9449f0252ddb88e5be6753686",
@@ -437,11 +446,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "9942d43cc5a466b02c4560b3c9934285551d5969229c4fcc22668b2f5b646191",
-      "target_sha256": "09b693aa69086fdc3c685754c90bd5772bc28f20b2f865098cef35a1d8411baf",
-      "reviewer": "Claude (Claude Code session; three rows added (db_er, db_hent, f_dbmom) and the entry count; rows and count compared)",
+      "source_sha256": "c25894593b12a4049a1fbcc8ac8b300a993f654c9fcb66013128510441ec61ef",
+      "target_sha256": "cf1952c1d6c031f28b5bda81f1b3002ff249e7109dca3a3a3e67884353e3f05e",
+      "reviewer": "Claude (Claude Code session; merge of main (paddy-field dams) into the work branch: both languages carry the additions of both sides (the paddy rows from main, and the snow-avalanche, entrainment-parameter and test/vchannel rows of this branch); merged lines compared side by side, parameter count 865 checked by tools/params_index; the rest unchanged since the records of the two sides)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -482,11 +491,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "913335e20b170ce204049ce51a127d427c74aa02165639ad86e058302f1e600b",
-      "target_sha256": "abdec81554566e508b491d7daf02bf86a67d5617b7245b5b63976412bba386d8",
-      "reviewer": "Claude (Claude Code session; the verification sentence of the capacity and equilibrium feeds compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "6e7a8a6834b8db19cd8d62e877cdf806e4fb441f9ea24234d74a3fb133bdc12d",
+      "target_sha256": "9b9fa60b162491c76c929fdb9d3a71258f5a47e11b3f6ea9b8bbeed4a7dcef2d",
+      "reviewer": "Claude (Claude Code session; merge of main and the paddy-dam branch: both sides changes present in both files, parameter count 862 checked, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/sfm.md",
@@ -527,11 +536,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "c589b15550b05e73159544ff78b03f95b3bc0dcfe52e2512e9241f871ef61b1b",
-      "target_sha256": "ae736e2ea95be1571e55e0c69704766b381ec14a23a819ef84bf9c56c666c8e1",
-      "reviewer": "Claude (Claude Code session; run-time statement of the default advection values rewritten as the measured range 1.3-1.6 with the source_area measurement, Japanese and English compared)",
+      "source_sha256": "293b0927d59ef0be4ea2335e11e541c36954774d65312c2a2b213139c1d89471",
+      "target_sha256": "ad4763deed4d2c461294d51e3bdf5ed1bde0c274e9c16db8783c282053c687c5",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -572,11 +581,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "8baf8748113f93ce812503a74139a46f493cec0c1c4d7a97621654a39bc9050e",
-      "target_sha256": "5be7e463b55efff8d63f3379f6197cc93a7233b2f583b81855340bb68aed7a91",
-      "reviewer": "Claude (Claude Code session; avalanche row: f_opening_dynamic=0 for flows in valleys resolved by the grid added in both languages; the changed row compared side by side, the rest unchanged since the previous record)",
+      "source_sha256": "aefbae90a20b9543fb49cecc0b147ad73f2dab93a56b878ade171877c989e70c",
+      "target_sha256": "4270656c036685d0c4f1f216ee9851e8b2b32d6b3f59b77f1b5d649ffea24aee",
+      "reviewer": "Claude (Claude Code session; merge of main (paddy-field dams) into the work branch: both languages carry the additions of both sides (the paddy rows from main, and the snow-avalanche, entrainment-parameter and test/vchannel rows of this branch); merged lines compared side by side, parameter count 865 checked by tools/params_index; the rest unchanged since the records of the two sides)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -617,9 +626,9 @@
     {
       "source": "docs/users_guide/wq.md",
       "target": "docs/en/users_guide/wq.md",
-      "source_sha256": "7dbaf61894a4244fe0aa29ca4de467dfa0886452770f17ab83617cda8ac06127",
-      "target_sha256": "bb83ae61b27349db9f0c8c1cac0a25ac141a4d3d3e985a84eec72f0a6d48968f",
-      "reviewer": "Claude (Claude Code session; passages added for examples/coastal_compound_flood compared side by side with the Japanese source; the rest is unchanged since the previous record)",
+      "source_sha256": "bcfbe181ee699eb963ccdbb10ff14222dc550127b29c73217756f56d90e1ea1d",
+      "target_sha256": "8692b0e0b96bfb5086c0b9ddcca273fa686d205cfed3f199dc2e02d8f338b5e7",
+      "reviewer": "Claude (Claude Code session; merge of main and the paddy-dam branch: both sides changes present in both files, parameter count 862 checked, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -777,6 +786,15 @@
       "reviewed_on": "2026-10-24"
     },
     {
+      "source": "examples/List_samples/list_paddy.txt",
+      "target": "examples/List_samples/en/list_paddy.txt",
+      "source_sha256": "e32e2d208e822987b732185387066da1d8c44459f3502071b2661618efecf1f9",
+      "target_sha256": "7ac07c26c8bb8a04fc833f24129425f74ad5f45b9d4648fde834ff5ec00e0ea5",
+      "reviewer": "Claude (Claude Code session; renumbering of the developer record and handoff citations checked in both files, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
       "source": "examples/List_samples/list_precip.txt",
       "target": "examples/List_samples/en/list_precip.txt",
       "source_sha256": "277363028321fc2b89706471ec8a8c8df5b287de1aa80c771640eaf9f6dcc0f7",
@@ -851,11 +869,11 @@
     {
       "source": "examples/List_samples/list_sysparam.txt",
       "target": "examples/List_samples/en/list_sysparam.txt",
-      "source_sha256": "0f19b2ae473e6c175200822913ea8b79d5353899e54e294252c04327ad85df1b",
-      "target_sha256": "477bcaf586ca725c4b5e76e1ac85e8b6ef51e49a458984b4fa93a0c316527806",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 1: commented examples added in both languages; values, identifiers and states checked by tools/consistency/check.py samples, comments compared side by side)",
+      "source_sha256": "58cda92a85a153cc41ae98b234d0853ba8452ed6311a1b4ef2f69ffd44bc353d",
+      "target_sha256": "c7c04317c371939ae0fedbc1cf71cd7d2524089b874ed5f9b7b07b5677851c67",
+      "reviewer": "Claude (Claude Code session; merge of main and the paddy-dam branch: both sides changes present in both files, parameter count 862 checked, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/List_samples/list_tide.txt",
@@ -905,11 +923,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "97f6bf58fc0337e56246413ec145e5af4d5e8e837755a8fab48c90e9b5511fe8",
-      "target_sha256": "1b2101092f330bc4849080ddb7cdbc2407394ea2bcd5e1ae03fae73c4fef95c8",
-      "reviewer": "Claude (Claude Code session; snow_avalanche row: the numerical setting f_opening_dynamic=0 added in both languages; the changed row compared side by side, the rest unchanged since the previous record)",
+      "source_sha256": "8f5b46c99d9ed900bbcd79cfab4ea76409f6aa14a4d2f6439daddcab306ccb81",
+      "target_sha256": "970f1cd39d3e6db603a8c730860704b9094520629411e1cdb8f1dcdea4290997",
+      "reviewer": "Claude (Claude Code session; merge of main (paddy-field dams) into the work branch: both languages carry the additions of both sides (the paddy rows from main, and the snow-avalanche, entrainment-parameter and test/vchannel rows of this branch); merged lines compared side by side, parameter count 865 checked by tools/params_index; the rest unchanged since the records of the two sides)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -2345,11 +2363,11 @@
     {
       "source": "examples/joganji_flume/README.md",
       "target": "examples/joganji_flume/en/README.md",
-      "source_sha256": "a43205910c44f0a2e06d7ea26c20c61317cbdeb61c022856206bfdda0493e849",
-      "target_sha256": "ac86ba71920f3217f2677061a0b902aeba6fee4258de4b2d8ca7075528538a76",
-      "reviewer": "Claude (Claude Code session; added the morphodynamic sensitivity runs to 124 min (no repose collapse, fluv_muk = 0.7) as a new sensitivity subsection with a table, rewrote the ledger reading of repose collapse, removed the repose_phi hypothesis from the starting points, rewrote the flow-concentration limitation, added Asahi et al. 2013 and Hasegawa 1989 to the references and one sentence to the summary; compared the Japanese master and the English mirror passage by passage)",
+      "source_sha256": "a43279d1c1deb6868e097e6da1c148a89813071eb9250ff5d28170c3841b93b2",
+      "target_sha256": "09540293cd3446e948c12a42371dae742d1067ce4663680d016f5124a2eef830",
+      "reviewer": "Claude (Claude Code session; restructured the README for readability at the user's request (summary as bullets, shorter paragraphs, nested bullets, fewer numbers and parentheticals in the prose, a small table for the downstream-end profile) without changing the content; rewrote the English mirror to the same structure (headings, bullet levels, tables and figures match one to one) and compared the Japanese master and the English mirror passage by passage)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/joganji_flume/figs/bedchange.png",
@@ -3088,6 +3106,15 @@
       "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/paddy_dam/README.md",
+      "target": "examples/paddy_dam/en/README.md",
+      "source_sha256": "5e05eb54ad7f43ce2d292f7fbee54e685ce9e40f5e0547ec64a01383da11402c",
+      "target_sha256": "d66a9b4d49071e5703f80341947fa8e4b359dc579485c5303d48b1b9a37b18ff",
+      "reviewer": "Claude (Claude Code session; renumbering of the developer record and handoff citations checked in both files, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/qanat/README.md",
@@ -4037,11 +4064,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "bfeff0022a44f55de68cae4cd52c8c017f2825693505ef613ce50008eaec3238",
-      "target_sha256": "52d90295e4f3293745668827d50d71db8b3904dae9b1f7f5ece73a1857e8facd",
-      "reviewer": "Claude (Claude Code session; the new row of test/vchannel compared side by side with the Japanese source; the other rows are as recorded before)",
+      "source_sha256": "d166b383ea4202e99d77575c9b3d570a62f7ef38b597cbeb42c88e59267ebef1",
+      "target_sha256": "01f25f94dcbd2e02ab6389a5e0494cc8dc3ce49919bb50a2684fdf66ff5c40fb",
+      "reviewer": "Claude (Claude Code session; merge of main (paddy-field dams) into the work branch: both languages carry the additions of both sides (the paddy rows from main, and the snow-avalanche, entrainment-parameter and test/vchannel rows of this branch); merged lines compared side by side, parameter count 865 checked by tools/params_index; the rest unchanged since the records of the two sides)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "test/avalanche/README.md",
@@ -4078,6 +4105,15 @@
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "test/bankhalo/README.md",
+      "target": "test/bankhalo/en/README.md",
+      "source_sha256": "0dba28f60bf706bde6a164e2e9f38bfd3b75aa6e7ffb15515455eb7b005e437e",
+      "target_sha256": "551081ff697ac49c7492e4b23caea4dc6f37c2df548062b47289a2e3cd6204c2",
+      "reviewer": "Claude (Claude Code session; renumbering of the developer record and handoff citations checked in both files, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/bankspill/README.md",
@@ -5077,6 +5113,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/paddy/README.md",
+      "target": "test/paddy/en/README.md",
+      "source_sha256": "d381983f9c2fddddb42f0099f72867705f183f41ef479d4da3e260af5a146380",
+      "target_sha256": "0ecd9483a90655afad4a41b4ae1dc7decaf3b98b493d91e60d284d6b6963ed44",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/prmap/README.md",

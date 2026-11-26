@@ -1,7 +1,8 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   高速な 31 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
-#   ローカルで test/chichibu/Run.sh を実行すること)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
-#   bldgdrag・driftwood・bankcap・brink・bankspill・chutepool・cascade・tjunction・stairbank・stageside・vchannel は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
+#   高速な 32 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
+#   ローカルで test/chichibu/Run.sh を実行すること。test/paddy も実行時間の都合で、夜間の nightly.yml だけで
+#   回す。developer.md §127.16)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
+#   bldgdrag・driftwood・bankcap・brink・bankspill・chutepool・cascade・tjunction・stairbank・stageside・vchannel・bankhalo は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
 #   終了コードで判定。stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。
 #   vshaped は V 字流域の降雨流出の運動学的波の理論解との比較。bldgdrag は家屋の抗力項を含む等流の
 #   理論値との比較で、逐次のジョブだけで回す(辺ごとの局所の式で、MPI のジョブは同じ式を通るだけなので
@@ -51,6 +52,9 @@
 #   river_flowline は、前処理 utils/river_flowline(河道マスクを標高の落水線に載せ直す)が、秩父の 4 つの格子の
 #   置いてある載せ直し済みのマスクをバイト一致で作り直すことの検定で、逐次のジョブだけで回す(encflow は
 #   使わない。Run.sh が utils/river_flowline をビルドする)
+#   bankhalo は、堤防の越流の追い越し上限が帯の境で読む実効平面積率 af のハロの検定(閉じた箱の水の保存と、
+#   深く潜った堤防を越えて両岸の水位差が縮まることを判定する)。逐次と MPI の両方で回す(MPI のジョブは
+#   2 ランクと 1 ランクの Log・水位・水深をバイト比較する。帯の境が堤防付きの河道を横切る。developer.md §128)
 #   フル回帰・MPI np=1,2,4・-fcheck=all・BMI 適合性は夜間の nightly.yml で回す
 name: CI
 
@@ -76,7 +80,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink bankspill chutepool cascade tjunction stairbank stageside vchannel river_flowline; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink bankspill chutepool cascade tjunction stairbank stageside vchannel river_flowline bankhalo; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done
@@ -97,7 +101,7 @@ jobs:
         run: |
           set -e
           export OMP_NUM_THREADS=1
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade tjunction stairbank stageside; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade tjunction stairbank stageside bankhalo; do
             echo "===== test/$c (np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done

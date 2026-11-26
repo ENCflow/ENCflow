@@ -563,10 +563,12 @@ subroutine m_bldgdebris_calc(bd, p, g, s, it)
   !$omp end parallel do
 
   ! 空隙率の帰還があるときは gv・lm のハロを毎ステップ揃える(運動量項の
-  ! ±1 近傍参照。変化の有無によらず全ランクで同一に呼ぶ = collective 安全)
+  ! ±1 近傍参照。変化の有無によらず全ランクで同一に呼ぶ = collective 安全)。
+  ! m_state_set_gv が変えた af も揃える(堤防の越流の追い越し上限が隣の行の af を読む。§128)
   if (bd%gvfb) then
     call par_halo_cell(s%gv)
     call par_halo_cell(s%lm)
+    call par_halo_cell(s%af)
   end if
 
   ! (4) ダム捕捉帯の吸収(流動瓦礫はダム台帳へ。堆積 wbd は接地済みのため残す)

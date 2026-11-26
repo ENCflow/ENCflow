@@ -1,0 +1,65 @@
+!======================================================================
+! paddy: 区画の解像(表現 B)の畦畔と河川堤防が重なるエッジ(Check_paddy.py b_bank)
+!
+!   20 × 20 セル(Δx = Δy = 5 m)、四辺は不透過。落水口のない区画(10 × 10 セル)の東隣の列が河道(河床 −0.5 m、
+!   堤防の天端は堤内地の地盤 + 0.1 m)。区画の外と河道の初期の水位は 0.20 m で、堤防の天端より上、畦畔の天端
+!   0.30 m より下。区画と河道の間のエッジは堤防の側(bank_wall)が天端の大きい方(畦畔の 0.30 m)で扱う。1 h。
+!   確認: 区画の水深が事前の湛水深 0.05 m のまま(堤防の天端で河道の水が区画へ越流しない)、閉じた領域の
+!   水の保存(S)、区画の境を越える流れがないこと。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 3600
+  dt_disp = 1800
+  dt_file = 3600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_channel = '-'
+  fn_paddy = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_b_bank'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  f_output_mode = 3
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+
+&list_initial
+  f_htype = 3               ! 水位ファイル
+  fn_hinit = 'b_bank_e.txt'
+/
+
+&list_geoinfo
+  nx = 20
+  ny = 20
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'b_bank_z.txt'
+  fn_rw = 'b_bank_rw.txt'
+  rn0_rw = 0.03
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+/
+
+&list_channel
+  bank0 = 0.1               ! 堤防の天端(堤内地の地盤から)
+  f_bank_datum = 1          ! 堤内地セル標高基準
+/
+
+&list_paddy
+  fn_pd_plot = 'b_bank_plot.txt'
+  pd_hlev = 0.30
+  pd_h0 = 0.05
+  pd_perc_mmd = 0.0
+/
