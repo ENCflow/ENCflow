@@ -8,7 +8,8 @@
 #   (x は東、y は北。原点は領域の中心)
 #   基盤の高さ   zb = Z0 − S s + zc(n)、 zc(n) = WALL (sqrt(n² + A²) − A)
 #   初期の厚さ   d0 = max(D − zc(n), 0)(S0 <= s <= S0 + LS。ほかは 0)
-# 値と式は Check_vchannel.py が import して使う(対で保守する)
+# 値と式は Check_vchannel.py が import して使う(対で保守する)。Python の標準ライブラリだけで書く(毎 push の CI で
+# 回す。ランナーに numpy はない。developer.md §10)
 import math
 import os
 import re
