@@ -57,8 +57,8 @@
 
 ### 通過幅(開口補正)と斜めの配分
 
-- 現行: [通過幅の調整](users_guide/passage_width.md)・[斜めの配分比 d の決め方](users_guide/diagratio.md)・[斜めエッジの流束による数値拡散](users_guide/diagonal_diffusion.md)。塞がれた開口の動的振り替えの既定 f_opening_dynamic = 3 は [§68.41](developer/068.md)
-- 記録: [§18](developer/018.md)(開口補正の導入)・[§52](developer/052.md)・[§68.10](developer/068.md)・[§68.11](developer/068.md)・[§68.13](developer/068.md)〜[§68.15](developer/068.md)・[§68.38](developer/068.md)(既定 2)・[§68.41](developer/068.md)・[§68.43](developer/068.md)〜[§68.45](developer/068.md)・[§96](developer/096.md)(拡散型プロセスの 9 点化)・[§98](developer/098.md)(地下水の層の通過幅)・[§99](developer/099.md)(氷河・溶岩流の 8 近傍化)
+- 現行: [通過幅の調整](users_guide/passage_width.md)・[斜めの配分比 d の決め方](users_guide/diagratio.md)・[斜めエッジの流束による数値拡散](users_guide/diagonal_diffusion.md)。塞がれた開口の動的振り替えの既定 f_opening_dynamic = 3 は [§68.41](developer/068.md)。塞がり率の水柱は、土砂流動の計算では流動深 h + hs([§130](developer/130.md))
+- 記録: [§18](developer/018.md)(開口補正の導入)・[§52](developer/052.md)・[§68.10](developer/068.md)・[§68.11](developer/068.md)・[§68.13](developer/068.md)〜[§68.15](developer/068.md)・[§68.38](developer/068.md)(既定 2)・[§68.41](developer/068.md)・[§68.43](developer/068.md)〜[§68.45](developer/068.md)・[§96](developer/096.md)(拡散型プロセスの 9 点化)・[§98](developer/098.md)(地下水の層の通過幅)・[§99](developer/099.md)(氷河・溶岩流の 8 近傍化)・[§130](developer/130.md)(土砂流動の計算では塞がり率を流動深で測る。一様な V 字水路の厳密解との比較と検定 test/vchannel)
 
 ### 移流項
 
@@ -116,7 +116,7 @@
 ### 土砂・地形変化
 
 - 現行: [土砂・地形変化](users_guide/geomorph.md)・[土砂輸送と斜面・長期地形過程の解説](users_guide/sediment.md)・[土石流・斜面崩壊・動く底層の解説](users_guide/massflow.md)・[土砂・地形変化の適用例](users_guide/geomorph_applications.md)。既定値は [§62](developer/062.md)。混合粒径(f_bedmix。2026-11-22 合意、段 1 の掃流砂は 2026-11-23、段 2a の浮遊砂の結合・プローブの Dm・組成からの D84 と段 2b の崩落・クリープ・沿岸漂砂の組成は 2026-11-24 に実装)の設計の正本は [docs/mixed_sediment_plan.md](mixed_sediment_plan.md)、採る範囲は policy.md 方針 6 の例外と [§84.19](developer/084.md)、実装の記録は [§119](developer/119.md)・[§122](developer/122.md)・[§123](developer/123.md)
-- 記録: [§19](developer/019.md)・[§28](developer/028.md)(土石流・地滑り)・[§32](developer/032.md)(長期地形変動)・[§48](developer/048.md)(乾式斜面侵食)・[§61](developer/061.md)(動く底層)・[§62](developer/062.md)・[§84](developer/084.md)(蛇行・河岸侵食)・[§84.19](developer/084.md)(混合粒径を範囲を限って採る)・[§119](developer/119.md)(混合粒径の段 1 の実装)・[§120](developer/120.md)(例題 joganji_flume)・[§121](developer/121.md)(芦田・道上の有効掃流力 f_taupart = 2)・[§122](developer/122.md)(混合粒径の段 2a: 浮遊砂の結合・組成からの D84)・[§123](developer/123.md)(混合粒径の段 2b: 崩落・クリープ・沿岸漂砂)・[§126](developer/126.md)(雪崩の例題と設定の型の見直し: キャリアの授受・限界水深・連行の与え方)・[§85](developer/085.md)(河口デルタ)・[§86](developer/086.md)(石灰岩の溶食)・[§89](developer/089.md)(山地渓流)・[§92](developer/092.md)・[§96](developer/096.md)・[§101](developer/101.md)
+- 記録: [§19](developer/019.md)・[§28](developer/028.md)(土石流・地滑り)・[§32](developer/032.md)(長期地形変動)・[§48](developer/048.md)(乾式斜面侵食)・[§61](developer/061.md)(動く底層)・[§62](developer/062.md)・[§84](developer/084.md)(蛇行・河岸侵食)・[§84.19](developer/084.md)(混合粒径を範囲を限って採る)・[§119](developer/119.md)(混合粒径の段 1 の実装)・[§120](developer/120.md)(例題 joganji_flume)・[§121](developer/121.md)(芦田・道上の有効掃流力 f_taupart = 2)・[§122](developer/122.md)(混合粒径の段 2a: 浮遊砂の結合・組成からの D84)・[§123](developer/123.md)(混合粒径の段 2b: 崩落・クリープ・沿岸漂砂)・[§126](developer/126.md)(雪崩の例題と設定の型の見直し: キャリアの授受・限界水深・連行の与え方)・[§129](developer/129.md)(Hungr の連行則 f_dbed = 5・連行する流動深の下限・取り込んだ質量の運動量 f_dbmom)・[§130](developer/130.md)(沢の向きへの依存の原因と修正、横断方向の応力の試作)・[§85](developer/085.md)(河口デルタ)・[§86](developer/086.md)(石灰岩の溶食)・[§89](developer/089.md)(山地渓流)・[§92](developer/092.md)・[§96](developer/096.md)・[§101](developer/101.md)
 
 ### 流木
 
@@ -302,3 +302,5 @@
 - [§126](developer/126.md) 例題 examples/snow_avalanche: 沢を下る流れ型雪崩(走路の雪の連行と誘導堤)と、雪崩の設定の型の見直し(2026-11-25。利用者の依頼。計算本体は変えていない)
 - [§127](developer/127.md) 田んぼダムの評価機能 m_paddy(fn_paddy): 落水口の装置則とサブグリッドの水田タンク・区画の解像(2026-11-24 設計合意・段 1 実装、2026-11-25 段 2 実装・段 3 例題・段 4 水質と土砂・集水面積率)
 - [§128](developer/128.md) 実効平面積率 af のハロの行の更新漏れ: 堤防の越流の追い越し上限が帯の境で古い値を読む(MPI の実バグ。2026-11-24 発見・修正)
+- [§129](developer/129.md) 連行則の改良: Hungr の則(f_dbed = 5)・連行する流動深の下限(db_hent)・取り込んだ質量の運動量(f_dbmom)(2026-11-25。利用者の決定。既定は変えず、無効時はビット一致)
+- [§130](developer/130.md) 沢の向きへの依存の原因と修正: 塞がれた開口の動的振り替えの塞がり率を、土砂流動の計算では流動深で測る(横断方向の応力の試作、一様な V 字水路の厳密解との比較、検定 test/vchannel、例題 snow_avalanche の再計算。2026-11-25)

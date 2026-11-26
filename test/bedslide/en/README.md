@@ -94,7 +94,7 @@ lower than that).
 Configuration 4 (left) and the control (right). The mass that flowed over
 land as a debris flow (mixture) becomes, with the handover, a bed layer in
 the cells with a ponded depth of 2 m or more and runs along the lake bed
-(deposit 5.1 m, handover 17,534 m³ = 92 % of the release); without the
+(deposit 5.1 m, handover 17,333 m³ = 91 % of the release); without the
 handover it stops near the shoreline and does not reach the lake bed
 (deposit on the flat part 0 m).
 
@@ -109,7 +109,7 @@ handover it stops near the shoreline and does not reach the lake bed
 | Configuration 3: ledger / Σh | Σdz and max\|Δ(z − sd)\| both about 1e-10 or less (round-off) / Σh unchanged (+2.7e-3 m·cell) | PASS |
 | Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.19 m / water-surface maximum 0.56 m (flat part of the lake bed) | PASS |
 | Configuration 3: release ledger | released 19,110 = stopped 16,678 + moving 2,432 m³ | PASS |
-| Configuration 4: handover | 17,534 m³, lake-bed max dz 5.11 m; control 0.00 m | PASS |
+| Configuration 4: handover | 17,333 m³, lake-bed max dz 5.07 m; control 0.00 m | PASS |
 
 (Values recomputed on 2026-11-05 with the steep-slope gravity correction aligned to the default 2 (friction
 along the slope; developer.md §93). Only the rounding values of the ledger of configuration 3 and the handover of
@@ -146,6 +146,11 @@ ledger from 16,649 to 16,678 m³; in configuration 4 the handover goes from 17,5
 lake-bed deposit from 5.115 to 5.107 m and the speed of the mixture from 2.95 to 2.92 m/s. The change
 of the run-up comes mainly from f_dry_head_cap = 4 (with 3 restored it is 1.10 m), and that of the speed
 of the mixture from f_advection_bend = 2 (with 1 restored it is 2.95 m/s; developer.md §114.)
+After the blockage ratio of the dynamic reassignment of blocked openings was corrected on 2026-11-25 to be
+measured with the flow depth h + hs, the handover of configuration 4 goes from 17,534 to 17,333 m³, the
+lake-bed deposit from 5.107 to 5.065 m and the speed of the mixture from 2.92 to 2.85 m/s (how far the ground
+on both sides of the mixture flowing on land counts as a blockage is now set by the flow depth instead of the
+water depth; configurations 1 to 3 do not change; developer.md §130.)
 
 - The 45°-rotated benchmark is a detector for a wrong normalization of the
   8-direction distribution, which makes the passage speed come out √2 times

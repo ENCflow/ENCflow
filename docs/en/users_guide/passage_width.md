@@ -258,6 +258,11 @@ threshold, no history and no extra parameter. Outside the domain and invalid
 cells give 1, sea cells 0. Openings already reassigned statically at a levee
 are not counted, so as not to hand them back twice.
 
+The column $`h_c`$ is the depth of the flow: the water depth h in water-only
+computations, and the flow depth h + hs when the sediment-flow model is active
+(`f_debris` of [sediment and landform change](geomorph.md)), because the flow
+surface is then z + h + hs.
+
 <a id="history"></a>
 
 ## 5. How to measure "blocked" -- the road to the default 3
@@ -274,6 +279,7 @@ are not counted, so as not to hand them back twice.
 | 2026-10-29 | 2 | 3, which measures the rise above the local plane, was added | §68.41, opening_plan.md |
 | 2026-10-31 | **3** | After comparing all 86 tests and the examples, the default was switched to 3 | §68.41, opening_plan.md §8 |
 | 2026-10-31 to 11-01 | 3 | Found after the switch: specify 2 for longshore currents along a uniform beach (§7). A run that stopped in a deep impoundment of a tutorial was caused not by the reassignment but by an inconsistent lateral-face flux of the advection term, which was fixed | §68.41 to §68.43 |
+| 2026-11-25 | 3 | In computations with the sediment-flow model, the water column of the blockage ratio is now measured with the flow depth h + hs. Until then it was measured with the water depth h alone, so that even diagonal neighbours submerged by a flow with a thin carrier (one tenth of the flow depth in the avalanche settings) counted as blocking, and the diagonal edges that kept flowing and the axis edges that received the reassignment counted the same passage width twice (discharge 21 % too large in a uniform V-channel; [test/vchannel](../../../test/vchannel/en/README.md)) | §130 |
 
 In retrospect, each step widened "the situations where the virtual passage
 widths match the actual shape of the flow": levee walls → banks of the
@@ -489,6 +495,27 @@ conveyance.
   sheet flow running diagonally on a slope, the unit discharge obtained from
   depth and velocity remains 0.91 to 0.93 of the value from the rainfall,
   with both 2 and 3 (T10 of test/rockinc; not yet investigated).
+- **Thin flows advancing in a V-shaped valley resolved by the grid**: 3 counts
+  the rise of the valley floor (the second difference across the valley) as a
+  blockage. Where the flow is thinner than that rise, only the passage width
+  along the axis in the bottom rows is widened. This acts only when the valley
+  runs along a grid axis, so the shape of the head of the flow depends on the
+  direction of the valley. At the front of an avalanche running down a gully
+  (a flow without entrainment), the maximum flow depth with the gully along an
+  axis is 1.5 to 1.9 times that with the gully along the diagonal (5 m and
+  2.5 m grids) and does not shrink under grid refinement. With
+  `f_opening_dynamic = 0` it stays within 1.1 to 1.2 times and approaches the
+  solution of 4 neighbours along the grid (developer.md §130.4; a runnable
+  comparison is in the example
+  [snow_avalanche](../../../examples/snow_avalanche/en/README.md#grid-spacing-gully-direction-and-time-step)). For flows much
+  deeper than the rise the difference is small: in a uniform V-channel (flow
+  8 cells wide, flow depth 4.9 m) the spread of the discharge over the
+  directions is 8 % with 3 and 3 % with 0
+  ([test/vchannel](../../../test/vchannel/en/README.md)). Use 0 for sediment
+  flows in valleys resolved by the grid (snow avalanches, debris flows, debris
+  avalanches). Without the reassignment the passage width of the rows touching
+  the dry banks is not handed back, so the discharge comes out 7 to 11 % below
+  the exact solution (it approaches it as the grid is refined).
 - **Split of bedload**: bedload uses the reassignment table of the water as
   it is. If `fluv_diagratio` differs from `p_diagratio`, the splits disagree
   and the bedload capacity of a one-cell-wide channel becomes 2.41 times as
@@ -516,6 +543,7 @@ conveyance.
 | Reproducing runs calibrated with the default of 2026-10-18 to 31 | `f_opening_dynamic = 2` | the rule of the default in that period |
 | Reassigning only where there is a channel mask | `f_opening_dynamic = 1` | the default until 2026-10-18; has no effect without a channel mask (`fn_rw`) |
 | Reproducing versions before 2026-10-03 | `f_opening_dynamic = 0` (together with `f_advection_scheme = 1` and `f_dry_head_cap = 0`) | the defaults of that time |
+| Sediment flows in valleys resolved by the grid (snow avalanches, debris flows, debris avalanches) | `f_opening_dynamic = 0` | "thin flows advancing in a V-shaped valley resolved by the grid" in §7 |
 | Comparison with a 4-neighbour grid | `p_diagratio = 0` | closes the diagonal exchange (example chichibu_flood) |
 | Breaches 3 cells wide or more | `f_br_diag = 1` | 0.98 to 1.03 times the discharge of a resolved levee ([channel models page](channel_models.md) §4) |
 | Channels narrower than a cell | `fn_width` (the wall-free width mode if there is no levee) + the default reassignment | the double correction between width cells and slopes is avoided automatically |
@@ -565,6 +593,7 @@ The master tables of defaults and their basis are on the linked pages.
 | [test/rockinc](../../../test/rockinc/en/README.md) | steep uniform flow (T9) and orientation of sheet flow (T10) | with 3 the bed shear stress matches uniform flow and the local balance |
 | [test/hillslope](../../../test/hillslope/en/README.md) | rainfall-runoff of a planar slope, a stepped slope and a V-shaped catchment | compares the arrival time on the planar slope with the kinematic wave |
 | [test/wfcurrent](../../../test/wfcurrent/en/README.md) | longshore current on a beach of uniform slope | the first-order friction bias of 3 (the beach configurations specify 2) |
+| [test/vchannel](../../../test/vchannel/en/README.md) | cross-channel distribution of the flow in a uniform V-channel (flow 8 cells wide) against the exact solution (flow directions 0°, 22.5° and 45°; water and the Voellmy law) | the acceleration without friction is within 1 % of g S. The discharge is 0.90 to 0.98 times the exact solution for the Voellmy law with 3, 0.89 to 0.93 times with 0, and 0.84 to 0.86 times for water |
 | v-shaped in [examples/benchmark](../../../examples/benchmark/) | theoretical rainfall-runoff of a V-shaped catchment | the error of 3 decreases with grid refinement |
 | [examples/levee_breach](../../../examples/levee_breach/en/README.md) | diagonal linkage of breaches | breaches 3 to 5 cells wide match the discharge of a resolved levee |
 | [examples/chichibu_flood](../../../examples/chichibu_flood/en/README.md) | ENC and 4-neighbour grids, 200, 100 and 50 m | the 4-neighbour channel network stays cut even on a four times finer grid |

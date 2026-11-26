@@ -1,8 +1,8 @@
 # ENCflow/examples/snow_avalanche/Makefile
 #   make          ../../bin/ の実行ファイルへのリンクと、全ケースの入力・設定(make_init.py)を作る
-#   make run      本文の 5 ケース(走路の雪 0・1・2 m、誘導堤あり 2 ケース)を計算する(4 スレッドで 6 分ほど)
-#   make extra    補足の 14 ケース(摩擦係数・格子間隔・沢の向き・時間刻み・限界水深・全面の雪)を計算する
-#                 (4 スレッドで 40 分ほど。格子 2.5 m の 1 ケースが半分)
+#   make run      本文の 5 ケース(走路の雪 0・1・2 m、誘導堤あり 2 ケース)を計算する(4 スレッドで 4 分ほど)
+#   make extra    補足の 28 ケース(摩擦係数・格子間隔・沢の向き・時間刻み・開口の振り替え・限界水深・運動量・連行則・
+#                 全面の雪)を計算する(4 スレッドで 25 分ほど。格子 2.5 m の 1 ケースが 2 割)
 #   make clean    リンクと生成物を削除する
 
 TOPDIR	= ../..
@@ -10,7 +10,9 @@ BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
 # base は param.txt そのもの
 MAIN	= nosnow base deep dam deep_dam
-EXTRA	= mu155 mu340 dx10 r22p5 r45 dt2 dthalf dd3 dd3_dthalf dd5 allsnow allsnow_dd3 allsnow_dd5 dx2p5
+EXTRA	= mu155 mu340 dx10 r22p5 r45 dt2 dthalf nosnow_r45 open3 open3_r45 nosnow_open3 nosnow_open3_r45 \
+	  dd3 dd3_dthalf dd5 nomom deep_nomom hungr \
+	  allsnow allsnow_dd3 allsnow_dd5 allsnow_h allsnow_h_dd3 allsnow_h_dd5 allsnow_t allsnow_t_dd3 allsnow_t_dd5 dx2p5
 
 all: links inputs
 

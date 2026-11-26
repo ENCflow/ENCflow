@@ -1,8 +1,8 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   高速な 31 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
+#   高速な 32 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
 #   ローカルで test/chichibu/Run.sh を実行すること。test/paddy も実行時間の都合で、夜間の nightly.yml だけで
 #   回す。developer.md §127.16)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
-#   bldgdrag・driftwood・bankcap・brink・bankspill・chutepool・cascade・tjunction・stairbank・stageside・bankhalo は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
+#   bldgdrag・driftwood・bankcap・brink・bankspill・chutepool・cascade・tjunction・stairbank・stageside・vchannel・bankhalo は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
 #   終了コードで判定。stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。
 #   vshaped は V 字流域の降雨流出の運動学的波の理論解との比較。bldgdrag は家屋の抗力項を含む等流の
 #   理論値との比較で、逐次のジョブだけで回す(辺ごとの局所の式で、MPI のジョブは同じ式を通るだけなので
@@ -43,6 +43,12 @@
 #   Neumann の境界面で同じにしていること。古い値の組み合わせと 4 つの値の組み合わせが、どちらも定常・岸沿いに
 #   一様で、結果が一致することを判定する)。逐次と MPI の両方で回す(np = 2 では、北と南の側方 Neumann の辺を
 #   別のランクが持つ)
+#   vchannel は、一様な勾配の V 字水路の流れの横断分布と流量を、各列の流速が自分の流動深だけで決まる厳密解と
+#   比べる検定(流れの向き 0°・22.5°・45°。水のマニング則と、土砂流動の Voellmy 則)。塞がれた開口の動的振り替えの
+#   塞がり率を、土砂流動の計算では流動深 h + hs で測ることの見張りを兼ねる(水深 h だけで測ると、摩擦なしの
+#   加速度が g S の 1.12 倍になって不合格になる。developer.md §130)。逐次のジョブだけで回す(約 1 分。MPI の
+#   ジョブは、遅いランナーでは 27 分かかっていて制限の 30 分に余裕がなく、np = 2 で約 2 分のこの検定を足して
+#   いない。手元の np = 2 は合格し、分布出力は逐次とバイト一致する)
 #   river_flowline は、前処理 utils/river_flowline(河道マスクを標高の落水線に載せ直す)が、秩父の 4 つの格子の
 #   置いてある載せ直し済みのマスクをバイト一致で作り直すことの検定で、逐次のジョブだけで回す(encflow は
 #   使わない。Run.sh が utils/river_flowline をビルドする)
@@ -74,7 +80,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink bankspill chutepool cascade tjunction stairbank stageside river_flowline bankhalo; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink bankspill chutepool cascade tjunction stairbank stageside vchannel river_flowline bankhalo; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done

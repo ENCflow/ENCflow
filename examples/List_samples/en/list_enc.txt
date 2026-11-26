@@ -230,7 +230,11 @@
                             !   counts the upslope ground of a uniform slope as
                             !   blocking and speeds up steep, shallow flows
                             !   (developer.md §68.41); set 2 explicitly to
-                            !   reproduce cases calibrated with it
+                            !   reproduce cases calibrated with it. 0 is
+                            !   recommended for sediment flows (snow
+                            !   avalanches, debris flows) in valleys resolved
+                            !   by the grid (passage-width adjustment page of
+                            !   the user's guide, §7)
   !f_inflow_edge = 0        ! treatment of the edges touching the outer cells
                             !   of a segment inflow (0: zero advection on all
                             !   of them = default, 1: zero advection only on

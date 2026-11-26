@@ -403,37 +403,75 @@ composition without double counting) is not implemented.
 growth of avalanches and rock avalanches that pick up the snow or the
 colluvium of their path; the entrainable layer is given by the soil
 thickness $`s_d`$. Only dense cells with $`C \ge c_{\min}`$ entrain (no
-runaway of dilute fringes). The empirical entrainment law of Hungr[^hungr95],
-widely used in debris-flow practice, is $`E = E_r\,h\,|\mathbf{V}|`$ (DAN3D and
-others; $`E_r`$ is the volume growth per metre travelled, estimated from the
-volume $`V_0`$ entering and $`V_f`$ leaving the entrainment zone and its length
-$`L`$ as $`E_r = \ln(V_f/V_0)/L`$[^qiao23]) and has a flow-depth factor. With
-f_dbed = 4 the erosion depth is proportional to the distance travelled
-regardless of the flow depth, whereas with Hungr's law it is proportional to
-the flow depth and the volume grows exponentially with the distance. To give a
-similar entrained amount with f_dbed = 4, $`\delta_e \approx E_r \times`$ (a
-representative flow depth) is a guide. **f_dbed = 0** is no exchange
-(equivalent fluid).
+runaway of dilute fringes). It has the form of the entrainment law of the operational avalanche model RAMMS
+(an entrainment rate proportional to the avalanche speed[^christen08]); the erosion depth does not depend on
+the flow depth and is proportional to the distance the flow has passed.
 
-**Accuracy limits of the velocity-proportional entrainment.** (1) The law has no threshold on the flow depth or
-on the strength of the entrainable layer. The concentration condition $`C \ge c_{\min}`$ does not act on the thin
-flow at the margins (thin flow has the same concentration as the body). All of the layer that the flow touches is
-taken, so if the entrainable layer is placed over the whole slope, thin flow that leaves the margin for a
-neighbouring cell takes up the layer there and becomes thick flow, and the area that is entrained spreads
-sideways. The spreading stops at the threshold depth `dd` ([shallow-water flow](swflow.md): the sediment in a cell
-whose surface water falls below `dd` is fixed on the spot), so the entrained amount ends up being set by `dd` (in
-the example [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md), the avalanche with snow placed
-everywhere is 2.5 times the release for `dd` = 1 mm, 10.9 times for 0.1 mm and 14.1 times for 0.01 mm). Give the
-entrainable layer over a chosen area, such as a band of the width the flow covers. With Hungr's law above, the
-entrainment rate is proportional to the flow depth, so thin flow takes up almost nothing. (2) What is taken up
-joins the flow at the local flow velocity. The momentum equation is solved for the velocity and erosion and
-entrainment only add $`h_s`$, so the momentum needed to accelerate the entrained mass (a deceleration
-$`-\mathbf{V}E/h_t`$, with $`E`$ the rate at which the flow depth grows) is not counted. For a 0.5 m layer
-released at once on a uniform slope of 0.5 and taking up the layer below with $`\delta_e = 0.02`$ (μ = 0.2,
-ξ = 1500 m/s²), the velocity after 8 s is 14.3 m/s, larger than the 9.3 m/s of the solution of the
-momentum-conserving ordinary differential equation (developer.md §126.5). Erosion with f_dbed = 1 to 3 is
-treated in the same way, but the difference is small because the erosion rate is small compared with the flow
-depth.
+**f_dbed = 5: Hungr's entrainment law.** $`E = E_r\,h_t\,|\mathbf{V}|`$ ($`h_t = h + h_s`$). An empirical law
+widely used in debris-flow and landslide practice[^hungr95] (DAN3D and others); $`E_r`$ (`db_er`, 1/m) is the
+relative volume increase per metre travelled. It is estimated from the volume $`V_0`$ entering and $`V_f`$
+leaving the entrainment zone and its length $`L`$ as $`E_r = \ln(V_f/V_0)/L`$[^qiao23], so it can be calibrated
+from pre- and post-event surveys or deposit volumes, and published calibrations ($`E_r \approx 0.001`$ /m for
+the Cancia 2015 debris flow[^qiao23]) can be used as they are. The erosion depth is proportional to the flow
+depth, so thicker flow erodes deeper and the flow volume grows exponentially with the distance travelled.
+Entrainment only with deposition left to `f_dbstop`, the entrainable layer $`s_d`$, and entrainment by dense
+cells ($`C \ge c_{\min}`$) only are the same as for f_dbed = 4. In Hungr's definition the entrained material
+joins the flow with its pore water (as bulk volume), so combine it with pore-water entrainment
+(`f_dbwet = 1`, saturation 1) to match the volume growth. To give a similar entrained amount with f_dbed = 4,
+$`\delta_e \approx E_r \times`$ (a representative flow depth) is a guide. For a sheet released at once on a
+uniform slope, the flow depth grows as $`e^{E_r x}`$ with the distance travelled $`x`$ (configuration 4 of
+[test/avalanche](../../../test/avalanche/en/README.md); within 0.4 % of the solution of the ordinary
+differential equation).
+**f_dbed = 0** is no exchange (equivalent fluid).
+
+**Entrainment by thin flow, and the minimum flow depth for entrainment (db_hent).** The velocity-proportional
+law f_dbed = 4 has no threshold on the flow depth or on the strength of the entrainable layer. The
+concentration condition $`C \ge c_{\min}`$ does not act on the thin flow at the margins (thin flow has the same
+concentration as the body). All of the layer that the flow touches is taken, so if the entrainable layer is
+placed over the whole slope, thin flow that leaves the margin for a neighbouring cell takes up the layer there
+and becomes thick flow, and the area that is entrained spreads sideways. The spreading stops at the threshold
+depth `dd` ([shallow-water flow](swflow.md): the sediment in a cell whose surface water falls below `dd` is
+fixed on the spot), so the entrained amount ends up being set by `dd` (in the example
+[examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md), the avalanche with snow placed
+everywhere is 2.5 times the release for `dd` = 1 mm, 2.9 times for 0.1 mm and 14.6 times for 0.01 mm).
+Operational models know this behaviour: the developers of RAMMS write that too much mass is entrained if the
+avalanche spreads too widely[^christen08], and RAMMS::Extended has a yield-stress threshold for entrainment
+(default 300 Pa) that is raised when shallow flow arms entrain too much snow[^rammsext]. There are three
+remedies.
+
+1. Give the entrainable layer over a chosen area, such as a band of the width the flow covers.
+2. Give `db_hent` (m). Cells whose flow depth $`h_t`$ is below it do not entrain (f_dbed = 4 and 5; default
+   0 = no minimum). A guide is the yield stress of the snow $`\tau_c`$ converted to a flow depth,
+   $`\tau_c/(\rho g \mu\cos\theta)`$: about 0.4 m for $`\tau_c`$ = 300 Pa, a density of 300 kg/m³ and
+   μ = 0.25. This is our own simplification that cuts by flow depth alone; the stress itself is not compared.
+3. Use f_dbed = 5. The entrainment rate is proportional to the flow depth, so thin flow takes up almost
+   nothing.
+
+In the same computation the avalanche is 2.7, 2.7 and 2.7 times the release with `db_hent` = 0.3 m, and
+2.3, 2.5 and 2.5 times with f_dbed = 5 ($`E_r`$ = 0.01 /m), for `dd` = 1, 0.1 and 0.01 mm; it no longer
+depends on `dd`.
+
+**Momentum of the entrained mass (f_dbmom).** By default (`f_dbmom = 0`) what is taken up joins the flow at
+the local flow velocity. The momentum equation is solved for the velocity and erosion and entrainment only add
+$`h_s`$, so the momentum needed to accelerate the mass from rest to the flow velocity is not counted.
+`f_dbmom = 1` takes this from the flow. The relative rate of increase $`\dot m/m`$ of the mass added by erosion
+and entrainment (the solids and the pore water released with them), averaged over the two cells of an edge, is
+added to the semi-implicit resistance of the momentum equation of the next step (in one step
+$`\mathbf{V} \leftarrow \mathbf{V}\,m/(m + \Delta m)`$, with $`m = h + (1 + s)h_s`$). This is a deceleration
+$`-\mathbf{V}E/h_t`$, with $`E`$ the rate at which the flow depth grows; for the velocity-proportional law it is
+$`-\delta_e|\mathbf{V}|\mathbf{V}/h_t`$, the same form as the turbulent term of Voellmy
+$`g|\mathbf{V}|\mathbf{V}/(\xi h_t)`$ ($`\delta_e`$ = 0.05 is as strong as ξ ≈ 200 m/s² and acts only while the
+flow entrains). Deposition does not change the velocity (the mass leaves with its momentum). The switch is
+common to f_dbed = 1 to 5, and the value is carried across a restart (geomorph_debris.dat in the save
+directory). Accelerating the entrained mass from rest is the treatment of DAN3D[^qiao23],
+SamosAT[^sailer08][^fischer15] and AvaFrame com1DFA[^avaframe]; the 2008 formulation of RAMMS does not include
+momentum losses[^christen08]. For a 0.5 m layer released at once on a uniform slope of 0.5 and taking up the
+layer below with $`\delta_e = 0.02`$ (μ = 0.2, ξ = 1500 m/s²), the velocity after 8 s is 14.26 m/s with
+`f_dbmom = 0` (14.30 m/s for the ordinary differential equation without the term that accelerates the mass)
+and 9.31 m/s with `f_dbmom = 1` (9.33 m/s for the momentum-conserving solution; configurations 2 and 3 of
+test/avalanche). For erosion with f_dbed = 1 to 3 the difference is small because the erosion rate is small
+compared with the flow depth. It does not act on the mass set in motion by slope failure (`f_slide`) or by
+instantaneous release (`fn_dbinit`).
 
 **Stopping (f_dbstop = 1).** In cells with $`|\mathbf{V}| < v_{stop}`$ and
 $`C > C_\infty`$ the excess concentration is transferred to the bed at the
@@ -489,36 +527,6 @@ configuration 4 of [test/slide](../../../test/slide/en/README.md). In a trial in
 flow dams the main river (10 m grid, $`s_y = 0.2`$, $`\lambda = 0.4`$), leaving it at 2 let the water that
 did not enter the deposit spill, and the discharge downstream right after the debris flow was 2.6 times
 that with $`s_y = \lambda`$ (developer.md §28.17).
-
-**Future work (planned): Hungr's entrainment law.** We plan to add, without
-changing the default, Hungr's empirical entrainment law[^hungr95]
-$`E = E_r\,h_t\,|\mathbf{V}|`$, mentioned in the f_dbed = 4 paragraph above, as an
-f_dbed option.
-
-- **Effect**: the form then matches models used in European and North American
-  practice such as DAN3D, so earlier calibrated values (for example
-  $`E_r \approx 0.001`$ /m for Cancia 2015[^qiao23]) can be used as they are. The
-  entrainment rate $`E_r`$ can be estimated from the volumes entering and leaving
-  the entrainment zone and its length as $`E_r = \ln(V_f/V_0)/L`$, so it can be
-  calibrated with pre- and post-event surveys or deposit volumes. Thicker flows
-  erode deeper, and the flow volume grows exponentially with the distance
-  travelled (with f_dbed = 4 the erosion depth does not depend on the flow depth,
-  so the volume growth is set by the area the flow covers). The one added
-  parameter is $`E_r`$ (1/m); it is not shared with the dimensionless
-  $`\delta_e`$ because the units differ.
-- **To be prepared in the implementation**: as with f_dbed = 4, entrainment only
-  with deposition left to `f_dbstop`, the entrainable layer given by the soil
-  thickness $`s_d`$ (the entrainment zone given by the distribution of $`s_d`$),
-  and entrainment only by dense cells with $`C \ge c_{\min}`$. The flow depth is
-  the mixture depth $`h_t = h + h_s`$. In Hungr's definition the entrained
-  material joins the flow with its pore water (as bulk volume), so to match that
-  volume growth it is combined with pore-water entrainment (`f_dbwet = 1`,
-  saturation 1). The check case is that the volume of a flow moving at a
-  constant speed down a uniform slope grows as $`V_0\,e^{E_r x}`$ with the distance
-  travelled $`x`$ (together with the closure of the solid ledger).
-- **Timing**: it will be added when comparisons with European practice models or
-  real debris flows with large entrainment (Cancia 2015 and others; obtaining the
-  topographic data is a prerequisite) are taken up (developer.md §28.8).
 
 ## 4. Triggering
 
@@ -739,8 +747,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | db_mu / db_xi | 0.2 / 1000 m/s² | Voellmy μ, ξ (law 4) | **literature value** middle of the RAMMS avalanche range[^christen10]; smaller for rock debris |
 | db_tauy | 10 kPa | constant yield stress (law 5) | **literature value** low end of the VolcFlow pyroclastic applications[^kelfoun05] |
 | f_dbcurv | 0 | curvature term (§2) | **method** Fischer et al.[^fischer12]; 1 when comparing with RAMMS calibrations |
-| f_dbed | 1 | erosion/deposition law (§3) | **method** 1: Takahashi relaxation, 2: Egashira–Ashida, 3: Takahashi–Nakagawa, 4: velocity-proportional, 0: none |
+| f_dbed | 1 | erosion/deposition law (§3) | **method** 1: Takahashi relaxation, 2: Egashira–Ashida, 3: Takahashi–Nakagawa, 4: velocity-proportional, 5: Hungr's law, 0: none |
 | db_delte / db_deltd | 0.0007 / 0.05 | erosion / deposition rate coefficients | **calibration** Takahashi's general value / Kanako customary value |
+| db_er | 0 | growth rate $`E_r`$ of Hungr's law (1/m; §3) | **given** always supply it for f_dbed = 5; estimate it from the volumes before and after the entrainment zone and its length, and calibrate it case by case[^hungr95][^qiao23] |
+| db_hent | 0 m | minimum flow depth for entrainment (f_dbed = 4 and 5; §3) | **compatibility** 0 = no minimum (the earlier behaviour); when given, a yield-stress threshold[^rammsext] converted to a flow depth is a guide (our own simplification) |
+| f_dbmom | 0 | momentum of the entrained mass (§3) | **compatibility** 0 is the earlier behaviour (the mass joins at the flow velocity); use 1 for flows that grow much by entrainment (the acceleration from rest is counted[^sailer08][^fischer15][^avaframe]) |
 | f_dbstop / db_vstop / db_wstop | 0 / 0.05 m/s / 0.05 m/s | low-speed stopping | **numerical** vstop also serves the yield test |
 | db_immexp | 1 | exponent of (d_L/h) in the resistance of the bedload-like collective flow of the Takahashi–Nakagawa law (§2) | **method** 1: as printed in eqs. (24)(25) of the original paper[^tn91], 2: the form derived from the uniform-flow law, eq. (3), of the same paper (eq. (31) of [^tny91]) |
 | f_dbunsat / db_kunsat | 0 / 0.01 | erosion formula for an unsaturated bed / its constant K (§3; f_dbed = 3) | **method** eq. (10) of the original paper[^tn91]. **literature** K is the value applied to Horadani |
@@ -785,12 +796,13 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/dbslope](../../../test/dbslope/en/README.md) | uniform flow on a 30° slope (Voellmy, Egashira, the stony type and the bedload-like collective flow of Takahashi–Nakagawa, the latter with the first and the second power of (d/h)), steep-slope gravity correction 1 and 2 | for all five, within 0.04% of the analytical solutions of the along-slope equations with 2 and of the horizontal equations with 1 (ratio of the depths of 2 and 1: 1.11–1.21) |
 | [test/curvature](../../../test/curvature/en/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |
 | [test/dbonset](../../../test/dbonset/en/README.md) | rest and onset of motion under the yield (uniform slope 0.9, 1.1 and 1.3 times the yield slope; slope direction 0°, 22.5° and 45°; eight and four neighbours; without and with the steep-slope gravity correction) and the safety factor of the slope-stability test (same slopes; c' = 0, no groundwater) | threshold, speed and direction independent of the direction and the stencil, within 0.4% of the analytical solution of a rigid sliding block (g cos²θ with the gravity correction); safety factor independent of the direction, within 0.1% of tanφs/tanθ |
-| [test/avalanche](../../../test/avalanche/en/README.md) | avalanche (Voellmy + velocity-proportional entrainment) | grows by entrainment to about 3.4 times the released amount and stops; ledger to machine precision |
+| [test/avalanche](../../../test/avalanche/en/README.md) | avalanche (Voellmy + velocity-proportional entrainment); a sheet released at once on a uniform slope (velocity-proportional law, Hungr's law, minimum flow depth, with and without the momentum switch) and a restart | entrained solids grow to 1.97 times the released solids and the flow stops; ledger to machine precision; velocity and flow depth on the uniform slope within 0.5 % of the solutions of the ordinary differential equations |
+| [test/vchannel](../../../test/vchannel/en/README.md) | cross-channel distribution of a Voellmy-law flow in a uniform V-channel (flow 8 cells wide; flow directions 0°, 22.5° and 45°) against the exact solution in which the velocity of each column is set by its own flow depth alone | the acceleration without friction is within 1 % of g S. The discharge is 0.90 to 0.98 times the exact solution with the default and 0.89 to 0.93 times with `f_opening_dynamic = 0` (spread of 3 % over the directions) |
 | [test/bedslide](../../../test/bedslide/en/README.md) | analytical speed of the layer, 45° slope, entry into a lake | $`V`$ of interior cells within 0.5% of the analytical value |
 | [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md) | rock avalanche, hand-over, submarine landslide | four patterns compared |
 | [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) | ash fall → rain → lahar, check dam | the lahar setting pattern (infiltration capacity, f_dbwet=2) |
 | [examples/debris_fan](../../../examples/debris_fan/en/README.md) | slope failure → valley → residential area on the fan (Takahashi–Nakagawa stony type); grid spacings 40-2.5 m, the valley at 0°, 22.5° and 45°, four-neighbour control | grid dependence: with eight neighbours the valley orientation changes the results by a few % at 5 m, and the sediment reaches the fan even at 40 m (coarser than the valley floor); with four neighbours sediment stays in oblique valleys at 20 m and above |
-| [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md) | a dense snow avalanche down a gully (Voellmy + velocity-proportional entrainment); track snow of 0, 1 and 2 m, a deflecting dam, friction coefficients, grid spacing, gully direction and time step, threshold depth, snow everywhere | the avalanche setting pattern (exchange of the carrier f_dbwet=1, threshold depth 0.1 mm). With the entrainable snow given as a band, the amount taken up is set by the amount placed and does not depend on the time step; placed everywhere, it is set by the threshold depth (2.5 to 14 times the release) |
+| [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md) | a dense snow avalanche down a gully (Voellmy + velocity-proportional entrainment + momentum of the entrained snow); track snow of 0, 1 and 2 m, a deflecting dam, friction coefficients, grid spacing, gully direction and time step, with and without the dynamic reassignment of openings, threshold depth, snow everywhere (minimum flow depth db_hent, the Hungr law), comparison with runs that do not count the momentum | the avalanche setting pattern (exchange of the carrier f_dbwet=1, threshold depth 0.1 mm, f_dbmom=1; f_opening_dynamic=0 because the gully is resolved by the grid). With the entrainable snow given as a band, the amount taken up is set by the amount placed and does not depend on the time step; placed everywhere, it is set by the threshold depth (2.5 to 14.6 times the release), but with a minimum flow depth of 0.3 m (2.5 times) or the Hungr law (2.3 to 2.4 times) it does not depend on the threshold depth. The tip of the deposit stays within ±5 m for the gully direction and the time step and within −18 to +14 m for the grid spacing; the flow depth in the gully and the area and width of the deposit change by about 10 % with the gully direction |
 
 ## References
 
@@ -801,6 +813,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^tny91]: Takahashi, T., Nakagawa, H. and Yamashiki, Y. (1991): Formation and erosion of debris fan that is composed of sediment mixtures. *Annuals, Disaster Prevention Research Institute, Kyoto University*, 34 B-2, 355–372 (in Japanese). (Derivation of the unsaturated-bed erosion formula, eqs. (8) to (11); equilibrium concentration of the bedload-like collective flow, eq. (12); the cap 0.9c*; δe = 0.0007; resistance of the bedload-like collective flow, eq. (31).)
 [^egashira93]: Egashira, S. (1993): Mechanism of stopping and deposition of debris flow (2). *J. Jpn. Soc. Erosion Control Eng.*, 46(2) (in Japanese). (original form of the constitutive law and yield stress of Egashira et al. 1989)
 [^voellmy55]: Voellmy, A. (1955): Über die Zerstörungskraft von Lawinen. *Schweizerische Bauzeitung*, 73, 159–165, 212–217, 246–249, 280–285.
+[^christen08]: Christen, M., Bartelt, P., Kowalski, J. and Stoffel, L. (2008): Calculation of dense snow avalanches in three-dimensional terrain with the numerical simulation program RAMMS. *Proc. International Snow Science Workshop 2008, Whistler*, 709–716. <https://arc.lib.montana.edu/snow-science/objects/P__8140.pdf>
+[^rammsext]: Bartelt, P. and Christen, M. (2026): *RAMMS::Extended User Manual*. RAMMS AG. <https://ramms.ch/manuals/RAMMS_EXT_Manual.pdf> (the section on the yield stress for entrainment)
+[^sailer08]: Sailer, R. et al. (2008): *Ann. Glaciol.*, 48, 183–192. doi:10.3189/172756408784700707 (entrainment in SamosAT; eq. (14) is the term that accelerates the entrained mass)
+[^fischer15]: Fischer, J.-T. et al. (2015): *J. Glaciol.*, 61(229), 875–888. doi:10.3189/2015JoG14J168 (the term −(u/h)q̇ of eq. (2))
+[^avaframe]: The theory document (section Entrainment) and the algorithm document of AvaFrame com1DFA. <https://docs.avaframe.org/en/latest/theoryCom1DFA.html>, <https://docs.avaframe.org/en/latest/com1DFAAlgorithm.html> (read 2026-11-25; release 2.2.1)
 [^hungr95]: Hungr, O. (1995): A model for the runout analysis of rapid flow slides, debris flows, and avalanches. *Can. Geotech. J.*, 32, 610–623. doi:10.1139/t95-063 (the form of the entrainment law from eqs. (14) and (15) of Qiao et al. 2023; the paper itself not read)
 [^qiao23]: Qiao, Z., Li, T., Simoni, A., Gregoretti, C., Bernard, M., Wu, S., Shen, W. and Berti, M. (2023): Numerical modelling of an alpine debris flow by considering bed entrainment. *Front. Earth Sci.*, 10, 1059525. doi:10.3389/feart.2022.1059525 (the 2015 Cancia debris flow; calibrated Voellmy μ, ξ and entrainment rate in Tables 2 and 3)
 [^christen10]: Christen, M., Kowalski, J. and Bartelt, P. (2010): RAMMS: Numerical simulation of dense snow avalanches in three-dimensional terrain. *Cold Reg. Sci. Technol.*, 63, 1–14.

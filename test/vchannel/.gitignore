@@ -1,0 +1,3 @@
+# make_init.py が Run.sh のたびに作る入力と設定
+data_r*/
+p_*_r*.txt
