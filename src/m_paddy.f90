@@ -80,7 +80,9 @@ module m_paddy
   !   浮遊砂・掃流砂はセル全面のまま(タンクは土砂を運ばない)。双方向と浮遊砂(f_suspend)を併用すると、地表から
   !   タンクへ入る水(落水口の逆流・畦畔を越える満水)の浮遊砂を hs から引いて s%pdsd に記録し、m_geomorph の
   !   浮遊砂がそれを田面(z・sd)に積む(独自の簡略化。タンクから出る水は清水。§127.11)。集水面積率は B と、
-  !   地形変化の雨滴侵食(s%rainero_active)と併用できない(init で停止。§127.13)。
+  !   地形変化の雨滴侵食(s%rainero_active)と併用できない(init で停止。§127.13)。B は混合粒径(f_bedmix)・
+  !   芦田・道上の有効掃流力(f_taupart = 2)と、双方向と浮遊砂の併用は混合粒径と併用できない(写しの手続きが
+  !   畦畔と田面の堆積を扱わない。s%fluvcopy_active・s%bmf。init で停止。§127.17)。
   ! ==========================================================================
   use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
@@ -205,7 +207,11 @@ subroutine m_paddy_init(pd, p, g, b, s, multi, vzr, sfr)
   if (pd%catch) call setup_catch(pd, g, s)
   call setup_devices(pd, p, list)
   if (pd%exch == 1) call setup_twoway(pd, g, s)
-  ! 双方向と浮遊砂(f_suspend)の併用(§127.11): タンクへ入る水の浮遊砂を田面に堆積させる記録
+  ! 双方向と浮遊砂(f_suspend)の併用(§127.11): タンクへ入る水の浮遊砂を田面に堆積させる記録。混合粒径(f_bedmix)とは
+  ! 併用しない(田面に積む土砂が粒径階の組成を持たない。§127.17)
+  if (pd%exch == 1 .and. s%sed_active .and. allocated(s%bmf)) call par_stop("list_paddy: f_pd_exchange=1 with " &
+      //"suspended sediment (f_suspend) cannot be combined with mixed grain sizes (f_bedmix) yet: the sediment " &
+      //"deposited on the field surface carries no grain-size composition")
   if (pd%exch == 1 .and. s%sed_active) then
     pd%sed = .true.
     allocate(s%pdsd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -910,6 +916,9 @@ subroutine init_plots(pd, p, g, b, s, list, vzr, sfr)
   integer, allocatable :: pid(:,:), pod(:,:), pcl(:,:)
   integer :: i, j, c
 
+  if (s%fluvcopy_active) call par_stop("list_paddy: fn_pd_plot cannot be combined with the bed load of mixed " &
+      //"grain sizes (f_bedmix) or the effective shear of Ashida and Michiue (f_taupart=2) yet: their procedures do " &
+      //"not keep the bed load inside the levees of the plots")
   if (s%debris_active) call par_stop("list_paddy: fn_pd_plot cannot be combined with debris flows " &
       //"(f_debris of fn_geomorph): the levee walls are not checked with the mixture flow")
   call no_combo(p%fn_evap, "fn_evap", "pd_perc_mmd is the daily decrease of the ponding depth and already " &

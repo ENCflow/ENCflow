@@ -64,8 +64,9 @@ without paddy fields, area fraction + catchment fraction > void ratio, and combi
 plots, input errors (a plot cell on the outer rows and columns, an outlet pointing to the same plot or given on a cell that
 is not a plot cell, different classes within a plot, a non-integer plot number, an outlet pointing to a cell higher than
 the crest, outlets facing each other), combination with inputs of A only (including the catchment fraction), with the non-hydrostatic correction or with
-debris flows, restart with a different representation from the saved state, and restart with water quality enabled differently from
-the saved state.
+debris flows, restart with a different representation from the saved state, restart with water quality enabled differently from
+the saved state, resolved plots with mixed grain sizes or the effective shear (`f_taupart = 2`), and the two-way mode with
+suspended sediment and mixed grain sizes.
 
 | File | Contents |
 |---|---|

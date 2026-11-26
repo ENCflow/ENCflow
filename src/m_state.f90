@@ -456,6 +456,10 @@ module m_state
     logical :: rainero_active = .false. ! 雨滴侵食(f_wash の雨滴の項 wash_kr > 0・
                                     ! f_splash)の有効化(m_geomorph_init が設定。
                                     ! 田んぼダムの集水面積率との併用の停止に使う。§127.13)
+    logical :: fluvcopy_active = .false. ! 掃流砂を写しの手続き(混合粒径 f_bedmix・芦田・道上の
+                                    ! 有効掃流力 f_taupart = 2)で計算する(m_geomorph_init が設定。
+                                    ! 写しは田んぼダムの区画の解像(表現 B)の畦畔を掃流砂の輸送から
+                                    ! 外していないので、m_paddy が B との併用を止める。§127.17)
     real :: hmean
     real :: cnmax
     integer :: it0 = 0       ! 時間ループの開始ステップ(フレッシュランは 0。

@@ -472,7 +472,10 @@ debris flows (`f_debris`) or the non-hydrostatic correction (`f_nonhydrostatic =
 cannot be pond cells (`fn_rscap`); and the non-paddy share 1 − a/gv must be at least 0.01 (a place for the water from
 the outlets) (stops at start-up). A state saved in the one-way mode cannot be restarted in the two-way mode, nor the reverse.
 The catchment fraction (`fn_pd_catch`) cannot be combined with resolved plots (B) or with the raindrop erosion of landform
-change (the rain term of `f_wash`, `f_splash`) (stops at start-up).
+change (the rain term of `f_wash`, `f_splash`) (stops at start-up). Resolved plots (B) cannot be combined with mixed grain
+sizes (`f_bedmix`) or the effective shear of Ashida and Michiue (`f_taupart = 2`), and the two-way mode with suspended
+sediment (`f_suspend`) cannot be combined with mixed grain sizes (stops at start-up; those bed-load and suspended-sediment
+procedures do not handle the levees of the plots or the deposit on the field surface).
 
 **Combination with landform change** (`fn_geomorph`): the rain on paddy fields falls into the tanks (the ponded water on
 the fields), so erosion by raindrops (the raindrop term of `f_wash`, `f_splash`) is computed without the paddy part (the

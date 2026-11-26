@@ -428,9 +428,9 @@
     {
       "source": "docs/users_guide/paddy.md",
       "target": "docs/en/users_guide/paddy.md",
-      "source_sha256": "58450809c61f0ff0cb082ecee40f82681d640e8c2e7b775ee2b5072a00cecd2a",
-      "target_sha256": "fb0f630ac8f61e9c925130bbae2e7c9878745ac396ef6c0eade28eeee9cf0e7a",
-      "reviewer": "Claude (Claude Code session; renumbering of the developer record and handoff citations checked in both files, no model execution)",
+      "source_sha256": "0a2e3c25bafeffdc15010abe8f2ae77cdcfcb07d742d9659f85868f0387b0163",
+      "target_sha256": "d67bf45feb7ad577b29f2e165ea95501e45203e6a185b8a7e3e719b28a0b9c14",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -5117,9 +5117,9 @@
     {
       "source": "test/paddy/README.md",
       "target": "test/paddy/en/README.md",
-      "source_sha256": "a29c9d598d28271c0b503627d91e64059b3221840c1953c34e7799646f91317b",
-      "target_sha256": "7bc5f13c8b828809a69879537a6dd25058a60300062c7b4d4f856feb6a9b9093",
-      "reviewer": "Claude (Claude Code session; renumbering of the developer record and handoff citations checked in both files, no model execution)",
+      "source_sha256": "d381983f9c2fddddb42f0099f72867705f183f41ef479d4da3e260af5a146380",
+      "target_sha256": "0ecd9483a90655afad4a41b4ae1dc7decaf3b98b493d91e60d284d6b6963ed44",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },

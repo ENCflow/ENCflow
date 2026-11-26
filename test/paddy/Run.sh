@@ -34,7 +34,8 @@
 #   再開・保存時と浮遊砂の有無が違う双方向の再開、集水面積率の範囲・水田のないセルの集水面積・面積率 + 集水面積率
 #   > 空隙率・雨滴侵食との併用、B の入力の誤り(外周の
 #   区画のセル・同じ区画や区画でないセルの落水口・区画の中で違う種類・整数でない区画番号・天端より高い先・
-#   向かい合う落水口)と A だけの入力(集水面積率を含む)との併用、B と非静水圧、保存時と表現が違う再開
+#   向かい合う落水口)と A だけの入力(集水面積率を含む)との併用、B と非静水圧、保存時と表現が違う再開、
+#   B と掃流砂の写しの手続き(混合粒径 f_bedmix・有効掃流力 f_taupart = 2)、双方向・浮遊砂と混合粒径
 # reference 比較は Log.txt(ULP=0)。paddy.csv は 16 桁で書くため CPU(-march=native のベクトル化)が
 # 違うと最終桁が変わりうる(test/vzcol・sfzone と同じ理由)。CSV の内容は Check_paddy.py で確かめる。
 sdir=$(dirname "$(readlink -f "$0")")
@@ -243,6 +244,13 @@ bstop b_face "s/'b_back_plot.txt'/'b_bad_face_plot.txt'/;s/'b_back_out.txt'/'b_b
 bstop b_frac "s|^  pd_hlev = 0.30|&\n  pd_frac = 1.0|" "fn_pd_frac and pd_frac are for the subgrid paddy tanks"
 bstop b_exch "s|^  pd_hlev = 0.30|&\n  f_pd_exchange = 1|" "f_pd_exchange (the resolved plots exchange water"
 bstop b_catch "s|^  pd_hlev = 0.30|&\n  fn_pd_catch = 'catch_zero.txt'|" "fn_pd_catch (the farm roads and levees draining"
+# 掃流砂の写しの手続き(混合粒径・芦田・道上の有効掃流力)と B、混合粒径と双方向・浮遊砂の併用の停止(§127.17)
+variant param_b_sed.txt result_b_bmix "s|^  fluv_dzmax = 0.05|&\n  f_bedmix = 1\n  bmix_d = 0.001, 0.020\n  bmix_frac0 = 0.5, 0.5|" > "$tmp"
+expect_stop b_bmix "$tmp" "fn_pd_plot cannot be combined with the bed load of mixed grain sizes"
+variant param_b_sed.txt result_b_taueff "s|^  fluv_dzmax = 0.05|&\n  f_taupart = 2|" > "$tmp"
+expect_stop b_taueff "$tmp" "fn_pd_plot cannot be combined with the bed load of mixed grain sizes"
+variant param_sed_tw.txt result_tw_bmix "s|^  f_suspend = 1|&\n  f_fluvial = 1\n  f_qbform = 1\n  fluv_d50 = 0.001\n  fluv_tausc = 0.05\n  fluv_sgrav = 1.65\n  f_bedmix = 1\n  bmix_d = 0.0002, 0.020\n  bmix_frac0 = 0.5, 0.5|" > "$tmp"
+expect_stop tw_bmix "$tmp" "f_pd_exchange=1 with suspended sediment (f_suspend) cannot be combined with mixed grain sizes"
 variant param_b_back.txt result_b_nh "s|^  fn_paddy = '-'|&\n  fn_enc = '-'|" > "$tmp"
 printf "\n&list_enc\n  f_nonhydrostatic = 1\n/\n" >> "$tmp"
 expect_stop b_nh "$tmp" "fn_pd_plot cannot be combined with the non-hydrostatic correction"
