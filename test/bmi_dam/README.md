@@ -32,8 +32,9 @@ BMI でダム(`&list_struct_dam`)の水位・貯水量・流入・放流・ス�
 `dam_control.py` はコマンドとしても実行し、外部運転のダム 2・3 を初期の貯水量に
 保つこと(最終水位が 104 m ± 10 cm)を確かめます。静的ドライバ
 `test_encflow_bmi` は、目標放流量が入力表にあると、各歩の前に貯水量を初期値へ
-戻す決定的な制御を set しながら完走します。入力データ data_bmi_dam/ は
-`python3 make_data.py` で作り直せます。
+戻す決定的な制御を set しながら完走します。外部運転と合わない設定(モード 6 の
+`dam_tadashigaki`、負の `dam_q0`)が `encflow` の起動時に止まることも確かめます。
+入力データ data_bmi_dam/ は `python3 make_data.py` で作り直せます。
 
 MPI: `cd bmi && make clean && make MODE=mpi` の後、
 `mpirun -np N ../../bmi/test_encflow_bmi_mpi param.txt` の result/dams/*.csv と
