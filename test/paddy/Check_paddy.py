@@ -31,8 +31,11 @@ Gauss–Legendre の求積で直接求める(モデルは表と展開)。
   python3 Check_paddy.py wq_rain  result_wq_rain   水質: 雨の物質でタンクの濃度が雨の濃度へ近づくことと質量の収支
   python3 Check_paddy.py wq_tw    result_wq_tw     水質: 双方向の逆流で水田に入る水の濃度と閉じた箱の質量の保存
   python3 Check_paddy.py wq_b     result_wq_b      水質: 区画の解像(B)の減水深の持ち出しを含む質量の収支
+  python3 Check_paddy.py wq_vs    result_wq_vs     水質: タンクの沈降(離散式の厳密解、湛水深で割る)と質量の収支
   python3 Check_paddy.py restart_wq <連続の結果> <再開の結果>   水質のプールの保存 → 再開のビット一致
   python3 Check_paddy.py sed_tw   result_sed_tw    土砂: 双方向のタンクへ入る水の浮遊砂を田面に積む(固相の保存)
+  python3 Check_paddy.py wq_kd    result_wq_kd result_wq_kd_off  水質の二相分配: タンクへ入る水の粒子態を田面へ落とす
+  python3 Check_paddy.py wq_bkd   result_wq_bkd result_wq_bkd_off  水質の二相分配: B の減水深は溶存態だけを運ぶ
   python3 Check_paddy.py b_sed    result_b_sed     土砂: 区画の解像で掃流砂が畦畔を越えない(区画ごとの河床の変化の合計 0)
   python3 Check_paddy.py restart_sed <連続の結果> <再開の結果>  土砂: 堆積の記録の保存 → 再開のビット一致
   python3 Check_paddy.py catch    result_catch     集水面積率(片方向): 閉じた箱の雨だけの厳密解(タンク・地表)と台帳
@@ -813,6 +816,47 @@ def check_wq_tw(res):
     wq_closure(res, m0)
 
 
+def check_wq_vs(res):
+    """タンクのプールの沈降(wq_vs = 0.05 m/d だけ。閉じた箱で落水・雨・減水深・減衰なし): 種類ごとの濃度 =
+    10 × (1 − vs·Δt/h)^n(n = t/Δt。m_wq の沈降の離散式 c·(1 − vs·Δt/h) の厳密解。h は種類 1 が 0.10 m、種類 2 が
+    0.20 m)。連続の解 10 × exp(−vs·t/h) との差は時間の離散化の誤差 n·x²/2 = vs²·t·Δt/(2h²) に一致する。湛水深は
+    変わらず、地表の物質は 0 のまま、沈降した量は wq.csv の settle_g に入る(質量の収支)"""
+    vs = 0.05 / 86400.0
+    dt = 2.0
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    for key, h in (("h1(mm)", 100.0), ("h2(mm)", 200.0)):
+        worst = max(abs(r[key] - h) for r in rows) / h
+        if worst > 1e-12:
+            fail("%s changes (relative %.3e from %.1f mm): the tanks should neither drain nor fill" % (key, worst, h))
+    last = rows[-1]
+    for c, h in ((1, 0.10), (2, 0.20)):
+        key = "c%d(mg/L)" % c
+        x = vs * dt / h
+        worst = 0.0
+        for r in rows:
+            ex = 10.0 * (1.0 - x) ** round(r["time(s)"] / dt)
+            worst = max(worst, abs(r[key] - ex) / ex)
+        if worst > 1e-10:
+            fail("class %d: tank concentration vs 10 x (1 - vs dt/h)^n: relative difference %.3e" % (c, worst))
+        t = last["time(s)"]
+        dc = abs(last[key] - 10.0 * math.exp(-vs * t / h)) / (10.0 * math.exp(-vs * t / h))
+        pred = vs * vs * t * dt / (2.0 * h * h)
+        if abs(dc - pred) > 0.01 * pred:
+            fail("class %d: difference from the continuous solution %.4e is not the time-discretisation error %.4e"
+                 % (c, dc, pred))
+        ok("class %d (h = %.2f m): tank concentration = 10 x (1 - vs dt/h)^n (max relative difference %.1e), "
+           "%.6f mg/L after %.0f h; the continuous solution differs by %.3e = vs^2 t dt/(2h^2)"
+           % (c, h, worst, last[key], t / 3600.0, dc))
+    m0 = 10.0 * (0.5 * 0.10 + 0.5 * 0.20) * 8000.0
+    w = wq_closure(res, m0)
+    if max(abs(r["mass_surface_g"]) for r in w) > 0.0:
+        fail("substance appeared on the surface (the tanks neither drain nor spill)")
+    if not w[-1]["settle_g"] > 0.0:
+        fail("no settling counted in settle_g")
+    ok("settled %.4f g of %.1f g (counted in settle_g); the surface stays free of the substance"
+       % (w[-1]["settle_g"], m0))
+
+
 def check_wq_b(res):
     """B: 区画の事前の湛水 10 mg/L・雨 2 mg/L・減水深の持ち出し: 閉じた領域の質量の収支、区画の水の濃度は 2〜10"""
     rows = read_csv(os.path.join(res, "paddy.csv"))
@@ -831,6 +875,125 @@ def read_map(name):
     """data_paddy の整数・実数の分布(行 1 = j = 1)を (j − 1)·nx + (i − 1) の並びで返す"""
     with open(os.path.join("data_paddy", name)) as f:
         return [float(x) for line in f if line.strip() for x in line.split()]
+
+
+def check_wq_kd(res, res_off):
+    """双方向・浮遊砂・水質の二相分配(§127.19。wq_kd = 200 L/kg、外水の物質 c_in = 2 mg/L と浮遊砂の体積濃度
+    C_s = 0.002、ρs = (1 + 1.65) × 1000 kg/m3、タンクは空から): タンクへ入る水の物質のうち粒子態
+    fp = 1 − 1/(1 + Kd·ρs·hs/vh) を浮遊砂と一緒に田面へ落とし、溶存態だけをプールへ入れる。
+    (1) 田面に落とした物質 cdep = Kd·ρs × タンクの溶存態の濃度 × 田面に積んだ浮遊砂の体積 sed(移すごとに
+        fp·w = Kd·ρs·(hs/vh)·(1 − fp)·w = Kd·ρs·c_d·(移した浮遊砂)。地表の溶存態の濃度 c_d はどこでもほぼ同じで、
+        タンクから落水した溶存態の水が戻って混ざっても変わらない。外水に近い水が先に入る初めの記録では、そのわずかな
+        ばらつきで相対 1e-5 程度ずれるので、許容は 1e-4)
+    (2) タンクの濃度 / wq_kd を外した計算のタンクの濃度 = 1/(1 + Kd·ρs·C_s)。外水を入れるこの計算では、wq_kd を外しても
+        タンクの濃度が c_in より 3×10⁻⁴ ほど低く、地表の濃度も 1.9975〜2 mg/L とわずかにばらつく(既存の振る舞い)。
+        地表の浮遊砂の濃度も外水の C_s から場所でわずかにずれて fp が変わると見られる(沈降速度を 1e-12 にしても
+        同じ)ので、許容は 1e-3
+    (3) 水と浮遊砂は wq_kd によらない(paddy.csv の濃度以外の列が一致)
+    (4) wq.csv の収支(両方の計算。cdep は settle_g に入り、settle_g − cdep は地表の粒子態の沈降で小さい)。
+        wq_kd を外した計算は沈降がなく、paddy.csv に cdep の列がない"""
+    kr = 0.2 * (1.0 + 1.65) * 1000.0                 # Kd·ρs (m3/kg × kg/m3)
+    f_d = 1.0 / (1.0 + kr * 0.002)                   # 外水の溶存態の割合
+    ra = read_csv(os.path.join(res, "paddy.csv"))
+    rb = read_csv(os.path.join(res_off, "paddy.csv"))
+    if "cdep(g)" in rb[0]:
+        fail("the run without wq_kd has a cdep column in paddy.csv")
+    if len(ra) != len(rb):
+        fail("paddy.csv of the two runs have different numbers of records")
+    same = [k for k in rb[0] if k not in ("c1(mg/L)", "c2(mg/L)")]
+    for x, y in zip(ra, rb):
+        for k in same:
+            if x[k] != y[k]:
+                fail("%s differs between the runs with and without wq_kd at t = %.0f s (water and sediment should not "
+                     "depend on the partition)" % (k, x["time(s)"]))
+    ok("water and sediment do not depend on wq_kd (%d columns of paddy.csv identical)" % len(same))
+    w1 = w2 = 0.0
+    for x, y in zip(ra, rb):
+        if x["sed(m3)"] > 0.0 and x["store1(m3)"] + x["store2(m3)"] > 0.0:
+            cd = (x["c1(mg/L)"] * x["store1(m3)"] + x["c2(mg/L)"] * x["store2(m3)"]) / (x["store1(m3)"] + x["store2(m3)"])
+            w1 = max(w1, abs(x["cdep(g)"] / (kr * cd * x["sed(m3)"]) - 1.0))
+        for k in ("c1(mg/L)", "c2(mg/L)"):
+            if y[k] > 0.0:
+                w2 = max(w2, abs(x[k] / y[k] / f_d - 1.0))
+    last = ra[-1]
+    if not (last["cdep(g)"] > 0.0 and last["inflow(m3)"] > 0.0 and last["levee_in(m3)"] > 0.0):
+        fail("expected inflow through the outlets and over the levees, and particulate substance deposited")
+    if w1 > 1e-4:
+        fail("cdep vs Kd rhos x dissolved tank concentration x deposited sediment: relative difference %.3e" % w1)
+    ok("particulate substance deposited on the field surface = Kd rhos x dissolved tank concentration x deposited "
+       "sediment (%.4f g with %.6f m3 of sediment; max relative difference %.1e)" % (last["cdep(g)"], last["sed(m3)"], w1))
+    if w2 > 1e-3:
+        fail("tank concentration with wq_kd / without = %.6f expected: relative difference %.3e" % (f_d, w2))
+    ok("tank concentration with wq_kd / without = 1/(1 + Kd rhos Cs) = %.6f (max relative difference %.1e; "
+       "after 2 h: %.6f / %.6f mg/L)" % (f_d, w2, last["c1(mg/L)"], rb[-1]["c1(mg/L)"]))
+    wa = wq_closure(res, 0.0)
+    wb = wq_closure(res_off, 0.0)
+    st = wa[-1]["settle_g"]
+    if not (st >= last["cdep(g)"] * (1.0 - 1e-6) and st - last["cdep(g)"] < 1e-3 * last["cdep(g)"]):
+        fail("settle_g %.6f g should be cdep %.6f g plus the small settling on the surface" % (st, last["cdep(g)"]))
+    if max(abs(r["settle_g"]) for r in wb) > 0.0:
+        fail("the run without wq_kd settles the substance")
+    ok("settle_g %.4f g = cdep + settling of the particulate fraction on the surface (%.4f g); "
+       "nothing settles without wq_kd" % (st, st - last["cdep(g)"]))
+
+
+def check_wq_bkd(res, res_off):
+    """B と浮遊砂・水質の二相分配(§127.20。b_back の地形に西端から外水 1.0 m3/s(物質 c_in = 2 mg/L・浮遊砂の体積濃度
+    C_s = 0.002)を 2 h、wq_kd = 200 L/kg、減水深 100 mm/d、区画は空から): 区画の減水深は m_wq の浸透と同じく溶存態
+    だけを系外へ運ぶ。溶存態だけを抜くと区画の水の溶存態の濃度は変わらない(浮遊砂と粒子態は残って濃くなる)ので、
+    減水深で出る物質の濃度は外水の溶存態の濃度 c_d = c_in/(1 + Kd·ρs·C_s)。
+    (1) 水は wq_kd によらない(paddy.csv の濃度以外の列が一致)
+    (2) 区画が畦畔の天端まで満ちた後(区間の初めの full1 = 1)の各区間で、減水深で出た物質 / 出た水 = c_d、wq_kd を
+        外した計算の同じ区間との比 = 1/(1 + Kd·ρs·C_s)(外水を入れる計算の濃度のわずかなばらつきで、許容は 1e-3)。
+        満ちる前は、濡れ始めの薄い水(dd 以下)の浮遊砂を地形変化が河床へ落とすので、そこの物質は溶存態として出る
+        (m_wq の浸透と同じ扱い。累積の比は c_d/c_in より大きい)
+    (3) wq.csv の収支(両方の計算)"""
+    kr = 0.2 * (1.0 + 1.65) * 1000.0
+    f_d = 1.0 / (1.0 + kr * 0.002)
+    c_d = 2.0 * f_d
+    ra = read_csv(os.path.join(res, "paddy.csv"))
+    rb = read_csv(os.path.join(res_off, "paddy.csv"))
+    if len(ra) != len(rb):
+        fail("paddy.csv of the two runs have different numbers of records")
+    same = [k for k in rb[0] if k not in ("c1(mg/L)", "c2(mg/L)")]
+    for x, y in zip(ra, rb):
+        for k in same:
+            if x[k] != y[k]:
+                fail("%s differs between the runs with and without wq_kd at t = %.0f s" % (k, x["time(s)"]))
+    ok("water does not depend on wq_kd (%d columns of paddy.csv identical)" % len(same))
+    last = ra[-1]
+    if not (last["perc(m3)"] > 0.0 and last["levee_in(m3)"] > 0.0 and last["inflow(m3)"] > 0.0):
+        fail("expected percolation and inflow into the plot through the outlet and over the levees")
+    wa = wq_closure(res, 0.0)
+    wb = wq_closure(res_off, 0.0)
+    pa = {r["time_s"]: r["out_paddy_perc_g"] for r in wa}
+    pb = {r["time_s"]: r["out_paddy_perc_g"] for r in wb}
+    w1 = w2 = 0.0
+    n = 0
+    for x0, x1 in zip(ra[:-1], ra[1:]):
+        if x0["full1(-)"] < 1.0:
+            continue
+        t0, t1 = x0["time(s)"], x1["time(s)"]
+        dv = x1["perc(m3)"] - x0["perc(m3)"]
+        da = pa[t1] - pa[t0]
+        db = pb[t1] - pb[t0]
+        if not (dv > 0.0 and db > 0.0):
+            continue
+        w1 = max(w1, abs(da / dv / c_d - 1.0))
+        w2 = max(w2, abs(da / db / f_d - 1.0))
+        n += 1
+    if n < 3:
+        fail("too few intervals with the plot full (%d)" % n)
+    if w1 > 1e-3 or w2 > 1e-3:
+        fail("percolated substance after the plot is full: vs c_d %.3e, vs the run without wq_kd %.3e" % (w1, w2))
+    t = last["time(s)"]
+    cum = pa[t] / pb[t]
+    if not (f_d < cum < 0.6):
+        fail("cumulative ratio %.6f of the percolated substance (with / without wq_kd) out of range" % cum)
+    ok("after the plot is full, the percolation carries only the dissolved fraction: substance per water = c_d = %.6f "
+       "g/m3 (max relative difference %.1e), with / without wq_kd = 1/(1 + Kd rhos Cs) = %.6f (%.1e), %d intervals; "
+       "cumulative ratio %.6f (the thin water at the wetting front has no suspended sediment)"
+       % (c_d, w1, f_d, w2, n, cum))
 
 
 def check_sed_tw(res):
@@ -1081,8 +1244,14 @@ def main():
         check_wq_tw(sys.argv[2])
     elif cmd == "wq_b":
         check_wq_b(sys.argv[2])
+    elif cmd == "wq_vs":
+        check_wq_vs(sys.argv[2])
     elif cmd == "sed_tw":
         check_sed_tw(sys.argv[2])
+    elif cmd == "wq_kd":
+        check_wq_kd(sys.argv[2], sys.argv[3])
+    elif cmd == "wq_bkd":
+        check_wq_bkd(sys.argv[2], sys.argv[3])
     elif cmd == "b_sed":
         check_b_sed(sys.argv[2])
     elif cmd == "catch":

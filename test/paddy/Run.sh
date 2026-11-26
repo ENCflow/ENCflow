@@ -19,10 +19,14 @@
 #                     越える外からの流入、畦畔と河川堤防が重なるエッジ、区画から区画への落水口(田越し)。b_back は sed で
 #                     6 h で保存 → 再開(連続計算とビット一致)
 #   param_wq_*.txt    水質(fn_wq。§127.10): タンクの濃度の一次減衰(厳密解)、雨の物質、双方向の逆流で入る水の
-#                     濃度、区画の解像の減水深の持ち出し(wq.csv の質量の収支)。wq_a は sed で 6 h で保存 → 再開
+#                     濃度、区画の解像の減水深の持ち出し(wq.csv の質量の収支)、タンクの沈降(離散式の厳密解。
+#                     §127.18)。wq_a は sed で 6 h で保存 → 再開
 #   param_sed_tw.txt  土砂(§127.11): 双方向のタンクへ入る水の浮遊砂を田面に積む(固相の保存)。地形変化の刻み 7 s
 #                     で 1 h で保存 → 再開
 #   param_b_sed.txt   土砂: 区画の解像で掃流砂が畦畔を越えない(区画ごとの河床の変化の合計 0)
+#   param_wq_kd.txt   水質の二相分配(wq_kd。§127.19): 双方向のタンクへ入る水の物質の粒子態を浮遊砂と一緒に田面へ
+#                     落とす(田面に落とした物質と積んだ浮遊砂の比、タンクの濃度の比)。sed で wq_kd を外した計算と比べる
+#   param_wq_bkd.txt  水質の二相分配と B(§127.20): 区画の減水深は溶存態だけを運ぶ(wq_kd を外した計算との比)
 #   param_catch.txt   集水面積率(fn_pd_catch。§127.13): 閉じた箱の雨だけの厳密解(片方向と、sed で双方向)。
 #                     集水面積率 0 の分布を与えた計算と与えない計算のビット一致(steady・tw_drain の変形)、
 #                     集水面積の雨の物質がタンクへ入ること(wq_rain の変形)
@@ -126,8 +130,8 @@ python3 Check_paddy.py restart_b result_b_back result_b_restart || exit 1
 variant param_b_back.txt result_b_mode "s|^  dir_result = 'result_b_mode'|&\n  dir_save = 'save_b'\n  f_state_restore = 1|;s|^  fn_pd_plot = .*|  pd_frac = 0.5|;/^  fn_pd_outlet = /d" > "$tmp"
 expect_stop b_mode "$tmp" "the representation of the paddy fields differs from the saved state"
 
-# 水質(fn_wq。§127.10): タンクのプール(A の片方向・双方向)と区画の解像(B)の減水深の持ち出し
-for t in wq_a wq_rain wq_tw wq_b; do
+# 水質(fn_wq。§127.10): タンクのプール(A の片方向・双方向)と区画の解像(B)の減水深の持ち出し、タンクの沈降(§127.18)
+for t in wq_a wq_rain wq_tw wq_b wq_vs; do
     run $t param_$t.txt
     python3 Check_paddy.py $t result_$t || exit 1
 done
@@ -158,6 +162,17 @@ run sed_restart "$tmp"
 python3 Check_paddy.py restart_sed result_sed_cont result_sed_restart || exit 1
 variant param_tw_flood.txt result_sed_mode "s|^  dir_result = 'result_sed_mode'|&\n  dir_save = 'save_sed'\n  f_state_restore = 1|" > "$tmp"
 expect_stop sed_mode "$tmp" "suspended sediment (f_suspend) with f_pd_exchange=1 differs from the saved state"
+
+# 水質の二相分配(§127.19): 双方向のタンクへ入る水の物質の粒子態を浮遊砂と一緒に田面へ落とす。wq_kd を外した計算と比べる
+run wq_kd param_wq_kd.txt
+variant param_wq_kd.txt result_wq_kd_off "/^  wq_kd = /d" > "$tmp"
+run wq_kd_off "$tmp"
+python3 Check_paddy.py wq_kd result_wq_kd result_wq_kd_off || exit 1
+# B と二相分配(§127.20): 区画の減水深は溶存態だけを運ぶ。wq_kd を外した計算と比べる
+run wq_bkd param_wq_bkd.txt
+variant param_wq_bkd.txt result_wq_bkd_off "/^  wq_kd = /d" > "$tmp"
+run wq_bkd_off "$tmp"
+python3 Check_paddy.py wq_bkd result_wq_bkd result_wq_bkd_off || exit 1
 
 # 集水面積率(fn_pd_catch。§127.13・§127.15): 閉じた箱の雨だけの厳密解(片方向・双方向)、集水面積率 0 の分布を与えた
 # 計算と与えない計算のビット一致(片方向 steady・双方向 tw_drain)、集水面積の雨の物質もタンクへ入ること(雨の濃度へ
