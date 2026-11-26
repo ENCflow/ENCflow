@@ -357,6 +357,62 @@ contains
     n = int(sz, c_int)
   end function
 
+  !-------- 非構造格子の口(ダム・湖沼の点の格子。節点だけ。§133)--------
+
+  function ebmi_get_grid_node_count(grid, n) &
+      bind(c, name="encflow_bmi_get_grid_node_count") result(status)
+    integer(c_int), value :: grid
+    integer(c_int), intent(out) :: n
+    integer(c_int) :: status
+    integer :: cnt
+    status = int(model%get_grid_node_count(int(grid), cnt), c_int)
+    n = int(cnt, c_int)
+  end function
+
+  function ebmi_get_grid_edge_count(grid, n) &
+      bind(c, name="encflow_bmi_get_grid_edge_count") result(status)
+    integer(c_int), value :: grid
+    integer(c_int), intent(out) :: n
+    integer(c_int) :: status
+    integer :: cnt
+    status = int(model%get_grid_edge_count(int(grid), cnt), c_int)
+    n = int(cnt, c_int)
+  end function
+
+  function ebmi_get_grid_face_count(grid, n) &
+      bind(c, name="encflow_bmi_get_grid_face_count") result(status)
+    integer(c_int), value :: grid
+    integer(c_int), intent(out) :: n
+    integer(c_int) :: status
+    integer :: cnt
+    status = int(model%get_grid_face_count(int(grid), cnt), c_int)
+    n = int(cnt, c_int)
+  end function
+
+  function ebmi_get_grid_x(grid, x, n) &
+      bind(c, name="encflow_bmi_get_grid_x") result(status)
+    ! 節点の x 座標(ダムの点の格子のみ。ラスタの格子は FAILURE)
+    integer(c_int), value :: grid, n
+    real(c_double), intent(inout) :: x(n)
+    integer(c_int) :: status
+    double precision, allocatable :: buf(:)
+    allocate(buf(n))
+    status = int(model%get_grid_x(int(grid), buf), c_int)
+    if (status == int(BMI_SUCCESS, c_int)) x = real(buf, c_double)
+  end function
+
+  function ebmi_get_grid_y(grid, y, n) &
+      bind(c, name="encflow_bmi_get_grid_y") result(status)
+    ! 節点の y 座標(ダムの点の格子のみ。ラスタの格子は FAILURE)
+    integer(c_int), value :: grid, n
+    real(c_double), intent(inout) :: y(n)
+    integer(c_int) :: status
+    double precision, allocatable :: buf(:)
+    allocate(buf(n))
+    status = int(model%get_grid_y(int(grid), buf), c_int)
+    if (status == int(BMI_SUCCESS, c_int)) y = real(buf, c_double)
+  end function
+
   !=========================== Set values ==============================
 
   function ebmi_set_value_double(name, src, n) &

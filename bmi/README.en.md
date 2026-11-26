@@ -253,6 +253,100 @@ exchange at the **time scale of the quantity being exchanged** (minutes
 for rainfall), not at every model time step. Exchanging too finely is
 merely wasteful; exchanging too coarsely becomes a coupling error.
 
+### Dam (reservoir) quantities and external operation
+
+In a case with dams or lakes (`&list_struct_dam`;
+[Structures](../docs/en/users_guide/structure.md#dams-and-lakes-list_struct_dam)),
+you can get the quantities of each dam, and you can set a target release
+for the dams declared as externally operated (`f_dam_mode = 6`)
+(developer.md §133). This is the entry for deciding the release in the
+caller's program instead of with a rule of the model. Rules that remember
+an earlier state (such as a limit on how fast the release may rise or
+fall), rules that use forecasts, and coupling with other models cannot be
+expressed by the built-in operating rules, so they are written on the
+caller's side.
+
+The dam quantities sit on the **point grid of the dams**, whose nodes are
+the representative points of the dams.
+
+- The grid type is "unstructured" (nodes only, no edges or faces). The
+  grid id equals the number of raster grids (1 without nesting).
+- The values are 1-D in the order of the dam numbers (size = number of
+  dams). Node k is dam number k of `&list_struct_dam`.
+- The node coordinates (`get_grid_x` / `get_grid_y`) are the center of the
+  first cell of the capture set (for an additional release work,
+  `dam_lake`, the first release cell). They are in the same coordinate
+  system as the raster grids (measured from the lower-left corner of the
+  origin, x east and y north).
+- Only the dams of the root grid are exposed (the dams of nested child
+  grids are not listed).
+
+| CSDMS Standard Name | Quantity | Units | Exists when | set |
+| --- | --- | --- | --- | --- |
+| `reservoir_water_surface__elevation` | reservoir level | m | there is a dam or lake | No (get only) |
+| `reservoir_water__volume` | storage volume | m³ | same | No (get only) |
+| `reservoir_water~incoming__volume_flow_rate` | inflow (what the capture set absorbed) | m³/s | same | No (get only) |
+| `reservoir_water~outgoing__volume_flow_rate` | release (the actual release, without the spill) | m³/s | same | No (get only) |
+| `reservoir_water~spilled__volume_flow_rate` | spill (forced release above the surcharge) | m³/s | same | No (get only) |
+| `reservoir_water~outgoing~target__volume_flow_rate` | target release | m³/s | there is an externally operated dam | Allowed (only the elements of externally operated dams; persists until the next set) |
+
+- The inflow, release and spill are the mean flow rates of the last step
+  completed at that moment, the same quantities as Qin, Qout and Qspill in
+  the dam CSV (`result/dams/dam000n.csv`). They are 0 right after
+  initialize.
+- For an additional release work (`dam_lake`), the level and volume are
+  those of the referenced lake, and the inflow is 0. For a level-held lake
+  (no release cells), the level is the fixed level, the volume 0 and the
+  inflow the vanishing volume.
+
+**Target release** (`VAR_RESERVOIR_TARGET`)
+
+- It is in the input list only when at least one dam is externally
+  operated. The array you set covers all dams; the elements of dams that
+  are not externally operated are ignored (those dams release by their own
+  rule). get returns the current target for externally operated dams and
+  the rule release of the previous step for the other dams.
+- The target is an instruction that persists until the next set, and it
+  acts on the release from the step of the next update (treated like the
+  precipitation, as a persistent forcing). A get right after a set returns
+  the value set. Until the first set, the dam releases `dam_q0` (0 when
+  omitted). Because the target persists, a set is needed only when the
+  decision changes.
+- The actual release is limited to the part of the storage of that step
+  (inflow included) above the dead storage. What exceeds the surcharge
+  becomes a forced spill (the emergency-release ramp is not applied).
+  Check with the release (`VAR_RESERVOIR_OUTFLOW`) whether the target was
+  met. A target that is too large never creates water.
+- A negative value is an error (BMI_FAILURE; BmiError in Python), and the
+  target stays unchanged.
+- The target is not saved. A restart begins again from `dam_q0`, so the
+  caller sets it again right after the restart. Run with `encflow` without
+  BMI, the dam releases the constant `dam_q0` (a `note:` is printed at
+  startup).
+
+```python
+import numpy as np
+from encflow import (ENCflow, VAR_RESERVOIR_VOLUME, VAR_RESERVOIR_INFLOW,
+                     VAR_RESERVOIR_OUTFLOW, VAR_RESERVOIR_TARGET)
+with ENCflow("param.txt") as m:
+    print(m.ndam, m.dam_xy())                    # number of dams and their points (x, y)
+    v0 = m.get(VAR_RESERVOIR_VOLUME)             # 1-D in the order of the dam numbers
+    while m.time < m.end_time:
+        q = m.get(VAR_RESERVOIR_INFLOW) + (m.get(VAR_RESERVOIR_VOLUME) - v0) / 1800.0
+        m.set(VAR_RESERVOIR_TARGET, np.clip(q, 0.0, 2.0))   # acts only on externally operated dams
+        m.update()
+        q_real = m.get(VAR_RESERVOIR_OUTFLOW)    # actual release (below the target at the dead storage)
+```
+
+The sample controller [python/dam_control.py](python/dam_control.py) adds
+a cap on the release and a limit on its rate of change (it remembers the
+target of the previous step) to this, and it can also be used as a command
+(`python3 ../../bmi/python/dam_control.py param.txt --csv out.csv`). It is
+a sample and does not represent the operating rules of an actual dam. How
+the release given from outside was decided is not kept in the outputs of
+ENCflow, so keep the program of the rule together with the results. The
+acceptance test is [test/bmi_dam](../test/bmi_dam/en/README.md).
+
 ### Variables and grids of a nested system
 
 A case whose root parameter file has `fn_nest` (docs/users_guide/nest.md)
@@ -292,10 +386,13 @@ places a child on its parent).
 - Grids are uniform_rectilinear (grid 0 only without nesting, one per
   grid in a nested system), shape in [ny, nx] order. For cases with
   georeferencing (hdr), real coordinates appear in the origin (a nested
-  child's origin is derived from its parent).
-- References (get_value_ptr) and the unstructured-grid queries are not
-  supported (they return BMI_FAILURE / NotImplementedError, as the BMI
-  specification permits).
+  child's origin is derived from its parent). A case with dams adds the
+  point grid of the dams (unstructured, nodes only;
+  [Dams](#dam-reservoir-quantities-and-external-operation)).
+- References (get_value_ptr) and the unstructured-grid queries on the
+  raster grids (get_grid_x, edges, faces and so on) are not supported
+  (they return BMI_FAILURE / NotImplementedError, as the BMI specification
+  permits).
 
 ![ENCflow cell addresses, BMI array ordering and map orientation](../docs/figs/bmi_arrays_en.png)
 
@@ -339,6 +436,7 @@ mpirun -np 4 ./test_encflow_bmi_mpi param.txt
 | [python/test_set_value.py](python/test_set_value.py) | Equivalence tests for set_value (file forcing versus external supply; unchanged results for same-value h, z and rn; effect of a changed rn; run in [test/wave](../test/wave/en/README.md)) |
 | [python/test_vars.py](python/test_vars.py) | Acceptance test of feature-dependent variables (variable lists, values, re-initialize, same-value set of hg / swe and its acceptance rules; run in [test/bmi_vars](../test/bmi_vars/en/README.md). `Run.sh` also runs the static driver and bmi-tester) |
 | [python/test_nest.py](python/test_nest.py) | Acceptance test of multi-grid exposure (grid information, variable lists, 1:1 self-nesting identity, re-initialize, same-value set; run in [test/bmi_nest](../test/bmi_nest/en/README.md). `Run.sh` also runs the static driver and bmi-tester) |
+| [python/test_dam.py](python/test_dam.py) | Acceptance test of the dam quantities and external operation (point grid of the dams, a release given from outside matching a time-series dam on every row, the sample controller, a set for dams not in external operation being ignored, get agreeing with the CSV, volume conservation, re-initialize; run in [test/bmi_dam](../test/bmi_dam/en/README.md). `Run.sh` also runs the sample, the static driver and bmi-tester) |
 | `python/check_bmi.sh` | Runs the official CSDMS conformance test, bmi-tester (list the input files the parameter file refers to after it) |
 
 To reproduce the conformance check:
@@ -360,7 +458,8 @@ cd ../bmi_nest && ./Run.sh          # nested system (acceptance test + bmi-teste
 | `python/encflow.py` | Python wrapper: the `ENCflow` class (use this for everyday work) |
 | `python/encflow_bmi.py` | bmipy-conformant class `EncflowBmi` (for bmi-tester and pymt-style tools) |
 | `python/live_view.py` | Live visualization sample |
-| `python/test_set_value.py`, `python/test_nest.py`, `python/test_vars.py` | Acceptance tests (above) |
+| `python/dam_control.py` | Sample of the external operation of dams (a controller that keeps the level; [Dams](#dam-reservoir-quantities-and-external-operation)) |
+| `python/test_set_value.py`, `python/test_nest.py`, `python/test_vars.py`, `python/test_dam.py` | Acceptance tests (above) |
 
 ## Limitations and notes
 
@@ -376,6 +475,9 @@ cd ../bmi_nest && ./Run.sh          # nested system (acceptance test + bmi-teste
   physical outputs agree to the printed precision). For verification
   that needs strict bit reproducibility, use the static
   `test_encflow_bmi` driver.
+- Only the dams of the root grid are exposed. The target release of the
+  external operation is not saved, so the caller sets it again after a
+  restart ([Dams](#dam-reservoir-quantities-and-external-operation) above).
 
 ## For developers
 
@@ -388,5 +490,6 @@ The design history and roadmap are in
 [docs/bmi_plan.md](../docs/bmi_plan.md) (in Japanese), and the
 authoritative records of decisions and verification are in
 [docs/developer.md](../docs/developer.md) Secs. 53–60, 73 (multiple grids),
-76 (dynamic variable lists and feature-dependent variables) and
-77 (roughness overrides), in Japanese.
+76 (dynamic variable lists and feature-dependent variables),
+77 (roughness overrides) and 133 (dam quantities and external
+operation), in Japanese.

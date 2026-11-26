@@ -208,6 +208,19 @@ storage limit and the spill above the surcharge, and the emergency ramp is not
 applied. The part by which the model inflow differs from the record shows up
 in the reservoir level in mode 4 and in the release in mode 5.
 
+**External operation** (mode 6). The release $`Q_{ext}`$ is given from outside
+through BMI (the value set last; `dam_q0` until the first set).
+
+```math
+Q = Q_{ext}\ (\text{mode 6})
+```
+
+The dead storage limit and the spill above the surcharge are the same as in
+modes 4 and 5, and the emergency ramp is not applied. How the release is
+decided (the operating rule) belongs to the caller's program; ENCflow neither
+describes nor records that rule
+([dams in BMI](../../../bmi/README.en.md#dam-reservoir-quantities-and-external-operation)).
+
 ## 5. Edge boundaries
 
 Edge boundaries act only on edges where valid non-sea cells touch the grid
@@ -327,7 +340,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | pump_q0 / pump_rule / f_pump_ref | — | constant discharge / operation rule / reference (§3) | **given** operation rule |
 | div_q0 / div_rule | — | constant discharge / rating (§3) | **given** |
 | dam_hv / dam_hmin / dam_hsur | — | HV curve / linear HV floor and surcharge (§4) | **given** project data; a lake of unknown depth: normal level − 5 m (empirical) |
-| f_dam_mode / dam_q0 / dam_rate | — | operation mode and values | **given** |
+| f_dam_mode / dam_q0 / dam_rate | — | operation mode and values (in mode 6, dam_q0 is the release until a target is given from outside) | **given** |
 | dam_hlim / dam_qon | minimum level / none | restricted level (floor of rule releases) / regulation start flow (§4) | **given** operating rules[^mlit19] |
 | dam_qout_val / dam_h_val (and fn_*) | — | release / water-level time series (replaying records, §4) | **given** operation records |
 | dam_hq_rule / dam_ori_* / dam_qmax | — | natural-regulation rating / orifice / square-root law (dam_qmax is the release cap in mode 2) | **given** the orifice $`c_e`$ default 0.5 is the culvert value |
@@ -356,6 +369,7 @@ are the Honma values of §1 and are not user parameters.
 |---|---|---|
 | [test/damwq](../../../test/damwq/en/README.md) | constant release of a dam and a pond | storage and release ledger agree with the analytical solution |
 | [test/damops](../../../test/damops/en/README.md) | dam operation rules (restricted level, regulation start flow, record time series) | formulas and series match at every recorded row, volume of the closed system conserved, restart continuation |
+| [test/bmi_dam](../../../test/bmi_dam/en/README.md) | external operation of dams (BMI) | a release given from outside matches a time-series dam on every row, the sample controller, volume of the closed system conserved |
 | [test/coastal_drain](../../../test/coastal_drain/en/README.md) | pumping station from the conduit layer with a sea outfall | transfer of the pumping station |
 | [test/nhcurrent](../../../test/nhcurrent/en/README.md) | uniform flow and sine wave from prescribed levels | use of prescribed-level boundaries |
 | [test/sedinflow](../../../test/sedinflow/en/README.md) | total segment inflow with sediment | ledger closure of the inflow |

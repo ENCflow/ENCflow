@@ -15,6 +15,12 @@
 !   - 誤用が BMI_FAILURE になること(未知変数・サイズ不一致・過去への
 !     update_until・終了後の update・存在しない格子)
 !
+!   - ダム・湖沼の点の格子(§133。type "unstructured"): 節点数 = 大きさ、辺・面 0、
+!     節点の x・y、ダムの量の get と nbytes。外部運転(f_dam_mode = 6)のダムが
+!     あれば(目標放流量が入力表にある)、初めから 1 歩ずつ進め、各歩の前に
+!     貯水量を初期値へ戻す決定的な制御(目標 = max(0, 流入 + (V − V0)/τ)、
+!     τ = 1800 s)を set する(MPI の np によらず結果が一致することの検査用)
+!
 !   使い方:  ./test_encflow_bmi param.txt [set]
 !     第2引数 set: 中間時点で get した h・z をそのまま set して継続する
 !     (同値 set の不変性 = Log は set なしと一致するはず。z の set は
@@ -33,6 +39,15 @@ program test_bmi
   character(len=BMI_MAX_UNITS_NAME) :: units
   integer :: i, nx, ny, gsize, nstep, nhalf, icount, ocount
   integer :: g, ng, gid, nbytes, gsz
+  character(len=BMI_MAX_TYPE_NAME) :: gtype
+  ! ダム・湖沼(§133): 目標放流量の入力があれば各歩の前に制御を set する
+  character(len=*), parameter :: v_dam_vol = "reservoir_water__volume"
+  character(len=*), parameter :: v_dam_qin = "reservoir_water~incoming__volume_flow_rate"
+  character(len=*), parameter :: v_dam_tgt = "reservoir_water~outgoing~target__volume_flow_rate"
+  double precision, parameter :: tau_dam = 1800.0d0
+  logical :: dam_ctl
+  integer :: ndam, k
+  double precision, allocatable :: dvol(:), dqin(:), dtgt(:), dvol0(:)
   logical :: do_set        ! 同値 set の不変性検査を行うか(第2引数 'set')
   integer :: shp(2)
   double precision :: t, t0, tend, dt
@@ -73,6 +88,11 @@ program test_bmi
 
   ! ---- 全格子の情報の整合(ネスト系では 2 格子以上) ----
   do g = 0, ng - 1
+    call chk(model%get_grid_type(g, gtype), "get_grid_type")
+    if (trim(gtype) == "unstructured") then
+      call check_dam_grid(g)            ! ダム・湖沼の点の格子(§133)
+      cycle
+    end if
     call chk(model%get_grid_shape(g, shp), "get_grid_shape")
     call chk(model%get_grid_size(g, gsz), "get_grid_size")
     call chk(model%get_grid_spacing(g, spacing), "get_grid_spacing")
@@ -122,6 +142,23 @@ program test_bmi
     "bmi: t0 = ", t0, ", tend = ", tend, ", dt = ", dt, ", nsteps = ", nstep
 
   allocate(h(gsize), z(gsize))
+  ! ---- ダムの外部運転の制御(目標放流量が入力表にあるとき。§133) ----
+  dam_ctl = .false.
+  call chk(model%get_input_var_names(onames), "get_input_var_names")
+  do i = 1, size(onames)
+    if (trim(onames(i)) == v_dam_tgt) dam_ctl = .true.
+  end do
+  if (dam_ctl) then
+    call chk(model%get_var_grid(v_dam_tgt, gid), "get_var_grid (dam target)")
+    call chk(model%get_grid_size(gid, ndam), "get_grid_size (dams)")
+    allocate(dvol(ndam), dqin(ndam), dtgt(ndam), dvol0(ndam))
+    call chk(model%get_value_double(v_dam_vol, dvol0), "get_value dam volume (t0)")
+    write(*, '(a,i0,a,f8.1,a)') "bmi: dam control: ", ndam, &
+      " dams, target = max(0, Qin + (V - V0)/tau), tau = ", tau_dam, " s (external dams only)"
+    ! 誤用: 負の目標は FAILURE
+    dtgt = -1.0d0
+    call chkf(model%set_value_double(v_dam_tgt, dtgt), "set negative dam target")
+  end if
 
   ! ---- 誤用の検査(FAILURE が返ること。状態は変更されない) ----
   call chkf(model%get_value_double("no_such__variable", h), "get unknown name")
@@ -135,7 +172,16 @@ program test_bmi
 
   ! ---- 前半は update_until、後半は update で最後まで進める ----
   nhalf = nstep / 2
-  call chk(model%update_until(t0 + dt * dble(nhalf)), "update_until (half)")
+  if (dam_ctl) then
+    do
+      call chk(model%get_current_time(t), "get_current_time")
+      if (t >= t0 + dt * (dble(nhalf) - 0.5d0)) exit
+      call dam_control()
+      call chk(model%update(), "update (dam control)")
+    end do
+  else
+    call chk(model%update_until(t0 + dt * dble(nhalf)), "update_until (half)")
+  end if
   call chk(model%get_current_time(t), "get_current_time")
   call chk(model%get_value_double("surface_water__depth", h), "get_value h")
   write(*, '(a,f10.3,a,es13.6,a,i0)') &
@@ -170,6 +216,7 @@ program test_bmi
   do
     call chk(model%get_current_time(t), "get_current_time")
     if (t >= tend) exit
+    if (dam_ctl) call dam_control()
     call chk(model%update(), "update")
   end do
 
@@ -193,6 +240,45 @@ program test_bmi
   write(*, '(a)') "bmi: all checks passed"
 
 contains
+
+  subroutine check_dam_grid(gg)
+    ! ダム・湖沼の点の格子(非構造。節点だけ)の整合と、ダムの量の get(§133)
+    integer, intent(in) :: gg
+    integer :: n, ne, nf, nb, j
+    double precision, allocatable :: xx(:), yy(:), vv(:)
+    character(len=BMI_MAX_VAR_NAME), parameter :: names(5) = [character(len=BMI_MAX_VAR_NAME) :: &
+      "reservoir_water_surface__elevation", "reservoir_water__volume", &
+      "reservoir_water~incoming__volume_flow_rate", "reservoir_water~outgoing__volume_flow_rate", &
+      "reservoir_water~spilled__volume_flow_rate"]
+    call chk(model%get_grid_size(gg, n), "get_grid_size (dams)")
+    call chk(model%get_grid_node_count(gg, j), "get_grid_node_count (dams)")
+    call chk(model%get_grid_edge_count(gg, ne), "get_grid_edge_count (dams)")
+    call chk(model%get_grid_face_count(gg, nf), "get_grid_face_count (dams)")
+    if (n < 1 .or. j /= n .or. ne /= 0 .or. nf /= 0) call die("dam grid: node/edge/face counts")
+    allocate(xx(n), yy(n), vv(n))
+    call chk(model%get_grid_x(gg, xx), "get_grid_x (dams)")
+    call chk(model%get_grid_y(gg, yy), "get_grid_y (dams)")
+    call chkf(model%get_grid_shape(gg, shp), "get_grid_shape of the dam grid")
+    write(*, '(a,i0,a,i0,a,2f14.3)') "bmi: grid ", gg, ": unstructured (dams), nodes = ", n, &
+      ", first dam at (x, y) =", xx(1), yy(1)
+    do j = 1, size(names)
+      call chk(model%get_var_nbytes(trim(names(j)), nb), "get_var_nbytes (dams)")
+      if (nb /= n * 8) call die("dam var nbytes /= 8*ndam")
+      call chk(model%get_value_double(trim(names(j)), vv), "get_value "//trim(names(j)))
+    end do
+    call chk(model%get_value_double("reservoir_water_surface__elevation", vv), "get dam level")
+    write(*, '(a,es13.6)') "bmi: dams: initial level of dam 1 = ", vv(1)
+  end subroutine check_dam_grid
+
+  subroutine dam_control()
+    ! 貯水量を初期値へ戻す決定的な制御。外部運転でないダムの要素は無視される(§133)
+    call chk(model%get_value_double(v_dam_vol, dvol), "get_value dam volume")
+    call chk(model%get_value_double(v_dam_qin, dqin), "get_value dam inflow")
+    do k = 1, ndam
+      dtgt(k) = max(0.0d0, dqin(k) + (dvol(k) - dvol0(k)) / tau_dam)
+    end do
+    call chk(model%set_value_double(v_dam_tgt, dtgt), "set dam target")
+  end subroutine dam_control
 
   subroutine chk(status, what)
     integer, intent(in) :: status
