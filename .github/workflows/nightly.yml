@@ -11,7 +11,7 @@
 #                   debug 逐次 reference と MPI np=2 のビット一致を検査
 #                   (確保範囲・FPE の実行時検査。developer.md §10)
 #     bmi         : CSDMS bmi-tester 適合性+BMI 経由実行の逐次 reference 一致
-#                   +多格子(bmi_nest)・機能依存変数(bmi_vars)の受け入れ試験
+#                   +多格子(bmi_nest)・機能依存変数(bmi_vars)・ダム(bmi_dam)の受け入れ試験
 #   手動実行は workflow_dispatch から。
 name: Nightly
 
@@ -197,4 +197,12 @@ jobs:
           set -e
           . "$HOME/bmi-venv/bin/activate"
           cd test/bmi_vars
+          ./Run.sh
+      # ダムの量の公開と外部運転(f_dam_mode = 6。developer.md §133): Python 受け入れ
+      # 試験 + 見本の制御器 + 静的ドライバ + bmi-tester
+      - name: BMI dam quantities and external operation acceptance + bmi-tester (bmi_dam)
+        run: |
+          set -e
+          . "$HOME/bmi-venv/bin/activate"
+          cd test/bmi_dam
           ./Run.sh

@@ -112,8 +112,8 @@ with free outflow at the south end and roughness n = 0.05.
 ```
 cd examples/debris_bedrock
 make                     # links and inputs (make_init.py writes the terrain, soil depth and param_*.txt)
-make run                 # the 7 configurations of the first part in turn (about 30 s each)
-make long                # the long-term chain of the supplement (Run_long.sh runs the 50 configurations of make_long.py, 4 in parallel; about 8 minutes)
+make run                 # the 7 configurations of the first part in turn (about 20 s each)
+make long                # the long-term chain of the supplement (Run_long.sh runs the 50 configurations of make_long.py, 4 in parallel; about 7 minutes)
 python3 plot_setup.py    # figs/mechanism.png and setup.png (no results needed)
 python3 plot_results.py  # figs/*.png and the tables of the first part (argument en for the English figures in en/figs/)
 python3 plot_long.py     # figs/long_*.png and the tables of the supplement (argument en for the English figures)
@@ -135,9 +135,9 @@ plucked").
 | Configuration | Slope 0.35 | 0.20 | 0.10 | 0.04 | 0.01 | Ledger (m³) |
 |---|---|---|---|---|---|---|
 | T_b Takahashi–Nakagawa, bare rock | 2.48 | 1.22 | 0.008 | 0 | 0 | 42.1 |
-| C_b Coulomb + Manning, bare rock | 2.91 | 0.75 | 0 | 0 | 0 | 42.4 |
+| C_b Coulomb + Manning, bare rock | 2.90 | 0.75 | 0 | 0 | 0 | 42.4 |
 | T_c Takahashi–Nakagawa, deposit | 0.65 | 0.005 | 0 | 0 | 0 | 7.8 |
-| C_c Coulomb + Manning, deposit | 0.87 | 0.0005 | 0 | 0 | 0 | 10.4 |
+| C_c Coulomb + Manning, deposit | 0.86 | 0.0005 | 0 | 0 | 0 | 10.4 |
 | T_b05 threshold 0.5 kPa | 7.30 | 3.47 | 0.32 | 0 | 0 | 124.9 |
 | T_b20 threshold 2 kPa | 0.59 | 0.15 | 0 | 0 | 0 | 8.6 |
 | W clear water, same discharge (fluvial plucking) | 0.28 | 0.022 | 0 | 0 | 0 | 3.5 |
@@ -151,7 +151,7 @@ plucked").
   passed (30 s) 0.68, 0.71 and 0.74 m against 0.75, 0.76 and 0.78 m at 21, 41 and 61 m from the
   head), so τ_d, which is proportional to the depth, is smaller. It also recedes faster and erodes
   for a shorter time (the time integral of the flow depth at the same three points is a little over
-  0.6 times). The means over the reach (2.91 cm and 2.48 cm) include the peak upstream of the slope break described next.
+  0.6 times). The means over the reach (2.90 cm and 2.48 cm) include the peak upstream of the slope break described next.
 - **Peak upstream of a slope break**: with Coulomb + Manning, a deposit 0.9 m thick forms at the
   slope break 120 m from the head (0.35 → 0.20), and the mixture ponds upstream of it. In the cell
   111 m from the head, h_t becomes 1.4 to 1.8 m from 60 s on; after |V| has dropped from 1.5 m/s to
@@ -165,7 +165,7 @@ plucked").
   by observations.
 - **Mobile layer at the end**: the steep reach is almost swept clean (0 for T_b), and the sediment
   deposits at the slope breaks (1.4 m for T_b at the slope break at 220 m; 0.91 m for C_b at the
-  slope break at 120 m and 0.49 m at 220 m). The eroded rock enters the mobile layer 1:1, and the
+  slope break at 120 m and 0.50 m at 220 m). The eroded rock enters the mobile layer 1:1, and the
   erosion–deposition equation decides whether the flow takes it up or leaves it as cover.
 - **Rock-derived sediment**: the solids of the eroded rock are 25.2 m³ for T_b (5.2 % of the
   490 m³ of solids that entered), 5.2 % for C_b, 1.0 % for T_c and 1.3 % for C_c. Almost all of the
@@ -203,9 +203,9 @@ evaluation with the quasi-static stress (0.22 cm).
   stripped; it remains or thickens.
 - With Coulomb + Manning and the deposit (C_c), the slow and thick flow upstream of the slope break
   lasts long, so the rock keeps eroding without the mobile layer being stripped completely. At 101 m
-  from the head, the mobile layer never becomes thinner than 13.6 cm (16.1 cm at the end; exposure
-  exp(−sd/H*) 7 % or less) and 1.47 cm is eroded by 300 s. Upstream at 83 m the layer is stripped
-  completely and 3.5 cm is eroded, the largest in the reach.
+  from the head, the mobile layer never becomes thinner than 13.6 cm (16.2 cm at the end; exposure
+  exp(−sd/H*) 7 % or less) and 1.46 cm is eroded by 300 s. Upstream at 83 m the layer is stripped
+  completely and 3.4 cm is eroded, the largest in the reach.
 - The H* = 0.05 m of the exposure exp(−sd/H*) follows the observation that a deposit about 5 cm
   thick protects the bed from impacts (McCoy et al. 2013).
 

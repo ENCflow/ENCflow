@@ -294,6 +294,12 @@
 !     interpolation, end values outside the range; repeating a time point
 !     makes a step). Modes 4,5 have no emergency release (dam_tadashigaki
 !     cannot be given)
+!     6: external operation (BMI). The caller (Python etc.) gives the
+!        release as the BMI target release (bmi/README.en.md "Dams"). It
+!        persists until the next set; until the first set, dam_q0 (0 when
+!        omitted). No emergency release. The target is not saved (after a
+!        restart it starts from dam_q0). Run with encflow without BMI, the
+!        dam releases the constant dam_q0
 !   Operating rules from practice (modes 1,2; a form without history):
 !     dam_hlim(n) : restricted level (m). Rule releases never lower the
 !                   reservoir below it (the floor). Default = the lowest
@@ -417,4 +423,12 @@
 !  dam_h_init(7) = 428.6                 ! recorded initial level
 !  !f_dam_mode(7) = 5                    ! to reproduce with the recorded level (mode 5)
 !  !fn_dam_h_val(7) = "dam7_level.txt"   ! each line "min m"; dam_h_init may be omitted
+!  ! Dam 8: operated from outside (the BMI target release; a Python controller, coupling with another model)
+!  dam_in_cell(:,1,8) = 350, 60
+!  dam_out_cell(:,1,8) = 353, 60
+!  dam_hv(:,1,8) = 380.0, 0.0
+!  dam_hv(:,2,8) = 410.0, 1.5e7
+!  f_dam_mode(8) = 6
+!  dam_q0(8) = 5.0                       ! release until the first target is set
+!  dam_h_init(8) = 400.0
 !/

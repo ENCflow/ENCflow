@@ -155,6 +155,7 @@ reference の更新(`-u`)は結果の妥当性を人間が確認してから行�
 | [nest_identity/](nest_identity/) | 比 1:1 自己ネストの恒等(子の内部 == 親、双方向はルート == 単独)。restart・保存修正・地下水 | ネスティング fn_nest | 一致(ドライバ) |
 | [bmi_nest/](bmi_nest/) | BMI の多格子公開(grid id・修飾名)。Python からの恒等・再 initialize・同値 set、bmi-tester | BMI・ネスティング | 一致(Python)・bmi-tester |
 | [bmi_vars/](bmi_vars/) | 機能依存の BMI 変数(動的変数表)と hg・swe の set の受け入れ試験。機能なし・バケツ地下水 + 積雪・Green-Ampt の 3 構成で、変数表の有無・解析値・同値 set・不正な set の拒否(§76) | BMI・地下水・積雪 | 一致(Python)・bmi-tester |
+| [bmi_dam/](bmi_dam/) | ダムの量の BMI 公開と外部運転(f_dam_mode = 6)の受け入れ試験。外部から与えた放流量が放流量の時系列のダムと全行一致、見本の制御器(貯水位を保つ・上限・変化の速さの制限)、外部運転でないダムへの set の無視、get と CSV の一致、体積保存、再 initialize(§133) | BMI・構造物(ダム) | 一致(Python)・解析・bmi-tester |
 | **入出力** | | | |
 | [gtif/](gtif/) | GeoTIFF リーダーの読みテスト資産(圧縮・座標系の各種) | GeoTIFF | 単体テスト |
 | [river_flowline/](river_flowline/) | 河道マスクを標高の落水線に載せ直す前処理(utils/river_flowline)。秩父の 4 つの格子(50〜500 m)で、置いてある載せ直し済みのマスクをバイト一致で作り直せること、落水線の集水面積の最大が領域のセル数に一致すること、bil・GeoTIFF でも同じ内訳になること | 前処理 utils/river_flowline | 単体テスト |

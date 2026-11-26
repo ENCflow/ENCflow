@@ -1,7 +1,7 @@
 # ENCflow/examples/debris_bedrock/Makefile
 #   make        ../../bin/ の実行ファイルへのリンクと入力(make_init.py)を作る
-#   make run    前半の 7 構成(T_b T_c C_b C_c T_b05 T_b20 W)を順に計算する(各 約 30 秒)
-#   make long   補足(長期の連鎖): make_long.py の 50 構成を Run_long.sh で並列に回す($(NP) 並列で約 8 分)
+#   make run    前半の 7 構成(T_b T_c C_b C_c T_b05 T_b20 W)を順に計算する(各 約 20 秒)
+#   make long   補足(長期の連鎖): make_long.py の 50 構成を Run_long.sh で並列に回す($(NP) 並列で約 7 分)
 #   make clean  リンクと生成物を削除する
 
 TOPDIR	= ../..

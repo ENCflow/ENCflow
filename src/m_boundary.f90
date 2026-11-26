@@ -54,6 +54,8 @@ module m_boundary
   public :: m_boundary_dam_record
   public :: m_boundary_dam_gwcheck
   public :: m_boundary_dam_gwforce
+  public :: m_boundary_dam_count, m_boundary_dam_has_ext, m_boundary_dam_get   ! BMI 用(§133)
+  public :: m_boundary_dam_set_target, m_boundary_dam_cell
   public :: dam_operate, dam_sink, dam_draw, e_struct_dam, e_struct_culvert
   public :: e_bc_wall, e_bc_outflow, e_bc_radiation, e_bc_neumann, e_bc_inflow
   public :: e_ext_none, e_ext_nest
@@ -216,12 +218,16 @@ module m_boundary
     ! ---- 以下はダム・湖沼(e_struct_dam)専用 ----
     integer :: dmode = 0                   ! 運転モード (0:水位固定湖沼, 1:一定量,
                                            !   2:一定率カット, 3:自然調節,
-                                           !   4:放流量の時系列, 5:貯水位の時系列。§132)
+                                           !   4:放流量の時系列, 5:貯水位の時系列。§132,
+                                           !   6:外部運転 = BMI の目標放流量。§133)
     real :: vfl = 0.0                      ! 運転の放流が下げない床の貯水量 (m3)。
                                            !   制限水位 dam_hlim の貯水量(モード1,2)。
                                            !   省略時は Vmin = geom(1)(従来の死水の下限)
     real :: qon = -1.0                     ! 洪水調節開始流量 (m3/s。モード2。負=指定なし)
     real :: qcap = -1.0                    ! 放流量の上限 (m3/s。モード2 の dam_qmax。負=指定なし)
+    real :: qext = 0.0                     ! 外部運転(モード6)の目標放流量 (m3/s。0 以上。init は
+                                           !   dam_q0、以後は BMI の set が次の set まで持続。
+                                           !   save しない = 再開時は dam_q0 に戻る。§133)
     integer :: nts = 0                     ! 時系列の点数(モード4,5)
     real, allocatable :: ts(:,:)           ! 時系列 (1:2, 1:nts) (時刻 s, 放流量 m3/s
                                            !   または水位 m)。interp_series で補間
@@ -353,6 +359,39 @@ module m_boundary
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
       real, intent(in) :: dts        ! gwflow の実効時間刻み (s)
+    end subroutine
+    ! --- BMI 向けのダムの量の読み書き(§133。m_main が使う)---
+    ! ダム・湖沼の数(&list_struct_dam の番号の数。追加の放流工・水位固定湖沼を含む)
+    module function m_boundary_dam_count(b) result(n)
+      type(t_boundary), intent(in) :: b
+      integer :: n
+    end function
+    ! 外部運転(f_dam_mode = 6)のダムがあるか
+    module function m_boundary_dam_has_ext(b) result(yes)
+      type(t_boundary), intent(in) :: b
+      logical :: yes
+    end function
+    ! ダムの量を番号順に vals(1:ダム数) へ写す。what = 'h'(水位 m)、'v'(貯水量 m3)、
+    ! 'qin'・'qout'・'qsp'(流入・放流・スピル m3/s)、'qtgt'(目標放流量: 外部運転の
+    ! ダムは qext、ほかはその運転則の放流 = qout)。値はこの歩の終わりの診断量
+    ! (dam_operate が決定的総和で更新済み = 全ランク同値)
+    module subroutine m_boundary_dam_get(b, what, vals)
+      type(t_boundary), intent(in) :: b
+      character(len=*), intent(in) :: what
+      real, intent(out) :: vals(:)
+    end subroutine
+    ! 外部運転のダムの目標放流量を vals(1:ダム数)(番号順)から設定する。ほかの
+    ! ダムの要素は無視する。値の検査(0 以上)と全ランクへの配布は呼び出し側
+    module subroutine m_boundary_dam_set_target(b, vals)
+      type(t_boundary), intent(inout) :: b
+      real, intent(in) :: vals(:)
+    end subroutine
+    ! ダム k(番号順)の代表セル (i, j): 捕捉集合の先頭セル。捕捉集合を持たない
+    ! 追加の放流工(dam_lake)は放流セルの先頭
+    module subroutine m_boundary_dam_cell(b, k, i, j)
+      type(t_boundary), intent(in) :: b
+      integer, intent(in) :: k
+      integer, intent(out) :: i, j
     end subroutine
   end interface
 

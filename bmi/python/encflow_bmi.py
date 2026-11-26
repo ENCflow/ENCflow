@@ -16,7 +16,11 @@ ENCflow クラスの方が便利で、本クラスは適合性確認と pymt 系
   非ルート格子の変数は object 部に ~grid<k>(encflow.var_on_grid)。
   initialize → finalize → initialize の再初期化は逐次で可(bmi-tester が
   この使い方をする。ネスト系も可)。
-- get_value_ptr / at_indices / 非構造格子系は NotImplementedError。
+- ダム・湖沼の量(developer.md §133)は、ダムの代表点を節点とする非構造格子
+  (type "unstructured"。節点だけで辺・面は 0)に載る。この格子の x・y・
+  節点数・辺数・面数は返す。ラスタの格子の x・y・辺・面と、辺・面の
+  つながり(edge_nodes 等)は NotImplementedError。
+- get_value_ptr / at_indices は NotImplementedError。
 - 型は倍精度接口(float64)に統一(PREC=single ビルドでも交換は倍精度)。
 """
 
@@ -67,6 +71,11 @@ class EncflowBmi(Bmi):
         L.encflow_bmi_get_var_location.argtypes = [c_char_p, c_char_p, c_int]
         L.encflow_bmi_get_value_double.argtypes = [c_char_p, pd, c_int]
         L.encflow_bmi_set_value_double.argtypes = [c_char_p, pd, c_int]
+        L.encflow_bmi_get_grid_node_count.argtypes = [c_int, pi]
+        L.encflow_bmi_get_grid_edge_count.argtypes = [c_int, pi]
+        L.encflow_bmi_get_grid_face_count.argtypes = [c_int, pi]
+        L.encflow_bmi_get_grid_x.argtypes = [c_int, pd, c_int]
+        L.encflow_bmi_get_grid_y.argtypes = [c_int, pd, c_int]
 
     # ---- 内部ヘルパ ----
 
@@ -252,11 +261,28 @@ class EncflowBmi(Bmi):
         origin[0], origin[1] = y0.value, x0.value
         return origin
 
+    def _unstructured(self, grid):
+        return self.get_grid_type(grid) == "unstructured"
+
+    def _coords(self, fname, grid, dest):
+        arr = np.ascontiguousarray(dest, dtype=np.float64)
+        if getattr(self._lib, fname)(
+                grid, arr.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), arr.size) != _OK:
+            _err(fname)
+        if arr is not dest:
+            dest[:] = arr
+        return dest
+
     def get_grid_x(self, grid, x):
-        raise NotImplementedError("get_grid_x")
+        # ダムの点の格子(非構造)だけ。ラスタは shape/spacing/origin で表す
+        if not self._unstructured(grid):
+            raise NotImplementedError("get_grid_x")
+        return self._coords("encflow_bmi_get_grid_x", grid, x)
 
     def get_grid_y(self, grid, y):
-        raise NotImplementedError("get_grid_y")
+        if not self._unstructured(grid):
+            raise NotImplementedError("get_grid_y")
+        return self._coords("encflow_bmi_get_grid_y", grid, y)
 
     def get_grid_z(self, grid, z):
         raise NotImplementedError("get_grid_z")
@@ -265,10 +291,21 @@ class EncflowBmi(Bmi):
         return self.get_grid_size(grid)
 
     def get_grid_edge_count(self, grid):
-        raise NotImplementedError("get_grid_edge_count")
+        # ダムの点の格子は辺なし(0)。ラスタの格子には非構造格子の口はない
+        if not self._unstructured(grid):
+            raise NotImplementedError("get_grid_edge_count")
+        v = ctypes.c_int()
+        if self._lib.encflow_bmi_get_grid_edge_count(grid, ctypes.byref(v)) != _OK:
+            _err("get_grid_edge_count")
+        return v.value
 
     def get_grid_face_count(self, grid):
-        raise NotImplementedError("get_grid_face_count")
+        if not self._unstructured(grid):
+            raise NotImplementedError("get_grid_face_count")
+        v = ctypes.c_int()
+        if self._lib.encflow_bmi_get_grid_face_count(grid, ctypes.byref(v)) != _OK:
+            _err("get_grid_face_count")
+        return v.value
 
     def get_grid_edge_nodes(self, grid, edge_nodes):
         raise NotImplementedError("get_grid_edge_nodes")
