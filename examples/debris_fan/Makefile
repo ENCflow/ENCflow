@@ -1,6 +1,6 @@
 # ENCflow/examples/debris_fan/Makefile
 #   make          ../../bin/ の実行ファイルへのリンクと、全ケースの入力・設定(make_init.py)を作る
-#   make run      全 26 ケースを計算する(4 スレッドで 30 分ほど。2.5 m の 2 ケースが大半)
+#   make run      全 26 ケースを計算する(4 スレッドで 35 分ほど。2.5 m の 2 ケースが大半)
 #   make quick    40・20・10 m の 8 近傍と 4 近傍の 18 ケースだけ計算する(数分)
 #   make clean    リンクと生成物を削除する
 
