@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # examples/confluence_backwater の補足: 同じ地区を Δx = 100 m の粗い格子で表す入力(data_coarse/ に書く。make が呼ぶ)
 #   本編(make_terrain.py)と同じ地形の式を 100 m のセルの中心で評価する。流域規模の計算での表し方:
-#   - 本川(幅 200 m)は 2 セル前後の解像した河道、狭窄部(幅 100 m)は 1 セル。河道マスク fn_rw に入れ、幅は 9999(解像扱い)
+#   - 本川(幅 200 m)は 2 セル前後の解像した河道。河道マスク fn_rw に入れ、幅は 9999(解像扱い)
+#   - 狭窄部(幅 120 m)と前後の遷移は、南の 1 セルを解像した河道、北の 1 セルを残りの幅のサブグリッド河道(fn_width)にする
 #   - 支川(幅 80 m)は 1 セルのサブグリッド河道(幅 80 m。fn_width)
 #   - 堤防は地形で表せないので、河道の堤防(仮想壁面。fn_bank、絶対標高 f_bank_datum = 2)で天端を与える
 #   - 堤内地の地盤高は本編と同じ式(セルの中心)
@@ -15,9 +16,41 @@ import make_terrain as m
 DXC = 100.0
 NXC, NYC = int(m.NX * m.DX / DXC), int(m.NY * m.DX / DXC)    # 60 × 74
 LYC = NYC * DXC
+RESOLVED = 9999.0                                            # 解像した河道の幅(セルより広い = 幅で絞らない)
+# 幅がセル 2 つに満たない区間(狭窄部とその前後の遷移)の表し方。この区間は直線で、中心線(y = 700 m)が粗い格子の
+# セルの境目にあるので、中心線の南北の 2 セルで表す
+#   "mix"   南を解像した河道(100 m)、北を残りの幅のサブグリッド河道(狭窄部で 20 m)にする(既定)
+#   "round" 幅に最も近いセル数の解像した河道(狭窄部は南の 1 セル = 100 m)
+#   "split" 南北とも幅の半分のサブグリッド河道(狭窄部は 60 m × 2)
+#   "full"  南北とも解像した河道(200 m。狭窄部が消える)
+# "split" は、並んだサブグリッド河道のセルを結ぶ斜めの辺の幅の絞りが緩く、通水が過大になる(開発記録 §18 の制約 (6)。
+# 比べた結果は README の補足 1 と coarse_check/)
+REPS = ("mix", "round", "split", "full")
+REP = "mix"
 
 
-def build(qm0=m.QM_BASE, qt0=m.QT_BASE):
+def channel_width(b, dn, rep):
+    """本川のセルの幅(0: 河道でない、RESOLVED: 解像した河道、それ以外: サブグリッド河道の幅)。dn は中心線からの距離(北が正)"""
+    if b >= 2 * DXC:
+        return RESOLVED if -b / 2 < dn <= b / 2 else 0.0
+    south, north = -DXC < dn <= 0.0, 0.0 < dn <= DXC
+    if not (south or north):
+        return 0.0
+    if rep == "mix":
+        if south:
+            return RESOLVED if b >= DXC else b
+        return b - DXC if b > DXC else 0.0
+    if rep == "round":
+        return RESOLVED if south or round(b / DXC) >= 2 else 0.0
+    if rep == "split":
+        return b / 2
+    if rep == "full":
+        return RESOLVED
+    raise ValueError(rep)
+
+
+def build(qm0=m.QM_BASE, qt0=m.QT_BASE, rep=None):
+    rep = rep or REP
     z = np.full((NYC, NXC), -9999.0)
     rn = np.full((NYC, NXC), m.RNF)
     rw = np.zeros((NYC, NXC), dtype=int)
@@ -33,12 +66,12 @@ def build(qm0=m.QM_BASE, qt0=m.QT_BASE):
             dn, s, xn = m.nearest(x, y)
             b = m.width(xn)
             zm = m.ZM0 - m.SM * s
-            # 本川の中心線(直線区間 y = 700 m)は粗い格子のセルの境目にあるので、幅 200 m は 2 セルになる。
-            # 幅がセル以下の狭窄部(100 m)は南側の 1 セルにする(中心線から両側 50 m のセルを両方取ると 200 m になる)
-            if (b > DXC and abs(dn) <= b / 2) or (b <= DXC and -DXC < dn <= 0.0):
+            wc = channel_width(b, dn, rep)
+            if wc > 0.0:
                 kind[j-1, i-1] = 1
                 z[j-1, i-1] = zm
                 rn[j-1, i-1] = m.RNM
+                width[j-1, i-1] = wc
                 bank[j-1, i-1] = zm + m.LEV_M
                 h0[j-1, i-1] = m.hn(qm0 / b, m.RNM, m.SM)
                 continue
@@ -56,7 +89,6 @@ def build(qm0=m.QM_BASE, qt0=m.QT_BASE):
                 kind[j-1, i-1] = 5
                 z[j-1, i-1] = m.zt(y) + m.FP_T + m.G_LAT * max(0.0, abs(x - m.XT) - m.BT / 2 - m.DX)
     rw[(kind == 1) | (kind == 3)] = 1
-    width[kind == 1] = 9999.0
     width[kind == 3] = m.BT
     mask[kind > 0] = 1
     return z, rn, rw, width, bank, mask, h0, kind
@@ -95,7 +127,8 @@ def main():
             a = np.loadtxt(os.path.join(src, fn))
             a[:, 1] += zc_out - zf_out
             np.savetxt(os.path.join(out, fn), a, fmt="%.1f %.3f")
-    print(f"粗い格子 {NXC} × {NYC}、有効セル {int(mask.sum())}、本川のセル {int((kind == 1).sum())}、支川のセル {int((kind == 3).sum())}")
+    print(f"粗い格子 {NXC} × {NYC}、有効セル {int(mask.sum())}、本川のセル {int((kind == 1).sum())}"
+          f"(うちサブグリッド河道 {int(((kind == 1) & (width < RESOLVED)).sum())})、支川のセル {int((kind == 3).sum())}")
 
 
 if __name__ == "__main__":

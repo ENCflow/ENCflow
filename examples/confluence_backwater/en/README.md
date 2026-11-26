@@ -51,7 +51,7 @@ Flooding by backwater is likely at confluences where the following conditions ov
 
 | Condition | Why it matters | In this example |
 |---|---|---|
-| A narrows downstream of the confluence (outlet of a basin, hillside, bridge) | The main-river stage is high at the confluence | Main geometry (a 100 m-wide narrows 1.6 km downstream) |
+| A narrows downstream of the confluence (outlet of a basin, hillside, bridge) | The main-river stage is high at the confluence | Main geometry (a 120 m-wide narrows 1.6 km downstream) |
 | A gentle tributary with levees lower than the main river's | The backwater reaches far upstream and overtops the low levees | Main geometry |
 | A long main-river flood, with the tributary peak overlapping it | The backwater lasts long and the tributary water cannot get out either | Cases with combinations of floods |
 | Joining on the outer bank of a bend | Centrifugal effects raise the stage on the outer bank | Main geometry and supplement 3 |
@@ -86,11 +86,11 @@ back up the tributary, overtops the tributary levees near the mouth and ponds on
 (a) Terrain and gauges (P = probes, L = flux transects). (b) Cross-section 300 m above the tributary mouth. (c) Inflows
 at the upstream ends.
 
-6.0 km × 7.4 km, Δx = 20 m (300 × 370 cells; the hills are not computed, leaving 30,876 active cells).
+6.0 km × 7.4 km, Δx = 20 m (300 × 370 cells; the hills are not computed, leaving 30,884 active cells).
 
 - **Main river**: a 200 m-wide channel flowing from west to east (bed slope 1/1500, roughness 0.03). At the
   confluence it bends into a bulge to the north (radius of curvature 430 m at the apex), and the tributary enters on
-  its outer (north) bank. A 100 m-wide, 600 m-long narrows lies 1.6 km downstream of the confluence. The levee crest
+  its outer (north) bank. A 120 m-wide, 600 m-long narrows lies 1.6 km downstream of the confluence. The levee crest
   is the bed + 8.5 m and is never overtopped.
 - **Tributary**: an 80 m-wide channel flowing from north to south (slope 1/1000, roughness 0.035). Its bed at the mouth
   is 1 m above the main-river bed, and its levee crest is the bed + 4.5 m. For its own flood (300 m³/s; normal depth
@@ -129,14 +129,15 @@ cd examples/confluence_backwater
 make                    # links and inputs (data/, data_coarse/, junction/data/)
 make run                # the 6 cases of the main part (about 6 minutes per case with 4 threads)
 make coarse             # supplement 1: the 3 coarse-grid cases (about 2 minutes in total)
+make coarse_check       # supplement 1: the 13 cases that locate the coarse-grid difference, and the table (about 5 minutes in total)
 make steady             # supplement 2: the steady case on the main grid (about 3 minutes with 4 threads)
 make junction           # supplement 3: the 9 junction-shape cases (about 2 minutes per case with 4 threads)
 make junction_fine      # supplement 3: the 2 grid-check cases (about 10 minutes per case with 4 threads)
 python3 plot_results.py # figs/*.png and tables (argument en draws the English version into en/figs/; cases not computed are skipped)
 ```
 
-The settings files are written by make_params.py (main part and supplements 1 and 2) and junction/make_junction.py
-(supplement 3).
+The settings files are written by make_params.py (main part and supplements 1 and 2), coarse_check/make_check.py
+(the checks of supplement 1) and junction/make_junction.py (supplement 3).
 
 ## Results
 
@@ -158,9 +159,9 @@ tributary gauge (2 km above the mouth). The dotted line is the uniform-flow rela
 | Case | Highest main-river stage at the confluence, north / south bank (m) | Highest tributary level 200 m above the mouth (m) | Max. water on the landside (million m³) | Flooded area (km²) | Max. flood depth (m) | Overtopped reach |
 |---|---:|---:|---:|---:|---:|---:|
 | trib | 20.40 / 20.44 | 21.25 | 0 | 0 | 0 | none |
-| main | 24.15 / 23.94 | 24.17 | 2.63 | 3.16 | 1.88 | 430 m from the mouth |
-| early | 24.18 / 23.97 | 24.20 | 3.38 | 3.60 | 2.09 | 450 m from the mouth |
-| same | 24.25 / 24.05 | 24.29 | 4.13 | 3.99 | 2.27 | 570 m from the mouth |
+| main | 24.14 / 23.92 | 24.16 | 2.49 | 3.08 | 1.84 | 430 m from the mouth |
+| early | 24.18 / 23.96 | 24.19 | 3.22 | 3.50 | 2.05 | 450 m from the mouth |
+| same | 24.24 / 24.03 | 24.28 | 4.00 | 3.93 | 2.24 | 550 m from the mouth |
 
 The flooded area is the landside area with a maximum depth of 0.1 m or more. The tributary levee crest 200 m above
 the mouth is 23.95 m.
@@ -169,23 +170,23 @@ the mouth is 23.95 m.
   crest.
 - **The main-river flood alone makes the tributary overflow, without any increase of the tributary flow** (main):
   while the main-river stage rises (2–9 h), main-river water flows back up the tributary at its mouth, at up to
-  250 m³/s.
-  - From about 5.5 h, when the stage at the confluence exceeds the tributary levee crest, the tributary levees are
+  240 m³/s.
+  - From about 6 h, when the stage at the confluence exceeds the tributary levee crest, the tributary levees are
     overtopped over the reach up to 430 m from the mouth.
-  - 2.63 million m³ ponds on the landside, with a maximum depth of 1.9 m.
+  - 2.49 million m³ ponds on the landside, with a maximum depth of 1.8 m.
 - **When the tributary flood coincides with the main-river peak, the flooding grows 1.6-fold** (same): the tributary
-  water hardly gets out to the main river, and the water on the landside grows by 1.50 million m³ over main. This is
+  water hardly gets out to the main river, and the water on the landside grows by 1.51 million m³ over main. This is
   60 % of the volume of the tributary flood (2.52 million m³ above the base flow).
-  - The peak discharge from the tributary mouth into the main river drops to 193 m³/s, against 275 m³/s with the
-    tributary flood alone (trib), and comes 2 h later. The overtopped reach extends to 570 m from the mouth.
+  - The peak discharge from the tributary mouth into the main river drops to 183 m³/s, against 275 m³/s with the
+    tributary flood alone (trib), and comes 2 h later. The overtopped reach extends to 550 m from the mouth.
   - When the tributary peak comes 3 h earlier (early), most of the tributary flood gets out to the main river before
     the main-river stage is high, and the flooding stays at 1.3 times that of main.
-- **The ponded water does not drain**: the water on the landside below the levee crests remains; at 14 h, 3.56 million
+- **The ponded water does not drain**: the water on the landside below the levee crests remains; at 14 h, 3.53 million
   m³ still remains in case same. This example has no drainage of the landside.
 - **At a gauge under backwater, the stage does not tell the discharge** (panel (d)): with the tributary flood alone,
   stage and discharge follow the uniform-flow relation. With the main-river flood, the stage rises by 2.5 m while the
   discharge stays near zero (partly reversed).
-- **The outer bank is 0.2 m higher than the south bank**: the highest main-river stage at the confluence is 0.20–0.21 m
+- **The outer bank is 0.2 m higher than the south bank**: the highest main-river stage at the confluence is 0.21 m
   higher on the north bank (the outer bank of the bend) than on the south bank. A 1-D calculation with
   cross-section-averaged stages would estimate the stage at the tributary mouth, which lies on the outer bank, about
   0.1 m too low.
@@ -199,13 +200,13 @@ case gate, and the pump discharge obtained from the operating rule.
 
 | Case | Max. water on the landside (million m³) | Flooded area (km²) | Max. flood depth (m) | Highest main-river stage at the confluence, north bank (m) | Highest level at the tributary gauge (m) |
 |---|---:|---:|---:|---:|---:|
-| same (no measure) | 4.13 | 3.99 | 2.27 | 24.25 | 24.53 |
-| raise (measure A) | 0 | 0 | 0 | 24.90 | 25.06 |
-| gate (measure B) | 1.30 | 2.14 | 1.40 | 24.53 | 24.39 |
+| same (no measure) | 4.00 | 3.93 | 2.24 | 24.24 | 24.52 |
+| raise (measure A) | 0 | 0 | 0 | 24.88 | 25.04 |
+| gate (measure B) | 1.29 | 2.14 | 1.39 | 24.50 | 24.39 |
 
 - **Raising the levees of the backwater section removes the tributary flooding but raises the main-river stage**
   (raise): the water that escaped from the tributary onto the landside stays in the main river, so the main-river stage
-  at the confluence rises by 0.65 m, and the maximum main-river discharge below the confluence grows from 2,616 to
+  at the confluence rises by 0.63 m, and the maximum main-river discharge below the confluence grows from 2,626 to
   3,063 m³/s.
   - The landside had been acting as a retention basin. Raising the levees is a measure to choose after checking the
     freeboard of the main-river levees and the safety downstream.
@@ -214,13 +215,16 @@ case gate, and the pump discharge obtained from the operating rule.
   - The pump can clear the tributary base flow, but with the tributary flood at 7 h the stage inside the gate rises to
     24.1 m, and the tributary levees are overtopped near the mouth (inland flooding).
   - The water on the landside becomes one third of that in same. Because less water escapes from the main river, the
-    main-river stage at the confluence rises by 0.28 m.
+    main-river stage at the confluence rises by 0.26 m.
 
 ## Supplement 1: coarse grid (Δx = 100 m, subgrid channel)
 
 The same area on a grid used for catchment-scale computations.
 
-- **Main river**: a resolved channel about 2 cells wide. The narrows is 1 cell (100 m wide).
+- **Main river**: a resolved channel about 2 cells wide.
+- **Narrows** (120 m wide): the southern cell is a resolved channel (100 m), and the northern cell is a subgrid channel
+  of the remaining 20 m. The transitions before and after it have the same form (the northern cell is 40 and 80 m
+  wide).
 - **Tributary**: a 1-cell subgrid channel (80 m wide).
 - **Levees**: since they cannot be represented by the terrain, the crests of channel levees (virtual walls) are given
   as absolute elevations.
@@ -233,22 +237,69 @@ the landside. (d) Profile of the maximum water level along the tributary.
 
 | Case | Highest main-river stage at the confluence (m)<br>20 m → 100 m | Max. water on the landside (million m³)<br>20 m → 100 m | Flooded area (km²)<br>20 m → 100 m |
 |---|---|---|---|
-| main | 24.15 → 24.52 | 2.63 → 7.22 | 3.16 → 5.28 |
-| same | 24.25 → 24.76 | 4.13 → 8.62 | 3.99 → 5.80 |
+| main | 24.14 → 24.36 | 2.49 → 5.70 | 3.08 → 4.71 |
+| same | 24.24 → 24.49 | 4.00 → 7.11 | 3.93 → 5.28 |
 
-- **On the coarse grid the main-river stage at the confluence comes out 0.4–0.5 m higher, and the water on the
-  landside 2–3 times as much**: the difference of the main-river stage arises in the bend.
-  - The bend becomes a staircase 2 cells wide, and its width across the flow narrows. Going up through the bend, the
-    difference of stage grows to about 0.6 m.
-  - Downstream of the bend the stages agree with the main part within 0.13 m, except at the entrance of the narrows.
+- **On the coarse grid the main-river stage at the confluence comes out 0.22–0.24 m higher, and the water on the
+  landside 1.8–2.3 times as much**: the difference of the main-river stage arises mainly in the bend (see the
+  breakdown below).
 - **The overtopping volume changes greatly with small differences of the stage at the confluence**: the depth over the
   tributary levees is only 0.4–0.5 m in the main part. Since the overflow is roughly proportional to the 1.5 power of
-  the overflow depth, a difference of 0.4 m in the stage at the confluence changes the overtopping volume several-fold.
-- **When looking at backwater flooding on a coarse grid, check the main-river stage at the confluence first**: the
-  backwater profile of the tributary itself agrees well with 1-D theory even on the coarse grid (supplement 2). Most of
-  the error enters the stage at the confluence through the representation of the main river.
-  - It is safe to check the representation of the bends of the main river (at least 4 cells wide in the bends,
-    comparison with a finer grid) and to match it to observed stages before reading the results.
+  the overflow depth, and the overtopped reach and duration also grow, a difference of only 0.2 m in the stage at the
+  confluence roughly doubles the overtopping volume.
+
+**Where the difference of the main-river stage arises**
+
+Constant flows in the main river (and the tributary) are run for 4 h, and the steady stages computed in the channels
+only are compared (coarse_check/).
+
+| Main river | Δx = 20 m | Δx = 100 m | Difference | 1-D |
+|---|---:|---:|---:|---:|
+| straight | 23.60 | 23.59 | 0.00 | 23.60 |
+| straight + narrows | 24.34 | 24.30 | −0.04 | 24.25 |
+| bend | 23.63 | 24.07 | +0.44 | 23.55 |
+| bend + narrows (main river of this example) | 24.33 | 24.66 | +0.33 | 24.19 |
+| bend + narrows + tributary 300 m³/s | 24.78 | 25.13 | +0.35 | 24.60 |
+
+Main-river stage at the confluence location (m). The main river carries 2,800 m³/s. The 1-D column is the solution of
+the gradually varied flow equation (rectangular section, Manning), without contraction, expansion or junction losses.
+
+- **Most of the difference arises in the staircase of the bend**: for a straight main river the stage is the same on
+  both grids, but with the bend the coarse grid comes out 0.44 m higher. On the coarse grid the bend becomes a
+  staircase 2 cells wide, and its width across the flow narrows.
+- **The difference in reproducing the confluence is small**: adding the tributary raises the stage by 0.45 m at
+  Δx = 20 m and by 0.47 m at Δx = 100 m.
+
+**At the narrows, the representation of a width that is not a multiple of the cell size changes the stage by more
+than 1 m**
+
+| Representation of the narrows (120 m wide) | Stage (m) | Difference from Δx = 20 m (m) |
+|---|---:|---:|
+| 1 resolved cell (100 m wide) | 24.99 | +0.65 |
+| 2 subgrid cells of 60 m | 23.80 | −0.54 |
+| 1 resolved cell + 20 m subgrid (this example) | 24.30 | −0.04 |
+| 2 resolved cells (200 m wide; the narrows disappears) | 23.59 | −0.75 |
+
+Stage at the confluence location for the straight main river with the narrows. At Δx = 20 m (6 cells = 120 m) it is
+24.34 m, and 24.25 m in 1-D.
+
+- A subgrid channel width can be given only up to the cell size, so a channel wider than one cell is represented by
+  channel cells side by side.
+- Splitting the width equally over 2 cells almost removes the narrows. Subgrid cells in two rows, north and south, are
+  connected not only with the next downstream cell in the same row (orthogonal edge) but also with the next downstream
+  cell in the other row (diagonal edge).
+  - The width limit of the diagonal edges (60 m ÷ diagonal natural width 71 m = 0.85) is looser than that of the
+    orthogonal edges (60 m ÷ 100 m = 0.6), so the two rows together convey more than a 120 m channel.
+- With the southern cell resolved and the northern cell a subgrid channel of the remaining 20 m, the diagonal edges are
+  also limited by the 20 m width (0.28), and the result agrees with Δx = 20 m within 0.04 m.
+  - Channel cells side by side are outside the assumption of the subgrid channel (a channel one cell wide along a
+    line). This is a result checked for the form of this example (a straight reach), not for oblique channels.
+
+When looking at backwater flooding on a coarse grid, check the main-river stage at the confluence first. The backwater
+profile of the tributary itself agrees well with 1-D theory even on the coarse grid (supplement 2). Most of the error
+enters the stage at the confluence through the representation of the main river. It is safe to compare the
+representation of the bends and of widths that are not a multiple of the cell size with a finer grid or a 1-D
+calculation, and to match it to observed stages before reading the results.
 
 ## Supplement 2: how far up the tributary the backwater reaches (steady backwater profile)
 
@@ -263,12 +314,12 @@ depth 150 m above the mouth.
 
 | Grid | Depth 150 m above the mouth (m) | Max. difference from theory (m) | Reach affected by backwater (normal depth + 0.1 m)<br>model / theory |
 |---|---:|---:|---:|
-| Δx = 20 m (resolved channel) | 3.31 | 0.004 | 2,770 m / 2,770 m |
-| Δx = 100 m (subgrid channel) | 3.73 | 0.018 | 3,250 m / 3,200 m |
+| Δx = 20 m (resolved channel) | 3.29 | 0.004 | 2,750 m / 2,750 m |
+| Δx = 100 m (subgrid channel) | 3.49 | 0.018 | 2,950 m / 2,950 m |
 
 - **The backwater profile of the tributary agrees with 1-D theory on both grids**: even for the tributary as a subgrid
   channel the difference is within 2 cm. The difference of the reach affected by backwater is within one cell (100 m).
-- **The longer reach on the coarse grid is due to the 0.42 m higher stage at the confluence** (the same reason as in
+- **The longer reach on the coarse grid is due to the 0.20 m higher stage at the confluence** (the same reason as in
   supplement 1), not to a different shape of the backwater profile.
 - **A guide to the reach affected by backwater**: where the rise Δh caused by the main-river stage is larger than the
   normal depth h, the water surface extends almost level up the tributary. Its length is about Δh / S.
@@ -358,7 +409,8 @@ the mouth. The downstream uniform-flow velocity is 2.59 m/s.
   resolved channels and depends on the grid. Three-dimensional flow that the depth-averaged 2-D equations cannot
   represent, such as the size of the separation zone and secondary currents, is not included.
 - **On a coarse grid the representation of the main river governs the result**: as in supplement 1, the staircase of
-  the bend changes the stage at the confluence by 0.4–0.5 m, which changes the overtopping volume several-fold.
+  the bend raises the stage at the confluence by 0.2–0.4 m, which roughly doubles the overtopping volume. For a
+  width that is not a multiple of the cell size, the representation changes the stage by more than 1 m.
 - **The downstream stage is the normal depth of the sum of the inflows**: the drop of the stage when flooding reduces
   the main-river discharge, and the delay by storage in the channels, are not counted.
 - **Sediment does not move**: bed changes by deposition and scour at the confluence are not computed.
@@ -370,7 +422,7 @@ the mouth. The downstream uniform-flow velocity is 2.59 m/s.
 
 ## Starting points for sensitivity experiments
 
-All are constants in make_terrain.py. After changing them, rebuild the inputs with `make`.
+After changing make_terrain.py or make_coarse.py, rebuild the inputs with `make`.
 
 - `QM_PEAK` (main-river peak discharge), `XC1`, `XC2`, `BC` (position and width of the narrows): the main-river stage at
   the confluence changes.
@@ -381,6 +433,8 @@ All are constants in make_terrain.py. After changing them, rebuild the inputs wi
 - `L_RAISE` (length raised in measure A): if shorter than the backwater section, the levees upstream of it are
   overtopped.
 - `pump_rule` (pump capacity) and `culv_width` (gate width) in param_gate.txt.
+- `REP` in make_coarse.py (how the narrows is represented on the coarse grid: the default mix, or round, split, full):
+  as in supplement 1, the main-river stage at the confluence changes by about 1 m.
 
 ## References
 
