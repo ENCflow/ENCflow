@@ -1,0 +1,86 @@
+!======================================================================
+! paddy: 双方向・浮遊砂・水質の二相分配(wq_kd)の併用(Check_paddy.py wq_kd。developer.md §127.19)
+!
+!   param_sed_tw.txt(四辺が壁の箱、面積率 0〜0.9 の分布、西端の列のセルから外水 1.0 m3/s を 2 h、外水の浮遊砂の
+!   体積濃度 C_s = 0.002、巻き上げなし・沈降はほぼなし)の外水に物質の濃度 c_in = 2 mg/L を乗せ、平衡分配係数
+!   wq_kd = 200 L/kg を与える。タンクは空から始める(地表も乾いている)。Run.sh は sed で wq_kd を外した計算も解く。
+!   確認: 地表の溶存態の濃度はどこでも c_d = c_in/(1 + Kd·ρs·C_s) で(タンクから落水した溶存態の水が戻って混ざっても
+!   変わらない)、タンクへ入るのは溶存態だけなので、種類ごとのタンクの濃度 = c_d。田面に落とした粒子態の物質
+!   (paddy.csv の cdep)= Kd·ρs·c_d × 田面に積んだ浮遊砂の体積(paddy.csv の sed)。wq.csv の収支(cdep は settle_g)。
+!   wq_kd を外した計算ではタンクの濃度 = c_in(全部がプールに入る)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 1.0
+  t0 = 0
+  tt = 7200
+  dt_disp = 600
+  dt_file = 7200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  fn_geomorph = '-'
+  fn_wq = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_wq_kd'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+&list_geoinfo
+  nx = 10
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 0
+  sd0 = 1.0
+/
+&list_bound_edge
+/
+&list_bound_inflow
+  inflow_cell(:,1,1) = 1, 4
+  inflow_val(:,1,1) = 0, 1.0
+  inflow_val(:,2,1) = 9999, 1.0
+  inflow_cs(1:2,1,1) = 0, 0.002
+  inflow_cs(1:2,2,1) = 9999, 0.002
+  inflow_dist(1) = 0
+/
+&list_paddy
+  fn_pd_frac = 'frac_tw.txt'
+  fn_pd_adopt = 'adopt_mix.txt'
+  pd_hlev = 0.30
+  pd_aplot = 300.0
+  pd_h0 = 0.0               ! タンクは空から始める(タンクの水はすべて地表から入る)
+  f_pd_exchange = 1         ! 双方向(二室化)
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  fluv_porosity = 0.4
+  f_suspend = 1
+  f_esform = 1
+  susp_d50 = 0.0002
+  susp_tausc = 1.0e6        ! 巻き上げなし
+  susp_esa = 1.0e-4
+  susp_wf = 1.0e-9          ! 沈降はほぼなし
+/
+
+&list_wq
+  wq_c0 = 0.0
+  wq_in_conc(1) = 2.0       ! 外水の物質の濃度 (mg/L。溶存態と粒子態の合計)
+  wq_kd = 200.0             ! 平衡分配係数 (L/kg)
+/

@@ -326,9 +326,16 @@ turbid water from puddling, leaching of pesticides, etc.); it is a generic form 
     the tanks at the surface concentration.
   - First-order decay (`wq_thalf`, `wq_k20`) also acts on the pools, and single-phase settling (`wq_vs`) is applied
     divided by the ponding depth of the tank.
+  - When the two-way mode is combined with suspended sediment (`f_suspend`) and two-phase partitioning (`wq_kd`), the
+    particulate part of the substance of the water entering the tanks, which is attached to the suspended sediment, is
+    dropped on the field surface at once together with the sediment (it stays in the soil of the field surface and is
+    counted in `settle_g` of `wq.csv`). Only the dissolved part enters the pools (developer.md §127.19). The particulate
+    fraction is the same equilibrium partitioning as the two-phase partitioning of the water quality chapter.
 - **Plots of B**: the plot water is surface water, so rain, advection, decay and settling are as in the water quality
   chapter. Only the decrease in depth takes the substance out of the system together with the water of the plot cells,
-  at the surface concentration.
+  at the surface concentration. With two-phase partitioning (`wq_kd`), it takes out only the dissolved part, like the
+  infiltration of the water quality chapter, and the particulate part attached to the suspended sediment stays in the plot
+  water (developer.md §127.20).
 - **Concentration of the ponding before the rain**: `pd_wq_c0` (mg/L; default 0). In A it is the concentration of the
   initial water of the tanks, in B the concentration of the water added to the plot cells (filled up to `pd_h0`). The
   concentration of the initial surface water is `wq_c0` of water quality.
@@ -355,7 +362,8 @@ most half the difference of the levels of the two sides in one step (to prevent 
 | S (S_surf) in the Log | surface water plus the storage of the paddy tanks (domain mean, m) |
 | c1 and c2 in `paddy.csv` (only with water quality) | mean concentration of the paddy water of each class (mg/L; total mass / total water). A: the tanks; B: the water of the plot cells |
 | sed in `paddy.csv` (only when the two-way mode is combined with suspended sediment `f_suspend`; after c1 and c2) | accumulated deposit on the field surface of the suspended sediment of the water that entered the tanks from the surface (m³, volume of solids) |
-| catch in `paddy.csv` (only when the catchment fraction `fn_pd_catch` is given; the last column) | accumulated rain of the catchment that entered the tanks (m³; rain is the rain on the paddy fields, and residual closes including catch) |
+| catch in `paddy.csv` (only when the catchment fraction `fn_pd_catch` is given; after c1, c2 and sed) | accumulated rain of the catchment that entered the tanks (m³; rain is the rain on the paddy fields, and residual closes including catch) |
+| cdep in `paddy.csv` (only when the two-way mode, suspended sediment and two-phase partitioning `wq_kd` are combined; the last column) | accumulated particulate part of the substance of the water entering the tanks that was dropped on the field surface (g): the particulate amount caught by the paddy fields |
 | mass_paddy_g and out_paddy_perc_g in `wq.csv` (only in runs with paddy-field dams; the last 2 columns) | current mass of the pools of the tanks of A (g; 0 for B, whose plot water is counted in the surface `mass_surface_g`), accumulated substance that left the system with the decrease in depth (g) |
 
 The accumulated values in `paddy.csv` start at the beginning of the run (at the restart when restarted). The
@@ -366,6 +374,7 @@ as well (a restart with water quality enabled differently from the saved state s
 **Reading the water quality balance**: add `mass_paddy_g` to the mass of the whole system in `wq.csv` and
 `out_paddy_perc_g` to the removals out of the system, and the balance of "Tips for reading and checking" in the
 [water quality](wq.md) chapter closes. The decay in the pools of the tanks is in `decay_g`, and the settling in
+`settle_g`. The particulate part dropped on the field surface by two-phase partitioning (cdep in `paddy.csv`) is also in
 `settle_g`. Transfers between the surface and the tanks are internal and have no columns.
 
 **Output of B**: the ponding depth of the plots is the water depth `H` itself (`Hpn` and `Hpd` are not written; S in the Log
@@ -485,7 +494,9 @@ combined with suspended sediment (`f_suspend`), the suspended sediment of the wa
 surface (backflow through the outlets, filling over the levees) is deposited on the field surface (the bed) of the cell
 (with the same conversion as the settling of suspended sediment; an original simplification). The deposited amount is the
 sed column of `paddy.csv` (accumulated volume of solids, m³). Flood sediment remaining in paddy fields has been reported
-in the field[^manh2014]. When combined with resolved plots (B), bed load does not cross the edges of the levees and outlets
+in the field[^manh2014]. With two-phase partitioning of water quality (`wq_kd`) as well, the particulate substance attached
+to that sediment is dropped on the field surface together with it (see
+[combination with water quality](#combination-with-water-quality-fn_wq) above). When combined with resolved plots (B), bed load does not cross the edges of the levees and outlets
 (the same treatment as the virtual walls of river banks; the flow over the levees carries suspended sediment).
 Limits: the tanks carry no sediment and the water from the outlets is clear (turbid water such as the drainage after
 puddling is not represented). All suspended sediment entering a tank settles at once (no time for settling), and the bed
@@ -501,9 +512,17 @@ count the percolation of paddy fields).
 - The tanks of A are fully mixed, and the exchange of the substance with the soil of the field surface and the rice
   plants (adsorption, release, resuspension) is not represented. High concentrations after puddling or fertilizing are
   given only as the concentration of the ponding before the rain, `pd_wq_c0`.
-- The substance that settles in the tanks of A (`wq_vs`) is removed from the pools and does not go into the surface
-  accumulation pool (`f_wq_settle = 1`). Two-phase partitioning (`wq_kd`) is not treated in the tanks and does not settle
-  there (the particulate part leaves with the outlet flow like the dissolved part).
+- The substance that settles in the tanks of A (`wq_vs`) and the particulate part dropped on the field surface in the
+  two-way mode (`wq_kd`) stay in the soil of the field surface: they are removed from the pools and do not go into the
+  surface accumulation pool (`f_wq_settle = 1`); washing them off the field surface again by later floods is not
+  represented.
+- The particulate part of two-phase partitioning (`wq_kd`) is dropped at once together with the suspended sediment when it
+  enters a tank (no time for settling). The tanks hold only the dissolved part, and the tanks of the one-way mode receive
+  only the substance of the rain (dissolved). The plot water of B is surface water, so the particulate part settles with
+  the suspended sediment as in the water quality chapter, and the decrease in depth takes out only the dissolved part.
+- Thin water of depth `dd` or less holds no suspended sediment (landform change deposits it on the bed), so the substance
+  of the thin water when a plot starts to get wet is treated as dissolved and moves as dissolved with the decrease in
+  depth and the inflow into the tanks (the same treatment as the infiltration of the water quality chapter).
 - In the one-way mode of A, floods do not enter the paddy fields, so the substance of the flood does not enter the tanks
   either (use the two-way mode).
 - The substance of the rain on the paddy fields enters the tanks after the water of the step has been moved. The
@@ -568,7 +587,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Contents | Key points |
 |---|---|---|
-| [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode, resolved plots (B), combination with water quality and sediment, catchment fraction | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). In B, the drainage of a plot of 3000 m² against the exact solution (weir, 8.7×10⁻⁴ relative) and a reference solution (hole, 2×10⁻⁷ relative), plots without outlets keep their water at the levees and checkerboard corners, and water conservation and levelling out with levee overflow, backflow through an outlet and inflow over the levees. For water quality, first-order decay of the tank concentration against the exact solution (4×10⁻¹³ relative), the concentration of the water entering by backflow equal to the surface concentration, and the mass balance of wq.csv closing to the digits of the output (5×10⁻⁸ relative). For sediment, the suspended sediment entering the tanks settles only on the paddy cells with the solids conserved (2×10⁻⁹ relative), and in B bed load does not cross the levees (total bed change of the plot 9×10⁻¹² m). For the catchment fraction, rain on a closed box gives ponding depth = (a + c)/a × rain and surface water = (1 − a − c) × rain against the exact solution (9×10⁻¹⁴ relative), a catchment fraction map of 0 is bit-identical to none, and the substance of the rain on the catchment also enters the tanks. Bit-identical for np = 1, 2, 4 |
+| [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode, resolved plots (B), combination with water quality and sediment, catchment fraction | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). In B, the drainage of a plot of 3000 m² against the exact solution (weir, 8.7×10⁻⁴ relative) and a reference solution (hole, 2×10⁻⁷ relative), plots without outlets keep their water at the levees and checkerboard corners, and water conservation and levelling out with levee overflow, backflow through an outlet and inflow over the levees. For water quality, first-order decay of the tank concentration against the exact solution (4×10⁻¹³ relative), settling in the tanks against the exact solution of the discrete formula (2×10⁻¹² relative), the particulate substance dropped on the field surface by two-phase partitioning equal to Kd·ρs × dissolved concentration × deposited sediment (1×10⁻⁵ relative), the decrease in depth of B carrying only the dissolved part (3×10⁻⁴ relative), the concentration of the water entering by backflow equal to the surface concentration, and the mass balance of wq.csv closing to the digits of the output (5×10⁻⁸ relative). For sediment, the suspended sediment entering the tanks settles only on the paddy cells with the solids conserved (2×10⁻⁹ relative), and in B bed load does not cross the levees (total bed change of the plot 9×10⁻¹² m). For the catchment fraction, rain on a closed box gives ponding depth = (a + c)/a × rain and surface water = (1 − a − c) × rain against the exact solution (9×10⁻¹⁴ relative), a catchment fraction map of 0 is bit-identical to none, and the substance of the rain on the catchment also enters the tanks. Bit-identical for np = 1, 2, 4 |
 | [examples/paddy_dam](../../../examples/paddy_dam/en/README.md) | heavy rain on a lowland drainage district that can drain only through a pumping station (inland flooding) | the same district is solved with representation A (Δx = 30 m; one-way, two-way, and two-way with the catchment fraction) and representation B (Δx = 10 m). With representation B, compares the inundation of a settlement with normal outlets and with paddy-field dams (all, the upstream half, the downstream half), and compares it with representation A under the same conditions |
 
 ## References

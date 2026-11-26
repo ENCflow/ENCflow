@@ -62,7 +62,8 @@ module m_wq
   !           (取水・ポンプと同じ契約。§30.10)、本モジュールは水田の上の雨の物質をプールへ入れ(s%pdfa。
   !           集水面積率のときは集水面積の雨の物質も地表から除き(s%pdfc)、近傍から配られた雨の物質を受ける
   !           セルのプールへ入れる(s%pdcr。§127.15))、プールに減衰・沈降を掛け、減水深で系外へ出た物質
-  !           (s%fmpd。m_paddy が記録)を台帳に積む。
+  !           (s%fmpd。m_paddy が記録)を台帳に積む。双方向のタンクへ入る水の粒子態(wq_kd)を m_paddy が田面に
+  !           落とした物質(s%fspd)は台帳の沈降に積む(§127.19)。
   !           区画の解像(表現 B)の区画の水は地表の水のまま(減水深の持ち出しだけ同じ記録)。
   !           docs/paddy_plan.md §16.1、developer.md §127.10
   !   蒸発:   純水のみが抜けるため質量は残留(濃縮)= 物理的に正しい。
@@ -1116,6 +1117,21 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
         if (s%fmpd(i,j) == 0.0) cycle
         wq%vrow(j,22) = wq%vrow(j,22) + real(s%fmpd(i,j), real64) * acell
         s%fmpd(i,j) = 0.0
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
+  ! (2q) 双方向の水田のタンクへ入る水の粒子態(§127.19): m_paddy が浮遊砂と一緒に田面へ落とした物質 fspd(セル面積
+  !      基底)を台帳の沈降 settle に積んでゼロに戻す(田面の土に残る。タンクの沈降 wq_vs と同じく表面蓄積プールには
+  !      入れない)
+  if (allocated(s%fspd)) then
+    !$omp parallel do schedule(static) private(i, j)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (s%fspd(i,j) == 0.0) cycle
+        wq%vrow(j,6) = wq%vrow(j,6) + real(s%fspd(i,j), real64) * acell
+        s%fspd(i,j) = 0.0
       end do
     end do
     !$omp end parallel do

@@ -186,6 +186,10 @@ module m_state
                                     ! 双方向と浮遊砂 f_suspend の併用のときだけ m_paddy_init が確保。§127.11)
     real, allocatable :: fmpd(:,:)  ! 減水深で系外へ出た物質 (g/m2。セル面積基底。m_paddy が足し、m_wq が
                                     ! 台帳に積んでゼロに戻す。fxr と同じ契約)
+    real, allocatable :: fspd(:,:)  ! 双方向の水田のタンクへ入る水の物質のうち、浮遊砂に付いた粒子態を田面に落とした量
+                                    ! (g/m2。セル面積基底。m_paddy が足し、m_wq が台帳の沈降 settle に積んでゼロに戻す。
+                                    ! fxr と同じ契約。双方向・浮遊砂・水質の二相分配 wq_kd の併用のときだけ m_paddy_init が
+                                    ! 確保。§127.19)
     real :: pdmean = 0.0     ! 領域平均の水田の貯留(m)。pd_active 時のみ更新
     ! 沿岸の波浪場(fn_wavefield。§90)の診断量。確保と wv_active の設定は m_wavefield_init
     ! (有効時のみ)。状態(ビン別のエネルギー)は t_wavefield の私有で、ここは書き出しと
@@ -1158,6 +1162,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%pdfc)) deallocate(s%pdfc)
   if (allocated(s%pdcr)) deallocate(s%pdcr)
   if (allocated(s%fmpd)) deallocate(s%fmpd)
+  if (allocated(s%fspd)) deallocate(s%fspd)
   if (allocated(s%pdsd)) deallocate(s%pdsd)
   if (allocated(s%wvh)) deallocate(s%wvh)
   if (allocated(s%wvdir)) deallocate(s%wvdir)
