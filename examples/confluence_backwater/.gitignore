@@ -18,3 +18,4 @@ coarse_check/Screen_*.log
 coarse_check/encflow
 coarse_check/encflow_mpi
 coarse_check/__pycache__/
+coarse_check/oblique/

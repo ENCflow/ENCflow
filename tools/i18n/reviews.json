@@ -1850,9 +1850,9 @@
     {
       "source": "examples/confluence_backwater/README.md",
       "target": "examples/confluence_backwater/en/README.md",
-      "source_sha256": "308c232773a752fa592a730671f15108851b768cf48586abc97dd0ef458b57b4",
-      "target_sha256": "31db43bf1495691c69587ba7d04048ab40fe9027a39a1165128456d40bfb1092",
-      "reviewer": "Claude (Claude Code session; confluence_backwater update: narrows redefined as 120 m, coarse-grid narrows as a resolved cell plus a subgrid cell for the remaining width, coarse_check breakdown; Japanese and English compared line by line, values from the rerun results)",
+      "source_sha256": "a4a1a263c10abe3b7d5310a75e9e1ed125a2a2deb04173ec33d13d1dd39b58bb",
+      "target_sha256": "e7230416190044582bf87d34bfb99aaf49829ded4e6bd388f4fb188cec13e4c4",
+      "reviewer": "Claude (Claude Code session; confluence_backwater update: oblique-channel check of the coarse-grid representations added to supplement 1 (table from coarse_check/oblique.py, make coarse_oblique); Japanese and English compared line by line, values from the rerun results)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },

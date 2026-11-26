@@ -3,6 +3,7 @@
 #   make run       本編の 6 ケースを順に計算する(1 ケース 4 スレッドで 6 分前後)
 #   make coarse    補足: 粗い格子(Δx = 100 m)の 2 ケースと定常の 1 ケース(合わせて 2 分前後)
 #   make coarse_check  補足: 粗い格子の切り分けの 13 ケース(本川だけの定常。合わせて 5 分前後)と数表
+#   make coarse_oblique  補足: 斜めの河道での河道の表し方の 47 ケース(直線の河道の等流。合わせて 20 分前後)と数表
 #   make steady    補足: 本編の格子の定常の 1 ケース(背水曲線を 1 次元の理論と比べる。4 スレッドで 3 分前後)
 #   make junction  補足「合流の形と水位」の 9 ケース(Δx = 10 m の定常。1 ケース 4 スレッドで 2 分前後)
 #   make junction_fine  同じ補足の格子の確認 2 ケース(Δx = 5 m。1 ケース 4 スレッドで 10 分前後)
@@ -53,6 +54,11 @@ coarse_check: all
 	@cd coarse_check && python3 make_check.py > /dev/null && \
 	    for c in $(CCHECK); do ./encflow param_$$c.txt > Screen_$$c.log || exit 1; done && python3 make_check.py table
 
+coarse_oblique: all
+	@cd coarse_check && python3 oblique.py gen && cd oblique && ln -sf ../encflow encflow && \
+	    for c in $$(cat cases.txt); do ./encflow param_$$c.txt > Screen_$$c.log || exit 1; done && \
+	    cd .. && python3 oblique.py table
+
 steady: all
 	./encflow param_steady.txt | tee Screen_steady.log
 
@@ -65,8 +71,8 @@ junction_fine: all
 install: all
 
 clean:
-	rm -rf result_* data data_coarse junction/result_* junction/data coarse_check/result_* coarse_check/data_*
+	rm -rf result_* data data_coarse junction/result_* junction/data coarse_check/result_* coarse_check/data_* coarse_check/oblique
 	rm -f encflow encflow_mpi junction/encflow junction/encflow_mpi Screen*.log junction/Screen*.log
 	rm -f coarse_check/encflow coarse_check/encflow_mpi coarse_check/Screen*.log
 
-.PHONY: all links inputs run coarse coarse_check steady junction junction_fine install clean
+.PHONY: all links inputs run coarse coarse_check coarse_oblique steady junction junction_fine install clean
