@@ -146,8 +146,8 @@ def write_inputs(name, shape, grid, rep, thick=0):
             f.write(f"0 {qt:.1f}\n1440 {qt:.1f}\n")
         trib = "  fn_inflow_cell(2) = 'cells_trib.txt'\n  fn_inflow_val(2) = 'q_trib.txt'\n  inflow_dist(2) = 2\n"
     title = TITLE_SHAPE[shape] + ("、細かい格子 Δx = 20 m" if grid == "fine" else f"、粗い格子 Δx = 100 m。{TITLE_REP[rep]}")
-    if thick:
-        title += f"。湾曲部の段を太らせる(THICK = {thick})"
+    if grid == "coarse":
+        title += f"。湾曲部の段 THICK = {thick}"
     with open(os.path.join(HERE, f"param_{name}.txt"), "w", encoding="utf-8") as f:
         f.write(PARAM.format(title=title, qm=Q_MAIN, trib_txt=f"・支川 {qt:,.0f} m3/s" if qt > 0 else "", name=name,
                              dt="1.0" if grid == "fine" else "2.0", chan_fn="" if grid == "fine" else "  fn_channel = '-'\n",
@@ -234,8 +234,9 @@ def table():
     lab = {"uniform": T("直線", "straight"), "constr": T("直線 + 狭窄部", "straight + narrows"),
            "bend": T("湾曲", "bend"), "base": T("湾曲 + 狭窄部(本編の本川)", "bend + narrows (main river of this example)"),
            "trib": T("湾曲 + 狭窄部 + 支川 300 m³/s", "bend + narrows + tributary 300 m³/s")}
-    print(T("| 本川の形 | Δx = 20 m | Δx = 100 m | 差 | Δx = 100 m(段を太らせる) | 差 | 1 次元 |",
-            "| Main river | Δx = 20 m | Δx = 100 m | Difference | Δx = 100 m (steps thickened) | Difference | 1-D |"))
+    print(T("| 本川の形 | Δx = 20 m | Δx = 100 m(段を太らせない) | 差 | Δx = 100 m(段を太らせる) | 差 | 1 次元 |",
+            "| Main river | Δx = 20 m | Δx = 100 m (steps not thickened) | Difference | Δx = 100 m (steps thickened) | "
+            "Difference | 1-D |"))
     print("|---|---:|---:|---:|---:|---:|---:|")
     for shape, *_ in SHAPES:
         f, c = val[f"f_{shape}"], val[f"c_{shape}"]

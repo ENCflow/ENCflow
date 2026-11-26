@@ -861,6 +861,11 @@ def tables():
             print(f"== 表 2 粗い格子 {c}: 合流点の本川の最高水位(北岸の P1){e1.max():.2f} → {ec1.max():.2f} m、"
                   f"堤内地の最大水量 {v.max() / 1e6:.2f} → {vc.max() / 1e6:.2f} 百万 m3、浸水面積 {a:.2f} → {ac:.2f} km2、"
                   f"最大水深 {hm[FP].max():.2f} → {hc[KC == 5].max():.2f} m")
+            t1, e1t, _ = probe(c, 1)
+            tc1, ec1t, _ = probe(f"coarse_{c}", 1)
+            hh = (3.0, 4.0, 5.0, 6.0, 7.0, 8.0)
+            print("     合流点の本川の水位(P1)の時刻ごとの差(粗い − 細かい): " + "、".join(
+                f"{h:.0f} h {np.interp(h * 60, tc1, ec1t) - np.interp(h * 60, t1, e1t):+.2f} m" for h in hh))
     rows = backwater_table()
     if rows:
         print(f"== 表 3 定常の背水曲線(等流水深 {HN_ST:.3f} m。理論は口から 150 m 前後の計算の水深から上流へ積分)")
