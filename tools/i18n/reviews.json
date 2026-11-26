@@ -2615,20 +2615,20 @@
     {
       "source": "examples/landslide_tsunami/README.md",
       "target": "examples/landslide_tsunami/en/README.md",
-      "source_sha256": "038208f763a554281c131db1cc7c815e667289210146820aff7e47707e424bfa",
-      "target_sha256": "5e0210cb8e386d2210528520a9e50c9d1125073dd0dc0f275b70401888298235",
-      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10: the changed table cells (B, B0, A_nh0, A_nh, C_nh), the shoreline-zone volume in the text, the run line and the figure links now pointing to en/figs compared against the Japanese source and the printed tables of plot_results.py; no model execution)",
+      "source_sha256": "cda816c9470cf888bcc515bdb6f22cd1b829f14dc57df9fb125e73c360c22526",
+      "target_sha256": "4378eb72c32a1f0dddcf60b1c8edf7b3b22b7c58019b3d6988e6e5d865d62beb",
+      "reviewer": "Claude (Claude Code session; landslide_tsunami recomputed with main 90881b8: tables, prose values, run times and result figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/landslide_tsunami/figs/deposit.png",
       "target": "examples/landslide_tsunami/en/figs/deposit.png",
-      "source_sha256": "3540dee8e3b25b6d9a3bfd92c3c78874230a111324aee05a7aed3c57feb43298",
-      "target_sha256": "d1fc06a591f87acb234dde44d9903e037cd89fc26a15810d25115e3051282b3c",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "c1516007e33d15e0eb2ff8c477ab776bb5dac519063dd08d7bf17c9675268299",
+      "target_sha256": "f562cdf98c062ca1e6c8dfd1a88ef8849007a5f97dd25f2fdff287293fd53635",
+      "reviewer": "Claude (Claude Code session; figure redrawn by plot_results.py from the rerun results, same data as the Japanese figure, English labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/landslide_tsunami/figs/mechanism.png",
@@ -2651,29 +2651,29 @@
     {
       "source": "examples/landslide_tsunami/figs/nonhydro.png",
       "target": "examples/landslide_tsunami/en/figs/nonhydro.png",
-      "source_sha256": "a3a4ae38a9590b9d63b69f1063d121b5056b17e277cf8de03f6e9f55816c55f7",
-      "target_sha256": "f949e955df7f4e406890e8b193f2c627cd4cba89a4ec1a57dfac9158bb8f9d0a",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "5632cee1ca96d23bb9adef4ce2b2576f5426c50a2b316af600786cd8f50e0e1e",
+      "target_sha256": "6ac8dc4d0b4f6437c7f07b15c2601c33be17c40aff83c0386afd427d445998fd",
+      "reviewer": "Claude (Claude Code session; figure redrawn by plot_results.py from the rerun results, same data as the Japanese figure, English labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/landslide_tsunami/figs/probes.png",
       "target": "examples/landslide_tsunami/en/figs/probes.png",
-      "source_sha256": "1864e09104b9c1300bfcfc5a5ec068b8f989f50279ae6b175113afb9ced62bb6",
-      "target_sha256": "4d89163f7988dbfae4e54713759cef538a2df425a4f5bb529b4320762e603651",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "3179d0dd762e1c7fd0df855ac6553d0614aa0ce5426ce88e72ce5fcb6c7ede73",
+      "target_sha256": "bcd71cee5767619db56722e4434820eb4a3b26fed6f79bc6f8d5f4b7e11074fb",
+      "reviewer": "Claude (Claude Code session; figure redrawn by plot_results.py from the rerun results, same data as the Japanese figure, English labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/landslide_tsunami/figs/profiles.png",
       "target": "examples/landslide_tsunami/en/figs/profiles.png",
-      "source_sha256": "8b99d5e6fd8beaa2831bfd48c728c390230bd92609c9745447d56b1458aa33fb",
-      "target_sha256": "afb3861ee4d64c86cd86d89d819632f38f147d4b855d3752998e38cce6809664",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "f1e5e5e71cad07463fa0f775361b6ccb92b84a64e69c2d93371de75c1178f088",
+      "target_sha256": "0e725ef2bb9557e0900617f13495ad401e3d8b8b5c14184482acb4e215bfaec7",
+      "reviewer": "Claude (Claude Code session; figure redrawn by plot_results.py from the rerun results, same data as the Japanese figure, English labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/landslide_tsunami/figs/properties.png",
