@@ -67,11 +67,17 @@ def centerline():
     return xs, ys, s
 
 
-XS, YSC, SC = centerline()
-S_J = float(np.interp(XJ, XS, SC))             # 合流点の本川の中心線の距離
-ZMJ = ZM0 - SM * S_J                           # 合流点の本川の河床
-Y_MOUTH = yc(XJ) + BM / 2                      # 支川の口(本川の北岸)の y
-ZTJ = ZMJ + D_STEP                             # 支川の口の河床
+def geometry():
+    """中心線と、それで決まる合流点の諸量(湾曲の振幅 AM を変えたら呼び直す。coarse_check/make_check.py が使う)"""
+    global XS, YSC, SC, S_J, ZMJ, Y_MOUTH, ZTJ
+    XS, YSC, SC = centerline()
+    S_J = float(np.interp(XJ, XS, SC))         # 合流点の本川の中心線の距離
+    ZMJ = ZM0 - SM * S_J                       # 合流点の本川の河床
+    Y_MOUTH = yc(XJ) + BM / 2                  # 支川の口(本川の北岸)の y
+    ZTJ = ZMJ + D_STEP                         # 支川の口の河床
+
+
+geometry()
 
 
 def zt(y):

@@ -17,7 +17,7 @@ NXC, NYC = int(m.NX * m.DX / DXC), int(m.NY * m.DX / DXC)    # 60 × 74
 LYC = NYC * DXC
 
 
-def build(qm0=m.QM_BASE, qt0=m.QT_BASE, margin=0.0):
+def build(qm0=m.QM_BASE, qt0=m.QT_BASE):
     z = np.full((NYC, NXC), -9999.0)
     rn = np.full((NYC, NXC), m.RNF)
     rw = np.zeros((NYC, NXC), dtype=int)
@@ -35,7 +35,7 @@ def build(qm0=m.QM_BASE, qt0=m.QT_BASE, margin=0.0):
             zm = m.ZM0 - m.SM * s
             # 本川の中心線(直線区間 y = 700 m)は粗い格子のセルの境目にあるので、幅 200 m は 2 セルになる。
             # 幅がセル以下の狭窄部(100 m)は南側の 1 セルにする(中心線から両側 50 m のセルを両方取ると 200 m になる)
-            if (b > DXC and abs(dn) <= b / 2 + margin) or (b <= DXC and -DXC < dn <= 0.0):
+            if (b > DXC and abs(dn) <= b / 2) or (b <= DXC and -DXC < dn <= 0.0):
                 kind[j-1, i-1] = 1
                 z[j-1, i-1] = zm
                 rn[j-1, i-1] = m.RNM
