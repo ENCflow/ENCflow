@@ -330,7 +330,7 @@ initial terrain z.txt of the resolved levee; the same in both rows).
 | Case | Peak discharge through the opening (m³/s) / time (min) | Flood volume (10⁴ m³) | Inundated area (ha; h > 0.01 m) | Maximum inundation depth (m) | Start of inundation at the toe (min) |
 |---|---:|---:|---:|---:|---:|
 | Resolved levee + prescribed bed motion | 138 / 120 | 36.2 | 69.4 | 1.13 | 76 |
-| Virtual wall + &list_channel_breach (f_br_diag = 1) | 137 / 109 | 38.1 | 68.6 | 0.95 | 76 |
+| Virtual wall + &list_channel_breach (f_br_diag = 1) | 134 / 120 | 36.5 | 69.2 | 0.91 | 76 |
 
 - With the resolved levee, once the levee cells drop to the floor the opening becomes
   ordinary cells and the shallow-water equations solve the flow directly (all links of the
