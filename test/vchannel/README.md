@@ -38,7 +38,7 @@ Voellmy 則   du/dt = g (S − μ) − g u² / (ξ h)    →  u = u_t tanh(g (S 
 | 構成 | 内容 | 向き |
 |---|---|---|
 | `vo` | Voellmy 則・既定の数値設定 | 0°・22.5°・45° |
-| `vo0` | Voellmy 則・`f_opening_dynamic = 0`(格子で解像された谷の土砂流動に勧める設定) | 0°・22.5°・45° |
+| `vo0` | Voellmy 則・`f_opening_dynamic = 0`(V 字の沢の雪崩の例題 snow_avalanche が使う設定) | 0°・22.5°・45° |
 | `vo4` | Voellmy 則・4 近傍(`p_diagratio = 0`) | 0° |
 | `fr` | 摩擦なし(μ = 1e-4、ξ = 1e9)・1 秒 | 0°・22.5°・45° |
 | `w` | 水・既定の数値設定 | 0°・22.5°・45° |
@@ -92,8 +92,11 @@ python3 Fig.py    # figs/vchannel.png(引数 en で英語版を en/figs/ に)
 
 **精度の限界**: 流れの幅が 8 セルのこの水路では、8 近傍の計算の流量は厳密解より 2〜16 % 小さく出ます。誤差は
 格子間隔にほぼ比例して縮みます(Δx = 2.5 m で、Voellmy 則・`f_opening_dynamic = 0` が 0.95・0.91(0°・45°)、
-水が 0.91・0.93。developer.md §130.2・§130.6)。格子で解像された谷を流れる土砂流動では、向きによる幅の小さい
-`f_opening_dynamic = 0` を使います(例題 [snow_avalanche](../../examples/snow_avalanche/README.md))。
+水が 0.91・0.93。developer.md §130.2・§130.6)。V 字の沢を進む流れで、谷の向きへの依存を小さくしたいときは、
+向きによる幅の小さい `f_opening_dynamic = 0` を使います(例題
+[snow_avalanche](../../examples/snow_avalanche/README.md))。平らな谷底と急な谷壁を持つ谷では、0 にすると
+谷壁に接する列の通過幅が戻らないので、既定の 3 のままにします([通過幅の調整](../../docs/users_guide/passage_width.md)
+§7。例題 debris_fan の土石流での比較は developer.md §130.11)。
 
 ## 関連文書
 

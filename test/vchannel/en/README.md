@@ -43,7 +43,7 @@ stretch, Q = Σ h u_s Δn (u_s is the along-channel component of the velocity).
 | Configuration | Content | Directions |
 |---|---|---|
 | `vo` | Voellmy law, default numerical settings | 0°, 22.5°, 45° |
-| `vo0` | Voellmy law, `f_opening_dynamic = 0` (the setting recommended for sediment flows in valleys resolved by the grid) | 0°, 22.5°, 45° |
+| `vo0` | Voellmy law, `f_opening_dynamic = 0` (the setting used by the example snow_avalanche, an avalanche in a V-shaped gully) | 0°, 22.5°, 45° |
 | `vo4` | Voellmy law, 4 neighbours (`p_diagratio = 0`) | 0° |
 | `fr` | No friction (μ = 1e-4, ξ = 1e9), 1 s | 0°, 22.5°, 45° |
 | `w` | Water, default numerical settings | 0°, 22.5°, 45° |
@@ -104,9 +104,13 @@ Values for Δx = 5 m (gfortran 13.3, -Ofast).
 **Limits of accuracy**: in this channel, where the flow is 8 cells wide, the discharge of the 8-neighbour
 computation is 2 to 16 % below the exact solution. The error shrinks roughly in proportion to the grid spacing
 (at Δx = 2.5 m, 0.95 and 0.91 (0°, 45°) for the Voellmy law with `f_opening_dynamic = 0` and 0.91 and 0.93 for
-water; developer.md §130.2 and §130.6). For sediment flows in valleys resolved by the grid, use
-`f_opening_dynamic = 0`, which has the smaller spread over the directions (example
-[snow_avalanche](../../../examples/snow_avalanche/en/README.md)).
+water; developer.md §130.2 and §130.6). For a flow advancing in a V-shaped gully, use
+`f_opening_dynamic = 0`, which has the smaller spread over the directions, when the dependence on the direction
+of the valley is to be reduced (example [snow_avalanche](../../../examples/snow_avalanche/en/README.md)). In a
+valley with a flat floor and steep walls, keep the default 3, because with 0 the passage width of the rows
+touching the valley walls is not handed back
+([passage-width adjustment](../../../docs/en/users_guide/passage_width.md) §7; the comparison for the debris
+flow of the example debris_fan is in developer.md §130.11).
 
 ## Related documents
 
