@@ -1850,17 +1850,17 @@
     {
       "source": "examples/confluence_backwater/README.md",
       "target": "examples/confluence_backwater/en/README.md",
-      "source_sha256": "5c1a0149fad4920006e0418e2016c59afe8eeafc490d2b8ed3ce0bbb2102df5c",
-      "target_sha256": "3a3f07934b8cf8647bb5851a27af8ecfc236d42ac6537754570c2ab99ab0d41b",
-      "reviewer": "Claude (Claude Code session; confluence_backwater update: thickening the steps of oblique bands (2 rows shared at steps; THICK in make_coarse.py) added to supplement 1 tables and notes; Japanese and English compared line by line, values from the runs of coarse_check and oblique.py)",
+      "source_sha256": "6bf0c39090ba749d4682cdefa4384ddfd03831564c0c972de6a71be66f89e465",
+      "target_sha256": "ea5ac970b1d25c7e8eb586dcb9ba19dfbbceeb29c9e04b1e03241218159bd4e2",
+      "reviewer": "Claude (Claude Code session; confluence_backwater update: cause of the overflow-phase difference on the coarse grid (advection does not see the virtual walls of fn_bank; developer.md §131.12) added to supplement 1 and the limitations; Japanese and English compared line by line)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/confluence_backwater/figs/backwater.png",
       "target": "examples/confluence_backwater/en/figs/backwater.png",
-      "source_sha256": "0db7f16135659ac89392f4add43b7abdf3fb4e46961434a7734aa923ea6ad577",
-      "target_sha256": "0067093749cff94873ac6e4caf565ebe3dcebf6e382017da4171d856824b4a4f",
+      "source_sha256": "25bd0324ee5d03a9c0c1a5d8d6eb42fe67c0e77e44b3b57e5ad1c3e835b701a8",
+      "target_sha256": "d40a78ee26b417c4f02e5e5200663eab3a61864d56f1d6f206722086a5363d05",
       "reviewer": "Claude (Claude Code session; figure redrawn by plot_results.py from the rerun results, same data as the Japanese figure, English labels checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
@@ -1868,8 +1868,8 @@
     {
       "source": "examples/confluence_backwater/figs/coarse.png",
       "target": "examples/confluence_backwater/en/figs/coarse.png",
-      "source_sha256": "98e3f6e16dda82de9379b5e951f8cfc7c37aef65f8f6a9d43addfc6f3db2cab6",
-      "target_sha256": "fcce8849db7458d41f41cf50e9926a415c2a7dd5de56aacf4301a5c5431b89a9",
+      "source_sha256": "f4bd1725c6f0088c4fb246087c140e19895af6aac25ec2b0c60ca9377a9a63cd",
+      "target_sha256": "0dfc16a25f66bc4439bfd6bcca89141dfa1bb35d22e09b4cab2dc311efad1ee4",
       "reviewer": "Claude (Claude Code session; figure redrawn by plot_results.py from the rerun results, same data as the Japanese figure, English labels checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
