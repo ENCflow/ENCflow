@@ -1,0 +1,101 @@
+!======================================================================
+! confluence_backwater 補足「合流の形と水位」: 合流角 135°(Δx = 5 m。本川 600・支川 400 m3/s)
+!   背水の弱い定常の流れ(岸は河床 + 10 m の高台で、水はあふれない)。入力は make_junction.py が data/ に作る
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.25
+  t0 = 0
+  tt_c = '90m'
+  dt_disp_c = '30m'
+  dt_file_c = '30m'         ! 最後の 2 つの出力で定常を確かめる
+  dt_recrd_c = '10m'
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  dir_data = 'data'
+  dir_result = 'result_fa135'
+  f_out_h = 1
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+/
+&list_initial
+  f_htype = 1
+  fn_hinit = 'h_fa135.txt' ! 流量に合う等流水深
+/
+&list_geoinfo
+  nx = 720
+  ny = 270
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'z_fa135.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+&list_bound_stage
+  stage_cell(:,1,1) = 720, 241
+  stage_cell(:,2,1) = 720, 242
+  stage_cell(:,3,1) = 720, 243
+  stage_cell(:,4,1) = 720, 244
+  stage_cell(:,5,1) = 720, 245
+  stage_cell(:,6,1) = 720, 246
+  stage_cell(:,7,1) = 720, 247
+  stage_cell(:,8,1) = 720, 248
+  stage_cell(:,9,1) = 720, 249
+  stage_cell(:,10,1) = 720, 250
+  stage_cell(:,11,1) = 720, 251
+  stage_cell(:,12,1) = 720, 252
+  stage_cell(:,13,1) = 720, 253
+  stage_cell(:,14,1) = 720, 254
+  stage_cell(:,15,1) = 720, 255
+  stage_cell(:,16,1) = 720, 256
+  stage_cell(:,17,1) = 720, 257
+  stage_cell(:,18,1) = 720, 258
+  stage_cell(:,19,1) = 720, 259
+  stage_cell(:,20,1) = 720, 260
+  stage_eta(1) = 10.2597  ! 下流端の等流水深の水位
+/
+&list_bound_inflow
+  inflow_cell(:,1,1) = 1, 241
+  inflow_cell(:,2,1) = 1, 242
+  inflow_cell(:,3,1) = 1, 243
+  inflow_cell(:,4,1) = 1, 244
+  inflow_cell(:,5,1) = 1, 245
+  inflow_cell(:,6,1) = 1, 246
+  inflow_cell(:,7,1) = 1, 247
+  inflow_cell(:,8,1) = 1, 248
+  inflow_cell(:,9,1) = 1, 249
+  inflow_cell(:,10,1) = 1, 250
+  inflow_cell(:,11,1) = 1, 251
+  inflow_cell(:,12,1) = 1, 252
+  inflow_cell(:,13,1) = 1, 253
+  inflow_cell(:,14,1) = 1, 254
+  inflow_cell(:,15,1) = 1, 255
+  inflow_cell(:,16,1) = 1, 256
+  inflow_cell(:,17,1) = 1, 257
+  inflow_cell(:,18,1) = 1, 258
+  inflow_cell(:,19,1) = 1, 259
+  inflow_cell(:,20,1) = 1, 260
+  inflow_val(:,1,1) = 0, 600.0   ! 本川
+  inflow_val(:,2,1) = 999, 600.0
+  inflow_dist(1) = 0
+  inflow_cell(:,1,2) = 533, 1
+  inflow_cell(:,2,2) = 534, 1
+  inflow_cell(:,3,2) = 535, 1
+  inflow_cell(:,4,2) = 536, 1
+  inflow_cell(:,5,2) = 537, 1
+  inflow_cell(:,6,2) = 538, 1
+  inflow_cell(:,7,2) = 539, 1
+  inflow_cell(:,8,2) = 540, 1
+  inflow_cell(:,9,2) = 541, 1
+  inflow_cell(:,10,2) = 542, 1
+  inflow_cell(:,11,2) = 543, 1
+  inflow_cell(:,12,2) = 544, 1
+  inflow_cell(:,13,2) = 545, 1
+  inflow_cell(:,14,2) = 546, 1
+  inflow_val(:,1,2) = 0, 400.0   ! 支川
+  inflow_val(:,2,2) = 999, 400.0
+  inflow_dist(2) = 0
+/

@@ -1,0 +1,14 @@
+# 生成物(make が作る入力・リンクと計算結果)
+result_*/
+data/
+data_coarse/
+Screen_*.log
+encflow
+encflow_mpi
+__pycache__/
+junction/data/
+junction/result_*/
+junction/Screen_*.log
+junction/encflow
+junction/encflow_mpi
+junction/__pycache__/

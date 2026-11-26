@@ -36,6 +36,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [tsunami_coast/](tsunami_coast/) | 断層運動による沿岸の沈降・隆起と沖からの津波の到達の時間差が、沈降した湾奥平野の浸水をどう変えるかを見る | 規定底面運動 fn_bedmotion |
 | [tsunami_meander/](tsunami_meander/) | 蛇行水路を進む段波の水理実験(小林ら 2019・2021。河川を遡上する津波の模型)を静水圧と 1 層非静水圧で計算し、岸沿いの波高を計測と比べる。砕波段波は静水圧で合い、波状段波は 2 つの計算が計測を挟むことと、モデルで表せないことを確かめる | 領域マスク(格子の階段の側壁)、初期水位の分布 fn_hinit、非静水圧補正 f_nonhydrostatic、プローブ |
 | [levee_breach/](levee_breach/) | 洪水が堤防の低い所を越水して破堤し、堤内地の氾濫で家屋が押し流される過程と、二線堤の効果を見る | 規定底面運動 fn_bedmotion(解像堤防の破堤)、家屋破壊 fn_bldgdebris(流体力判定)、建物空隙率 fn_gv、河道の破堤 &list_channel_breach(補足) |
+| [confluence_backwater/](confluence_backwater/) | 本川の水位が合流点から支川をさかのぼり(背水)、支川の流量が増えなくても支川の低い堤防を越えて堤内地が浸水する過程を、本川と支川の出水の組み合わせ・ピークのずれ・対策(背水区間の堤防のかさ上げ、水門と排水ポンプ)で比べる。粗い格子(サブグリッド河道)での再現、背水が及ぶ範囲(1 次元の理論との比較)、合流角・湾曲部の外岸と内岸の効果も確かめる | 浅水流(解像した河道と堤防)、フラップゲートのカルバート(水門)&list_struct_culvert、ポンプ &list_struct_pump、サブグリッド河道幅 fn_width と堤防の仮想壁面 fn_bank(補足)、プローブと測線 |
 | [estuary_barrage/](estuary_barrage/) | 感潮河川を遡上する塩水くさびと、河床から周辺の帯水層への塩水侵入に、河口堰の有無が与える影響を見る | 淡塩2層 fn_salt(地表の塩水層・地下の塩水 zone・交換の淡塩配分 f_salt_exch)、潮位、Green-Ampt、地下水の側方流、河床交換能 f_gwbed |
 | [nest_reflect/](nest_reflect/) | 比 3・5 の双方向ネスト格子の界面をガウス波が横切るときの誤差と反射率を、一様細格子と比べて確かめる | ネスティング fn_nest(docs/users_guide/nest.md) |
 | [tsunami_town/](tsunami_town/) | 津波で木造家屋が壊れ、瓦礫が内陸へ運ばれて積もり、引き波で海へ出る過程と、防潮堤かさ上げの効果を見る | 家屋破壊・瓦礫 fn_bldgdebris(浸水深判定・空隙率への帰還)、建物空隙率 fn_gv、潮位 fn_tide、流木 fn_driftwood(補足) |
@@ -85,6 +86,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - ゲート急開の段波 → 蛇行水路の伝播 → 外岸の波高(水理実験の計測との比較。静水圧と非静水圧の使い分け): [tsunami_meander/](tsunami_meander/)。
 - 斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
 - 洪水 → 越水 → 破堤 → 氾濫 → 家屋の流失(二線堤で止める): [levee_breach/](levee_breach/)。
+- 本川の洪水 → 狭窄部で合流点の水位が上がる → 支川の背水・逆流 → 支川の低い堤防の越水 → 堤内地の浸水(ピークが重なると増える。背水区間の堤防のかさ上げ・水門と排水ポンプで変わる): [confluence_backwater/](confluence_backwater/)。
 - 潮汐 → 塩水くさびの遡上 → 河床からの浸透 → 岸の地盤の塩水化(河口堰で遮断): [estuary_barrage/](estuary_barrage/)。
 - 給砂 → 河口砂州 → 分岐 → ローブ → 植生の定着・波の沿岸漂砂・潮汐でデルタの形が変わる: [delta/](delta/)。
 - 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。

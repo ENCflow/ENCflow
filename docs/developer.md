@@ -63,7 +63,7 @@
 ### 移流項
 
 - 現行: [移流項のスキーム](users_guide/advection.md)・[1 セル幅の河道と移流項の風上供給元](users_guide/advection_donor.md)・[高い地盤へ登るエッジ水深の頭打ち](users_guide/dry_head_cap.md)。既定のスキーム f_advection_scheme = 3 は [§68.19](developer/068.md) の既定昇格、f_advection_donor = 4・f_advection_bend = 2・f_advection_lateral = 2・f_dry_head_cap = 4 は [§114](developer/114.md)、それぞれの値の定義は [§113](developer/113.md)
-- 記録: [§21](developer/021.md)・[§68](developer/068.md)(2026-10-01〜11-03 の改良の全体)・[§78](developer/078.md)(スカラー輸送の MUSCL)・[§102](developer/102.md)(f_advection_donor = 2, 3)・[§110](developer/110.md)(屈曲直後の辺の慣性と側方面のブレーキ)・[§118](developer/118.md)(§110 の続き)・[§111](developer/111.md)(窪地処理の平坦区間の振動)・[§112](developer/112.md)(深くて遅い隣のセルの規則の試作)・[§113](developer/113.md)・[§114](developer/114.md)
+- 記録: [§21](developer/021.md)・[§68](developer/068.md)(2026-10-01〜11-03 の改良の全体)・[§78](developer/078.md)(スカラー輸送の MUSCL)・[§102](developer/102.md)(f_advection_donor = 2, 3)・[§110](developer/110.md)(屈曲直後の辺の慣性と側方面のブレーキ)・[§118](developer/118.md)(§110 の続き)・[§111](developer/111.md)(窪地処理の平坦区間の振動)・[§112](developer/112.md)(深くて遅い隣のセルの規則の試作)・[§113](developer/113.md)・[§114](developer/114.md)・[§129](developer/129.md)(解像した合流の損失の格子依存。例題 confluence_backwater)
 
 ### 急勾配の重力補正と斜面の勾配
 
@@ -83,7 +83,7 @@
 ### 河道
 
 - 現行: [河道](users_guide/channel.md)・[河道の解説](users_guide/channel_models.md)。設計の文書は docs/channel_model.md
-- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)・[§128](developer/128.md)(堤防の越流の上限が読む af のハロ)
+- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)・[§128](developer/128.md)(堤防の越流の上限が読む af のハロ)・[§129](developer/129.md)(サブグリッド河道の支川の背水曲線、粗い格子の湾曲部の階段)
 
 ### 内部水理構造物・堤防・家屋
 
@@ -171,7 +171,7 @@
 ### 例題・教材・データ
 
 - 現行: examples/README.md・tutorials/
-- 記録: [§104](developer/104.md)(examples/benchmark の再構築)・[§109](developer/109.md)・[§111](developer/111.md)・[§115](developer/115.md)・[§117](developer/117.md)(例題 source_area の作成と検討)・[§120](developer/120.md)(例題 joganji_flume。公開の実験データとの比較)・[§124](developer/124.md)(例題 tsunami_meander。論文の図から読んだ計測値との比較)・[§125](developer/125.md)(例題 coastal_compound_flood。沿岸の町の複合浸水)・[§126](developer/126.md)(例題 snow_avalanche。雪崩の設定の型の見直し)
+- 記録: [§104](developer/104.md)(examples/benchmark の再構築)・[§109](developer/109.md)・[§111](developer/111.md)・[§115](developer/115.md)・[§117](developer/117.md)(例題 source_area の作成と検討)・[§120](developer/120.md)(例題 joganji_flume。公開の実験データとの比較)・[§124](developer/124.md)(例題 tsunami_meander。論文の図から読んだ計測値との比較)・[§125](developer/125.md)(例題 coastal_compound_flood。沿岸の町の複合浸水)・[§126](developer/126.md)(例題 snow_avalanche。雪崩の設定の型の見直し)・[§129](developer/129.md)(例題 confluence_backwater。合流点の背水による支川の氾濫)
 ## 全節の一覧
 
 - [§1](developer/001.md) 実数精度の方針
@@ -302,3 +302,4 @@
 - [§126](developer/126.md) 例題 examples/snow_avalanche: 沢を下る流れ型雪崩(走路の雪の連行と誘導堤)と、雪崩の設定の型の見直し(2026-11-25。利用者の依頼。計算本体は変えていない)
 - [§127](developer/127.md) 田んぼダムの評価機能 m_paddy(fn_paddy): 落水口の装置則とサブグリッドの水田タンク・区画の解像(2026-11-24 設計合意・段 1 実装、2026-11-25 段 2 実装・段 3 例題・段 4 水質と土砂・集水面積率)
 - [§128](developer/128.md) 実効平面積率 af のハロの行の更新漏れ: 堤防の越流の追い越し上限が帯の境で古い値を読む(MPI の実バグ。2026-11-24 発見・修正)
+- [§129](developer/129.md) 例題 examples/confluence_backwater: 合流点の背水による支川の氾濫と、粗い格子・合流の形の確かめ(2026-11-26。利用者の依頼。計算本体は変えていない)
