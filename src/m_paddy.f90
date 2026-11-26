@@ -79,7 +79,9 @@ module m_paddy
   !   雨滴の項・f_splash)は水田の部分を外す(1 − a を掛ける。s%pdfr。§127.5)。流れによる侵食・
   !   浮遊砂・掃流砂はセル全面のまま(タンクは土砂を運ばない)。双方向と浮遊砂(f_suspend)を併用すると、地表から
   !   タンクへ入る水(落水口の逆流・畦畔を越える満水)の浮遊砂を hs から引いて s%pdsd に記録し、m_geomorph の
-  !   浮遊砂がそれを田面(z・sd)に積む(独自の簡略化。タンクから出る水は清水。§127.11)。集水面積率は B と、
+  !   浮遊砂がそれを田面(z・sd)に積む(独自の簡略化。タンクから出る水は清水。§127.11)。さらに水質の二相分配
+  !   (wq_kd)を併用すると、タンクへ入る水の物質の粒子態を浮遊砂と一緒に田面へ落として s%fspd に記録し(m_wq が台帳の
+  !   沈降に積む)、溶存態だけをプールへ入れる(§127.19)。集水面積率は B と、
   !   地形変化の雨滴侵食(s%rainero_active)と併用できない(init で停止。§127.13)。B は混合粒径(f_bedmix)・
   !   芦田・道上の有効掃流力(f_taupart = 2)と、双方向と浮遊砂の併用は混合粒径と併用できない(写しの手続きが
   !   畦畔と田面の堆積を扱わない。s%fluvcopy_active・s%bmf。init で停止。§127.17)。
@@ -110,8 +112,10 @@ module m_paddy
 
   integer, parameter :: save_version = 2026112503 ! paddy.dat の形式の版(2026-11-25 に表現の印、水質の
                                                    !   タンクのプール、浮遊砂の堆積の記録を足した)
-  integer, parameter :: nrow = 9                   ! 台帳の行部分和の列数(8 = タンクへ入った浮遊砂の堆積。§127.11、
-                                                   !   9 = 集水面積から入った雨。§127.13)
+  integer, parameter :: nrow = 10                  ! 台帳の行部分和の列数(8 = タンクへ入った浮遊砂の堆積。§127.11、
+                                                   !   9 = 集水面積から入った雨。§127.13、10 = 田面に落とした
+                                                   !   粒子態の物質。§127.19)
+  real, parameter :: rhow = 1000.0                 ! 水の密度 (kg/m3。粒子の密度 ρs = (s + 1) ρw。m_wq・取水と同じ)
   real, parameter :: pd_smin = 0.01                ! 双方向の水田のセルの、水田でない面積の割合の下限(落水口の水の
                                                    !   行き場を残す独自の目安。§127.12)
   integer, parameter :: pid_max = 16777215         ! 区画番号の上限(単精度の実数で正確に読める 2^24 − 1)
@@ -134,6 +138,10 @@ module m_paddy
     logical :: sed = .false.                   ! 双方向と浮遊砂(f_suspend)の併用: タンクへ入る水の浮遊砂を田面に
                                                !   堆積させる(s%pdsd に記録し m_geomorph が積む。§127.11)
     logical :: catch = .false.                 ! 集水面積率(fn_pd_catch)を使う(表現 A。§127.13)
+    logical :: kd = .false.                    ! 双方向・浮遊砂・水質の二相分配(wq_kd)の併用: タンクへ入る水の物質の
+                                               !   粒子態を浮遊砂と一緒に田面へ落とす(s%fspd に記録し m_wq が台帳の
+                                               !   沈降に積む。§127.19)
+    real :: kdrho = 0.0                        ! Kd·ρs (無次元。粒子態の割合 fp = 1 − 1/(1 + kdrho·hs/vh)。kd のときだけ)
     real :: c0 = 0.0                           ! 事前の湛水の物質の濃度 (mg/L = g/m3)
     real :: aplot = 0.0                        ! 代表区画面積 (m2)
     real :: hlev = 0.0                         ! 畦畔高 (m)
@@ -151,7 +159,8 @@ module m_paddy
                                                !   3 越流・4 減水深(累積)、5 直近のステップの地表への量(正味)、
                                                !   6 落水口からの流入・7 畦畔を越えた流入
                                                !   (累積。双方向と B)、8 タンクへ入った浮遊砂の堆積、
-                                               !   9 集水面積から入った雨(累積)。B: 1 区画のセルの雨・
+                                               !   9 集水面積から入った雨(累積)、10 田面に落とした粒子態の
+                                               !   物質 (g。累積。§127.19)。B: 1 区画のセルの雨・
                                                !   2 落水口からの流出・3 畦畔を越えた流出
     real(real64) :: store0 = 0.0_real64        ! 計算開始(再開)時の貯留 (m3。全ランク同値)
     real(real64) :: dxdy = 0.0_real64          ! セル面積 (m2)
@@ -238,6 +247,17 @@ subroutine m_paddy_init(pd, p, g, b, s, multi, vzr, sfr)
     end if
     if (pd%have(1)) allocate(s%cpn(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     if (pd%have(2)) allocate(s%cpd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
+  ! 双方向・浮遊砂・水質の二相分配(wq_kd)の併用(§127.19): タンクへ入る水の物質のうち、浮遊砂に付いた粒子態は浮遊砂と
+  ! 一緒にその場で田面へ落とし(田面の土に残る = 台帳の沈降)、溶存態だけをプールへ入れる。粒子態の割合は m_wq の
+  ! 沈降・取水の溶存分と同じ fp = 1 − 1/(1 + Kd·ρs·hs/vh)、ρs = (s + 1) ρw(§30.6・§30.10)
+  if (pd%wq .and. pd%sed .and. s%cq_kd > 0.0) then
+    pd%kd = .true.
+    pd%kdrho = s%cq_kd * (s%sed_sgrav + 1.0) * rhow
+    allocate(s%fspd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    call par_info("paddy: the particulate fraction (wq_kd) of the substance carried into the paddy tanks is " &
+                  //"deposited on the field surface with the suspended sediment (counted as settling); only the " &
+                  //"dissolved fraction enters the pools")
   end if
   if (p%f_state_restore > 0) then
     call restore_state(pd, p, s)
@@ -385,7 +405,7 @@ subroutine m_paddy_record(pd, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: tot(1:nrow), st(1:2), fu(1:2), res, hm(1:2), ff(1:2), cm(1:2), cw(1:2), cc(1:2), vals(1:20)
+  real(real64) :: tot(1:nrow), st(1:2), fu(1:2), res, hm(1:2), ff(1:2), cm(1:2), cw(1:2), cc(1:2), vals(1:24)
   real(real64), allocatable :: r1(:), srow(:,:)
   real :: hfull
   integer :: i, j, k, nv
@@ -462,6 +482,10 @@ subroutine m_paddy_record(pd, p, g, s)
   end if
   if (pd%catch) then             ! 集水面積から入った雨の累積(§127.13)
     vals(nv+1) = tot(9)
+    nv = nv + 1
+  end if
+  if (pd%kd) then                ! 田面に落とした粒子態の物質の累積 (g。§127.19)
+    vals(nv+1) = tot(10)
     nv = nv + 1
   end if
   write(fmt, '(a,i0,a)') '(f0.2,', nv, '(",",es23.15))'
@@ -548,12 +572,14 @@ subroutine calc_twoway(pd, p, g, s)
   real :: f(1:pd_nclass), tk(1:pd_nclass), qd(1:pd_nclass)
   real :: cqv, pl(1:pd_nclass), w                ! 水質: 地表の物質(cq の基底)、タンクのプール(セル面積基底)
   real :: hsv, dep                               ! 浮遊砂: 地表の hs、タンクへ入って田面に積む分(§127.11)
+  real :: fpp, spd                               ! 二相分配: 粒子態の割合、田面に落とす物質(セル面積基底。§127.19)
   real(real64) :: rr(1:nrow)
 
   dt = p%dt
   if (pd%catch) call catch_spread(pd, p, g, s)    ! 集水面積の雨を近傍の水田へ配る(collective。§127.15)
   !$omp parallel do schedule(dynamic) private(i, j, c, a, rain, gv, vh, vh0, hd, r, q, sp, pc, fill, wv, &
-  !$omp                                        dtot, phi, vcrest, f, tk, qd, rr, cqv, pl, w, hsv, dep, ac, rk)
+  !$omp                                        dtot, phi, vcrest, f, tk, qd, rr, cqv, pl, w, hsv, dep, ac, rk, &
+  !$omp                                        fpp, spd)
   do j = dcp%js, dcp%je
     rr(:) = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
@@ -598,6 +624,7 @@ subroutine calc_twoway(pd, p, g, s)
         hsv = max(s%hs(i,j), 0.0)
         dep = 0.0
       end if
+      if (pd%kd) spd = 0.0
       ! (2) 落水口(両向き。水位の高い側を上流として装置則を使う)。種類ごとにステップの初めの水位から求め、
       !     陽解法の上限は両側の貯留(タンク、地表 gv·σ(h))で水位差の半分(全水田の面積で数える)
       r = a / (gv * sect_sig(s, i, j, hd))
@@ -627,7 +654,13 @@ subroutine calc_twoway(pd, p, g, s)
           else if (qd(c) < 0.0 .and. vh > 0.0) then       ! 地表 → タンク(地表の濃度)
             w = cqv * min(-f(c) * qd(c) / gv / vh, 1.0)
             cqv = cqv - w
-            pl(c) = pl(c) + w * gv
+            if (pd%kd) then                              ! 粒子態は浮遊砂と一緒に田面へ、溶存態はプールへ(§127.19)
+              fpp = particulate_fraction(pd%kdrho, hsv, vh)
+              spd = spd + fpp * w * gv
+              pl(c) = pl(c) + (w - fpp * w) * gv
+            else
+              pl(c) = pl(c) + w * gv
+            end if
           end if
         end if
         if (pd%sed .and. qd(c) < 0.0 .and. vh > 0.0) then  ! 逆流の水の浮遊砂を田面へ
@@ -671,7 +704,13 @@ subroutine calc_twoway(pd, p, g, s)
             if (pd%wq .and. vh > 0.0) then               ! 畦畔を越える満水(地表の濃度でタンクへ)
               w = cqv * min(f(c) * fill / gv / vh, 1.0)
               cqv = cqv - w
-              pl(c) = pl(c) + w * gv
+              if (pd%kd) then                            ! 粒子態は浮遊砂と一緒に田面へ、溶存態はプールへ(§127.19)
+                fpp = particulate_fraction(pd%kdrho, hsv, vh)
+                spd = spd + fpp * w * gv
+                pl(c) = pl(c) + (w - fpp * w) * gv
+              else
+                pl(c) = pl(c) + w * gv
+              end if
             end if
             if (pd%sed .and. vh > 0.0) then              ! 満たす水の浮遊砂を田面へ
               w = hsv * min(f(c) * fill / gv / vh, 1.0)
@@ -722,10 +761,17 @@ subroutine calc_twoway(pd, p, g, s)
           rr(8) = rr(8) + real(dep, real64)
         end if
       end if
+      if (pd%kd) then
+        if (spd > 0.0) then
+          s%fspd(i,j) = s%fspd(i,j) + spd
+          rr(10) = rr(10) + real(spd, real64)
+        end if
+      end if
     end do
     pd%rows(j,1:4) = pd%rows(j,1:4) + rr(1:4) * pd%dxdy
     pd%rows(j,5) = rr(5) * pd%dxdy
     pd%rows(j,6:9) = pd%rows(j,6:9) + rr(6:9) * pd%dxdy
+    if (pd%kd) pd%rows(j,10) = pd%rows(j,10) + rr(10) * pd%dxdy   ! 田面に落とした粒子態の物質 (g。§127.19)
   end do
   !$omp end parallel do
 end subroutine
@@ -1445,6 +1491,19 @@ end function
 
 
 !----------------------------------------------------------------------
+! 地表の水の物質のうち、浮遊砂に付いた粒子態の割合(水質の二相分配 wq_kd。§127.19):
+!   fp = 1 − 1/(1 + Kd·ρs·hs/vh)(kdrho = Kd·ρs。m_wq の沈降・取水の溶存分と同じ平衡分配。§30.6・§30.10)。
+!   浮遊砂か水がなければ 0
+!----------------------------------------------------------------------
+pure function particulate_fraction(kdrho, hs, vh) result(fp)
+  real, intent(in) :: kdrho, hs, vh
+  real :: fp
+  fp = 0.0
+  if (hs > 0.0 .and. vh > 0.0) fp = 1.0 - 1.0 / (1.0 + kdrho * hs / vh)
+end function
+
+
+!----------------------------------------------------------------------
 ! 水質(fn_wq)と併用するかの設定(§127.10): 有効なら事前の湛水の濃度 pd_wq_c0 を読み、減水深で系外へ出る
 ! 物質の記録 s%fmpd を確保する(A のタンクのプールは呼び出し側が確保する)
 !----------------------------------------------------------------------
@@ -2080,6 +2139,7 @@ subroutine open_csv(pd, p)
   if (pd%wq) head = head // ",c1(mg/L),c2(mg/L)"
   if (pd%sed) head = head // ",sed(m3)"
   if (pd%catch) head = head // ",catch(m3)"
+  if (pd%kd) head = head // ",cdep(g)"
   write(pd%un_csv, '(a)') head
 end subroutine
 

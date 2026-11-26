@@ -8,7 +8,8 @@
 # 区画の解像(表現 B。§127.8。param_b_*.txt。区画・落水口・市松の角が帯の境にかかる。np=1 とバイト比較)、
 # 水質と併用するタンクのプールと区画の解像の減水深の持ち出し、タンクの沈降(param_wq_a・wq_tw・wq_b・wq_vs。
 # np=1 とバイト比較)と
-# その保存 → 再開、土砂(param_sed_tw・b_sed。np=1 とバイト比較)、集水面積率(param_catch の片方向・双方向と
+# その保存 → 再開、土砂(param_sed_tw・b_sed。np=1 とバイト比較)、水質の二相分配(param_wq_kd。np=1 とバイト比較)、
+# 集水面積率(param_catch の片方向・双方向と
 # 水質、param_catch_sp の近傍へ配る雨が帯の境をまたぐ片方向・双方向。np=1 とバイト比較)、
 # 保存 → 再開(np=1 とバイト比較)、rank0 が見つける停止と帯で見つける停止(全ランク同時の par_stop)も
 # MPI で確かめる。行は 8 なので np <= 4
@@ -137,6 +138,18 @@ for t in sed_tw b_sed; do
         same_as_np1 "result_$t" "result_${t}_np1" paddy.csv Log.txt Z0001.bil
     fi
 done
+
+# 水質の二相分配(§127.19): 双方向のタンクへ入る水の物質の粒子態を田面へ落とす。wq_kd を外した計算と比べ、np=1 と
+# バイト比較
+run "$np" wq_kd param_wq_kd.txt
+variant param_wq_kd.txt result_wq_kd_off "/^  wq_kd = /d" > "$tmp"
+run "$np" wq_kd_off "$tmp"
+python3 Check_paddy.py wq_kd result_wq_kd result_wq_kd_off || exit 1
+if [ "$np" != 1 ]; then
+    variant param_wq_kd.txt result_wq_kd_np1 "" > "$tmp"
+    run 1 wq_kd_np1 "$tmp"
+    same_as_np1 result_wq_kd result_wq_kd_np1 paddy.csv Log.txt wq.csv
+fi
 
 # 集水面積率(§127.13・§127.15): 解析検定と np=1 とのバイト一致(片方向・双方向、集水面積の雨の物質、近傍の水田へ
 # 配る雨が帯の境をまたぐ配置)
