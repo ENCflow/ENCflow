@@ -426,7 +426,7 @@ end subroutine
 ! エッジ (i,j)-(in,jn) が堤防壁エッジか(bank_wall が流速・流量を上書き
 ! するエッジ。bank_wall の対象判定と同一に保つこと)
 !----------------------------------------------------------------------
-module function bank_edge(g, s, i, j, in, jn) result(res)
+pure module function bank_edge(g, s, i, j, in, jn) result(res)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j, in, jn
@@ -438,6 +438,50 @@ module function bank_edge(g, s, i, j, in, jn) result(res)
   else if (g%rw(in,jn) > 0 .and. g%rw(i,j) <= 0) then
     res = is_wall(g%zbank(in,jn), s%z(in,jn), s%z(i,j))
   end if
+end function
+
+
+!----------------------------------------------------------------------
+! エッジ (ic,jc)-(il,jl) が破堤サイトなら実効天端を返す(それ以外は zc)。
+! bank_wall と、移流項の近傍の仮想壁面の判定(m_swflow_enc_adv。§134)が使う
+!----------------------------------------------------------------------
+pure module function breach_crest(ic, jc, il, jl, zc) result(z)
+  integer, intent(in) :: ic, jc, il, jl
+  real, intent(in) :: zc
+  real :: z
+  integer :: n, isite, jr
+  z = zc
+  if (jc < lbound(chn%ibr0,1) .or. jc > ubound(chn%ibr0,1)) return
+  do n = chn%ibr0(jc), chn%ibr1(jc)         ! この行のサイトだけ照合
+    isite = chn%ibrs(n)
+    if (chn%br(isite)%ic == ic .and. chn%br(isite)%il == il .and. chn%br(isite)%jl == jl) then
+      z = chn%br(isite)%zeff
+      if (chn%br_diag == 0) return
+      exit
+    end if
+  end do
+  if (chn%br_diag == 0) return
+
+  ! 斜めエッジの連動(f_br_diag = 1。§18): 斜めエッジ (ic,jc)-(il,jl) は、
+  ! 河道セルが同じで堤内地セルが (il,jl) の 4 近傍にあるサイト(同じ行)、
+  ! または堤内地セルが同じで河道セルが (ic,jc) の 4 近傍にあるサイト
+  ! (行 jc−1..jc+1)の実効天端のうち最小値まで下がる。法線サイトの
+  ! 両側の斜め(破堤口の両端の外側へ向かう斜めを含む)が対象で、明示した
+  ! 斜めサイトからは派生しない(その斜めに 4 近傍で接する斜めエッジはない)。
+  ! 参照する行は jc±1 まで = 帯+ハロ 2 の内側(bank_wall は js−1..je+1 の
+  ! セルのエッジまでしか触れない)。サイトの zeff は両セルを jsh..jeh に
+  ! 持つランクが評価済み(同じ理由で十分)
+  if (abs(ic - il) /= 1 .or. abs(jc - jl) /= 1) return
+  do jr = max(jc - 1, lbound(chn%ibr0,1)), min(jc + 1, ubound(chn%ibr0,1))
+    do n = chn%ibr0(jr), chn%ibr1(jr)
+      isite = chn%ibrs(n)
+      if (chn%br(isite)%ic == ic .and. chn%br(isite)%jc == jc) then
+        if (abs(chn%br(isite)%il - il) + abs(chn%br(isite)%jl - jl) == 1) z = min(z, chn%br(isite)%zeff)
+      else if (chn%br(isite)%il == il .and. chn%br(isite)%jl == jl) then
+        if (abs(chn%br(isite)%ic - ic) + abs(chn%br(isite)%jc - jc) == 1) z = min(z, chn%br(isite)%zeff)
+      end if
+    end do
+  end do
 end function
 
 
@@ -1001,48 +1045,6 @@ end subroutine
 !======================================================================
 !============= SUBMODULE 内の補助手続き(引数渡し。§13)==============
 !======================================================================
-
-!----------------------------------------------------------------------
-! エッジ (ic,jc)-(il,jl) が破堤サイトなら実効天端を返す(それ以外は zc)
-!----------------------------------------------------------------------
-function breach_crest(ic, jc, il, jl, zc) result(z)
-  integer, intent(in) :: ic, jc, il, jl
-  real, intent(in) :: zc
-  real :: z
-  integer :: n, isite, jr
-  z = zc
-  if (jc < lbound(chn%ibr0,1) .or. jc > ubound(chn%ibr0,1)) return
-  do n = chn%ibr0(jc), chn%ibr1(jc)         ! この行のサイトだけ照合
-    isite = chn%ibrs(n)
-    if (chn%br(isite)%ic == ic .and. chn%br(isite)%il == il .and. chn%br(isite)%jl == jl) then
-      z = chn%br(isite)%zeff
-      if (chn%br_diag == 0) return
-      exit
-    end if
-  end do
-  if (chn%br_diag == 0) return
-
-  ! 斜めエッジの連動(f_br_diag = 1。§18): 斜めエッジ (ic,jc)-(il,jl) は、
-  ! 河道セルが同じで堤内地セルが (il,jl) の 4 近傍にあるサイト(同じ行)、
-  ! または堤内地セルが同じで河道セルが (ic,jc) の 4 近傍にあるサイト
-  ! (行 jc−1..jc+1)の実効天端のうち最小値まで下がる。法線サイトの
-  ! 両側の斜め(破堤口の両端の外側へ向かう斜めを含む)が対象で、明示した
-  ! 斜めサイトからは派生しない(その斜めに 4 近傍で接する斜めエッジはない)。
-  ! 参照する行は jc±1 まで = 帯+ハロ 2 の内側(bank_wall は js−1..je+1 の
-  ! セルのエッジまでしか触れない)。サイトの zeff は両セルを jsh..jeh に
-  ! 持つランクが評価済み(同じ理由で十分)
-  if (abs(ic - il) /= 1 .or. abs(jc - jl) /= 1) return
-  do jr = max(jc - 1, lbound(chn%ibr0,1)), min(jc + 1, ubound(chn%ibr0,1))
-    do n = chn%ibr0(jr), chn%ibr1(jr)
-      isite = chn%ibrs(n)
-      if (chn%br(isite)%ic == ic .and. chn%br(isite)%jc == jc) then
-        if (abs(chn%br(isite)%il - il) + abs(chn%br(isite)%jl - jl) == 1) z = min(z, chn%br(isite)%zeff)
-      else if (chn%br(isite)%il == il .and. chn%br(isite)%jl == jl) then
-        if (abs(chn%br(isite)%ic - ic) + abs(chn%br(isite)%jc - jc) == 1) z = min(z, chn%br(isite)%zeff)
-      end if
-    end do
-  end do
-end function
 
 
 !----------------------------------------------------------------------
