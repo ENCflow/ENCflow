@@ -1778,20 +1778,20 @@
     {
       "source": "examples/coastal_compound_flood/README.md",
       "target": "examples/coastal_compound_flood/en/README.md",
-      "source_sha256": "ec82c41661ed50b48fbeecfae6b205e4946394b4d368b234f891f033e31af467",
-      "target_sha256": "4adb855812f26e3b420067c8e28512c3a296fbfff01f2607b1a695cdedd8496a",
-      "reviewer": "Claude (Claude Code session; new example written in Japanese and English in parallel; both versions read in full side by side; numbers checked against the tables printed by plot_results.py from the computed results)",
+      "source_sha256": "cf6f0e58bbc12208df25b0e8409cf6e20f99e41e465039a18a46c87f92e99bc0",
+      "target_sha256": "618b6875f0a44235694c8c1a73a4f6a62274b4ae4c260f5bd18aaf923fbe5cd3",
+      "reviewer": "Claude (Claude Code session; the flooded area of the rain + surge case changed 1.6 -> 1.7 ha in the table and the text after developer.md §134.9; both files compared, the rest unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/coastal_compound_flood/figs/ladder.png",
       "target": "examples/coastal_compound_flood/en/figs/ladder.png",
-      "source_sha256": "6299cdaff226bcab11565ff8cdc4c50745a28772d1cb5116e48eac3f068d6ea9",
-      "target_sha256": "3f7e9fa9bd878df59dbec72b70b5c95520b1385d68402de654eda61a3a5fa47b",
-      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py (en switch) from the same results; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "7d42214b4fd1dc7b3b60cd01822df21d6e7f76ea130d61edeec10464fd54b24d",
+      "target_sha256": "b34922263d08bb3bdf280b71198a95bd78871ba7d1cc6b85aa909de484e47301",
+      "reviewer": "Claude (Claude Code session; redrawn by plot_results.py ladder from the cases recomputed after developer.md §134.9; viewed the Japanese and English images side by side: same curves and bars, 1.7 ha label in both, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/coastal_compound_flood/figs/lag.png",
