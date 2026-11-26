@@ -280,6 +280,35 @@
 !     none (and no release cells): a level-held lake (all inflow
 !        vanishes; the level stays at dam_h_init = not lowered even by
 !        evaporation. A "large water surface not solved")
+!     4: release time series (replaying records) dam_qout_val(:,k,n) =
+!        time min, release m3/s, or the file fn_dam_qout_val(n) (each line
+!        "time(min) value"; the file takes precedence). The release of each
+!        step = the release at that time. The level is a result
+!     5: water-level time series (replaying records) dam_h_val(:,k,n) =
+!        time min, level m, or the file fn_dam_h_val(n). Releases so that the
+!        storage at the end of each step equals the storage of the target
+!        level (release 0 when the inflow is not enough). If dam_h_init is
+!        omitted, the value of the series at the start time. Cannot be
+!        referenced by additional release works (dam_lake)
+!     The time series use the boundary-condition format (linear
+!     interpolation, end values outside the range; repeating a time point
+!     makes a step). Modes 4,5 have no emergency release (dam_tadashigaki
+!     cannot be given)
+!   Operating rules from practice (modes 1,2; a form without history):
+!     dam_hlim(n) : restricted level (m). Rule releases never lower the
+!                   reservoir below it (the floor). Default = the lowest
+!                   level. Mode 1 + dam_hlim = the constant-release method
+!                   (inflow < q0 passes at a held level; above it, q0 is
+!                   released and the rest stored)
+!     dam_qon(n)  : regulation start flow of mode 2 (m3/s). Inflow <= Qon
+!                   targets Qon (at the floor the inflow passes through;
+!                   above the floor the reservoir returns at Qon), inflow >
+!                   Qon gives min(Qon + r(inflow - Qon), dam_qmax)
+!     dam_qmax(n) : in mode 2, the release cap (needs a surcharge level)
+!     The "constant release after the peak" of the constant-rate
+!     constant-release method is not represented (it needs history; after
+!     the peak the release keeps following the formula and decreases,
+!     storing more than in reality)
 !   Multiple release works: dam_lake(n) = m makes structure n draw from
 !   the storage of lake m with its own rule and release cells (an
 !   additional release work. The referenced lake must be a
@@ -301,12 +330,16 @@
 !   normal level, explicitly). Drawdown floor = the storage at the
 !   lowest level (dead storage). Keeping the normal level is the job of
 !   the rating (the level of Q=0 = the outlet sill).
+!   Mode 1 and mode 2 with dam_qon keep releasing down to the floor while
+!   the inflow is small. For multipurpose dams also give dam_hlim (the
+!   restricted level; without it the reservoir is lowered to the lowest
+!   level before the flood, and a note: is printed at start-up).
 !   Evaporation (with &list_evap active): from the capture set storage
 !   cell by cell by the cell area (same as ponds). Painting the surface
 !   on the raster makes the impounded area = cells x cell area.
 !   (The former dam_area was removed on 2026-08-20 = specifying it
 !   stops with a read error.)
-!   At every record time, (t, H, V, Qin, Qout, Qspill) is written to
+!   At every record time, (t, H, V, Qin, Qout, Qspill, Qgw) is written to
 !   result/dams/dam0001.csv (Qin is the direct accumulation of the
 !   capture set absorption = exact; for a level-held lake the vanished
 !   volume).
@@ -362,4 +395,26 @@
 !  f_dam_mode(5) = 1
 !  dam_q0(5) = 15.0                      ! constant canal intake 15 m3/s
 !  dam_out_cell(:,1,5) = 150, 120        ! the inlet cell of the canal
+!  ! Dam 6: constant-rate constant-release of a multipurpose dam (hold the
+!  ! restricted level 345 m; above 300 m3/s add 40% of the excess; max 600 m3/s)
+!  dam_in_cell(:,1,6) = 300, 80
+!  dam_out_cell(:,1,6) = 303, 80
+!  dam_hv(:,1,6) = 330.0, 0.0
+!  dam_hv(:,2,6) = 360.0, 4.0e7
+!  f_dam_mode(6) = 2
+!  dam_rate(6) = 0.4
+!  dam_qon(6) = 300.0                    ! regulation start flow
+!  dam_qmax(6) = 600.0                   ! release cap
+!  dam_hlim(6) = 345.0                   ! restricted level (floor of rule releases)
+!  dam_h_init(6) = 345.0
+!  ! Dam 7: reproducing a past flood (recorded release; each file line "min m3/s")
+!  dam_in_cell(:,1,7) = 330, 95
+!  dam_out_cell(:,1,7) = 333, 95
+!  dam_hv(:,1,7) = 410.0, 0.0
+!  dam_hv(:,2,7) = 440.0, 2.5e7
+!  f_dam_mode(7) = 4
+!  fn_dam_qout_val(7) = "dam7_qout.txt"  ! the recorded release
+!  dam_h_init(7) = 428.6                 ! recorded initial level
+!  !f_dam_mode(7) = 5                    ! to reproduce with the recorded level (mode 5)
+!  !fn_dam_h_val(7) = "dam7_level.txt"   ! each line "min m"; dam_h_init may be omitted
 !/

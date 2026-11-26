@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 862 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 871 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -70,6 +70,8 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | culv_zout | &list_struct_culvert | [構造物](structure.md) |
 | dam_gw | &list_struct_dam | [構造物](structure.md) |
 | dam_h_init | &list_struct_dam | [構造物](structure.md) |
+| dam_h_val | &list_struct_dam | [構造物](structure.md) |
+| dam_hlim | &list_struct_dam | [構造物](structure.md) |
 | dam_hmin | &list_struct_dam | [構造物](structure.md) |
 | dam_hq_rule | &list_struct_dam | [構造物](structure.md) |
 | dam_hsur | &list_struct_dam | [構造物](structure.md) |
@@ -83,6 +85,8 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | dam_out_cell | &list_struct_dam | [構造物](structure.md) |
 | dam_q0 | &list_struct_dam | [構造物](structure.md) |
 | dam_qmax | &list_struct_dam | [構造物](structure.md) |
+| dam_qon | &list_struct_dam | [構造物](structure.md) |
+| dam_qout_val | &list_struct_dam | [構造物](structure.md) |
 | dam_rate | &list_struct_dam | [構造物](structure.md) |
 | dam_tadashigaki | &list_struct_dam | [構造物](structure.md) |
 | dam_zbase | &list_struct_dam | [構造物](structure.md) |
@@ -92,7 +96,9 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | db_deltd | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_deltdi | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_delte | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| db_er | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_erest | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| db_hent | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_immexp | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_kunsat | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_mu | &list_geomorph | [土砂・地形変化](geomorph.md) |
@@ -208,6 +214,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_dbcurv | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbed | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbimm | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_dbmom | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbres | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbstop | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbunsat | &list_geomorph | [土砂・地形変化](geomorph.md) |
@@ -398,9 +405,11 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_channel | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_culv_in_cell | &list_struct_culvert | [構造物](structure.md) |
 | fn_culv_out_cell | &list_struct_culvert | [構造物](structure.md) |
+| fn_dam_h_val | &list_struct_dam | [構造物](structure.md) |
 | fn_dam_in_cell | &list_struct_dam | [構造物](structure.md) |
 | fn_dam_map | &list_struct_dam | [構造物](structure.md) |
 | fn_dam_out_cell | &list_struct_dam | [構造物](structure.md) |
+| fn_dam_qout_val | &list_struct_dam | [構造物](structure.md) |
 | fn_dbinit | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fn_depth_rw | &list_geoinfo | [地理情報](geoinfo.md) |
 | fn_dissol | &list_geomorph | [土砂・地形変化](geomorph.md) |

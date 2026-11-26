@@ -218,9 +218,21 @@
                            !   4:速度比例連行 E = δe・|V| — 雪崩・岩屑なだれの
                            !   走路連行(連行のみ。堆積は f_dbstop。連行可能層は
                            !   sd(雪崩では走路の雪厚)。C >= db_cmin のセルのみ。
-                           !   users_guide/geomorph_applications.md の雪崩))
-  db_delte = 0.0007        ! 侵食速度係数 δe(f_dbed=1,3。校正パラメータ)
+                           !   users_guide/geomorph_applications.md の雪崩),
+                           !   5:Hungr の連行則 E = E_r・h_t・|V|(db_er。h_t = h + hs。
+                           !   連行だけ・連行可能層 sd・C >= db_cmin は 4 と同じ。
+                           !   users_guide/massflow.md §3))
+  db_delte = 0.0007        ! 侵食速度係数 δe(f_dbed=1,3,4。校正パラメータ)
   db_deltd = 0.05          ! 堆積速度係数 δd(f_dbed=1,3。校正パラメータ)
+  db_er = 0.0              ! Hungr の連行則の成長率 E_r (1/m。f_dbed=5 で使用。> 0 必須。
+                           !   1 m 進むごとの体積の増加率。連行域に入る体積 V0・出る体積 Vf・
+                           !   連行域の長さ L から ln(Vf/V0)/L と見積もる)
+  db_hent = 0.0            ! 連行する流動深の下限 (m。f_dbed=4,5 で使用。0 = 下限なし。
+                           !   h + hs がこれ未満のセルは連行しない。流れの縁の薄い流れが
+                           !   連行可能な層を取り込みながら広がるのを止める)
+  f_dbmom = 0              ! 侵食・連行で加わる質量の運動量(0:その場の流速を持って加わる,
+                           !   1:静止から加速する分を流れから引く(u ← u・m/(m + Δm)。
+                           !   f_dbed=1〜5)。users_guide/massflow.md §3)
   f_dbres = 1              ! 抵抗則(0:マニングのみ, 1:クーロン+マニング合成,
                            !   2:江頭構成則(降伏応力+層流抵抗。文献照合済み。
                            !   db_d50/db_erest 必須),

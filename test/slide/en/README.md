@@ -153,9 +153,9 @@ Configuration 2 (left three panels) and 3 (right). Left: the run minimum
 safety factor Fs9999. Fs < 1 over the whole slope (minimum 0.493), and
 only the gentle part near the slope break has Fs > 1. Center left: the
 final soil thickness sd. Many cells on the slope reach sd = 0 (failed and
-bedrock exposed; 426 cells), and stripes of failed sediment that flowed
+bedrock exposed; 474 cells), and stripes of failed sediment that flowed
 down and redeposited are also visible. Center right: the maximum flow
-depth D9999 (maximum 0.46 m). Right: Fs9999 of configuration 3. Since
+depth D9999 (maximum 0.43 m). Right: Fs9999 of configuration 3. Since
 nothing is mobilized, the minimum of Fs stays at 0.943, and only the
 detection of the hazardous range (< 1) takes place (the hazard map of the
 judge-only mode).
@@ -165,10 +165,10 @@ judge-only mode).
 | Configuration | Total solid | Co-moving update | Water budget / activity | Result |
 |---|---|---|---|---|
 | 1 release | about 1e-12 or less | about 1e-13 or less | Σh = 52.8000 (expected λ relsat ΣD = 52.8000) / collapse area min dz −0.98 m, deposition outside the area +0.31 m | PASS |
-| 2 fslide | about 1e-11 or less (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | about 1e-13 or less | slope min sd = 0 (426 cells failed) / min Fs9999 0.493, D9999 ≥ H9999 | PASS |
+| 2 fslide | about 1e-11 or less (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | about 1e-13 or less | slope min sd = 0 (474 cells failed) / min Fs9999 0.493, D9999 ≥ H9999 | PASS |
 | 3 fsdiag | — | — | z, sd and hs unchanged; min Fs 0.943 < 1 detected (600 cells evaluated) | PASS |
-| 4 wet (saturated) | about 1e-13 or less | about 1e-13 or less | residual of the water ledger 3e-12 (initial subsurface storage 1200 m³, retained-water term 16.8 m³, shortfall 0) / collapse area min dz −0.98 m, deposition outside the area +0.30 m | PASS |
-| 4 wet (dry) | about 1e-12 or less | about 1e-13 or less | residual of the water ledger 2e-11 (retained-water term 17.9 m³, shortfall 0.18 m³) / collapse area min dz −0.84 m, deposition outside the area +0.65 m | PASS |
+| 4 wet (saturated) | about 1e-13 or less | about 1e-13 or less | residual of the water ledger 3e-12 (initial subsurface storage 1200 m³, retained-water term 17.1 m³, shortfall 0) / collapse area min dz −0.97 m, deposition outside the area +0.29 m | PASS |
+| 4 wet (dry) | about 1e-12 or less | about 1e-13 or less | residual of the water ledger 3e-12 (retained-water term 18.3 m³, shortfall 0.09 m³) / collapse area min dz −0.83 m, deposition outside the area +0.54 m | PASS |
 
 | Case of configurations 5 to 8 | Compared quantity | Value of the formula | Difference from the computation | Verdict |
 |---|---|---|---|---|
@@ -208,7 +208,7 @@ judge-only mode).
   and the deposition outside it are nearly the same as in configuration 1. The
   dry soil layer (configuration 4, dry) carries only the retained water and
   becomes a dense mixture, and on deposition some cells run short of retained
-  water. Counting that shortfall (0.18 m³) in the ledger brings the residual
+  water. Counting that shortfall (0.09 m³) in the ledger brings the residual
   back to machine precision (§28.17).
 - The lake cases of configuration 5 show numerically that the conventional formula (slope-parallel
   seepage) estimates the safety factor of a saturated slope under still water at
@@ -262,7 +262,14 @@ judge-only mode).
   developer.md §110.32). After the four values of the advection term (f_advection_donor = 4,
   f_advection_bend = 2, f_advection_lateral = 2, f_dry_head_cap = 4) became the default on 2026-11-21, the
   values are the same to the digits shown (the deposit outside of configuration 1 is +0.31 m; configuration 2
-  has 426 cells, 0.493 and 0.46 m; developer.md §114). The table and the figures show these values.
+  has 426 cells, 0.493 and 0.46 m; developer.md §114). After the blockage ratio of the dynamic reassignment
+  of blocked openings was corrected on 2026-11-25 to be measured with the flow depth h + hs, configuration 1
+  is the same to the digits shown (lowering of the collapse area from 0.979 to 0.977 m, deposit outside
+  +0.31 m), configuration 2 goes from 426 to 474 cells, 0.493, and from 0.46 to 0.43 m, the saturated case of
+  configuration 4 has the deposit outside from +0.30 to +0.29 m and the retained-water term from 16.8 to
+  17.1 m³, and the dry case has the lowering of the collapse area from 0.84 to 0.83 m, the deposit outside
+  from +0.65 to +0.54 m, the retained-water term from 17.9 to 18.3 m³ and the shortfall from 0.18 to 0.09 m³
+  (developer.md §130). The table and the figures show these values.
 
 ## Related documents
 

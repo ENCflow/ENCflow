@@ -496,7 +496,12 @@ module m_geomorph
                                      !   m_swflow_enc(set_debris で通知))
     integer :: f_dbed = 1            ! E-D 式(0:交換なし(等価流体),
                                      !   1:高橋型平衡濃度緩和, 2:江頭・芦田1992,
-                                     !   3:高橋・中川1991, 4:速度比例連行(雪崩))
+                                     !   3:高橋・中川1991, 4:速度比例連行(雪崩),
+                                     !   5:Hungr の連行則 E = E_r・h_t・|V|。§129)
+    real :: db_er = 0.0              ! Hungr の連行則の成長率 E_r (1/m。f_dbed = 5)
+    real :: db_hent = 0.0            ! 連行する流動深の下限 (m。f_dbed = 4・5。0 = 下限なし)
+    integer :: f_dbmom = 0           ! 侵食・連行で加わる質量の運動量(0:流速を持って加わる,
+                                     !   1:静止から加速する分を数える。s%dbmr と対。§129)
     real :: db_d50v = 0.0            ! 代表粒径 (m)(f_dbres=2)
     real :: db_erest = 0.0           ! 粒子の反発係数 e(f_dbres=2)
     real :: db_cmin = 0.0            ! 江頭層流則の濃度下限(f_dbres=2)
@@ -675,6 +680,18 @@ module m_geomorph
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine init_debris_state(gm, p, g, s)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+    end subroutine
+    module subroutine dispose_debris(gm, p, g, s)
+      type(t_geomorph), intent(in) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
     end subroutine
     module subroutine calc_debris(gm, p, g, s, dtw)
       type(t_geomorph), intent(inout) :: gm
@@ -1410,6 +1427,8 @@ subroutine m_geomorph_init(gm, p, g, s, b)
   if (list%wet_lw > 0.0) call init_wetlw(gm, g, list)
   if (gm%f_splash > 0) call init_splash(gm, g, list)
   if (gm%f_debris > 0) call init_debris(gm, p, g, list)
+  ! 侵食・連行で加わる質量の増加率の配列(f_dbmom = 1 のときだけ。確保と私有 save の復元。§129)
+  if (gm%f_debris > 0 .and. gm%f_dbmom == 1) call init_debris_state(gm, p, g, s)
   ! 瞬時流動化(f_release)は f_debris の付属機構(fn_dbinit の有無で有効化。
   ! 検証・読み込みは init_debris 内)
   ! 動く底層(f_bedslide。s%hb の確保・restore・発火与件の読み込みまで)
@@ -2038,6 +2057,8 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   character(len=160) :: msg
   ! 底層 hb の私有 save と台帳報告(契約5。無効時は何もしない)
   if (gm%f_bedslide > 0) call dispose_bedslide(gm, p, g, s)
+  ! 侵食・連行で加わる質量の増加率 s%dbmr の私有 save(f_dbmom = 1 のときだけ。§129)
+  if (gm%f_debris > 0 .and. gm%f_dbmom == 1) call dispose_debris(gm, p, g, s)
   ! 定着度 a・基準高の私有 save と台帳報告(契約5)
   if (gm%f_fixation > 0) call dispose_fixation(gm, p, g, s)
   if (gm%f_rockfall > 0) call dispose_rockfall(gm, p, g, s)

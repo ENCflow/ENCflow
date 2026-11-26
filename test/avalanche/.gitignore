@@ -1,0 +1,2 @@
+# make_init.py sheet が Run.sh のたびに作る入力(構成 2〜5)
+sheet_*.txt

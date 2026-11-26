@@ -297,6 +297,11 @@ module m_state
     real, allocatable :: hi(:,:)        ! 氷河の氷厚 (m 氷柱。幾何面積基底。水当量は
                                         ! hi×(ρi/ρw)。m_glacier が確保・更新・保存する。
                                         ! fn_glacier 未指定なら未確保。§45)
+    real, allocatable :: dbmr(:,:)      ! 土石流の侵食・連行で加わる質量の相対的な増加率 ṁ/m (1/s)。
+                                        !   f_dbmom = 1 のときだけ確保する。calc_debris が毎ステップ書き、
+                                        !   次のステップの運動方程式(m_swflow_enc の calc_kth_flux)が
+                                        !   辺の両セルの平均を半陰の抵抗に足す。私有 save は
+                                        !   geomorph_debris.dat(developer.md §129)
     real, allocatable :: hb(:,:)        ! 動く底層の厚さ (m。かさ体積 = 間隙込み。s%z と
                                         ! s%sd の内数で常に土層の最上部にある。m_geomorph
                                         ! の f_bedslide が確保・更新・私有保存する。無効
@@ -1191,6 +1196,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hl)) deallocate(s%hl)
   if (allocated(s%tl)) deallocate(s%tl)
   if (allocated(s%hb)) deallocate(s%hb)
+  if (allocated(s%dbmr)) deallocate(s%dbmr)
   if (allocated(s%fx)) deallocate(s%fx)
   if (allocated(s%ht)) deallocate(s%ht)
   if (allocated(s%ri)) deallocate(s%ri)

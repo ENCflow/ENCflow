@@ -230,7 +230,16 @@
                             !   counts the upslope ground of a uniform slope as
                             !   blocking and speeds up steep, shallow flows
                             !   (developer.md §68.41); set 2 explicitly to
-                            !   reproduce cases calibrated with it
+                            !   reproduce cases calibrated with it. Use 0 for
+                            !   a flow (snow avalanche and the like) advancing
+                            !   in a V-shaped gully resolved with a flow
+                            !   8 cells wide or more, when the dependence of
+                            !   the head shape on the direction is to be
+                            !   reduced. Keep 3 in valleys with a flat floor
+                            !   and on coarse grids (0 loses the passage width
+                            !   of the rows touching the valley walls)
+                            !   (passage-width adjustment page of
+                            !   the user's guide, §7)
   !f_inflow_edge = 0        ! treatment of the edges touching the outer cells
                             !   of a segment inflow (0: zero advection on all
                             !   of them = default, 1: zero advection only on

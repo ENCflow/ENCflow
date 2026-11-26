@@ -36,6 +36,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [tsunami_coast/](tsunami_coast/) | 断層運動による沿岸の沈降・隆起と沖からの津波の到達の時間差が、沈降した湾奥平野の浸水をどう変えるかを見る | 規定底面運動 fn_bedmotion |
 | [tsunami_meander/](tsunami_meander/) | 蛇行水路を進む段波の水理実験(小林ら 2019・2021。河川を遡上する津波の模型)を静水圧と 1 層非静水圧で計算し、岸沿いの波高を計測と比べる。砕波段波は静水圧で合い、波状段波は 2 つの計算が計測を挟むことと、モデルで表せないことを確かめる | 領域マスク(格子の階段の側壁)、初期水位の分布 fn_hinit、非静水圧補正 f_nonhydrostatic、プローブ |
 | [levee_breach/](levee_breach/) | 洪水が堤防の低い所を越水して破堤し、堤内地の氾濫で家屋が押し流される過程と、二線堤の効果を見る | 規定底面運動 fn_bedmotion(解像堤防の破堤)、家屋破壊 fn_bldgdebris(流体力判定)、建物空隙率 fn_gv、河道の破堤 &list_channel_breach(補足) |
+| [confluence_backwater/](confluence_backwater/) | 本川の水位が合流点から支川をさかのぼり(背水)、支川の流量が増えなくても支川の低い堤防を越えて堤内地が浸水する過程を、本川と支川の出水の組み合わせ・ピークのずれ・対策(背水区間の堤防のかさ上げ、水門と排水ポンプ)で比べる。粗い格子(サブグリッド河道)での再現、背水が及ぶ範囲(1 次元の理論との比較)、合流角・湾曲部の外岸と内岸の効果も確かめる | 浅水流(解像した河道と堤防)、フラップゲートのカルバート(水門)&list_struct_culvert、ポンプ &list_struct_pump、サブグリッド河道幅 fn_width と堤防の仮想壁面 fn_bank(補足)、プローブと測線 |
 | [estuary_barrage/](estuary_barrage/) | 感潮河川を遡上する塩水くさびと、河床から周辺の帯水層への塩水侵入に、河口堰の有無が与える影響を見る | 淡塩2層 fn_salt(地表の塩水層・地下の塩水 zone・交換の淡塩配分 f_salt_exch)、潮位、Green-Ampt、地下水の側方流、河床交換能 f_gwbed |
 | [nest_reflect/](nest_reflect/) | 比 3・5 の双方向ネスト格子の界面をガウス波が横切るときの誤差と反射率を、一様細格子と比べて確かめる | ネスティング fn_nest(docs/users_guide/nest.md) |
 | [tsunami_town/](tsunami_town/) | 津波で木造家屋が壊れ、瓦礫が内陸へ運ばれて積もり、引き波で海へ出る過程と、防潮堤かさ上げの効果を見る | 家屋破壊・瓦礫 fn_bldgdebris(浸水深判定・空隙率への帰還)、建物空隙率 fn_gv、潮位 fn_tide、流木 fn_driftwood(補足) |
@@ -55,7 +56,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [debris_bedrock/](debris_bedrock/) | 渓流に流した土石流が岩盤をどこでどれだけ削るか、土石流の頻度が渓流の定常勾配をどう変えるかを見る | 土石流 f_debris(高橋・中川、クーロン + Manning)、土石流による岩盤侵食 f_rockinc の rock_kdb |
 | [debris_fan/](debris_fan/) | 斜面崩壊から始まる土石流が扇状地の住宅地に堆積する過程を、格子間隔・谷の向き・8 近傍と 4 近傍を変えて比べる | 土石流 f_debris(高橋・中川 f_dbed=3・f_dbres=3)、瞬時流動化 fn_dbinit、最大流動深 D9999・流体力 F9999、4 近傍の対照 p_diagratio |
 | [debris_dam/](debris_dam/) | 豪雨の斜面崩壊から、土石流による天然ダムの形成、越流による決壊、下流の集落の洪水までをつなぎ、決壊が急になる条件を比べる | 斜面安定判定 f_slide(浸透力 f_slide_seep・深さの上限 slide_dmax ほか)、土石流 f_debris(高橋・中川。保持水 f_dbwet=3・不飽和床 f_dbunsat・緩い勾配 f_dbimm)+ 掃流砂 f_fluvial、Green-Ampt、家屋破壊 fn_bldgdebris、カルバート |
-| [snow_avalanche/](snow_avalanche/) | 沢を下る流れ型雪崩が走路の雪を取り込んで大きくなり、扇状地に堆積する過程を、走路の雪の量を変えて比べ、誘導堤の効果と、連行の与え方の限界を見る | 土石流 f_debris の雪への援用(Voellmy 則 f_dbres=4、速度比例連行 f_dbed=4、瞬時流動化 fn_dbinit、キャリアの授受 f_dbwet=1)、限界水深 dd、誘導堤(地形)、最大流動深 D9999・最大流速 V9999 |
+| [snow_avalanche/](snow_avalanche/) | 沢を下る流れ型雪崩が走路の雪を取り込んで大きくなり、扇状地に堆積する過程を、走路の雪の量を変えて比べ、誘導堤の効果と、連行の与え方の限界を見る | 土石流 f_debris の雪への援用(Voellmy 則 f_dbres=4、速度比例連行 f_dbed=4、取り込んだ雪の運動量 f_dbmom=1、瞬時流動化 fn_dbinit、キャリアの授受 f_dbwet=1)、連行する流動深の下限 db_hent・Hungr の連行則 f_dbed=5、限界水深 dd、格子で解像された沢の数値設定 f_opening_dynamic=0、誘導堤(地形)、最大流動深 D9999・最大流速 V9999 |
 | [shield_volcano/](shield_volcano/) | 断続的な噴火の溶岩流が重なって楯状火山が育つ過程と、形を決めるのが降伏応力であることを見る(補足に溶岩ドーム) | 溶岩流 fn_lavaflow(複数噴火口 lv_cell・lv_val、Bingham 降伏応力 lv_tauy、固化 lv_wsol・lv_vsol) |
 | [stratovolcano/](stratovolcano/) | 溶岩流・降灰・豪雨の侵食を 10 回繰り返して成層火山を作り、噴火の仕方と侵食で形と内部の層がどう変わるかを見る | 溶岩流 fn_lavaflow(固化した溶岩の下の土層を埋める。最後の段は温度モード f_lvtemp)、降灰は前処理、Green-Ampt、掃流砂 f_fluvial + morfac、段ごとの計算をつなぐドライバ |
 | [glacier_valley/](glacier_valley/) | 川の V 字谷に氷河を育て、6000 年の侵食が集まる場所と速さを見る。補足に侵食 10 倍の計算で凹地・湖・懸谷を見る | 氷河 fn_glacier(質量収支・雪崩 f_glava・SIA 流動 f_glflow・滑動 f_glslide・侵食 f_glero と侵食の結合長 gl_lc)、気温減率と降水の標高補正、積雪、時間加速 gl_morfac、段の間で地盤高を渡す前処理 |
@@ -85,6 +86,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - ゲート急開の段波 → 蛇行水路の伝播 → 外岸の波高(水理実験の計測との比較。静水圧と非静水圧の使い分け): [tsunami_meander/](tsunami_meander/)。
 - 斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
 - 洪水 → 越水 → 破堤 → 氾濫 → 家屋の流失(二線堤で止める): [levee_breach/](levee_breach/)。
+- 本川の洪水 → 狭窄部で合流点の水位が上がる → 支川の背水・逆流 → 支川の低い堤防の越水 → 堤内地の浸水(ピークが重なると増える。背水区間の堤防のかさ上げ・水門と排水ポンプで変わる): [confluence_backwater/](confluence_backwater/)。
 - 潮汐 → 塩水くさびの遡上 → 河床からの浸透 → 岸の地盤の塩水化(河口堰で遮断): [estuary_barrage/](estuary_barrage/)。
 - 給砂 → 河口砂州 → 分岐 → ローブ → 植生の定着・波の沿岸漂砂・潮汐でデルタの形が変わる: [delta/](delta/)。
 - 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。

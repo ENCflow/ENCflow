@@ -162,6 +162,52 @@ attenuation $`A\,dH/dt = Q_{in} - Q(H)`$, so the pass-through setting
 (r = 1) is inappropriate for large lakes. The completely mixed water
 quality is in [Water-quality models](wq_models.md) §6.
 
+**Restricted level and regulation start flow** (modes 1 and 2). With the
+restricted level $`H_{lim}`$ (`dam_hlim`), rule releases never lower the
+reservoir below the floor $`V(H_{lim})`$ ($`Q\,\Delta t \le V - V(H_{lim})`$;
+default: the minimum level). $`H_{lim}`$ corresponds to the lower end of the
+flood-control capacity (the flood-storage preparation level)[^mlit19]. With
+the regulation start flow $`Q_{on}`$ (`dam_qon`) and the release cap
+$`Q_{\max}`$ (`dam_qmax`), mode 2 becomes
+
+```math
+Q = \begin{cases}
+Q_{on} & (Q_{in} \le Q_{on}) \\
+\min\{\,Q_{on} + r\,(Q_{in} - Q_{on}),\ Q_{\max}\,\} & (Q_{in} > Q_{on})
+\end{cases}
+```
+
+At the floor the release is $`Q = \min(Q_{in}, Q_{on})`$ (the level is held and
+the inflow passes through); above the floor with $`Q_{in} \le Q_{on}`$ the
+reservoir is brought back to the floor at $`Q_{on}`$. Mode 1 with a floor (an
+inflow below $`Q_0`$ passes through at a held level; above it, $`Q_0`$ is
+released and the rest stored) is the **constant-release method** of the MLIT
+technical standards[^mlit19]. The mode-2 form represents the
+**constant-rate constant-release method**[^mlit19] (for an inflow at or above
+the regulation start flow, a fixed ratio of the inflow until the peak, a
+constant release after the peak) up to the peak without history; the
+post-peak constant release is not represented (after the peak the release
+keeps following the formula and decreases, storing more than the real rule).
+The form of the formula (the rate applied to the excess over the start flow,
+continuous at $`Q_{on}`$), bringing the reservoir back to the floor at
+$`Q_{on}`$ after a flood, and the cap $`Q_{\max}`$ are choices of this project
+(original). The source defines the methods in words.
+
+**Replaying records** (modes 4 and 5). The recorded release $`Q_{rec}(t)`$ or
+reservoir level $`H_{rec}(t)`$ is given as it is. $`t`$ is the end time of the
+step, interpolated linearly as in the boundary time series.
+
+```math
+Q = Q_{rec}(t)\ (\text{mode 4}),
+\qquad
+Q\,\Delta t = \max\{\,V + Q_{in}\,\Delta t - V(H_{rec}(t)),\ 0\,\}\ (\text{mode 5})
+```
+
+($`V`$ is the storage at the end of the previous step.) Both keep the dead
+storage limit and the spill above the surcharge, and the emergency ramp is not
+applied. The part by which the model inflow differs from the record shows up
+in the reservoir level in mode 4 and in the release in mode 5.
+
 ## 5. Edge boundaries
 
 Edge boundaries act only on edges where valid non-sea cells touch the grid
@@ -282,7 +328,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | div_q0 / div_rule | — | constant discharge / rating (§3) | **given** |
 | dam_hv / dam_hmin / dam_hsur | — | HV curve / linear HV floor and surcharge (§4) | **given** project data; a lake of unknown depth: normal level − 5 m (empirical) |
 | f_dam_mode / dam_q0 / dam_rate | — | operation mode and values | **given** |
-| dam_hq_rule / dam_ori_* / dam_qmax | — | natural-regulation rating / orifice / square-root law | **given** the orifice $`c_e`$ default 0.5 is the culvert value |
+| dam_hlim / dam_qon | minimum level / none | restricted level (floor of rule releases) / regulation start flow (§4) | **given** operating rules[^mlit19] |
+| dam_qout_val / dam_h_val (and fn_*) | — | release / water-level time series (replaying records, §4) | **given** operation records |
+| dam_hq_rule / dam_ori_* / dam_qmax | — | natural-regulation rating / orifice / square-root law (dam_qmax is the release cap in mode 2) | **given** the orifice $`c_e`$ default 0.5 is the culvert value |
 | dam_tadashigaki | min + 0.9(surcharge − min) | start level of the emergency ramp | **customary value** practical placeholder |
 | f_bc_w/e/n/s | 0 | type of the edge boundary (§5) | **method** 0: wall, 1: free outflow (critical drop), 2: radiation, 3: lateral Neumann |
 | bc_eta_* | derived from the initial state | reference level of the radiation | **derived** explicit value > e0 of f_htype=2 > initial level of each boundary cell; the last gives exactly zero radiation flux at t = 0 cell by cell. On restart it is derived again from the restored state ([Suspend and restart](restart.md)) |
@@ -307,6 +355,7 @@ are the Honma values of §1 and are not user parameters.
 | Case | Content | Point |
 |---|---|---|
 | [test/damwq](../../../test/damwq/en/README.md) | constant release of a dam and a pond | storage and release ledger agree with the analytical solution |
+| [test/damops](../../../test/damops/en/README.md) | dam operation rules (restricted level, regulation start flow, record time series) | formulas and series match at every recorded row, volume of the closed system conserved, restart continuation |
 | [test/coastal_drain](../../../test/coastal_drain/en/README.md) | pumping station from the conduit layer with a sea outfall | transfer of the pumping station |
 | [test/nhcurrent](../../../test/nhcurrent/en/README.md) | uniform flow and sine wave from prescribed levels | use of prescribed-level boundaries |
 | [test/sedinflow](../../../test/sedinflow/en/README.md) | total segment inflow with sediment | ledger closure of the inflow |
@@ -319,3 +368,4 @@ are the Honma values of §1 and are not user parameters.
 [^fhwa12]: Schall, J. D., Thompson, P. L., Zerges, S. M., Kilgore, R. T. and Morris, J. L. (2012): Hydraulic Design of Highway Culverts, 3rd ed. *FHWA Hydraulic Design Series*, 5 (HDS-5), FHWA-HIF-12-026. (entrance loss coefficients and pipe friction of culverts)
 [^chow59]: Chow, V. T. (1959): *Open-Channel Hydraulics*. McGraw-Hill. (critical-depth drop, Manning conveyance)
 [^flather76]: Flather, R. A. (1976): A tidal model of the north-west European continental shelf. *Mém. Soc. R. Sci. Liège*, Ser. 6, 10, 141–164. (Flather radiation condition)
+[^mlit19]: Water and Disaster Management Bureau, Ministry of Land, Infrastructure, Transport and Tourism (2019): Technical Criteria for River Works, Planning, technical materials (in Japanese: 河川砂防技術基準 計画編 技術資料), Facility layout planning, Chapter 2, Chapter 2-1, Section 3 Reservoirs (dams), 3.1.2 Flood-control methods and 3.1.3 Flood-control capacity (March 2019 edition). https://www.mlit.go.jp/river/shishin_guideline/gijutsu/gijutsukijunn/keikaku/pdf/2-1-3_g.pdf (definitions of the constant-rate constant-release, constant-release, natural-regulation and variable-rate methods; the lower end of the flood-control capacity = the normal highest level or the flood-storage preparation level; release in advance when a flood is expected)
