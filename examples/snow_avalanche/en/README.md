@@ -56,7 +56,7 @@ particular avalanche.
   exchanging h in the same proportion as the snow (`f_dbwet = 1`, `db_satbed = db_relsat`) and lowering
   the threshold depth `dd` to 0.1 mm makes the deposit smooth and the results almost independent of the
   time step (about 3 % in the area).
-- **In a gully resolved by the grid, do not use the dynamic reassignment of openings**: by default the
+- **In a V-shaped gully resolved by the grid, do not use the dynamic reassignment of openings**: by default the
   shallow-water computation reassigns the passage width of edges whose diagonal neighbours are blocked by
   the ground to the open edges, for the sake of grid-wide channels (`f_opening_dynamic = 3`). In a
   V-shaped gully resolved by the grid this widens only the passage of the bottom rows, and the thickness
@@ -145,7 +145,7 @@ and plots of formulas, not computed results.
 | Gravity and friction on steep slopes | The correction of gravity for the slope. The Voellmy law is evaluated with the speed along the slope and the depth normal to the ground | `f_gravity_correction = 2` (default) |
 | Deflecting dam | The dam body is added to the terrain and its soil depth is set to 0 (not eroded) | `fn_z`, `fn_sd` (made by `make_init.py`) |
 | Gully direction and the grid | The terrain, the snow and the starting zone are given by formulas in coordinates along the gully and sampled at the cell centres of each grid (no interpolation). The eight neighbours of the ENC grid | `make_init.py` |
-| Passage widths in a gully resolved by the grid | The dynamic reassignment of blocked openings (the closure of the passage widths for grid-wide channels whose diagonal neighbours are blocked by the ground) is not used. With it, only the passage of the bottom rows is widened and the shape of the head of the flow depends on the direction of the gully | `f_opening_dynamic = 0` |
+| Passage widths in a V-shaped gully resolved by the grid | The dynamic reassignment of blocked openings (the closure of the passage widths for grid-wide channels whose diagonal neighbours are blocked by the ground) is not used. With it, only the passage of the bottom rows is widened and the shape of the head of the flow depends on the direction of the gully | `f_opening_dynamic = 0` |
 
 **Accounting for the depth of flowing snow (the carrier).** This model carries the flow as a mixture of
 the surface water h and the sediment column hs (the solid volume as a thickness), and treats a cell
@@ -457,7 +457,11 @@ s = 500 to 900 m.)
 neighbouring ground higher than the flow to the open edges. It is a mechanism for conveying the flow of
 grid-wide channels correctly
 ([passage-width adjustment](../../../docs/en/users_guide/passage_width.md)). This example does not use it
-(`f_opening_dynamic = 0`).
+(`f_opening_dynamic = 0`). This is a choice for a V-shaped gully resolved with a flow 12 cells wide. In a valley
+with a flat floor and steep walls, or where the flow is a few cells wide or less, keep the default: without the
+reassignment the passage width of the rows touching the valley walls is not handed back, and the flow comes out
+slower and smaller (in the debris-flow example [debris_fan](../../debris_fan/en/README.md), the sediment
+reaching the fan decreases by 7 to 9 % on the 5 m grid without the reassignment).
 
 | Case | Track snow | Gully direction | Reassignment of openings | Arrival at the gully mouth (s) | Maximum speed in the gully (m/s) | Maximum flow depth in the gully (m) | Tip of the deposit, s (m) | Deposit area (10³ m²) |
 |---|---|---|---|---:|---:|---:|---:|---:|

@@ -511,11 +511,37 @@ conveyance.
   deeper than the rise the difference is small: in a uniform V-channel (flow
   8 cells wide, flow depth 4.9 m) the spread of the discharge over the
   directions is 8 % with 3 and 3 % with 0
-  ([test/vchannel](../../../test/vchannel/en/README.md)). Use 0 for sediment
-  flows in valleys resolved by the grid (snow avalanches, debris flows, debris
-  avalanches). Without the reassignment the passage width of the rows touching
-  the dry banks is not handed back, so the discharge comes out 7 to 11 % below
-  the exact solution (it approaches it as the grid is refined).
+  ([test/vchannel](../../../test/vchannel/en/README.md)). Use 0 only for a
+  V-shaped gully (one in which the deepest flow lies on the one or two rows of
+  the valley line) resolved with a flow 8 cells wide or more, when the
+  dependence of the head shape and the arrival on the direction of the valley
+  is to be reduced (snow avalanches, debris avalanches and the like; in the
+  example snow_avalanche the flow is 12 cells wide). Without the reassignment
+  the blocked diagonal passage width (about 30 % of the row width) of the rows
+  touching the dry banks or the valley walls is not handed back, so the
+  discharge comes out low (7 to 11 % below the exact solution in this
+  V-channel; it approaches it as the grid is refined).
+- **Do not use 0 in a valley with a flat floor and steep walls**: in a valley
+  with a flat floor (a trapezoidal valley, a channel), the blockage is only in
+  the two rows touching the walls, and the reassignment of 3 gives those rows
+  the passage width they would have without the walls (its original purpose,
+  §4). With 0, the conveyance of a valley whose floor is N cells wide falls
+  short by roughly 0.6/N. When the debris flow of the example
+  [debris_fan](../../../examples/debris_fan/en/README.md) (valley floor 30 m
+  wide, wall slope 0.7) is computed with 0, the sediment reaching the fan is
+  smaller than in the computation with 3 by 4 % on the 2.5 m grid (floor
+  12 cells wide), 7 to 9 % at 5 m (6 cells), 10 to 11 % at 10 m (3 cells) and
+  30 % at 20 m (1.5 cells), the arrival at the fan apex is later by 0.4 s,
+  0.4 to 2.5 s, 2 to 8 s and 12 to 28 s, and at 40 m (a grid coarser than the
+  valley floor) the debris flow cannot run down the valley. With 3, the
+  sediment reaching the fan is within ±3 % of the 2.5 m value on grids of 10 m
+  and finer. At 2.5 m the computations with 3, with 0 and with 4 neighbours
+  agree within 3.6 % (developer.md §130.11). 3 also depends on the direction
+  of the valley: with the valley along a grid axis, the maximum flow depth and
+  the maximum speed at the valley mouth come out larger than with the valley
+  along the diagonal, by 10 % on the 5 m grid and by 20 to 30 % on the 10 m
+  grid (3 % in the sediment reaching the fan, and within 2 s in the arrival
+  at the apex).
 - **Split of bedload**: bedload uses the reassignment table of the water as
   it is. If `fluv_diagratio` differs from `p_diagratio`, the splits disagree
   and the bedload capacity of a one-cell-wide channel becomes 2.41 times as
@@ -543,7 +569,7 @@ conveyance.
 | Reproducing runs calibrated with the default of 2026-10-18 to 31 | `f_opening_dynamic = 2` | the rule of the default in that period |
 | Reassigning only where there is a channel mask | `f_opening_dynamic = 1` | the default until 2026-10-18; has no effect without a channel mask (`fn_rw`) |
 | Reproducing versions before 2026-10-03 | `f_opening_dynamic = 0` (together with `f_advection_scheme = 1` and `f_dry_head_cap = 0`) | the defaults of that time |
-| Sediment flows in valleys resolved by the grid (snow avalanches, debris flows, debris avalanches) | `f_opening_dynamic = 0` | "thin flows advancing in a V-shaped valley resolved by the grid" in §7 |
+| A flow (snow avalanche, debris avalanche and the like) advancing in a V-shaped gully resolved with a flow 8 cells wide or more, when the dependence of the head shape on the direction of the valley is to be reduced | `f_opening_dynamic = 0` | "thin flows advancing in a V-shaped valley resolved by the grid" in §7. Keep the default in valleys with a flat floor and in valleys where the flow is a few cells wide or less ("do not use 0 in a valley with a flat floor and steep walls" in §7) |
 | Comparison with a 4-neighbour grid | `p_diagratio = 0` | closes the diagonal exchange (example chichibu_flood) |
 | Breaches 3 cells wide or more | `f_br_diag = 1` | 0.98 to 1.03 times the discharge of a resolved levee ([channel models page](channel_models.md) §4) |
 | Channels narrower than a cell | `fn_width` (the wall-free width mode if there is no levee) + the default reassignment | the double correction between width cells and slopes is avoided automatically |
