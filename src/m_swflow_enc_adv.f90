@@ -169,12 +169,14 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 隣り合う 2 セル (ai,aj)-(bi,bj) の間に、河道の堤防の仮想壁面(fn_bank)が立っているか。移流項が隣のセルの
+! 隣り合う 2 セル (ai,aj)-(bi,bj) の間に、河道の堤防の仮想壁面(fn_bank)か海岸堤防の仮想壁(seawall0・fn_seawall。
+! §134.9)が立っているか。移流項が隣のセルの
 ! 状態を読む判定(流向面の風上の供給元・側方面の平行リンク・斜めエッジの開口率・屈曲の規則の供給元と「線が続く」
 ! 判定・スキーム 1 のセル中心の勾配)で、壁の向こうのセルを、濡れていても乾いたセルと同じに数えないために使う
 ! (developer.md §134。ENCflow 独自)。
 !   - 壁のエッジは bank_wall が流速・流量を上書きするエッジ(bank_edge。天端が両側の地盤より高い)。破堤サイトは
-!     実効天端(breach_crest)で判定し、天端が地盤まで下がって開いた破堤口は壁と数えない。水位には依らない
+!     実効天端(breach_crest)で判定し、天端が地盤まで下がって開いた破堤口は壁と数えない。海岸堤防は seawall_wall が
+!     上書きするエッジ(swall_edge。海側マスクのセルと、天端を持つ陸側セルの間)。水位には依らない
 !     (越流中も壁: 壁のエッジの流量は堰の式で決まり、運動量の式を通らない)。
 !   - 同じセル・8 近傍でない組・確保範囲の外・無効のセルを含む組は偽(呼び出し側の cell_ok・wet_weight が
 !     偽・0 を返すので、判定はそれで足りる)。鏡像のセル(側方 Neumann の辺の外)は、呼び出し側が両方を鏡像に
@@ -191,11 +193,16 @@ pure function vwall_between(g, s, ai, aj, bi, bj) result(res)
   integer, intent(in) :: ai, aj, bi, bj
   logical :: res
   res = .false.
-  if (.not. chn%have_bank) return
+  if (.not. chn%have_vwall) return
   if (max(abs(ai - bi), abs(aj - bj)) /= 1) return
   if (ai < lbound(s%z, 1) .or. ai > ubound(s%z, 1) .or. aj < dcp%jsh .or. aj > dcp%jeh) return
   if (bi < lbound(s%z, 1) .or. bi > ubound(s%z, 1) .or. bj < dcp%jsh .or. bj > dcp%jeh) return
   if (g%x(ai,aj) <= 0 .or. g%x(bi,bj) <= 0) return
+  if (chn%have_swall) then                      ! 海岸堤防の壁(§134.9)
+    res = swall_edge(g, ai, aj, bi, bj)
+    if (res) return
+  end if
+  if (.not. chn%have_bank) return
   res = bank_edge(g, s, ai, aj, bi, bj)
   if (.not. (res .and. chn%have_breach)) return
   if (g%rw(ai,aj) > 0) then
@@ -904,7 +911,7 @@ contains
     integer, intent(in) :: ri, rj, oi, oj
     logical :: ok
     ok = cell_ok(oi, oj)
-    if (ok .and. chn%have_bank) ok = .not. walled(ri, rj, oi, oj)
+    if (ok .and. chn%have_vwall) ok = .not. walled(ri, rj, oi, oj)
   end function
 
   ! wet_weight の、セル (ri, rj) から見た版(間に仮想壁面があれば 0。§134)
@@ -912,7 +919,7 @@ contains
     integer, intent(in) :: ri, rj, oi, oj
     real :: w
     w = wet_weight(oi, oj)
-    if (w > 0.0 .and. chn%have_bank) then
+    if (w > 0.0 .and. chn%have_vwall) then
       if (walled(ri, rj, oi, oj)) w = 0.0
     end if
   end function
@@ -1441,7 +1448,7 @@ contains
         wn = open_rep(ci, cj, kk, sgn, ci + din(kk) + din(kn), cj + djn(kk) + djn(kn))
       end if
       ! 仮想壁面のある軸リンクは閉じている(リンクごと: c 側は c と角のセル、n 側は n と角のセルの間。§134)
-      if (chn%have_bank) then
+      if (chn%have_vwall) then
         if (walled(ci, cj, ci + din(kc), cj + djn(kc))) wc = 0.0
         if (walled(ci + din(kk), cj + djn(kk), ci + din(kk) + din(kn), cj + djn(kk) + djn(kn))) wn = 0.0
       end if
@@ -1820,7 +1827,7 @@ contains
     integer, intent(in) :: ri, rj, oi, oj
     logical :: ok
     ok = cell_ok(oi, oj)
-    if (ok .and. chn%have_bank) ok = .not. walled(ri, rj, oi, oj)
+    if (ok .and. chn%have_vwall) ok = .not. walled(ri, rj, oi, oj)
   end function
 
   ! セルの水深(枠外は鏡像。cell_ok が真のセルにだけ使う)
@@ -2637,7 +2644,7 @@ contains
     integer, intent(in) :: ri, rj, oi, oj
     logical :: ok
     ok = cell_ok(oi, oj)
-    if (ok .and. chn%have_bank) ok = .not. walled(ri, rj, oi, oj)
+    if (ok .and. chn%have_vwall) ok = .not. walled(ri, rj, oi, oj)
   end function
 
   pure function hcell(ci, cj) result(h)
@@ -2700,7 +2707,7 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
       forall(k=1:8) wwx(k) = geo%w8x(k) * ww(k)
       forall(k=1:8) wwy(k) = geo%w8y(k) * ww(k)
       ! 河道の堤防の仮想壁面の向こうのセルは、濡れていても勾配に数えない(乾いたセルと同じ。§134)
-      if (chn%have_bank) then
+      if (chn%have_vwall) then
         do k = 1, 8
           if (vwall_between(g, s, i, j, i + din(k), j + djn(k))) then
             wwx(k) = 0.0

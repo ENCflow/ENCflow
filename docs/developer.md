@@ -73,7 +73,7 @@
 ### 境界条件・潮位・海域
 
 - 現行: [境界条件](users_guide/boundary.md)・[潮位・海面](users_guide/tide.md)。[§15](developer/015.md)・[§23](developer/023.md)・[§67](developer/067.md)(潮位の最小入力)
-- 記録: [§15](developer/015.md)・[§23](developer/023.md)・[§67](developer/067.md)・[§68.30](developer/068.md)(自由流出面)・[§68.35](developer/068.md)(海セルに接するエッジ)・[§68.40](developer/068.md)(区間流入の外縁セル)
+- 記録: [§15](developer/015.md)・[§23](developer/023.md)・[§67](developer/067.md)・[§68.30](developer/068.md)(自由流出面)・[§68.35](developer/068.md)(海セルに接するエッジ)・[§68.40](developer/068.md)(区間流入の外縁セル)・[§134.9](developer/134.md)(海岸堤防の仮想壁を移流項と開口の振り替えで見る)
 
 ### 非静水圧
 
@@ -88,7 +88,7 @@
 ### 内部水理構造物・堤防・家屋
 
 - 現行: [内部水理構造物](users_guide/structure.md)・[構造物と境界の水理則の解説](users_guide/hydraulics.md)・[家屋破壊・瓦礫](users_guide/bldgdebris.md)・[家屋破壊・瓦礫モデルの解説](users_guide/bldgdebris_models.md)
-- 記録: [§17](developer/017.md)(堤防)・[§22](developer/022.md)(構造物族)・[§63](developer/063.md)(家屋破壊・瓦礫)・[§68.25](developer/068.md)(堤防天端の下限)・[§103](developer/103.md)(fn_reservoir の廃止)・[§107](developer/107.md)(家屋の抗力項の次元の修正)・[§132](developer/132.md)(ダムの運転則の拡張: 実績の時系列・制限水位・洪水調節開始流量)・[§133](developer/133.md)(ダムの外部運転 = BMI の目標放流量)・[§134](developer/134.md)(堤防の仮想壁面の向こうのセルを移流項が数えない)
+- 記録: [§17](developer/017.md)(堤防)・[§22](developer/022.md)(構造物族)・[§63](developer/063.md)(家屋破壊・瓦礫)・[§68.25](developer/068.md)(堤防天端の下限)・[§103](developer/103.md)(fn_reservoir の廃止)・[§107](developer/107.md)(家屋の抗力項の次元の修正)・[§132](developer/132.md)(ダムの運転則の拡張: 実績の時系列・制限水位・洪水調節開始流量)・[§133](developer/133.md)(ダムの外部運転 = BMI の目標放流量)・[§134](developer/134.md)(堤防の仮想壁面の向こうのセルを移流項が数えない。海岸堤防も同じ = §134.9)
 
 ### 降雨・気象・蒸発散・雪氷
 

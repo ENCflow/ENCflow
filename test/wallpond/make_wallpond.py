@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""wallpond: 河道の堤防の仮想壁面(fn_bank)の向こうの湛水が、河道の流れを変えないことの検定の入力と設定を生成する。
+"""wallpond: 河道の堤防の仮想壁面(fn_bank)と海岸堤防の仮想壁(seawall0)の向こうの湛水が、壁の手前の流れを変えない
+ことの検定の入力と設定を生成する。
 
-  python3 make_wallpond.py          → d_<case>/(z・rn・mask・h0・rw・width・bank・境界の表・kind・info)と p_<case>.txt
+  python3 make_wallpond.py          → d_<case>/(z・rn・mask・h0・rw・width・bank・seaside・境界の表・kind・info)と p_<case>.txt
   python3 make_wallpond.py list     → ケース名を 1 行に 1 つ書く(Run.sh 用)
   python3 make_wallpond.py mpi      → Run_MPI.sh が N ランクと 1 ランクで比べるケース名
 
 移流項は、隣のセルの状態を読む判定(流向面の風上の供給元・側方面の平行リンク・斜めエッジの開口率・屈曲の規則の
 供給元・スキーム 1 のセル中心の勾配)で、河道の堤防の仮想壁面の向こうのセルを、濡れていても乾いたセルと同じに数えない
-(developer.md §134)。この検定は、同じ河道で堤内地を「乾いている」と「水平な地盤に静かに湛水している」の 2 通りにして、
+(developer.md §134)。海岸堤防の仮想壁も同じに扱い、開口の動的な振り替えでは壁の向こうを塞がっていると数える
+(§134.9)。この検定は、同じ河道で堤内地を「乾いている」と「水平な地盤に静かに湛水している」の 2 通りにして、
 河道の水位が一致することを確かめる(Check_wallpond.py)。
 
 形(どれも Δx = 100 m、勾配 1/1000、粗度 0.03、河道の両側に幅 300 m の堤内地、3 時間):
@@ -17,6 +19,8 @@
   dg1  45° の直線の河道を 4 連結の 1 セルの階段(解像。tutorials/chichibu の河道マスクと同じ型)で表す。
        流量 300 m³/s。移流項の規則の組み合わせを 3 つ(既定の 4・2・2・4、3・1・0・3、0・1・0・3。値は
        f_advection_donor・f_advection_bend・f_advection_lateral・f_dry_head_cap の順)と、スキーム 1(セル中心勾配)で回す
+  海岸堤防(sdry・swet): ax2 と dg1(既定の構成)の河道を、海側マスク(fn_seaside。sw でない通常のセル)の帯にし、
+       両側の陸に海岸堤防(seawall0 = 35 m の絶対標高。越流しない)を立てたもの。河道の設定(&list_channel)は使わない
 堤内地は水平(地盤 = 区間の中ほどの河床 + 1 m)。湛水は水深 1.5 m の静かな池。堤防の天端は河床 + 10 m(越流しない)。
 """
 import math, os, sys
@@ -35,7 +39,11 @@ CASES = [("ax2_mask", "ax2", "mask", "o4"), ("ax2_dry", "ax2", "dry", "o4"), ("a
          ("ax1_dry", "ax1", "dry", "o4"), ("ax1_wet", "ax1", "wet", "o4")]
 for o in OPTS:
     CASES += [(f"dg1_{o}_dry", "dg1", "dry", o), (f"dg1_{o}_wet", "dg1", "wet", o)]
-MPI_CASES = ["ax2_wet", "ax1_wet", "dg1_o4_wet", "dg1_s1_wet"]
+# 海岸堤防の仮想壁(§134.9)
+CASES += [("ax2_sdry", "ax2", "sdry", "o4"), ("ax2_swet", "ax2", "swet", "o4"),
+          ("dg1_o4_sdry", "dg1", "sdry", "o4"), ("dg1_o4_swet", "dg1", "swet", "o4")]
+SEAWALL0 = Z0 + CREST + 5.0        # 海岸堤防の天端(絶対標高。どの地盤より高い)
+MPI_CASES = ["ax2_wet", "ax1_wet", "dg1_o4_wet", "dg1_s1_wet", "ax2_swet", "dg1_o4_swet"]
 
 
 def hn(q):
@@ -171,11 +179,12 @@ def gen_case(name, geo, var, opt):
                 z[j][i] = zb + CREST                  # 解像した堤防(セルの地盤を天端の高さに)
             elif k == 5:
                 z[j][i] = zfp
-                if var in ("wet", "levee"):
+                if var in ("wet", "levee", "swet"):
                     h0[j][i] = HP
             if k > 0 and not (var == "mask" and k == 5):
                 mask[j][i] = 1
     walls = var in ("dry", "wet")
+    seawall = var in ("sdry", "swet")
     chan_model = walls or width is not None
     dd = f"d_{name}"
     os.makedirs(dd, exist_ok=True)
@@ -190,6 +199,8 @@ def gen_case(name, geo, var, opt):
                                                for i in range(nx)] for j in range(ny)], "%.1f")
         write(os.path.join(dd, "bank.txt"), [[Z0 - S * sal[j][i] + CREST if (kind[j][i] == 1 and walls) else -9999.0
                                               for i in range(nx)] for j in range(ny)], "%.3f")
+    if seawall:
+        write(os.path.join(dd, "seaside.txt"), [[1 if kind[j][i] == 1 else 0 for i in range(nx)] for j in range(ny)], "%d")
     jin = [j for j in range(ny) if kind[j][0] == 1]
     jout = [j for j in range(ny) if kind[j][nx - 1] == 1]
     with open(os.path.join(dd, "cells_in.txt"), "w") as f:
@@ -206,10 +217,13 @@ def gen_case(name, geo, var, opt):
     sch, don, bend, lat, cap = OPTS[opt]
     bank = "  fn_bank = 'bank.txt'\n  f_bank_datum = 2\n" if walls else ""
     channel = f"&list_channel\n{bank}  fn_width = 'width.txt'\n/\n" if chan_model else ""
+    geo_extra = "  fn_rw = 'rw.txt'\n" if chan_model else ""
+    if seawall:
+        geo_extra = f"  fn_seaside = 'seaside.txt'\n  seawall0 = {SEAWALL0:.1f}\n  f_seawall_datum = 2\n"
     with open(f"p_{name}.txt", "w") as f:
         f.write(PARAM.format(name=name, tt=TT, dtf=DT_FILE, sch=sch, don=don, bend=bend, lat=lat, cap=cap,
                              chan_fn="  fn_channel = '-'\n" if chan_model else "", nx=nx, ny=ny, dx=DX,
-                             rw="  fn_rw = 'rw.txt'\n" if chan_model else "", channel=channel))
+                             rw=geo_extra, channel=channel))
 
 
 def main():

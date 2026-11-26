@@ -323,6 +323,8 @@ module m_swflow_enc
                                             !   §68.29 (C')。have_bank のとき bank_init が帯+ハロで構築。
                                             !   水田の区画の畦畔・落水口(have_pwall)のエッジも足す。§127.8)
     logical :: have_swall = .false.           ! 海岸堤防天端が有効か(§17 一般化)
+    logical :: have_vwall = .false.           ! 移流項の近傍の判定で見る仮想壁面があるか(河道の堤防・海岸堤防。
+                                            !   §134・§134.9)
     integer :: f_swall_mode = 0               ! 海岸堤防の水理モード(e_bank_* と同義)
     logical :: have_bopen = .false.           ! 開口補正が有効か(have_bank との合成)
     logical :: have_width = .false. ! サブグリッド河道幅が有効か(g%width_active)
@@ -915,6 +917,11 @@ module m_swflow_enc
       real, intent(in) :: zc
       real :: z
     end function
+    pure module function swall_edge(g, i, j, in, jn) result(res)
+      type(t_geoinfo), intent(in) :: g
+      integer, intent(in) :: i, j, in, jn
+      logical :: res
+    end function
     module subroutine breach_init(p, g, s, ch)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
@@ -1093,6 +1100,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (chn%have_bank) call bank_init(g)
   chn%have_swall = g%swall_active
   chn%f_swall_mode = g%f_swall_mode             ! 検証は geoinfo(setup_seawall)済み
+  chn%have_vwall = chn%have_bank .or. chn%have_swall   ! 移流項の近傍の判定(vwall_between)の入口。§134・§134.9
   chn%have_width = g%width_active
   ! 曲率項の作業配列(f_dbcurv=1 のみ。set_debris は geomorph init から
   ! swflow init より前に呼ばれる契約なので db_curv はここで確定済み)
@@ -4549,6 +4557,11 @@ function sblk(g, s, ic, jc, id, jd, io, jo, kap) result(res)
     if (.not. ok) return
   end if
   if (g%x(ii,jj) <= 0) return
+  ! 海岸堤防の壁の向こうは塞がり 1(領域の外・無効のセルと同じ振り替え。河道の堤防は静的な開口補正 frw が受け持つ
+  ! ので下で 0 を返すが、海岸堤防には静的な表がない。§134.9)
+  if (chn%have_swall) then
+    if (swall_edge(g, ic, jc, ii, jj)) return
+  end if
   res = 0.0
   if (g%sw(ii,jj) > 0) return
   if (chn%have_bopen) then

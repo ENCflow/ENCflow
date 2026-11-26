@@ -382,10 +382,12 @@ With `f_advection_donor` = 3 or 4 (the default is 4) the wet/dry test of the par
   cases of [test/bendloss](../../../test/bendloss/en/README.md)). The upwind
   value of such a face is therefore not taken from the wall side but built
   from the water that actually enters the face cell (next item).
-- **Cells behind the virtual walls of channel levees supply no momentum either.**
+- **Cells behind the virtual walls of channel levees and seawalls supply no momentum either.**
   When channel levees are represented as virtual walls (`fn_bank` in
-  `&list_channel`; [channel models](channel_models.md) §1), the landside cell
-  behind the wall is, on the grid, a neighbour of the channel cell. The checks
+  `&list_channel`; [channel models](channel_models.md) §1) or seawalls as
+  virtual walls (`seawall0` and `fn_seawall` in `&list_geoinfo`; "Seawall"
+  in [geographic information](geoinfo.md)), the cell behind the wall is, on the
+  grid, a neighbour of the cell in front of it. The checks
   with which the advection term reads the state of a neighbour cell (the upwind
   donor of a flow-direction face, the parallel link of a lateral face, the
   opening ratio of a diagonal edge, the donor of the rule for the edge just
@@ -397,8 +399,9 @@ With `f_advection_donor` = 3 or 4 (the default is 4) the wet/dry test of the par
   45° one-cell staircase channel rose by 0.14 m
   ([test/wallpond](../../../test/wallpond/en/README.md)).
   - Whether an edge is a wall is decided by the same check as in the levee
-    discharge (an edge whose crest is higher than the ground on both sides)
-    and does not depend on the water level (the cell is not counted during
+    discharge (for a channel levee an edge whose crest is higher than the
+    ground on both sides, for a seawall an edge between a sea-side cell
+    and a land cell with a crest) and does not depend on the water level (the cell is not counted during
     overtopping either: the discharge of a wall edge comes from the weir
     formula and does not pass through the momentum equation). A breach site
     is judged by its effective crest, and an opened breach whose crest has
