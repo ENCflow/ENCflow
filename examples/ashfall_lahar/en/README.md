@@ -149,8 +149,8 @@ Right: sediment that passed the valley outlet to the fan and sediment trapped be
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Before the eruption | 2,700 m³ (100 % of the rain) | — | — | — | — | 0 | 0 |
 | Ash, clear-water control | 549 m³ (20 %) | — | — | — | — | water 0.26 m³/s | 1,283 m³ |
-| Ash (lahar) | 1,341 m³ (50 %) | 2,089 m³ (27 %) | 1,096 m³ | — | 1,096 m³ / 2.8 m | water 0.30, water + sediment 0.55 m³/s | 473 m³ |
-| Ash + check dam | 1,332 m³ (49 %) | 2,068 m³ (26 %) | 302 m³ | 1,652 m³ | 301 m³ / 0.6 m | (as above) | 483 m³ |
+| Ash (lahar) | 1,341 m³ (50 %) | 2,089 m³ (27 %) | 1,097 m³ | — | 1,096 m³ / 2.8 m | water 0.30, water + sediment 0.55 m³/s | 473 m³ |
+| Ash + check dam | 1,332 m³ (49 %) | 2,067 m³ (26 %) | 303 m³ | 1,651 m³ | 302 m³ / 0.6 m | (as above) | 483 m³ |
 
 The rain totals 2,700 m³ from 10 to 70 minutes. The water into the ground is the sum of the
 rain that soaked in and the water that went into the pores of the deposits.
@@ -174,13 +174,13 @@ rain that soaked in and the water that went into the pores of the deposits.
   porosity of 0.5 leaves about 80 % of its water in the pores), so the water through the fan
   section is about 40 % of the clear-water control (473 m³) (the concentration and the pore water are
   explained in panels (a) and (c) of the figure in "Choosing the settings" below).
-- **The check dam holds back the sediment**: 1,652 m³ is trapped behind the dam, the sediment
-  passing the valley outlet to the fan falls from 1,096 to 302 m³ (a 70 % reduction), and the
+- **The check dam holds back the sediment**: 1,651 m³ is trapped behind the dam, the sediment
+  passing the valley outlet to the fan falls from 1,097 to 303 m³ (a 70 % reduction), and the
   deposit at the fan apex falls from 2.8 to 0.6 m at most. Until about 42 minutes, while the
   space behind the dam first fills with water, no flow from the valley reaches the fan; once
   the overflow starts, a flow of low concentration comes out. The deposit just upstream of the
   dam reaches the crest level at about 52 minutes (the dam is full), and after that sediment
-  also passes over the dam. Of the 302 m³ that reached the fan, 129 m³ came out before the
+  also passes over the dam. Of the 303 m³ that reached the fan, 129 m³ came out before the
   overflow started; it was carried by water flowing down the valley walls downstream of the
   dam and at both ends of the dam (not through the dam).
 
@@ -218,9 +218,9 @@ Cross-sections of the flow depth averaged over 30–60 minutes. Left: in the val
 | Difference between 0° and 45° in flow depth (30–60 min mean; relative L1 difference) | 8 % | 26 % |
 | Difference between 0° and 45° in bed change | 8 % | 12 % |
 | Flow on the valley floor (0°; 4 cells across) | nearly uniform (14–15 mm) | split to both edges (20 mm and 6 mm) |
-| Central flow on the fan: peak / half width (0° → 45°) | 12 → 13 mm / 32 → 28 m | 17 → 13 mm / 19 → 30 m |
-| Sediment passing the valley outlet to the fan (0° → 45°) | 1,096 → 1,114 m³ | 1,108 → 1,107 m³ |
-| Deposit at the fan apex (0° → 45°) | 1,096 → 1,103 m³ | 1,103 → 1,094 m³ |
+| Central flow on the fan: peak / half width (0° → 45°) | 12 → 13 mm / 31 → 28 m | 17 → 13 mm / 19 → 30 m |
+| Sediment passing the valley outlet to the fan (0° → 45°) | 1,097 → 1,114 m³ | 1,108 → 1,107 m³ |
+| Deposit at the fan apex (0° → 45°) | 1,096 → 1,102 m³ | 1,103 → 1,094 m³ |
 
 - **With 4 neighbours the flow is tied to the grid direction**: water can only move along the
   axes, so at 0°, with the valley along the grid, the water from the valley walls flows along
@@ -332,12 +332,18 @@ pores (`f_dbwet = 2`).
 
 - `gw_ksv_mmh` (5 → 15 mm/h): the difference from the rain sets how much flows over the
   surface. The closer it is to the rain (30 mm/h), the less surface flow and the smaller the
-  lahar.
+  lahar (with 15 mm/h, the rain flowing over the surface drops by 40 %, but the sediment passing
+  the valley outlet drops by only about 5 %).
 - `prval` (rain intensity): the stronger, the deeper the erosion and the wider the area where
-  the ash is stripped.
-- `DAM_H` (make_init.py; dam height): more empty space and more sediment trapped.
-- `db_mu` (0.05 → 0.1): the place where the flow stops on the fan moves upstream.
-- `db_deltd` (0.01 → 0.05): the deposit concentrates more just below the valley outlet.
+  the ash is stripped (with 50 mm/h, 1.7 times as much ash is eroded and 5 times as many cells
+  are stripped of ash).
+- `DAM_H` (make_init.py; dam height): more empty space and more sediment trapped (with 7 m, the
+  sediment passing the valley outlet falls from 303 to 193 m³).
+- `db_mu` (0.05 → 0.1): the deposit at the fan apex hardly changes, and the concentration of the
+  thin flow over the fan is about halved (0.07 → 0.04).
+- `db_deltd` (0.01 → 0.05): the deposit moves closer to the valley outlet (more is deposited just
+  upstream of the outlet, the sediment passing the outlet drops by 4 %, and less is deposited more
+  than 20 m below the apex).
 
 ## References
 
