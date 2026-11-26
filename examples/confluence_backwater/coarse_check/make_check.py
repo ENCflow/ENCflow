@@ -2,6 +2,7 @@
 # examples/confluence_backwater の補足 1「粗い格子」の切り分け(data_*/ と param_*.txt を書く。make coarse_check が呼ぶ)
 #   本川 2,800 m3/s(と支川 300 m3/s)の一定の流量を 4 h 流した定常で、合流点の位置の本川の水位を、細かい格子(Δx = 20 m)・
 #   粗い格子(Δx = 100 m)・1 次元の漸変流の式で比べる。本川の形(湾曲・狭窄部の有無)と、粗い格子での狭窄部の表し方を変える。
+#   粗い格子の湾曲部の段を太らせた版(make_coarse.py の THICK = 2。隣り合う列が中心線に近い 2 行を共有する)も計算する。
 #   地形は本編の make_terrain.py・make_coarse.py の式で作る。計算するのは本川の河道(細かい格子は本川の堤防を含む)と支川の
 #   河道だけで、堤内地は計算しない(水はあふれない)。下流端は流量の和の等流水深の水位、上流端は区間流入
 #   python3 make_check.py          入力(data_*/)と設定ファイル(param_*.txt)を書く
@@ -21,9 +22,11 @@ Q_MAIN, Q_TRIB = 2800.0, 300.0
 SHAPES = [("uniform", 0.0, m.BM, 0.0), ("constr", 0.0, m.BC, 0.0), ("bend", m.AM, m.BM, 0.0),
           ("base", m.AM, m.BC, 0.0), ("trib", m.AM, m.BC, Q_TRIB)]
 SHAPE = {s[0]: s for s in SHAPES}
-# 計算: (名前, 本川の形, 格子, 粗い格子の狭窄部の表し方)。粗い格子の既定は本編と同じ mix
-RUNS = ([(f"f_{s[0]}", s[0], "fine", None) for s in SHAPES] + [(f"c_{s[0]}", s[0], "coarse", "mix") for s in SHAPES]
-        + [(f"c_constr_{r}", "constr", "coarse", r) for r in ("round", "split", "full")])
+# 計算: (名前, 本川の形, 格子, 粗い格子の狭窄部の表し方, 湾曲部の段を太らせる行数 THICK)。粗い格子の既定は本編と同じ
+# mix・THICK = 0
+RUNS = ([(f"f_{s[0]}", s[0], "fine", None, 0) for s in SHAPES] + [(f"c_{s[0]}", s[0], "coarse", "mix", 0) for s in SHAPES]
+        + [(f"c_constr_{r}", "constr", "coarse", r, 0) for r in ("round", "split", "full")]
+        + [(f"c_{s}_k2", s, "coarse", "mix", 2) for s in ("bend", "base", "trib")])
 EN = "en" in sys.argv[1:]
 
 
@@ -104,7 +107,7 @@ TITLE_REP = {"mix": "狭窄部は解像 1 セル + サブグリッド 1 セル",
              "split": "狭窄部はサブグリッド 2 セル(幅を等分)", "full": "狭窄部は解像 2 セル"}
 
 
-def write_inputs(name, shape, grid, rep):
+def write_inputs(name, shape, grid, rep, thick=0):
     setup(shape)
     qt = SHAPE[shape][3]
     keep = [1, 2] if grid == "fine" else [1]               # 本川の河道(細かい格子は本川の堤防も)
@@ -118,7 +121,7 @@ def write_inputs(name, shape, grid, rep):
         z_out = m.ZM0 - m.SM * float(np.interp((m.NX - 0.5) * m.DX, m.XS, m.SC))
         arrays = []
     else:
-        z, rn, rw, width, bank, _, h0, kind = mc.build(Q_MAIN, max(qt, 1.0), rep=rep)
+        z, rn, rw, width, bank, _, h0, kind = mc.build(Q_MAIN, max(qt, 1.0), rep=rep, thick=thick)
         nx, ny, dx = mc.NXC, mc.NYC, mc.DXC
         z_out = float(np.mean([z[j, nx - 1] for j in range(ny) if kind[j, nx - 1] == 1]))
         arrays = [("rw", rw, "%d"), ("width", width, "%.1f"), ("bank", bank, "%.3f")]
@@ -143,6 +146,8 @@ def write_inputs(name, shape, grid, rep):
             f.write(f"0 {qt:.1f}\n1440 {qt:.1f}\n")
         trib = "  fn_inflow_cell(2) = 'cells_trib.txt'\n  fn_inflow_val(2) = 'q_trib.txt'\n  inflow_dist(2) = 2\n"
     title = TITLE_SHAPE[shape] + ("、細かい格子 Δx = 20 m" if grid == "fine" else f"、粗い格子 Δx = 100 m。{TITLE_REP[rep]}")
+    if thick:
+        title += f"。湾曲部の段を太らせる(THICK = {thick})"
     with open(os.path.join(HERE, f"param_{name}.txt"), "w", encoding="utf-8") as f:
         f.write(PARAM.format(title=title, qm=Q_MAIN, trib_txt=f"・支川 {qt:,.0f} m3/s" if qt > 0 else "", name=name,
                              dt="1.0" if grid == "fine" else "2.0", chan_fn="" if grid == "fine" else "  fn_channel = '-'\n",
@@ -217,7 +222,7 @@ def table():
         print(T("計算していない: ", "not computed: ") + " ".join(missing))
         return
     val, drift = {}, {}
-    for name, shape, grid, rep in RUNS:
+    for name, shape, grid, rep, thick in RUNS:
         val[name], drift[name] = stage_at_junction(name, shape, grid)
     one_d = {}
     for shape, *_ in SHAPES:
@@ -229,11 +234,14 @@ def table():
     lab = {"uniform": T("直線", "straight"), "constr": T("直線 + 狭窄部", "straight + narrows"),
            "bend": T("湾曲", "bend"), "base": T("湾曲 + 狭窄部(本編の本川)", "bend + narrows (main river of this example)"),
            "trib": T("湾曲 + 狭窄部 + 支川 300 m³/s", "bend + narrows + tributary 300 m³/s")}
-    print(T("| 本川の形 | Δx = 20 m | Δx = 100 m | 差 | 1 次元 |", "| Main river | Δx = 20 m | Δx = 100 m | Difference | 1-D |"))
-    print("|---|---:|---:|---:|---:|")
+    print(T("| 本川の形 | Δx = 20 m | Δx = 100 m | 差 | Δx = 100 m(段を太らせる) | 差 | 1 次元 |",
+            "| Main river | Δx = 20 m | Δx = 100 m | Difference | Δx = 100 m (steps thickened) | Difference | 1-D |"))
+    print("|---|---:|---:|---:|---:|---:|---:|")
     for shape, *_ in SHAPES:
         f, c = val[f"f_{shape}"], val[f"c_{shape}"]
-        print(f"| {lab[shape]} | {f:.2f} | {c:.2f} | {sgn(c - f)} | {one_d[shape]:.2f} |")
+        k = val.get(f"c_{shape}_k2")
+        kk = f"{k:.2f} | {sgn(k - f)}" if k is not None else "— | —"
+        print(f"| {lab[shape]} | {f:.2f} | {c:.2f} | {sgn(c - f)} | {kk} | {one_d[shape]:.2f} |")
     print()
     print(T("== 粗い格子の狭窄部(幅 120 m)の表し方(直線 + 狭窄部)", "== Representing the 120 m narrows on the coarse grid (straight + narrows)"))
     rep_lab = {"round": T("解像 1 セル(幅 100 m)", "1 resolved cell (100 m wide)"),
@@ -255,8 +263,8 @@ def main():
     if "table" in sys.argv[1:]:
         table()
         return
-    for name, shape, grid, rep in RUNS:
-        n = write_inputs(name, shape, grid, rep)
+    for name, shape, grid, rep, thick in RUNS:
+        n = write_inputs(name, shape, grid, rep, thick)
         print(f"{name:16s} {T('有効セル', 'active cells')} {n}")
 
 
