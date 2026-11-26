@@ -35,6 +35,7 @@ Gauss–Legendre の求積で直接求める(モデルは表と展開)。
   python3 Check_paddy.py restart_wq <連続の結果> <再開の結果>   水質のプールの保存 → 再開のビット一致
   python3 Check_paddy.py sed_tw   result_sed_tw    土砂: 双方向のタンクへ入る水の浮遊砂を田面に積む(固相の保存)
   python3 Check_paddy.py wq_kd    result_wq_kd result_wq_kd_off  水質の二相分配: タンクへ入る水の粒子態を田面へ落とす
+  python3 Check_paddy.py wq_bkd   result_wq_bkd result_wq_bkd_off  水質の二相分配: B の減水深は溶存態だけを運ぶ
   python3 Check_paddy.py b_sed    result_b_sed     土砂: 区画の解像で掃流砂が畦畔を越えない(区画ごとの河床の変化の合計 0)
   python3 Check_paddy.py restart_sed <連続の結果> <再開の結果>  土砂: 堆積の記録の保存 → 再開のビット一致
   python3 Check_paddy.py catch    result_catch     集水面積率(片方向): 閉じた箱の雨だけの厳密解(タンク・地表)と台帳
@@ -936,6 +937,65 @@ def check_wq_kd(res, res_off):
        "nothing settles without wq_kd" % (st, st - last["cdep(g)"]))
 
 
+def check_wq_bkd(res, res_off):
+    """B と浮遊砂・水質の二相分配(§127.20。b_back の地形に西端から外水 1.0 m3/s(物質 c_in = 2 mg/L・浮遊砂の体積濃度
+    C_s = 0.002)を 2 h、wq_kd = 200 L/kg、減水深 100 mm/d、区画は空から): 区画の減水深は m_wq の浸透と同じく溶存態
+    だけを系外へ運ぶ。溶存態だけを抜くと区画の水の溶存態の濃度は変わらない(浮遊砂と粒子態は残って濃くなる)ので、
+    減水深で出る物質の濃度は外水の溶存態の濃度 c_d = c_in/(1 + Kd·ρs·C_s)。
+    (1) 水は wq_kd によらない(paddy.csv の濃度以外の列が一致)
+    (2) 区画が畦畔の天端まで満ちた後(区間の初めの full1 = 1)の各区間で、減水深で出た物質 / 出た水 = c_d、wq_kd を
+        外した計算の同じ区間との比 = 1/(1 + Kd·ρs·C_s)(外水を入れる計算の濃度のわずかなばらつきで、許容は 1e-3)。
+        満ちる前は、濡れ始めの薄い水(dd 以下)の浮遊砂を地形変化が河床へ落とすので、そこの物質は溶存態として出る
+        (m_wq の浸透と同じ扱い。累積の比は c_d/c_in より大きい)
+    (3) wq.csv の収支(両方の計算)"""
+    kr = 0.2 * (1.0 + 1.65) * 1000.0
+    f_d = 1.0 / (1.0 + kr * 0.002)
+    c_d = 2.0 * f_d
+    ra = read_csv(os.path.join(res, "paddy.csv"))
+    rb = read_csv(os.path.join(res_off, "paddy.csv"))
+    if len(ra) != len(rb):
+        fail("paddy.csv of the two runs have different numbers of records")
+    same = [k for k in rb[0] if k not in ("c1(mg/L)", "c2(mg/L)")]
+    for x, y in zip(ra, rb):
+        for k in same:
+            if x[k] != y[k]:
+                fail("%s differs between the runs with and without wq_kd at t = %.0f s" % (k, x["time(s)"]))
+    ok("water does not depend on wq_kd (%d columns of paddy.csv identical)" % len(same))
+    last = ra[-1]
+    if not (last["perc(m3)"] > 0.0 and last["levee_in(m3)"] > 0.0 and last["inflow(m3)"] > 0.0):
+        fail("expected percolation and inflow into the plot through the outlet and over the levees")
+    wa = wq_closure(res, 0.0)
+    wb = wq_closure(res_off, 0.0)
+    pa = {r["time_s"]: r["out_paddy_perc_g"] for r in wa}
+    pb = {r["time_s"]: r["out_paddy_perc_g"] for r in wb}
+    w1 = w2 = 0.0
+    n = 0
+    for x0, x1 in zip(ra[:-1], ra[1:]):
+        if x0["full1(-)"] < 1.0:
+            continue
+        t0, t1 = x0["time(s)"], x1["time(s)"]
+        dv = x1["perc(m3)"] - x0["perc(m3)"]
+        da = pa[t1] - pa[t0]
+        db = pb[t1] - pb[t0]
+        if not (dv > 0.0 and db > 0.0):
+            continue
+        w1 = max(w1, abs(da / dv / c_d - 1.0))
+        w2 = max(w2, abs(da / db / f_d - 1.0))
+        n += 1
+    if n < 3:
+        fail("too few intervals with the plot full (%d)" % n)
+    if w1 > 1e-3 or w2 > 1e-3:
+        fail("percolated substance after the plot is full: vs c_d %.3e, vs the run without wq_kd %.3e" % (w1, w2))
+    t = last["time(s)"]
+    cum = pa[t] / pb[t]
+    if not (f_d < cum < 0.6):
+        fail("cumulative ratio %.6f of the percolated substance (with / without wq_kd) out of range" % cum)
+    ok("after the plot is full, the percolation carries only the dissolved fraction: substance per water = c_d = %.6f "
+       "g/m3 (max relative difference %.1e), with / without wq_kd = 1/(1 + Kd rhos Cs) = %.6f (%.1e), %d intervals; "
+       "cumulative ratio %.6f (the thin water at the wetting front has no suspended sediment)"
+       % (c_d, w1, f_d, w2, n, cum))
+
+
 def check_sed_tw(res):
     """双方向と浮遊砂: タンクへ入る水の浮遊砂を田面に積む。固相の保存(浮遊 + 河床の上昇 × (1 − λ) = 流し込んだ土砂)、
     水田のセルの河床の上昇 × (1 − λ) = paddy.csv の sed(+ 沈降の分)、水田のないセルは沈降の分しか上がらない"""
@@ -1190,6 +1250,8 @@ def main():
         check_sed_tw(sys.argv[2])
     elif cmd == "wq_kd":
         check_wq_kd(sys.argv[2], sys.argv[3])
+    elif cmd == "wq_bkd":
+        check_wq_bkd(sys.argv[2], sys.argv[3])
     elif cmd == "b_sed":
         check_b_sed(sys.argv[2])
     elif cmd == "catch":

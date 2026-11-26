@@ -81,7 +81,8 @@ module m_paddy
   !   タンクへ入る水(落水口の逆流・畦畔を越える満水)の浮遊砂を hs から引いて s%pdsd に記録し、m_geomorph の
   !   浮遊砂がそれを田面(z・sd)に積む(独自の簡略化。タンクから出る水は清水。§127.11)。さらに水質の二相分配
   !   (wq_kd)を併用すると、タンクへ入る水の物質の粒子態を浮遊砂と一緒に田面へ落として s%fspd に記録し(m_wq が台帳の
-  !   沈降に積む)、溶存態だけをプールへ入れる(§127.19)。集水面積率は B と、
+  !   沈降に積む)、溶存態だけをプールへ入れる(§127.19)。B と二相分配を併用すると、区画の減水深は溶存態だけを
+  !   系外へ運ぶ(m_wq の浸透と同じ。§127.20)。集水面積率は B と、
   !   地形変化の雨滴侵食(s%rainero_active)と併用できない(init で停止。§127.13)。B は混合粒径(f_bedmix)・
   !   芦田・道上の有効掃流力(f_taupart = 2)と、双方向と浮遊砂の併用は混合粒径と併用できない(写しの手続きが
   !   畦畔と田面の堆積を扱わない。s%fluvcopy_active・s%bmf。init で停止。§127.17)。
@@ -141,7 +142,10 @@ module m_paddy
     logical :: kd = .false.                    ! 双方向・浮遊砂・水質の二相分配(wq_kd)の併用: タンクへ入る水の物質の
                                                !   粒子態を浮遊砂と一緒に田面へ落とす(s%fspd に記録し m_wq が台帳の
                                                !   沈降に積む。§127.19)
-    real :: kdrho = 0.0                        ! Kd·ρs (無次元。粒子態の割合 fp = 1 − 1/(1 + kdrho·hs/vh)。kd のときだけ)
+    logical :: kdperc = .false.                ! B と浮遊砂・水質の二相分配(wq_kd)の併用: 区画の減水深は溶存態だけを
+                                               !   系外へ運ぶ(m_wq の浸透 f_wq_infil と同じ。§127.20)
+    real :: kdrho = 0.0                        ! Kd·ρs (無次元。粒子態の割合 fp = 1 − 1/(1 + kdrho·hs/vh)。kd・kdperc の
+                                               !   ときだけ)
     real :: c0 = 0.0                           ! 事前の湛水の物質の濃度 (mg/L = g/m3)
     real :: aplot = 0.0                        ! 代表区画面積 (m2)
     real :: hlev = 0.0                         ! 畦畔高 (m)
@@ -976,6 +980,15 @@ subroutine init_plots(pd, p, g, b, s, list, vzr, sfr)
   call setup_plots(pd, p, g, b, list, vzr, sfr, pid, pod, pcl)
   call setup_devices(pd, p, list)
   call setup_wq(pd, list, s)
+  ! B と浮遊砂・水質の二相分配(wq_kd)の併用(§127.20): 区画の減水深は、m_wq の浸透(f_wq_infil)と同じく溶存態だけを
+  ! 系外へ運ぶ(浮遊砂に付いた粒子態は浮遊砂と一緒に区画の水に残る)。溶存態の割合は m_wq の fd_of と同じ
+  ! fd = 1/(1 + Kd·ρs·hs/vh)、ρs = (s + 1) ρw(§30.6・§30.10)
+  if (pd%wq .and. s%sed_active .and. s%cq_kd > 0.0) then
+    pd%kdperc = .true.
+    pd%kdrho = s%cq_kd * (s%sed_sgrav + 1.0) * rhow
+    call par_info("paddy: the percolation of the plot water carries only the dissolved fraction (wq_kd) of the " &
+                  //"substance (the particulate fraction stays in the plot water with the suspended sediment)")
+  end if
   call m_swflow_enc_set_plot_walls(g, pid, pod, pcl, pd%hlev, pd%dev, pd%gt)
   deallocate(pid, pod, pcl)
   if (p%f_state_restore > 0) then
@@ -1392,11 +1405,11 @@ subroutine calc_plots(pd, p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j, k, in, jn, ipl
-  real :: dt, q, pc, w
+  real :: dt, q, pc, w, vh
   real(real64) :: rr(1:nrow)
 
   dt = p%dt
-  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ipl, q, pc, w, rr)
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ipl, q, pc, w, vh, rr)
   do j = dcp%js, dcp%je
     rr(:) = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
@@ -1431,6 +1444,11 @@ subroutine calc_plots(pd, p, g, s)
         ! 減水深に同伴する物質(地表の濃度で系外へ。セル面積基底で記録。§127.10)
         if (s%cq(i,j) > 0.0) then
           w = s%cq(i,j) * min(pc / s%h(i,j), 1.0)
+          if (pd%kdperc) then                        ! 溶存態だけ(§127.20。vh は m_wq の swflow_vh と同じく、断面形 σ が
+            vh = s%h(i,j)                            ! 無効なら h。σ の配列はそのときだけ確保される)
+            if (allocated(s%sdep)) vh = sect_vh(s, i, j, s%h(i,j))
+            w = w * dissolved_fraction(pd%kdrho, s%hs(i,j), vh, p%dd)
+          end if
           s%cq(i,j) = s%cq(i,j) - w
           s%fmpd(i,j) = s%fmpd(i,j) + w * s%gv(i,j)
         end if
@@ -1500,6 +1518,19 @@ pure function particulate_fraction(kdrho, hs, vh) result(fp)
   real :: fp
   fp = 0.0
   if (hs > 0.0 .and. vh > 0.0) fp = 1.0 - 1.0 / (1.0 + kdrho * hs / vh)
+end function
+
+
+!----------------------------------------------------------------------
+! 区画の水の物質のうち溶存態の割合(B の減水深。§127.20): fd = 1/(1 + Kd·ρs·hs/vh)。m_wq の浸透の fd_of と同じ
+!   (浮遊砂がないか、vh が dd 以下なら 1)
+!----------------------------------------------------------------------
+pure function dissolved_fraction(kdrho, hs, vh, dd) result(fd)
+  real, intent(in) :: kdrho, hs, vh, dd
+  real :: fd
+  fd = 1.0
+  if (hs <= 0.0) return
+  if (vh > dd) fd = 1.0 / (1.0 + kdrho * hs / vh)
 end function
 
 

@@ -26,6 +26,7 @@
 #   param_b_sed.txt   土砂: 区画の解像で掃流砂が畦畔を越えない(区画ごとの河床の変化の合計 0)
 #   param_wq_kd.txt   水質の二相分配(wq_kd。§127.19): 双方向のタンクへ入る水の物質の粒子態を浮遊砂と一緒に田面へ
 #                     落とす(田面に落とした物質と積んだ浮遊砂の比、タンクの濃度の比)。sed で wq_kd を外した計算と比べる
+#   param_wq_bkd.txt  水質の二相分配と B(§127.20): 区画の減水深は溶存態だけを運ぶ(wq_kd を外した計算との比)
 #   param_catch.txt   集水面積率(fn_pd_catch。§127.13): 閉じた箱の雨だけの厳密解(片方向と、sed で双方向)。
 #                     集水面積率 0 の分布を与えた計算と与えない計算のビット一致(steady・tw_drain の変形)、
 #                     集水面積の雨の物質がタンクへ入ること(wq_rain の変形)
@@ -167,6 +168,11 @@ run wq_kd param_wq_kd.txt
 variant param_wq_kd.txt result_wq_kd_off "/^  wq_kd = /d" > "$tmp"
 run wq_kd_off "$tmp"
 python3 Check_paddy.py wq_kd result_wq_kd result_wq_kd_off || exit 1
+# B と二相分配(§127.20): 区画の減水深は溶存態だけを運ぶ。wq_kd を外した計算と比べる
+run wq_bkd param_wq_bkd.txt
+variant param_wq_bkd.txt result_wq_bkd_off "/^  wq_kd = /d" > "$tmp"
+run wq_bkd_off "$tmp"
+python3 Check_paddy.py wq_bkd result_wq_bkd result_wq_bkd_off || exit 1
 
 # 集水面積率(fn_pd_catch。§127.13・§127.15): 閉じた箱の雨だけの厳密解(片方向・双方向)、集水面積率 0 の分布を与えた
 # 計算と与えない計算のビット一致(片方向 steady・双方向 tw_drain)、集水面積の雨の物質もタンクへ入ること(雨の濃度へ
