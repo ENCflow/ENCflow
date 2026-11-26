@@ -10,6 +10,8 @@
 #     band_lo  n = floor(B/δ) 列を解像した河道            band_hi  n + 1 列を解像した河道
 #     mix      n 列を解像 + 外側の 1 列を残りの幅 B − nδ のサブグリッド河道(例題の狭窄部の表し方)
 #     split    n + 1 列をすべて幅 B/(n + 1) のサブグリッド河道
+#     k1, k2   解像 n 列を、隣り合う列の境目で中心線に最も近い k 行が両方の列の解像セルになるように太らせる
+#              (くびれをなくす。make_coarse.py の THICK と同じ規則)
 #     fine     細かい格子(Δx = 20 m)で round(B/δ) 列を解像(表した幅で割って比べる)
 #   流入は解像したセルから入れる(流入の面は幅で絞られないので、細いサブグリッドのセルへ等分すると流入口で振動する。
 #   開発記録 §18 の制約 (5))。粗い格子は 8 h、細かい格子は 4 h(最後の 1 h の水位の変化で定常を確かめる)。
@@ -45,6 +47,7 @@ def cases():
         for b in WIDTHS:
             n = int(math.floor(b / d + 1e-9))
             reps = ["band_lo"] if abs(b / d - n) < 1e-6 else ["band_lo", "band_hi", "mix", "split"]
+            reps += ["k1", "k2"]
             out += [(f"{an}_b{int(b)}_{r}", an, b, r, 100.0) for r in reps]
             out.append((f"{an}_b{int(b)}_fine", an, b, "fine", 20.0))
     return out
@@ -72,9 +75,16 @@ def build(an, b, rep, dx):
     kmin = -int(math.ceil(n / 2))
     core = (k >= kmin) & (k <= kmin + n - 1)
     extra = k == kmin + n
-    if rep in ("fine", "band_lo"):
+    if rep in ("fine", "band_lo", "k1", "k2"):
         width[core] = RESOLVED
         brep = n * d
+        if rep in ("k1", "k2"):
+            yj = ly - (np.arange(ny) + 0.5) * dx
+            for i in range(nx - 1):
+                yc = y0 + (i + 1) * dx * st / ct
+                # 中心線に近い順(1e-6 m で丸めた距離。同じ距離なら北の行)
+                for j in np.argsort(np.round(np.abs(yj - yc), 6), kind="stable")[:int(rep[1])]:
+                    width[j, i] = width[j, i + 1] = RESOLVED
     elif rep == "band_hi":
         width[core | extra] = RESOLVED
         brep = (n + 1) * d
@@ -87,7 +97,10 @@ def build(an, b, rep, dx):
         brep = b
     chan = width > 0
     z = np.where(chan, 20.0 + S * L - S * s, -9999.0)
-    return dict(chan=chan, width=width, z=z, s=s, nx=nx, ny=ny, lx=lx, ct=ct, brep=brep)
+    sel = (s >= S1) & (s <= S2)
+    area = float((width[sel] >= RESOLVED).sum() + np.where((width > 0) & (width < RESOLVED), width / d, 0.0)[sel].sum()) \
+        * dx * dx / (S2 - S1)
+    return dict(chan=chan, width=width, z=z, s=s, nx=nx, ny=ny, lx=lx, ct=ct, brep=brep, area=area)
 
 
 PARAM = """!======================================================================
@@ -151,7 +164,8 @@ CHANNEL = """
 /
 """
 REP_TITLE = {"band_lo": "解像 n 列", "band_hi": "解像 n+1 列", "mix": "解像 n 列 + 残りの幅のサブグリッド 1 列",
-             "split": "n+1 列のサブグリッドに幅を等分", "fine": "細かい格子 Δx = 20 m"}
+             "split": "n+1 列のサブグリッドに幅を等分", "fine": "細かい格子 Δx = 20 m",
+             "k1": "解像 n 列を段で 1 行共有するように太らせる", "k2": "解像 n 列を段で 2 行共有するように太らせる"}
 
 
 def gen():
@@ -208,7 +222,7 @@ def measure(name, an, b, rep, dx):
     beff = RN * QB * b / (math.sqrt(slope) * h ** (5.0 / 3.0))
     # 流入口のセルを除いた、最後の 1 h の水位の変化
     drift = float(np.abs(e1 - e0)[chan & (np.arange(g["nx"])[None, :] > 0)].max())
-    return dict(beff=beff, rel=beff / (g["brep"] if rep == "fine" else b), h=h, slope=slope / S, drift=drift)
+    return dict(beff=beff, rel=beff / (g["brep"] if rep == "fine" else b), h=h, slope=slope / S, drift=drift, area=g["area"])
 
 
 def table():
@@ -222,21 +236,23 @@ def table():
            "a34": T("33.7°(2:3)", "33.7° (2:3)"), "a45": "45°"}
     print(T("== 通水の幅 ÷ 川幅(川幅 120 m / 200 m。Δx = 20 m は表した幅で割った値)",
             "== Conveyance width ÷ channel width (120 m / 200 m wide; Δx = 20 m divided by the width it represents)"))
-    print(T("| 向き | 解像 n 列 | 解像 n+1 列 | 解像 + 残り | 等分 | Δx = 20 m |",
-            "| Direction | n resolved rows | n+1 resolved rows | resolved + remainder | equal split | Δx = 20 m |"))
-    print("|---|---:|---:|---:|---:|---:|")
+    print(T("| 向き | 解像 n 列 | 解像 n+1 列 | 解像 + 残り | 等分 | 段で 2 行を共有 | Δx = 20 m |",
+            "| Direction | n resolved rows | n+1 resolved rows | resolved + remainder | equal split | 2 rows shared at steps | Δx = 20 m |"))
+    print("|---|---:|---:|---:|---:|---:|---:|")
     for an, p, q in ANGLES:
         cells = []
-        for rep in ("band_lo", "band_hi", "mix", "split", "fine"):
+        for rep in ("band_lo", "band_hi", "mix", "split", "k2", "fine"):
             v = [val.get(f"{an}_b{int(b)}_{rep}") for b in WIDTHS]
             cells.append(" / ".join(f"{x['rel']:.2f}" if x else "—" for x in v))
         print(f"| {ang[an]} | " + " | ".join(cells) + " |")
     print()
-    print(T("ケースごとの値(水深 m・水面勾配 ÷ 河床勾配・通水の幅 m・流入口を除く最後の 1 h の水位の変化 m):",
-            "Per case (depth m, water-surface slope ÷ bed slope, conveyance width m, largest change in the last hour "
-            "away from the inflow cells m):"))
+    print(T("ケースごとの値(水深 m・水面勾配 ÷ 河床勾配・通水の幅 m・表した面積の幅 m・通水 ÷ 面積・流入口を除く最後の"
+            " 1 h の水位の変化 m):",
+            "Per case (depth m, water-surface slope ÷ bed slope, conveyance width m, width of the represented area m, "
+            "conveyance ÷ area, largest change in the last hour away from the inflow cells m):"))
     for name, v in val.items():
-        print(f"  {name:20s} {v['h']:6.3f} {v['slope']:6.3f} {v['beff']:7.1f} {v['drift']:.4f}")
+        print(f"  {name:20s} {v['h']:6.3f} {v['slope']:6.3f} {v['beff']:7.1f} {v['area']:7.1f} {v['beff'] / v['area']:5.2f}"
+              f" {v['drift']:.4f}")
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 #   make           ../../bin/ の実行ファイルへのリンクと入力(data/・data_coarse/・junction/data/)を作る
 #   make run       本編の 6 ケースを順に計算する(1 ケース 4 スレッドで 6 分前後)
 #   make coarse    補足: 粗い格子(Δx = 100 m)の 2 ケースと定常の 1 ケース(合わせて 2 分前後)
-#   make coarse_check  補足: 粗い格子の切り分けの 13 ケース(本川だけの定常。合わせて 5 分前後)と数表
+#   make coarse_check  補足: 粗い格子の切り分けの 16 ケース(本川だけの定常。合わせて 5 分前後)と数表
 #   make coarse_oblique  補足: 斜めの河道での河道の表し方の 47 ケース(直線の河道の等流。合わせて 20 分前後)と数表
 #   make steady    補足: 本編の格子の定常の 1 ケース(背水曲線を 1 次元の理論と比べる。4 スレッドで 3 分前後)
 #   make junction  補足「合流の形と水位」の 9 ケース(Δx = 10 m の定常。1 ケース 4 スレッドで 2 分前後)
@@ -16,7 +16,7 @@ CASES	= trib main early same raise gate
 JCASES	= a45 a90 a135 b45 b90 b135 bend_none bend_outer bend_inner
 JFINE	= fa90 fa135
 CCHECK	= f_uniform f_constr f_bend f_base f_trib c_uniform c_constr c_bend c_base c_trib \
-	  c_constr_round c_constr_split c_constr_full
+	  c_constr_round c_constr_split c_constr_full c_bend_k2 c_base_k2 c_trib_k2
 
 all: links inputs
 
