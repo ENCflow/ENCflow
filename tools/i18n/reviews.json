@@ -122,9 +122,9 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "5a0cee2d2d02d7ad68a9a02086f5a0128edb1ed3453233ba121d3731894550da",
-      "target_sha256": "32328146e2be7e5de02eac84206dab57c1ab0ae0854bf9bf8f7e99537518f5a4",
-      "reviewer": "Claude (Claude Code session; §4.4 gained the item on cells behind the virtual walls of channel levees and §6 the test/wallpond entry in both files; the added text compared paragraph by paragraph, the rest unchanged)",
+      "source_sha256": "83b75a9e54990de24006cb657c8c7ad3d3d6d5b2971d4e50c425379615338716",
+      "target_sha256": "a8d8b4c2d0df425cbaa2de95d69f21618afbbf957652615dbbc9410b264ccac4",
+      "reviewer": "Claude (Claude Code session; the §4.4 item on virtual walls extended to seawalls (heading, definition of the wall edge) in both files; compared sentence by sentence, the rest unchanged)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -302,11 +302,11 @@
     {
       "source": "docs/users_guide/geoinfo.md",
       "target": "docs/en/users_guide/geoinfo.md",
-      "source_sha256": "67c791c7ea28e295e9f6cea32b94e75e435e927792f6b0f43b650e0ac0c9a1f4",
-      "target_sha256": "0958d2fc333d67e38b9e5c4a9cd4c6116bb725c0ea246277e03bdf3f7a9fb4ce",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "cbef1a41df3e8566f1ffd49533c4f29c834df704ca77d8fb865fa13e60f6674a",
+      "target_sha256": "a4eb1af9e435d9c15ecd6e78d80c03dd78dad262862c0684eec1ca812c4890e4",
+      "reviewer": "Claude (Claude Code session; the Seawall section gained the paragraph on flows along the wall (advection and dynamic reassignment, f_opening_dynamic = 0) in both files; compared sentence by sentence, the rest unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-15"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "docs/users_guide/geomorph.md",
@@ -455,9 +455,9 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "6284ee152f8a672717db61cba0aa56ea94d06c8f8b00ef46c2a1c725da11f824",
-      "target_sha256": "a9c84ca8aafa4682762f22a4b0149e262d85f126a6f9332bbd820a3493c9291a",
-      "reviewer": "Claude (Claude Code session; the scope of the recommendation f_opening_dynamic = 0 narrowed to V-shaped gullies, and the limit for valleys with a flat floor added, in both languages in the same work (comparison on the example debris_fan, developer.md §130.11); the changed passages compared side by side and their numbers checked against the comparison runs; the rest unchanged since the previous record)",
+      "source_sha256": "3edf07cae9ccb0d668b7721a55191c76c0b98ca19a82a6be984f59ff971a5af9",
+      "target_sha256": "68581c1a7bf34e85c3b5f4aee21d96d92c69794c8c9610853e80c4ee818efc1e",
+      "reviewer": "Claude (Claude Code session; §4.2 table row and §4.3 paragraph on seawalls in the dynamic reassignment added in both files; compared sentence by sentence, the rest unchanged)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -4154,9 +4154,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "6558f12df1eb57594079941a0e3e9098ffae6282ec33d435ac8ee3d1a743fc97",
-      "target_sha256": "baf1cb26f5853fe2ef6a5adda319b516d0162a47c81a2ac2399c3e900585b825",
-      "reviewer": "Claude (Claude Code session; the new test/wallpond row added after wetbank in both files and compared; the rest unchanged)",
+      "source_sha256": "6877e001d53b1b45ea9c217088084afef4c2af12054775ad06c69ff4db72adac",
+      "target_sha256": "f6f9f84052a2afbe9be9430ffd02e0b658d443a8940a90aa6b4bdcb267efcb17",
+      "reviewer": "Claude (Claude Code session; the wallpond row extended to seawalls in both files and compared; the rest unchanged)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
@@ -5729,9 +5729,9 @@
     {
       "source": "test/wallpond/README.md",
       "target": "test/wallpond/en/README.md",
-      "source_sha256": "0219ba0e3b364e21137773f4e5c02900f0bdd6999f90e0620844d86ec1d213e0",
-      "target_sha256": "107d7774533a35d387c070b5bc2ab71711fabe6a0b22dad413fe42833c9df01f",
-      "reviewer": "Claude (Claude Code session; new test written in Japanese and translated in full; tables, values, file names and limits compared section by section)",
+      "source_sha256": "e75382845a5ed3ed09def5b87550368e4caede3d70d84c80f4e30009b31244f5",
+      "target_sha256": "7f0a9e669032ba6524d36df7b467549b5bb5cbfa9f94c42d5d2ed67466e68a7e",
+      "reviewer": "Claude (Claude Code session; seawall cases added to the purpose, configuration, file and result tables and the unchecked items in both files; terms use seawall as in the English guide; compared section by section)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },

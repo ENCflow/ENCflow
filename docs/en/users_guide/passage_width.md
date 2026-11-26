@@ -229,7 +229,7 @@ needs no extra correction. The rule is ENCflow's own (developer.md §18,
 | Mechanism | Target | How blockage is decided | Setting |
 |---|---|---|---|
 | Static opening correction | openings blocked by levees (virtual walls) | whether there is a wall (once, at initialization) | `f_bank_opening` (&list_channel; default 1) |
-| Dynamic reassignment | openings blocked by terrain and water level (high dry banks, outside the domain, invalid cells) | blockage ratio $`s`$ (0 to 1) from the depth and ground at every step | `f_opening_dynamic` (&list_enc; default 3) |
+| Dynamic reassignment | openings blocked by terrain and water level (high dry banks, outside the domain, invalid cells) and openings blocked by seawalls (virtual walls) | blockage ratio $`s`$ (0 to 1) from the depth and ground at every step; 1 behind a seawall | `f_opening_dynamic` (&list_enc; default 3) |
 | Subgrid channel width | channels narrower than a cell | conveyance cap and storage area fraction from the width $`W`$ | `fn_width` (&list_channel). On edges that involve a width cell, the dynamic reassignment is limited to channel-to-channel edges (to avoid a double correction) |
 | Diagonal linkage of breaches | the diagonal openings at both ends of a breach | follows the lowering of the crest at the breach sites | `f_br_diag` (&list_channel_breach; default 0) |
 
@@ -256,7 +256,12 @@ carries the excess and the blockage is partial; if $`d`$ is lower, $`s = 0`$.
 It is a continuous function of the water level, so there is no flicker at a
 threshold, no history and no extra parameter. Outside the domain and invalid
 cells give 1, sea cells 0. Openings already reassigned statically at a levee
-are not counted, so as not to hand them back twice.
+are not counted, so as not to hand them back twice. Behind a seawall
+(between a sea-side cell and a land cell with a crest) the ratio is 1. Coastal
+levees have no static table, so this dynamic reassignment hands back the
+openings blocked by the wall in the same way as outside the domain (with
+`f_opening_dynamic = 0` they are not handed back, and the conveyance of a narrow
+flow along the wall drops by nearly 10 %; developer.md §134.9).
 
 The column $`h_c`$ is the depth of the flow: the water depth h in water-only
 computations, and the flow depth h + hs when the sediment-flow model is active

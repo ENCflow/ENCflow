@@ -367,7 +367,7 @@ module subroutine seawall_wall(p, g, s, i, j, in, jn, uve1, mne1)
   real :: wsr, wsl                ! 海側・陸側の水位
   real :: h, u
 
-  ! 対象エッジの判定(片側が海側マスク・他側が陸)
+  ! 対象エッジの判定(片側が海側マスク・他側が陸。swall_edge と同一に保つこと)
   if (g%ssw(i,j) > 0 .and. g%ssw(in,jn) <= 0) then
     ic = i;  jc = j;  il = in; jl = jn
     sgn = -1.0
@@ -437,6 +437,25 @@ pure module function bank_edge(g, s, i, j, in, jn) result(res)
     res = is_wall(g%zbank(i,j), s%z(i,j), s%z(in,jn))
   else if (g%rw(in,jn) > 0 .and. g%rw(i,j) <= 0) then
     res = is_wall(g%zbank(in,jn), s%z(in,jn), s%z(i,j))
+  end if
+end function
+
+
+!----------------------------------------------------------------------
+! エッジ (i,j)-(in,jn) が海岸堤防の壁エッジか(seawall_wall が流速・流量を上書きする
+! エッジ = 海側マスクのセルと、天端を持つ陸側セルの間。seawall_wall の対象判定と
+! 同一に保つこと)。移流項の近傍の判定(vwall_between)と、開口の動的な振り替えの
+! 塞がり率(sblk)が使う(§134.9)
+!----------------------------------------------------------------------
+pure module function swall_edge(g, i, j, in, jn) result(res)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j, in, jn
+  logical :: res
+  res = .false.
+  if (g%ssw(i,j) > 0 .and. g%ssw(in,jn) <= 0) then
+    res = g%zswall(in,jn) > zbank_min
+  else if (g%ssw(in,jn) > 0 .and. g%ssw(i,j) <= 0) then
+    res = g%zswall(i,j) > zbank_min
   end if
 end function
 
