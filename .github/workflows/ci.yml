@@ -80,7 +80,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink bankspill chutepool cascade tjunction stairbank stageside vchannel river_flowline bankhalo; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink bankspill chutepool cascade tjunction stairbank stageside vchannel river_flowline bankhalo damops; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done
@@ -101,7 +101,7 @@ jobs:
         run: |
           set -e
           export OMP_NUM_THREADS=1
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade tjunction stairbank stageside bankhalo; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade tjunction stairbank stageside bankhalo damops; do
             echo "===== test/$c (np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done

@@ -12,7 +12,9 @@ module list_structure
   !   &list_struct_dam     : ダム・湖沼(捕捉帯吸収+hrs バケツ貯留+運転
   !                          ルール放流。2026-08-08。湖沼への一般化=
   !                          fn_dam_map / dam_hmin / dam_hsur / 水位固定
-  !                          湖沼は 2026-08-20。lake_plan.md)
+  !                          湖沼は 2026-08-20。lake_plan.md。実績の再生の
+  !                          時系列モード 4・5 と制限水位・洪水調節開始流量は
+  !                          2026-11-26 = developer.md §131)
   ! グループ不在は正常(その型なし。present_* が偽のまま)。
   ! 構文エラー(iostat>0)は par_stop。
   use m_sysparam, only : t_sysparam
@@ -80,16 +82,24 @@ module list_structure
     real, allocatable :: dam_hv(:,:,:)             ! HV 曲線 (水位 m, 貯水量 m3)。
                                                    !   最低2点(最低水位・サーチャージ)
     integer :: f_dam_mode(1:nstmax) = 0            ! 運転モード (1:一定量, 2:一定率カット,
-                                                   !   3:自然調節)
+                                                   !   3:自然調節, 4:放流量の時系列,
+                                                   !   5:貯水位の時系列。§131)
     real :: dam_q0(1:nstmax) = -9999.0             ! モード1: 一定放流量 (m3/s)
     real :: dam_rate(1:nstmax) = -9999.0           ! モード2: 放流率 r (0-1)
+    real :: dam_qon(1:nstmax) = -9999.0            ! モード2: 洪水調節開始流量 (m3/s。流入が
+                                                   !   これ以下は流入を流す。§131)
+    real :: dam_hlim(1:nstmax) = -9999.0           ! モード1,2: 制限水位 (標高 m。運転の放流は
+                                                   !   この水位より下げない。省略時=最低水位。§131)
+    real, allocatable :: dam_qout_val(:,:,:)       ! モード4: 放流量の時系列 (時刻 min, m3/s)
+    real, allocatable :: dam_h_val(:,:,:)          ! モード5: 貯水位の時系列 (時刻 min, 標高 m)
     real, allocatable :: dam_hq_rule(:,:,:)        ! モード3(a): H-Q 折れ線 (水位 m, m3/s)
     real :: dam_ori_width(1:nstmax) = -9999.0      ! モード3(b): オリフィス幅 B (m)
     real :: dam_ori_height(1:nstmax) = -9999.0     ! モード3(b): オリフィス高 D (m)
     real :: dam_ori_zbase(1:nstmax) = -9999.0      ! モード3(b): オリフィス敷高 (m)
     real :: dam_ori_ce(1:nstmax) = -9999.0         ! モード3(b): 流入損失係数 (省略時 0.5)
-    real :: dam_qmax(1:nstmax) = -9999.0           ! モード3(c): 計画最大放流量 (m3/s。
-                                                   !   サーチャージ時。√則で自動構成)
+    real :: dam_qmax(1:nstmax) = -9999.0           ! 計画最大放流量 (m3/s)。モード3(c): サーチャージ
+                                                   !   時の放流量(√則で自動構成)。モード2: 放流量の
+                                                   !   上限(§131)
     real :: dam_zbase(1:nstmax) = -9999.0          ! モード3(c): √則の敷高 (m。省略時=最低水位)
     real :: dam_tadashigaki(1:nstmax) = -9999.0    ! 但し書き開始水位 (m。モード1,2。
                                                    !   省略時=最低+0.9×(サーチャージ−最低))
@@ -114,6 +124,10 @@ module list_structure
                                                    !   交換量を V に計上。§22 第3弾)
     character(len=maxpathlen) :: fn_dam_in_cell(1:nstmax) = ""    ! 捕捉帯セル一覧ファイル名
     character(len=maxpathlen) :: fn_dam_out_cell(1:nstmax) = ""   ! 放流セル一覧ファイル名
+    character(len=maxpathlen) :: fn_dam_qout_val(1:nstmax) = ""   ! モード4: 放流量の時系列ファイル名
+                                                   !   (各行 "時刻(min) 放流量(m3/s)"。dam_qout_val より優先)
+    character(len=maxpathlen) :: fn_dam_h_val(1:nstmax) = ""      ! モード5: 貯水位の時系列ファイル名
+                                                   !   (各行 "時刻(min) 水位(m)"。dam_h_val より優先)
   end type
 
   ! namelist 読み込み用の静的作業配列(スタックに置かないための措置。
@@ -131,6 +145,8 @@ module list_structure
   integer :: dam_out_cell(1:2,1:nstccmax,1:nstmax)
   real :: dam_hv(1:2,1:nstvmax,1:nstmax)
   real :: dam_hq_rule(1:2,1:nstvmax,1:nstmax)
+  real :: dam_qout_val(1:2,1:nstvmax,1:nstmax)
+  real :: dam_h_val(1:2,1:nstvmax,1:nstmax)
 
 contains
 
@@ -322,10 +338,13 @@ subroutine read_dam(un, list)
   real :: dam_qmax(1:nstmax), dam_zbase(1:nstmax)
   real :: dam_tadashigaki(1:nstmax), dam_h_init(1:nstmax)
   real :: dam_hmin(1:nstmax), dam_hsur(1:nstmax)
+  real :: dam_qon(1:nstmax), dam_hlim(1:nstmax)
   integer :: dam_lake(1:nstmax), dam_gw(1:nstmax)
   character(len=maxpathlen) :: fn_dam_map
   character(len=maxpathlen) :: fn_dam_in_cell(1:nstmax)
   character(len=maxpathlen) :: fn_dam_out_cell(1:nstmax)
+  character(len=maxpathlen) :: fn_dam_qout_val(1:nstmax)
+  character(len=maxpathlen) :: fn_dam_h_val(1:nstmax)
   integer :: ios
   character(len=1024) :: iom
   namelist /list_struct_dam/ dam_in_cell, dam_out_cell, dam_hv, f_dam_mode, &
@@ -333,15 +352,21 @@ subroutine read_dam(un, list)
                              dam_ori_width, dam_ori_height, dam_ori_zbase, dam_ori_ce, &
                              dam_qmax, dam_zbase, dam_tadashigaki, dam_h_init, &
                              dam_hmin, dam_hsur, dam_lake, dam_gw, fn_dam_map, &
-                             fn_dam_in_cell, fn_dam_out_cell
+                             fn_dam_in_cell, fn_dam_out_cell, &
+                             dam_qon, dam_hlim, dam_qout_val, dam_h_val, &
+                             fn_dam_qout_val, fn_dam_h_val
 
   dam_in_cell = -9999
   dam_out_cell = -9999
   dam_hv = -9999
   dam_hq_rule = -9999
+  dam_qout_val = -9999
+  dam_h_val = -9999
   f_dam_mode = list%f_dam_mode
   dam_q0 = list%dam_q0
   dam_rate = list%dam_rate
+  dam_qon = list%dam_qon
+  dam_hlim = list%dam_hlim
   dam_ori_width = list%dam_ori_width
   dam_ori_height = list%dam_ori_height
   dam_ori_zbase = list%dam_ori_zbase
@@ -357,6 +382,8 @@ subroutine read_dam(un, list)
   fn_dam_map = list%fn_dam_map
   fn_dam_in_cell = list%fn_dam_in_cell
   fn_dam_out_cell = list%fn_dam_out_cell
+  fn_dam_qout_val = list%fn_dam_qout_val
+  fn_dam_h_val = list%fn_dam_h_val
 
   rewind(un)
   read(un, nml=list_struct_dam, iostat=ios, iomsg=iom)
@@ -368,9 +395,13 @@ subroutine read_dam(un, list)
   list%dam_out_cell = dam_out_cell
   list%dam_hv = dam_hv
   list%dam_hq_rule = dam_hq_rule
+  list%dam_qout_val = dam_qout_val
+  list%dam_h_val = dam_h_val
   list%f_dam_mode = f_dam_mode
   list%dam_q0 = dam_q0
   list%dam_rate = dam_rate
+  list%dam_qon = dam_qon
+  list%dam_hlim = dam_hlim
   list%dam_ori_width = dam_ori_width
   list%dam_ori_height = dam_ori_height
   list%dam_ori_zbase = dam_ori_zbase
@@ -386,6 +417,8 @@ subroutine read_dam(un, list)
   list%fn_dam_map = fn_dam_map
   list%fn_dam_in_cell = fn_dam_in_cell
   list%fn_dam_out_cell = fn_dam_out_cell
+  list%fn_dam_qout_val = fn_dam_qout_val
+  list%fn_dam_h_val = fn_dam_h_val
 
 end subroutine
 

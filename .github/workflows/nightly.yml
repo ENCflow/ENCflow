@@ -27,7 +27,7 @@ concurrency:
 
 env:
   # reference がコミットされている回帰ケース(比較込みで PASS/FAIL 判定)
-  REF_CASES: wave dambreak frost pump conduit salt coastal_drain damwq gwseep kdpart sewer_wq splash tide chichibu chichibu_cond vzcol vzzone sfzone wfshoal wfshadow wfcurrent wfdoppler wfsed paddy
+  REF_CASES: wave dambreak frost pump conduit salt coastal_drain damwq damops gwseep kdpart sewer_wq splash tide chichibu chichibu_cond vzcol vzzone sfzone wfshoal wfshadow wfcurrent wfdoppler wfsed paddy
 
 jobs:
   full-serial:
