@@ -25,6 +25,7 @@ module m_main
   use m_vzflow, only : t_vzflow, m_vzflow_init, m_vzflow_calc, m_vzflow_record, m_vzflow_outprof, &
                       m_vzflow_dispose
   use m_sfm, only : t_sfm, m_sfm_init, m_sfm_calc, m_sfm_evap, m_sfm_record, m_sfm_dispose
+  use m_paddy, only : t_paddy, m_paddy_init, m_paddy_calc, m_paddy_record, m_paddy_dispose
   use m_wavefield, only : t_wavefield, m_wavefield_init, m_wavefield_calc, m_wavefield_record, &
                           m_wavefield_dispose
   use m_glacier, only : t_glacier, m_glacier_init, m_glacier_calc, m_glacier_dispose
@@ -89,6 +90,7 @@ module m_main
     type(t_swi) :: si
     type(t_vzflow) :: vz             ! 鉛直不飽和浸透(VZ)流出(fn_vz。§87)
     type(t_sfm) :: sf                ! 貯留関数法の区画流出(fn_sfm。§106)
+    type(t_paddy) :: pd              ! 田んぼダム(水田のサブグリッドのタンク。fn_paddy。§127)
     type(t_wavefield) :: wf          ! 沿岸の波浪場(fn_wavefield。§90)
     type(t_glacier) :: gl
     type(t_lavaflow) :: lv
@@ -251,7 +253,7 @@ subroutine init_instance(fn_param, align)
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
              gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw, &
-             ou => enc%ou, vz => enc%vz, sf => enc%sf, wf => enc%wf)
+             ou => enc%ou, vz => enc%vz, sf => enc%sf, pd => enc%pd, wf => enc%wf)
 
     ! システムを初期化
     call m_sysparam_init(p, fn_param)       ! sysparam を初期化
@@ -342,6 +344,10 @@ subroutine init_instance(fn_param, align)
                                             ! 有効。VZ と同じ検査に加え、VZ との区画の
                                             ! 重なりを検査するため VZ init より後に。蒸発散を
                                             ! タンクから引くかを決めるため evap init より後に。§106)
+    call m_paddy_init(pd, p, g, b, s, ninst > 1, vz%zr, sf%zr)  ! 田んぼダムを初期化(fn_paddy 指定時のみ
+                                            ! 有効。水田のセルの検査にゾーン2の全域マスク・境界の
+                                            ! 一覧・空隙率 s%gv、VZ・貯留関数の区画との重なりの
+                                            ! 検査のため両者の init より後に。§127)
     call m_wavefield_init(wf, p, g, s, ninst > 1)  ! 沿岸の波浪場を初期化(fn_wavefield 指定時のみ
                                             ! 有効。swflow init より後 = 河道の幅・断面形の
                                             ! 有無が確定、静的な波浪セルの判定にゾーン2の
@@ -419,10 +425,10 @@ subroutine step_instance()
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
              gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw, &
-             ou => enc%ou, vz => enc%vz, sf => enc%sf, wf => enc%wf)
+             ou => enc%ou, vz => enc%vz, sf => enc%sf, pd => enc%pd, wf => enc%wf)
 
     call run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, &
-                  wq, dw, bd, sn, gl, lv, bm, si, vz, sf, wf, ou, &
+                  wq, dw, bd, sn, gl, lv, bm, si, vz, sf, pd, wf, ou, &
                   enc%extpre_active, enc%extpre_fresh, enc%extpre, &
                   enc%extz_fresh, enc%extz, enc%exth_fresh, enc%exth, &
                   enc%exthg_fresh, enc%exthg, enc%extswe_fresh, enc%extswe, &
@@ -562,7 +568,7 @@ subroutine finalize_instance()
              gm => enc%gm, gw => enc%gw, ev => enc%ev, mt => enc%mt, &
              wq => enc%wq, dw => enc%dw, bd => enc%bd, sn => enc%sn, si => enc%si, &
              gl => enc%gl, lv => enc%lv, bm => enc%bm, ic => enc%ic, sw => enc%sw, &
-             ou => enc%ou, vz => enc%vz, sf => enc%sf, wf => enc%wf)
+             ou => enc%ou, vz => enc%vz, sf => enc%sf, pd => enc%pd, wf => enc%wf)
 
     ! 最終出力(従来 run_main の末尾)
     call run_close(p, g, s, r, ou)
@@ -589,6 +595,7 @@ subroutine finalize_instance()
     call m_vzflow_dispose(vz, p, s)         ! save は dispose で(契約5。区間の途中なら残りを
                                             ! 同期して s%h へ移してから。m_state の save より先。§87)
     call m_sfm_dispose(sf, p, s)            ! save は dispose で(契約5。VZ と同じ扱い。§106)
+    call m_paddy_dispose(pd, p, s)          ! save は dispose で(契約5。水田の湛水深。§127)
     call m_wavefield_dispose(wf, p, g, s)   ! save は dispose で(契約5。§90)
     call m_record_dispose(r)
     call m_state_dispose(s, p)
@@ -1040,7 +1047,8 @@ end subroutine
 !   進行位置は s%it が正本(m_state_updatetime が更新)。エラーは
 !   ierror に累積し、継続判定は呼び出し側(m_main_finished)が行う
 !----------------------------------------------------------------------
-subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, bd, sn, gl, lv, bm, si, vz, sf, wf, ou, &
+subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, bd, sn, gl, lv, bm, si, vz, sf, pd, wf, &
+                    ou, &
                     extpre_active, extpre_fresh, extpre, &
                     extz_fresh, extz, exth_fresh, exth, &
                     exthg_fresh, exthg, extswe_fresh, extswe, &
@@ -1069,6 +1077,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   type(t_swi), intent(inout) :: si     ! 土壌雨量指数(タンク貯留を保持。§49)
   type(t_vzflow), intent(inout) :: vz  ! VZ 流出(共有参照柱・区画・出口。§87)
   type(t_sfm), intent(inout) :: sf     ! 貯留関数法の区画流出(区画のタンク・出口。§106)
+  type(t_paddy), intent(inout) :: pd   ! 田んぼダム(水田のサブグリッドのタンク。§127)
   type(t_wavefield), intent(inout) :: wf  ! 沿岸の波浪場(ビン別エネルギー・台帳。§90)
   type(t_output), intent(inout) :: ou  ! 分布出力(集約バッファ・装置番号)
   logical, intent(in) :: extpre_active    ! BMI 外部降水供給モードか
@@ -1277,6 +1286,11 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   ! s%h へ移す。VZ とは区画が重ならないので順序は結果に影響しない。§106)
   call m_sfm_calc(sf, p, g, s, it)
 
+  ! 田んぼダム(fn_paddy 未指定なら no-op。VZ・貯留関数と同じ結合: swflow が水田の上に入れた雨を
+  ! s%h から回収して水田のタンクに貯め、落水口の装置則と畦畔の越流で地表の s%h へ戻す(e 回復まで)。
+  ! 水田のセルは VZ・貯留関数の区画セルと重ならないので順序は結果に影響しない。地下水の前。§127)
+  call m_paddy_calc(pd, p, g, s)
+
   ! 湖水位の地下水頭強制(dam_gw 指定の湖沼のみ。gwflow と同周期で
   ! m_gwflow_calc の直前に湖面セルの hg を規定し、交換量を湖の貯留と
   ! やり取りする。未指定なら実質 no-op。§22 第3弾)
@@ -1374,6 +1388,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
    call m_bldgdebris_record(bd, p, g, s)
    call m_vzflow_record(vz, s)
    call m_sfm_record(sf, s)
+   call m_paddy_record(pd, p, g, s)
    call m_wavefield_record(wf, p, g, s)
   end if
 
@@ -1464,6 +1479,7 @@ subroutine init_resultdir(p)
   call sysdep_copy_to_dir(p%fn_bldgdebris, p%dir_result)
   call sysdep_copy_to_dir(p%fn_vz, p%dir_result)
   call sysdep_copy_to_dir(p%fn_sfm, p%dir_result)
+  call sysdep_copy_to_dir(p%fn_paddy, p%dir_result)
   call sysdep_copy_to_dir(p%fn_snow, p%dir_result)
   call sysdep_copy_to_dir(p%fn_glacier, p%dir_result)
   call sysdep_copy_to_dir(p%fn_lavaflow, p%dir_result)

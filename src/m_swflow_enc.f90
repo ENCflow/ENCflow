@@ -10,11 +10,12 @@ module m_swflow_enc
   use m_parallel, only : par_info, par_stop, dcp, is_root, &
                        par_halo_cell, par_halo_edge, par_edge_merge, &
                        par_gather_edge_to, par_scatter_edge, par_allreduce_sumi, &
-                       par_gather_to, par_scatter_cell
+                       par_allreduce_maxi, par_gather_to, par_scatter_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_restart, only : restart_write_cell, restart_read_cell, restart_write_edge, &
                         restart_read_edge, restart_skip
   use m_util, only : itoa, rtoa
+  use m_paddy_law, only : t_pddev, t_gtab   ! 水田の落水口の装置(区画の解像 B の状態。§127.8)
   implicit none
   private
 
@@ -47,6 +48,10 @@ module m_swflow_enc
   public :: sct                                ! m_geomorph の浮遊砂 E-D が読む(have_sect, sdep。§26)
   public :: m_swflow_enc_post            ! ステップ末尾の u,v 正規化パス(§26)
   public :: m_swflow_enc_sdep_update     ! 河床変動後の σ 遷移深さ D の更新(§26)
+  public :: m_swflow_enc_set_step_sect   ! 階段形の断面の登録(水田の二室化。m_paddy が呼ぶ。§26.3・§127.6)
+  public :: m_swflow_enc_set_plot_walls  ! 水田の区画の畦畔・落水口の登録(表現 B。m_paddy が呼ぶ。§127.8)
+  public :: m_swflow_enc_plot_walls_on   ! 区画の畦畔があるか(m_geomorph の掃流砂の除外。§127.11)
+  public :: m_swflow_enc_plot_wall       ! エッジが区画の畦畔・落水口か(同上)
   public :: m_swflow_enc_edge_flux             ! 測線計測のエッジ流量の観測口(opt%have_edge_flux と対)
   public :: m_swflow_enc_nest_export, m_swflow_enc_nest_import   ! ネスティングのエッジ量の窓・帯(nesting_plan §3.5)
   public :: e_bc_wall                          ! m_nest が子の外縁条件(壁)を検査するため
@@ -315,7 +320,8 @@ module m_swflow_enc
   type t_enc_channel
     logical :: have_bank = .false.            ! 堤防天端が有効か
     integer, allocatable :: nwall(:,:)       ! セルの堤防壁エッジ本数(堰流量の追い越し禁止上限の分母。
-                                            !   §68.29 (C')。have_bank のとき bank_init が帯+ハロで構築)
+                                            !   §68.29 (C')。have_bank のとき bank_init が帯+ハロで構築。
+                                            !   水田の区画の畦畔・落水口(have_pwall)のエッジも足す。§127.8)
     logical :: have_swall = .false.           ! 海岸堤防天端が有効か(§17 一般化)
     integer :: f_swall_mode = 0               ! 海岸堤防の水理モード(e_bank_* と同義)
     logical :: have_bopen = .false.           ! 開口補正が有効か(have_bank との合成)
@@ -338,6 +344,18 @@ module m_swflow_enc
     type(t_breach), allocatable :: br(:)      ! サイトリスト(全ランク同一)
     integer, allocatable :: ibr0(:), ibr1(:)  ! (jsh:jeh)
     integer, allocatable :: ibrs(:)           ! 行順に整列したサイト番号
+    ! 水田の区画の畦畔(仮想壁面)と落水口(田んぼダムの表現 B。docs/paddy_plan.md §14、
+    ! developer.md §127.8)。m_paddy が m_swflow_enc_set_plot_walls で登録する(無効時は確保
+    ! しない)。m_paddy が台帳のために読む
+    logical :: have_pwall = .false.           ! 区画の畦畔があるか
+    integer, allocatable :: pid(:,:)          ! 区画番号 (ish:ieh, jsh:jeh)。0 = 水田でない
+    integer, allocatable :: pod(:,:)          ! 落水口の向き 1〜8(出口セル。ほかは 0)
+    integer, allocatable :: pcl(:,:)          ! 装置の種類 1・2(区画のセル。ほかは 0)
+    real, allocatable :: pzl(:,:)             ! 畦畔の天端を決めるセルの高さ(初期の地盤 + 畦畔高
+                                              !   (区画のセル)、初期の地盤(ほか))。天端はエッジの
+                                              !   両端(市松の角は 4 セル)の最大
+    type(t_pddev) :: pdev(1:2)                ! 種類ごとの落水口の装置
+    type(t_gtab) :: pgt                       ! 円の穴の積分の表
     logical :: have_cwd = .false.
     logical :: cwd_restored = .false.
     real, allocatable :: cwxd(:,:), cwyd(:,:)   ! (1:nx, jsh:jeh)。使うのは js:je
@@ -431,6 +449,8 @@ module m_swflow_enc
     real, allocatable :: screst(:,:)
     real, allocatable :: sdep(:,:)            ! 断面遷移深さ D (1:nx, jsh:jeh)。
                                             !   0 = σ 非適用セル(恒等写像)
+    real, allocatable :: sfl(:,:)             ! 床の割合 f (sdep と同じ形)。0 = 冪の形 σ = (h/D)^m(河道)、
+                                            !   > 0 = 階段形 σ = f(h < D)、1(h ≥ D)(水田の二室化。§26.3)
     real, allocatable :: frw0(:,:,:)          ! 幅キャップ「前」の frw のコピー
                                             !   (σ 有効時のみ。cw_cell の h 依存
                                             !    再評価が静的 cwx/cwy と同じ比の
@@ -856,6 +876,27 @@ module m_swflow_enc
     end subroutine
     module subroutine bank_init(g)
       type(t_geoinfo), intent(in) :: g
+    end subroutine
+    module subroutine m_swflow_enc_set_plot_walls(g, pid, pod, pcl, hlev, dev, gt)
+      type(t_geoinfo), intent(in) :: g
+      integer, intent(in) :: pid(dcp%ish:, dcp%jsh:), pod(dcp%ish:, dcp%jsh:), pcl(dcp%ish:, dcp%jsh:)
+      real, intent(in) :: hlev
+      type(t_pddev), intent(in) :: dev(1:)
+      type(t_gtab), intent(in) :: gt
+    end subroutine
+    module function pwall_kind(g, i, j, k, in, jn, zc) result(kind)
+      type(t_geoinfo), intent(in) :: g
+      integer, intent(in) :: i, j, k, in, jn
+      real, intent(out) :: zc
+      integer :: kind
+    end function
+    module subroutine pwall_apply(p, g, s, i, j, k, in, jn, ie, je, kind, zc, uve1, mne1)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+      integer, intent(in) :: i, j, k, in, jn, ie, je, kind
+      real, intent(in) :: zc
+      real, intent(inout) :: uve1, mne1
     end subroutine
     module function chan_dir(g, i, j, ux, uy) result(ok)
       type(t_geoinfo), intent(in) :: g
@@ -1322,6 +1363,8 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (sct%have_sect) then
     if (allocated(s%sdep)) deallocate(s%sdep)
     allocate(s%sdep(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = sct%sdep)
+    if (allocated(s%sfl)) deallocate(s%sfl)
+    allocate(s%sfl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = sct%sfl)
     s%sect_m = sct%sect_m
     s%sect_mp1 = sct%sect_mp1
     s%sect_rmp1 = sct%sect_rmp1
@@ -1909,7 +1952,7 @@ subroutine init_enc_status(p, g, s, sx)
         end if
         if ((uve > 0.0 .and. hc <= 0.0) .or. (uve < 0.0 .and. hn <= 0.0)) he = 0.0
         if (sct%have_sect) then
-          sx%mn1(k,ie,je) = uve * 0.5 * (sect_v(he, sct%sdep(i,j)) + sect_v(he, sct%sdep(in,jn)))
+          sx%mn1(k,ie,je) = uve * 0.5 * (sect_v(he, sct%sdep(i,j), sct%sfl(i,j)) + sect_v(he, sct%sdep(in,jn), sct%sfl(in,jn)))
         else
           sx%mn1(k,ie,je) = uve * he
         end if
@@ -1926,7 +1969,7 @@ subroutine init_enc_status(p, g, s, sx)
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (sct%have_sect) then
-        sx%h1(i,j) = sect_v(s%h(i,j), sct%sdep(i,j))
+        sx%h1(i,j) = sect_v(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j))
       else
         sx%h1(i,j) = s%h(i,j)
       end if
@@ -2457,6 +2500,8 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   real :: cor
   real :: maglim, maglim_inv
   logical :: wall                 ! 堤防壁エッジ(bank_wall が上書きする)
+  integer :: pwk                  ! 水田の区画の畦畔・落水口のエッジの種類(pwall_kind。0 = なし)
+  real :: pwz                     ! その天端標高
 
   ! この文はこの場所になければならない
   have_exflux = .false.
@@ -2522,6 +2567,13 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   maglim_inv = 1.0 / maglim
   wall = .false.
   if (chn%have_bank) wall = bank_edge(g, s, i, j, in, jn)
+  ! 水田の区画の畦畔・落水口のエッジ(表現 B。pwall_apply が上書きする)も同じ理由で判定しない。
+  ! 堤防の壁と重なるエッジは bank_wall が天端の大きい方で扱う(§127.8)
+  pwk = 0
+  if (chn%have_pwall .and. .not. wall) then
+    pwk = pwall_kind(g, i, j, k, in, jn, pwz)
+    wall = pwk > 0
+  end if
   if (opt%f_adaptive_runge > 0 .and. .not. wall) then
     if ((mne >= 0 .and. (mne1 > mne * maglim .or. mne1 < mne * maglim_inv)) .or. &
         (mne < 0  .and. (mne1 < mne * maglim .or. mne1 > mne * maglim_inv))) then
@@ -2550,6 +2602,9 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   ! bank_wall は sw エッジに触れないため干渉しない)
   if (chn%have_swall) call seawall_wall(p, g, s, i, j, in, jn, uve1, mne1)
 
+  ! 水田の区画の畦畔(仮想壁面)と落水口の装置則による上書き(同 submodule。表現 B。§127.8)
+  if (pwk > 0) call pwall_apply(p, g, s, i, j, k, in, jn, ie, je, pwk, pwz, uve1, mne1)
+
   ! セル境界での単位幅流量から境界の両側のセルでの水深の減少量を計算する
   !   通過幅係数有効時はエッジ別係数 frw を乗じる(k<=4 は成分=k)。
   !   河道幅有効時はセルの平面積率 wfrac で水深換算を除算補正する
@@ -2569,14 +2624,14 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   if (sct%have_sect) then
     ! σ 有効時は矩形換算水深(体積)で判定・抑制する(dhc/dhn は vh 増分。
     ! 非適用セルは sect_v が恒等のため従来と同値。§26)
-    if ((dh > 0 .and. sect_v(s%h(i,j), sct%sdep(i,j)) - dhc <= 0) .or. &
-        (dh < 0 .and. sect_v(s%h(in,jn), sct%sdep(in,jn)) - dhn <= 0)) then
+    if ((dh > 0 .and. sect_v(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j)) - dhc <= 0) .or. &
+        (dh < 0 .and. sect_v(s%h(in,jn), sct%sdep(in,jn), sct%sfl(in,jn)) - dhn <= 0)) then
       have_exflux = .true.
       if (opt%f_exflux_reduction > 0) then
         if (dh > 0) then
-          cor = max(sect_v(s%h(i,j), sct%sdep(i,j)) - p%dd, 0.0) / dhc
+          cor = max(sect_v(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j)) - p%dd, 0.0) / dhc
         else
-          cor = max(sect_v(s%h(in,jn), sct%sdep(in,jn)) - p%dd, 0.0) / dhn
+          cor = max(sect_v(s%h(in,jn), sct%sdep(in,jn), sct%sfl(in,jn)) - p%dd, 0.0) / dhn
         end if
         uve1 = uve1 * cor
         mne1 = mne1 * cor
@@ -2673,13 +2728,13 @@ contains
       h = max(s%h(i,j), 0.0)      ! 中心セルの水深
       uve1 = ((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
       mne1 = uve1 * h
-      if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(i,j))   ! 断面積ベース(§68.28)
+      if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(i,j), sct%sfl(i,j))   ! 断面積ベース(§68.28)
     else if (g%rw(in,jn) > 0 .and. g%sw(i,j) > 0) then
       ! 近傍から中心に段落ち
       h = max(s%h(in,jn), 0.0)    ! 近傍セルの水深
       uve1 = -((2. / 3.)**(3. / 2)) * sqrt(p%gg * h)
       mne1 = uve1 * h
-      if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(in,jn))
+      if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(in,jn), sct%sfl(in,jn))
     end if
   end subroutine
 
@@ -2934,11 +2989,11 @@ pure subroutine cap_approach(p, s, sx, i, j, k, in, jn, uac, uan)
   if (k > 4) return
   if (in /= i + din(k) .or. jn /= j + djn(k)) return
   hv = s%h(i,j)
-  if (sct%have_sect) hv = sect_v(hv, sct%sdep(i,j))
+  if (sct%have_sect) hv = sect_v(hv, sct%sdep(i,j), sct%sfl(i,j))
   uac = max(sx%mn(k, i+die(9-k), j+dje(9-k)), 0.0) / max(hv, p%dd)
   if (opt%cap_cellmean) uac = min(uac, max(s%m(i,j) * geo%n8x(k) + s%n(i,j) * geo%n8y(k), 0.0) / max(hv, p%dd))
   hv = s%h(in,jn)
-  if (sct%have_sect) hv = sect_v(hv, sct%sdep(in,jn))
+  if (sct%have_sect) hv = sect_v(hv, sct%sdep(in,jn), sct%sfl(in,jn))
   uan = max(-sx%mn(k, in+die(k), jn+dje(k)), 0.0) / max(hv, p%dd)
   if (opt%cap_cellmean) uan = min(uan, max(-(s%m(in,jn) * geo%n8x(k) + s%n(in,jn) * geo%n8y(k)), 0.0) / max(hv, p%dd))
 end subroutine
@@ -3358,7 +3413,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     ! 通水能が (m+1) 倍になり、段落ち・自由流出で終端セルが抜け切って
     ! 発散する(§68.27・§68.28。2026-10-04 に u·h から変更)
     if (sct%have_sect) then
-      mne1 = uve1 * 0.5 * (sect_v(he, sct%sdep(i,j)) + sect_v(he, sct%sdep(in,jn)))
+      mne1 = uve1 * 0.5 * (sect_v(he, sct%sdep(i,j), sct%sfl(i,j)) + sect_v(he, sct%sdep(in,jn), sct%sfl(in,jn)))
     else
       mne1 = uve1 * he
     end if
@@ -3443,8 +3498,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
             dvc = dvc + mnec * geo%mn2dh(kk) * fwc * winvc / s%gv(i,j) / a(l)
             dvn = dvn + mnen * geo%mn2dh(kk) * fwn * winvn / s%gv(in,jn) / a(l)
           end do
-          hc = sect_hinv(sect_v(hc0, sct%sdep(i,j)) - dvc, sct%sdep(i,j))
-          hn = sect_hinv(sect_v(hn0, sct%sdep(in,jn)) - dvn, sct%sdep(in,jn))
+          hc = sect_hinv(sect_v(hc0, sct%sdep(i,j), sct%sfl(i,j)) - dvc, sct%sdep(i,j), sct%sfl(i,j))
+          hn = sect_hinv(sect_v(hn0, sct%sdep(in,jn), sct%sfl(in,jn)) - dvn, sct%sdep(in,jn), sct%sfl(in,jn))
         end block
       else
       hc = hc0       ! 中心セルの水深
@@ -3701,7 +3756,7 @@ subroutine continuous(p, g, s, sx, nlim)
       s%n(i,j) = 0
       ! σ 有効時は h1 を矩形換算水深 vh で初期化(非適用セルは恒等。§26)
       if (sct%have_sect) then
-        sx%h1(i,j) = sect_v(s%h(i,j), sct%sdep(i,j))
+        sx%h1(i,j) = sect_v(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j))
       else
         sx%h1(i,j) = s%h(i,j)
       end if
@@ -3764,7 +3819,7 @@ subroutine continuous(p, g, s, sx, nlim)
       ! max(h − dd, 0)/O で縮める率を置く(縮めるのは呼び出し側の scale_cell_outflow。§94)
       if (have_rout .and. outf > 0.0) then
         hv = s%h(i,j)
-        if (sct%have_sect) hv = sect_v(s%h(i,j), sct%sdep(i,j))
+        if (sct%have_sect) hv = sect_v(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j))
         if (hv - outf <= 0.0) then
           sx%rout(i,j) = max(hv - p%dd, 0.0) / outf
           nlim = nlim + 1
@@ -3868,7 +3923,7 @@ subroutine complete(p, g, s, sx, initial)
           ! sdep=0 セルは従来通り h1 をコミット(ため池初期吸収の反映)
           if (sct%sdep(i,j) <= 0.0) s%h(i,j) = sx%h1(i,j)
         else
-          s%h(i,j) = sect_hinv(sx%h1(i,j), sct%sdep(i,j))
+          s%h(i,j) = sect_hinv(sx%h1(i,j), sct%sdep(i,j), sct%sfl(i,j))
           ! u,v の正規化はここでは行わない: complete の後に h を変える
           ! モジュール(gwflow/evap)があるため、最終確定 h の σ で
           ! ステップ末尾パス m_swflow_enc_post が1回だけ行う(§26。
@@ -3991,7 +4046,7 @@ subroutine stage_scalar_reset(g, b, gv, c, hh, h_is_vh, jlo, jhi, use_cq, xrow)
       j = b%stage(n)%cell(2,k)
       if (j < jlo .or. j > jhi) cycle
       v = max(hh(i,j), 0.0)
-      if (.not. h_is_vh .and. sct%have_sect) v = sect_v(v, sct%sdep(i,j))
+      if (.not. h_is_vh .and. sct%have_sect) v = sect_v(v, sct%sdep(i,j), sct%sfl(i,j))
       cnew = cb * v
       if (present(xrow)) then
         if (j >= dcp%js .and. j <= dcp%je) then
@@ -4141,7 +4196,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow)
         if (mne > 0.0) then
           if (s%h(i,j) > 0.0) then
             if (sct%have_sect) then
-              cdon = c(i,j) / sect_v(s%h(i,j), sct%sdep(i,j))
+              cdon = c(i,j) / sect_v(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j))
             else
               cdon = c(i,j) / s%h(i,j)
             end if
@@ -4150,7 +4205,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow)
           if (g%x(in,jn) > 0) then
             if (s%h(in,jn) > 0.0) then
               if (sct%have_sect) then
-                cdon = c(in,jn) / sect_v(s%h(in,jn), sct%sdep(in,jn))
+                cdon = c(in,jn) / sect_v(s%h(in,jn), sct%sdep(in,jn), sct%sfl(in,jn))
               else
                 cdon = c(in,jn) / s%h(in,jn)
               end if
@@ -4280,7 +4335,7 @@ contains
     integer, intent(in) :: ci, cj
     real :: cv
     if (sct%have_sect) then
-      cv = c(ci,cj) / sect_v(s%h(ci,cj), sct%sdep(ci,cj))
+      cv = c(ci,cj) / sect_v(s%h(ci,cj), sct%sdep(ci,cj), sct%sfl(ci,cj))
     else
       cv = c(ci,cj) / s%h(ci,cj)
     end if
@@ -4608,11 +4663,11 @@ subroutine restore_uvmn(p, g, s, sx)
         s%v(i,j) = s%v(i,j) / chn%cwyd(i,j)
       else if (chn%have_width) then
         if (sct%have_sect) then
-          if (sct%sdep(i,j) > 0.0) then
+          if (sct%sdep(i,j) > 0.0 .and. sct%sfl(i,j) <= 0.0) then   ! 冪の形の σ(河道)のセル(§26.3)
             ! 2026-10-04(§68.28): 面流束を断面積ベース u·vh にしたため、
             ! エッジ流速 = 河道内流速で、正規化の通水率は静的 cw と同じ
             ! (cw_cell は sig を無視して静的 cwx/cwy と同値を返す)
-            call cw_cell(g, i, j, sect_sigma(s%h(i,j), sct%sdep(i,j)), cxv, cyv)
+            call cw_cell(g, i, j, sect_sigma(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j)), cxv, cyv)
           else
             cxv = chn%cwx(i,j)
             cyv = chn%cwy(i,j)
@@ -4775,8 +4830,8 @@ subroutine m_swflow_enc_post(p, g, s)
       if (chn%have_cwd) then
         cxv = chn%cwxd(i,j)
         cyv = chn%cwyd(i,j)
-      else if (sct%sdep(i,j) > 0.0) then
-        call cw_cell(g, i, j, sect_sigma(s%h(i,j), sct%sdep(i,j)), cxv, cyv)
+      else if (sct%sdep(i,j) > 0.0 .and. sct%sfl(i,j) <= 0.0) then   ! 冪の形の σ(河道)のセル(§26.3)
+        call cw_cell(g, i, j, sect_sigma(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j)), cxv, cyv)
       else
         cxv = chn%cwx(i,j)
         cyv = chn%cwy(i,j)
@@ -4806,6 +4861,25 @@ end subroutine
 !   js-1..je に収まる。ハロは読まない)。(in,jn) が 8 近傍でなければ 0。
 !   閉じた境界面・乾いた対・通過幅ゼロのエッジは momentum/boundary_uvmn が
 !   mn を 0 にしているので、ここでは判定しない(continuous と同じ集合)。
+!----------------------------------------------------------------------
+! 水田の区画の畦畔・落水口のエッジの問い合わせ(表現 B。§127.8)。地形変化の掃流砂が区画の境を越えないように
+! m_geomorph_fluvial が使う(§127.11。河道の堤防の okbank と同じ扱い)。区画の解像がなければ常に .false.
+!----------------------------------------------------------------------
+logical function m_swflow_enc_plot_walls_on()
+  m_swflow_enc_plot_walls_on = chn%have_pwall
+end function
+
+
+logical function m_swflow_enc_plot_wall(g, i, j, k, in, jn)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j, k, in, jn      ! k は 1〜8(din/djn の向き)。(in, jn) = (i + din(k), j + djn(k))
+  real :: zc
+  m_swflow_enc_plot_wall = .false.
+  if (.not. chn%have_pwall) return
+  m_swflow_enc_plot_wall = pwall_kind(g, i, j, k, in, jn, zc) > 0
+end function
+
+
 !----------------------------------------------------------------------
 function m_swflow_enc_edge_flux(i, j, in, jn) result(q)
   integer, intent(in) :: i, j, in, jn
@@ -4888,18 +4962,28 @@ function swflow_vh(i, j, h) result(vh)
   real, intent(in) :: h
   real :: vh
   if (sct%have_sect) then
-    vh = sect_v(h, sct%sdep(i,j))
+    vh = sect_v(h, sct%sdep(i,j), sct%sfl(i,j))
   else
     vh = h
   end if
 end function
 
 
-pure function sect_v(h, d) result(v)
+pure function sect_v(h, d, f) result(v)
   real, intent(in) :: h, d
+  real, intent(in) :: f           ! 床の割合(0 = 冪の形。> 0 = 階段形。§26.3)
   real :: v
   if (d <= 0.0) then
     v = h
+  else if (f > 0.0) then
+    ! 階段形: σ = f(0 < h < D)、1(h ≥ D)。vh = f·h、h ≥ D で f·D + (h − D)
+    if (h >= d) then
+      v = h - d * (1.0 - f)
+    else if (h <= 0.0) then
+      v = h
+    else
+      v = f * h
+    end if
   else if (h >= d) then
     v = h - d * sct%sect_mfac
   else if (h <= 0.0) then
@@ -4910,12 +4994,22 @@ pure function sect_v(h, d) result(v)
 end function
 
 
-pure function sect_hinv(v, d) result(h)
+pure function sect_hinv(v, d, f) result(h)
   real, intent(in) :: v, d
+  real, intent(in) :: f           ! 床の割合(sect_v と同じ)
   real :: h
   real :: vd
   if (d <= 0.0) then
     h = v
+  else if (f > 0.0) then
+    ! 階段形の逆写像(満杯遷移点 h = D の vh は f·D)
+    if (v >= d * f) then
+      h = v + d * (1.0 - f)
+    else if (v <= 0.0) then
+      h = v
+    else
+      h = v / f
+    end if
   else
     vd = d * sct%sect_rmp1              ! 満杯遷移点(h=D)の vh
     if (v >= vd) then
@@ -4929,11 +5023,14 @@ pure function sect_hinv(v, d) result(h)
 end function
 
 
-pure function sect_sigma(h, d) result(sg)
+pure function sect_sigma(h, d, f) result(sg)
   real, intent(in) :: h, d
+  real, intent(in) :: f           ! 床の割合(sect_v と同じ)
   real :: sg
   if (d <= 0.0 .or. h >= d) then
     sg = 1.0
+  else if (f > 0.0) then
+    sg = f
   else if (h <= 0.0) then
     sg = sect_sgmin
   else
@@ -4958,6 +5055,7 @@ subroutine build_sdep(g, b, s)
   real :: d
 
   allocate(sct%sdep(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  allocate(sct%sfl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)   ! 河道は冪の形(§26.3)
   allocate(sct%screst(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = screst_none)
   do j = dcp%jsh, dcp%jeh
     do i = dcp%ish, dcp%ieh
@@ -5013,7 +5111,7 @@ subroutine m_swflow_enc_sdep_update(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  integer :: i, j
+  integer :: i, j, ich
   real :: dnew, vh
   logical :: changed
   if (p%initialized) continue  ! 引数未使用の警告を抑制
@@ -5026,8 +5124,8 @@ subroutine m_swflow_enc_sdep_update(p, g, s)
       dnew = max(sct%screst(i,j) - s%z(i,j), 0.0)
       if (dnew == sct%sdep(i,j)) cycle
       if (j >= dcp%js .and. j <= dcp%je) then
-        vh = sect_v(s%h(i,j), sct%sdep(i,j))
-        s%h(i,j) = sect_hinv(vh, dnew)
+        vh = sect_v(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j))
+        s%h(i,j) = sect_hinv(vh, dnew, sct%sfl(i,j))
         s%e(i,j) = s%z(i,j) + s%h(i,j)
         changed = .true.
       end if
@@ -5036,8 +5134,54 @@ subroutine m_swflow_enc_sdep_update(p, g, s)
     end do
   end do
   !$omp end parallel do
-  ! af(実効平面積率)は σ(h, D) を含むため更新する(帯のみ)
-  if (changed) call update_af(g, s)
+  ! af(実効平面積率)は σ(h, D) を含むため更新する。D が変わったかは全ランクで集める
+  ! (逐次は領域のどこかで変われば全セルを更新するので、それと同じにする。update_af は
+  ! ハロの行も交換する collective。§128)
+  ich = 0
+  if (changed) ich = 1
+  call par_allreduce_maxi(ich)
+  if (ich > 0) call update_af(g, s)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 階段形の断面の登録(水田の二室化。§26.3・§127.6)
+!   dstep > 0 のセルを、遷移深さ D = dstep・床の割合 f = fstep の σ のセル(h < D で σ = f、h ≥ D で 1)に
+!   する。m_paddy_init が swflow の init の後に 1 度だけ呼ぶ(collective: update_af がハロを交換する)。
+!   河道の σ(冪の形)と同じ配列に載せる(水田のセルは河道セルに置けないので重ならない)。D は河床変動に
+!   追従しない(天端の記録 screst を持たない = m_swflow_enc_sdep_update の対象外)。真の水深 s%h はそのまま
+!   (水位として読み替え、矩形換算水深 vh は次の連続式の頭で作る)
+!----------------------------------------------------------------------
+subroutine m_swflow_enc_set_step_sect(g, s, dstep, fstep)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dstep(dcp%ish:, dcp%jsh:)   ! 遷移深さ D (m。0 = 登録しない)
+  real, intent(in) :: fstep(dcp%ish:, dcp%jsh:)   ! 床の割合 f (0 < f < 1)
+  integer :: i, j
+  if (.not. sct%have_sect) then
+    ! 河道の σ がない計算: 配列をここで作る(冪の形の定数は既定の m = 0 のまま。河道のセルはない)
+    allocate(sct%sdep(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(sct%sfl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(sct%screst(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = screst_none)
+    sct%have_sect = .true.
+    s%sect_m = sct%sect_m
+    s%sect_mp1 = sct%sect_mp1
+    s%sect_rmp1 = sct%sect_rmp1
+    s%sect_mfac = sct%sect_mfac
+  end if
+  do j = dcp%jsh, dcp%jeh
+    do i = dcp%ish, dcp%ieh
+      if (dstep(i,j) <= 0.0) cycle
+      sct%sdep(i,j) = dstep(i,j)
+      sct%sfl(i,j) = fstep(i,j)
+      sct%screst(i,j) = screst_none
+    end do
+  end do
+  if (allocated(s%sdep)) deallocate(s%sdep)
+  allocate(s%sdep(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = sct%sdep)
+  if (allocated(s%sfl)) deallocate(s%sfl)
+  allocate(s%sfl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = sct%sfl)
+  call update_af(g, s)
 end subroutine
 
 
@@ -5062,7 +5206,7 @@ subroutine update_af(g, s)
       if (sct%have_sect) then
         if (sct%sdep(i,j) > 0.0) then
           if (s%h(i,j) > 0.0) then
-            base = base * (sect_v(s%h(i,j), sct%sdep(i,j)) / s%h(i,j))
+            base = base * (sect_v(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j)) / s%h(i,j))
           else
             base = base * sect_sgmin
           end if
@@ -5072,6 +5216,10 @@ subroutine update_af(g, s)
     end do
   end do
   !$omp end parallel do
+  ! ハロの行も持ち主の値にそろえる(堤防の越流の追い越し上限 cap_overshoot が、帯の境の
+  ! 堤防エッジで隣の行(ハロ)のセルの af を読む。§128)。呼ぶ条件(幅・σ・可動 gv)は
+  ! 全ランク同値なので collective の条件を満たす
+  call par_halo_cell(s%af)
 
 end subroutine
 

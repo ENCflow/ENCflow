@@ -178,7 +178,9 @@ $`u_e/|\mathbf{V}|_e`$, times the passage width $`L_k`$
 ([ENC grid](encgrid.md) §2): $`Q_k = q_b\,(u_e/|\mathbf{V}|_e)\,L_k`$. The
 adaptation length of bedload is taken as short compared with the grid, so
 the equilibrium transport is used directly (suspended load, with its long
-adaptation length, is handled by a transport equation instead).
+adaptation length, is handled by a transport equation instead). No bedload is
+carried across the edges of river banks (virtual walls) nor across the edges of the levees and outlets of resolved plots
+of [paddy-field dams](paddy.md) (the flow over the walls carries suspended sediment).
 
 The original Ashida–Michiue formula[^ashida72] (eq. (23)) uses the
 effective shear stress $`\tau_{*e}`$ in the leading $`\tau_*^{3/2}`$ (the part
@@ -676,6 +678,9 @@ settling $`D = w_f\,\beta\,C`$ (near-bed concentration factor $`\beta`$ =
 `susp_beta`, default 1). In dry cells ($`h \le d_d`$) all suspended sediment
 returns to the bed. In channel cells with a cross-section shape σ the
 exchange is multiplied by the wetted-width fraction $`\sigma(h)`$.
+Combined with the two-way mode of [paddy-field dams](paddy.md) (`f_pd_exchange = 1`), the suspended sediment of the
+water entering the paddy tanks from the surface (backflow through the outlets, filling over the levees) is deposited on
+the bed of the cell with the same conversion (an original simplification; the water leaving the tanks is clear).
 
 **Equilibrium concentration.** `f_esform` = 1 is the simple calibration
 form $`C_{eq} = \texttt{susp\_esa}\,(\tau_*/\tau_{*c} - 1)`$; `f_esform` = 2 is
@@ -751,6 +756,9 @@ $`z`$ and $`s_d`$ co-movingly and erosion stops at $`s_d = 0`$ (exposed
 bedrock). Outside channels the entrainment $`E`$ of the suspended load and
 the $`k_f`$ term overlap conceptually; when both are used, manage the
 overlap through the calibration.
+Combined with [paddy-field dams](paddy.md) (`fn_paddy`), the rain on paddy fields falls into the paddy tanks (the ponded
+water on the fields), so the raindrop term $`k_r P`$ is multiplied by "1 − paddy area fraction" (the sheet erosion term
+stays over the whole cell).
 
 **Width scale (`wet_lw`).** Sheet erosion and entrainment are both
 proportional to $`\tau_*`$, and the positive feedback that erodes only the
@@ -789,7 +797,8 @@ the slope-dependent erosion by grain aggregates rolled by raindrops
 terrain ($`\kappa > 0`$; `spl_ca`, `spl_cb`) grows valleys. The detached
 sediment cannot be carried without flow, so it is **exported out of the
 system** (the total is reported at the end) and $`z`$, $`s_d`$ are reduced
-co-movingly. A concavity feedback without smoothing grows fastest at the
+co-movingly. Combined with [paddy-field dams](paddy.md) (`fn_paddy`), the rain on paddy fields falls into the paddy
+tanks, so $`E`$ is multiplied by "1 − paddy area fraction". A concavity feedback without smoothing grows fastest at the
 shortest wavelength (the infinite-wavenumber problem of Smith &
 Bretherton[^smith72]): with the curvature taken on the grid (`spl_lc` = 0)
 the valley spacing sticks to 2-3 grid cells (adding a diffusion term only

@@ -86,6 +86,10 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
   logical :: spread, wsed, stk
   logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
 
+  ! 田んぼダムの双方向の水田のタンクへ入った水が運んだ浮遊砂(m_paddy の記録 s%pdsd)を田面に堆積させる
+  ! (§127.11。記録して読んでゼロに戻す契約。確保は双方向と f_suspend の併用のときだけ)
+  if (allocated(s%pdsd)) call deposit_paddy(gm, g, s)
+
   ! 混合粒径(f_bedmix。段 2。§122)は写しの手続きで(粒径階 1 と交換層の行き来。本手続きの命令列を変えない)
   if (gm%f_bedmix > 0) then
     call calc_suspend_bmix(gm, p, g, s, dtw)
@@ -159,7 +163,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         cc = 0.0
         if (s%hs(i,j) > 0.0) then
           if (sct%have_sect) then
-            cc = s%hs(i,j) / sect_v(s%h(i,j), sct%sdep(i,j))
+            cc = s%hs(i,j) / sect_v(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j))
           else
             cc = s%hs(i,j) / s%h(i,j)
           end if
@@ -169,7 +173,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         ! 交換量に σ(h) を掛ける(満杯以上・矩形では 1)。河床変動 Δz は
         ! 平面積平均のまま(§26 の近似)
         fx = gm%wf * (ceq - gm%beta * cc) * dtw
-        if (sct%have_sect) fx = fx * sect_sigma(s%h(i,j), sct%sdep(i,j))
+        if (sct%have_sect) fx = fx * sect_sigma(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j))
         if (fx > 0.0) then
           ! 可動層クランプ(河床側は ×morfac・poroi で減るため換算して制限)
           fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
@@ -248,5 +252,31 @@ end subroutine
 
 
 
+
+!----------------------------------------------------------------------
+! 田んぼダム(fn_paddy)の双方向の水田のタンクへ入った浮遊砂の堆積(§127.11。独自の簡略化): 落水口の逆流と
+! 畦畔を越える満水で地表の水がタンクへ入るとき、その水の浮遊砂を m_paddy が hs から引いて s%pdsd に記録する。
+! ここでそれを田面(セルの河床 z と土層 sd。細粒分の帳簿 sf も)に E-D の沈降と同じ換算(× morfac × 1/(1 − λ))で
+! 積み、記録をゼロに戻す。セル単位で帯の中だけ
+!----------------------------------------------------------------------
+subroutine deposit_paddy(gm, g, s)
+  type(t_geomorph), intent(in) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: dzb
+  !$omp parallel do schedule(static) private(i, j, dzb)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (s%pdsd(i,j) == 0.0) cycle
+      dzb = s%pdsd(i,j) * gm%morfac * gm%poroi
+      s%z(i,j) = s%z(i,j) + dzb
+      s%sd(i,j) = s%sd(i,j) + dzb
+      if (gm%f_bedfines > 0) s%sf(i,j) = s%sf(i,j) + dzb
+      s%pdsd(i,j) = 0.0
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
 
 end submodule

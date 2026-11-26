@@ -1,0 +1,72 @@
+!======================================================================
+! paddy: 水質(fn_wq)と併用するタンクの物質のプール(Check_paddy.py wq_a。developer.md §127.10)
+!
+!   param.txt と同じ 1 区画の落水(水位調整板、12 h、四辺は自由流出)に、事前の湛水の濃度 10 mg/L と
+!   半減期 6 h の一次減衰、減水深 5 mm/d を足す。雨はない。
+!   確認: タンクの濃度 c1 = 10 × 2^(−t/6 h)(落水と減水深はタンクの濃度で出るので濃度を変えない)、
+!   wq.csv の質量の収支(タンク・地表の質量 + 開いた辺からの流出 + 減衰 + 減水深の持ち出し = 初めの質量)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt = 43200
+  dt_disp = 1800
+  dt_file = 43200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  fn_wq = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_wq_a'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 10
+  ny = 8                    ! np = 4 でもランクあたり 2 行
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+  f_bc_w = 1                ! 四辺とも自由流出(落水した水はすぐ領域の外へ出る。地表の水深は 1 mm 未満)
+  f_bc_e = 1
+  f_bc_n = 1
+  f_bc_s = 1
+/
+
+&list_paddy
+  pd_frac = 1.0             ! 全セルが水田
+  pd_adopt = 0.0            ! 取組なし(全て通常の落水口 = 種類 1)
+  pd_aplot = 3000.0         ! 代表区画面積 (m2)
+  pd_hlev = 0.30            ! 畦畔高 (m)
+  pd_h0 = 0.25              ! 事前の湛水深 (m)
+  pd_perc_mmd = 5.0
+  pd_wq_c0 = 10.0           ! 事前の湛水の濃度 (mg/L)
+  pd_dev_type(1) = 0        ! 水位調整板だけ
+  pd_board_h(1) = 0.03
+  pd_board_w(1) = 0.30
+  pd_cw(1) = 0.6
+/
+
+&list_wq
+  wq_c0 = 0.0
+  wq_thalf = 0.25           ! 半減期 6 h(0.25 day)
+/

@@ -307,6 +307,26 @@ concentration).
 
 **Outputs for this section**: the fully mixed pool of dams/lakes and the retention-pond pool are lumped quantities, so there is no raster output; follow them with the `to_dam_g` (trapped), `rel_dam_g` (released), `mass_dam_g` (current lake pool mass), `to_rs_g` (absorbed by ponds) and `mass_rs_g` (current pond pool mass) columns of `wq.csv`. The concentration of released water is read from a probe C column downstream of the outlet cells ([Output and monitoring](#output-and-monitoring)).
 
+## Paddy fields of paddy-field dams
+
+No setting is needed; it works automatically when [paddy-field dams](paddy.md) (`fn_paddy`) are combined.
+
+- **Subgrid tanks (representation A)**: each class of tank has a fully mixed pool of the substance. The substance of the
+  rain on the paddy fields goes into the pools, outlet flow and levee overflow go to the surface at the tank
+  concentration, and the decrease in depth leaves the system at the tank concentration. In the two-way mode
+  (`f_pd_exchange = 1`), backflow through the outlets and water over the levees enter the pools at the surface
+  concentration. First-order decay and single-phase settling (`wq_vs`) also act on the pools (two-phase partitioning
+  `wq_kd` is not treated in the pools).
+- **Resolved plots (representation B)**: the plot water stays surface water. Only the decrease in depth takes the
+  substance out of the system at the concentration of the plot cells.
+- The concentration of the ponding before the rain is given by `pd_wq_c0` in `&list_paddy`.
+
+Details and limits are in "Combination with water quality" of the paddy-field dam chapter.
+
+**Outputs for this section**: the last 2 columns of `wq.csv`, `mass_paddy_g` (current mass of the pools of the tanks of
+A) and `out_paddy_perc_g` (cumulative mass that left the system with the decrease in depth), and the mean concentration of
+each class `c1`, `c2` in `paddy.csv` ([Output and monitoring](#output-and-monitoring)).
+
 ## Transfer by structures and withdrawals
 
 No setting is needed. Pumps, culverts and diversions of
@@ -535,6 +555,10 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   out-of-domain diversions, sinks of internal sources and well pumping)
   accumulates in the last column `out_intake_g` (appended at the end on
   2026-11-04; [transfer by structures and withdrawals](#transfer-by-structures-and-withdrawals)).
+- Only in runs with [paddy-field dams](paddy.md) (`fn_paddy`), the 2 columns
+  `mass_paddy_g` and `out_paddy_perc_g` follow `out_intake_g`
+  ([paddy fields of paddy-field dams](#paddy-fields-of-paddy-field-dams)). The
+  columns of runs without them do not change.
 - Sea cells hold no mass (a sea area with the initial concentration wq_c0
   is zeroed; sea cells are excluded from decay and from the ledger). Water
   that flows from the sea onto land is clean water (concentration 0). To
@@ -554,6 +578,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | mass_surface_g, mass_gw_g, mass_pool_g, mass_dam_g, mass_rs_g | current mass in surface water, groundwater, buildup, storage-type dams/lakes and retention ponds |
 | out_sea_g, out_edge_g, in_edge_g, out_stage_g, in_stage_g | cumulative exchange with the outside: outflow to sea cells, outflow through open edges, inflow through open edges, outflow to water-level cells, inflow from water-level cells (appended at the end on 2026-11-03; the positions of the existing columns are unchanged) |
 | out_intake_g | cumulative mass taken out of the system by withdrawals: pumps without an outlet, out-of-domain diversions, sinks of internal sources and well pumping (appended at the end on 2026-11-04; the positions of the existing columns are unchanged) |
+| mass_paddy_g, out_paddy_perc_g | only in runs with paddy-field dams (`fn_paddy`): current mass of the pools of the paddy tanks (representation A), cumulative mass that left the system with the decrease in depth |
 
 **Measurements** (probe and transect columns)
 
@@ -568,7 +593,9 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - The surface cq, subsurface cg, surface-pool bp and pond-pool crs masses
   and the dam/lake pool masses are saved in the private file `wq.dat`;
   save/restore is automatic (fn_wq must have been enabled at save time; the
-  run stops if the number of dams differs from the saved one).
+  run stops if the number of dams differs from the saved one). The pools of
+  the paddy tanks are saved in the private file of paddy-field dams,
+  `paddy.dat`.
 
 **How to read and check**
 
@@ -584,7 +611,8 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   `in_edge_g`, `in_stage_g`) − removals from the system (`decay_g`,
   `settle_g` with `f_wq_settle=0`, `to_gwc_g`, `out_sea_g`, `out_edge_g`,
   `out_stage_g`, `out_intake_g`, capture by fixed-level lakes) = current mass of the whole
-  system". Internal transfers
+  system". In runs with paddy-field dams, add `mass_paddy_g` to the mass of
+  the whole system and `out_paddy_perc_g` to the removals. Internal transfers
   (`wash_g`, `to_gw_g`, `seep_g`, `rel_dam_g`, `to_rs_g`, `settle_g` to the
   pool, and `to_dam_g` of storage-type lakes) are not counted twice.
   `to_dam_g` is the sum of the captures by storage-type and fixed-level
@@ -601,6 +629,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - [test/sewer_wq](../../../test/sewer_wq/en/README.md): budget check of sewer surcharge in a town with a conduit network (how the network was built: [examples/sewer_hybrid](../../../examples/sewer_hybrid/)).
 - [examples/coastal_compound_flood](../../../examples/coastal_compound_flood/en/README.md) (supplementary cases): a conservative tracer with a concentration of 1 on the surcharged water (`wq_gwc_conc = 1`), used to read the share of the flood water that came through the sewers (the surface concentration C) and the volume of surcharged water (`in_gwc_g`).
 - [test/wqstruct](../../../test/wqstruct/en/README.md): checks that pumps, culverts, diversions, sinks of internal sources and well pumping carry the substance with the water (concentration, closure of the ledger, `out_intake_g`).
+- [test/paddy](../../../test/paddy/en/README.md): checks of the pools of the paddy tanks (exact solution of first-order decay of the concentration, rain substance, concentration of the water entering by backflow in the two-way mode) and of the substance taken out by the decrease in depth of resolved plots (closure of the ledger).
 - Worked example of the format: [examples/List_samples/en/list_wq.txt](../../../examples/List_samples/en/list_wq.txt)
 - Combined with groundwater, infiltration entrainment and the
   subsurface pool can be tracked

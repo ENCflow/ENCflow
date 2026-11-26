@@ -353,8 +353,8 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - Columns of Log.txt: `time, progress, S(m), Runge, ex_flux, Cn_max, h_max,
   V_max` (with groundwater, snow or glaciers S splits into S_surf / S_grnd
   / S_total; `f_disp_*` selects the displayed columns). S is the
-  domain-mean storage depth (m; with the gv conversion and pond/dam
-  storage, sea cells excluded; `h_max` likewise), `Runge` the fraction of edges recomputed
+  domain-mean storage depth (m; with the gv conversion, pond/dam
+  storage and the tanks of [paddy-field dams](paddy.md), sea cells excluded; `h_max` likewise), `Runge` the fraction of edges recomputed
   by the adaptive Runge-Kutta, `ex_flux` the count of suppressed excessive
   outflow fluxes, `Cn_max` the domain maximum Courant number.
 

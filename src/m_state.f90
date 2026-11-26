@@ -87,6 +87,8 @@ module m_state
                                         !   build_sdep の直後と河床変動で D を更新するとき
                                         !   (m_swflow_enc_sdep_update)に埋める導出量(save
                                         !   対象外)。σ が無効なら確保しない
+    real, allocatable :: sfl(:,:)       ! 断面形 σ の床の割合 f の写し(sdep と同時に確保。0 = 冪の形、
+                                        !   > 0 = 階段形。§26.3)
     real :: sect_m = 0.0                ! σ の形状指数の写し m(§26.2。swflow_enc が設定)
     real :: sect_mp1 = 1.0              ! m+1
     real :: sect_rmp1 = 1.0             ! 1/(m+1)
@@ -158,6 +160,33 @@ module m_state
     real, allocatable :: sfe(:,:)   ! タンクへ渡す蒸発散の要求 (m。セル面積基底。そのステップの
                                     ! m_evap の残りの要求。確保は m_sfm_init(fn_sfm と fn_evap の
                                     ! 両方が有効なときのみ)、m_sfm_evap が引いてゼロ戻し。§106.7)
+    ! 田んぼダム(水田のサブグリッドのタンク。§127)の状態と台帳。pd_active は m_paddy_init が
+    ! 立てる。確保は m_paddy_init(有効時のみ。hpn・hpd はその種類の水田がある格子だけ)
+    logical :: pd_active = .false.  ! 水田のタンクの有効化
+    real, allocatable :: hpn(:,:)   ! 通常の落水口の水田の湛水深 (m。その種類の水田面積の上。田面から)
+    real, allocatable :: hpd(:,:)   ! 田んぼダムの落水口の水田の湛水深 (m。同上)
+    real, allocatable :: pdv(:,:)   ! 水田のタンクの貯留 (m。セル面積基底。calcstat が S に足す)
+    real, allocatable :: pdfr(:,:)  ! 水田面積率 a (セル面積基底。帯+ハロ。地形変化 fn_geomorph と併用する
+                                    ! ときだけ m_paddy_init が確保し、雨滴侵食(f_wash の雨滴の項・f_splash)
+                                    ! に 1 − a を掛けるのに使う。§127.5)
+    real, allocatable :: pdcr(:,:)  ! そのステップに近傍の集水面積から配られた雨 (m。水田の面積あたりの水深。帯。
+                                    ! 集水面積率 fn_pd_catch のときだけ m_paddy_init が確保し、m_paddy が毎ステップ
+                                    ! 書いてタンクに足す。水質と併用すると m_wq がその雨の物質をプールへ入れる。§127.15)
+    ! 水質(fn_wq)と併用するときの水田の物質(段 4a。docs/paddy_plan.md §16.1、developer.md §127.10)。
+    ! 確保は m_paddy_init(水質が有効なときだけ)。cpn・cpd・pdfa はタンク(表現 A)のその種類の水田がある
+    ! 格子だけ、fmpd は A・B とも
+    real, allocatable :: cpn(:,:)   ! 通常の落水口の水田のタンクの物質 (g/m2。セル面積基底 = ため池の crs と同じ)
+    real, allocatable :: cpd(:,:)   ! 田んぼダムの落水口の水田のタンクの物質 (g/m2。同上)
+    real, allocatable :: pdfa(:,:,:) ! 種類ごとの水田面積率 (ish:ieh, jsh:jeh, 1:2。m_wq が水田の上の雨の物質を
+                                    ! タンクへ入れるのに使う)
+    real, allocatable :: pdfc(:,:)  ! 集水面積率 c (セル面積基底。帯+ハロ。集水面積率 fn_pd_catch のときだけ。m_wq が
+                                    ! 雨の降るセルの地表から雨の物質を除く割合 a + c の c。§127.15)
+    real, allocatable :: pdsd(:,:)  ! 双方向の水田のタンクへ入った水が運んだ浮遊砂(hs と同じ柱状量 m。m_paddy が足し、
+                                    ! m_geomorph の浮遊砂が田面 z・sd に堆積させてゼロに戻す。fxr と同じ契約。
+                                    ! 双方向と浮遊砂 f_suspend の併用のときだけ m_paddy_init が確保。§127.11)
+    real, allocatable :: fmpd(:,:)  ! 減水深で系外へ出た物質 (g/m2。セル面積基底。m_paddy が足し、m_wq が
+                                    ! 台帳に積んでゼロに戻す。fxr と同じ契約)
+    real :: pdmean = 0.0     ! 領域平均の水田の貯留(m)。pd_active 時のみ更新
     ! 沿岸の波浪場(fn_wavefield。§90)の診断量。確保と wv_active の設定は m_wavefield_init
     ! (有効時のみ)。状態(ビン別のエネルギー)は t_wavefield の私有で、ここは書き出しと
     ! 他プロセスへの受け渡し用の導出量(帯 js..je を更新ごとに上書き)
@@ -424,6 +453,13 @@ module m_state
     logical :: debris_active = .false. ! 土石流モデルの有効化(m_geomorph_init が
                                     ! 設定。swflow_enc が運動量へ hs を算入し、
                                     ! 抵抗則を切り替える。debris_plan.md §2.3-2.4)
+    logical :: rainero_active = .false. ! 雨滴侵食(f_wash の雨滴の項 wash_kr > 0・
+                                    ! f_splash)の有効化(m_geomorph_init が設定。
+                                    ! 田んぼダムの集水面積率との併用の停止に使う。§127.13)
+    logical :: fluvcopy_active = .false. ! 掃流砂を写しの手続き(混合粒径 f_bedmix・芦田・道上の
+                                    ! 有効掃流力 f_taupart = 2)で計算する(m_geomorph_init が設定。
+                                    ! 写しは田んぼダムの区画の解像(表現 B)の畦畔を掃流砂の輸送から
+                                    ! 外していないので、m_paddy が B との併用を止める。§127.17)
     real :: hmean
     real :: cnmax
     integer :: it0 = 0       ! 時間ループの開始ステップ(フレッシュランは 0。
@@ -651,8 +687,8 @@ end subroutine
 !   流速(次ステップの運動量式が新しい h で更新する。運動量の保存は
 !   二次の効果として受容)。
 !   呼び出し側の契約: 自帯 js..je のセルだけを更新し、更新後に
-!   par_halo_cell(s%gv)・par_halo_cell(s%lm) を行うこと(運動量項が ±1 近傍の
-!   gv・lm を平均する)。gvnew >= gv_old のみ(第1段 = 破壊で空隙が増える
+!   par_halo_cell(s%gv)・par_halo_cell(s%lm)・par_halo_cell(s%af) を行うこと(運動量項が
+!   ±1 近傍の gv・lm を平均し、堤防の越流の追い越し上限が隣の行の af を読む。§128)。gvnew >= gv_old のみ(第1段 = 破壊で空隙が増える
 !   方向)。gvnew == gv_old は no-op
 !----------------------------------------------------------------------
 subroutine m_state_set_gv(p, s, i, j, gvnew)
@@ -709,6 +745,7 @@ subroutine m_state_calcstat(s, p, g)
   real(real64) :: hisum_j(dcp%js:dcp%je), hisum
   real(real64) :: vzsum_j(dcp%js:dcp%je), vzsum
   real(real64) :: sfsum_j(dcp%js:dcp%je), sfsum
+  real(real64) :: pdsum_j(dcp%js:dcp%je), pdsum
   real :: qcumf
   real :: dtpdx     ! dt / min(dx, dy)
   real :: cosdir
@@ -879,6 +916,18 @@ subroutine m_state_calcstat(s, p, g)
     call par_sum_rows(sfsum_j, sfsum)
     s%sfmean = (sfsum + s%sfstore) / s%n_valcells
   end if
+  ! 水田のタンクの貯留(§127)。VZ と同じく別ループ(無効時は何もしない)。判定 pd_active は全ランク同一
+  if (s%pd_active) then
+    pdsum_j(:) = 0.0
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) == 0 .or. g%sw(i,j) > 0) cycle
+        if (s%pdv(i,j) > 0.0) pdsum_j(j) = pdsum_j(j) + s%pdv(i,j)
+      end do
+    end do
+    call par_sum_rows(pdsum_j, pdsum)
+    s%pdmean = pdsum / s%n_valcells
+  end if
   rmax = [hmax, vvmax, qqmax, cnmax]
   call par_allreduce_max(rmax)
   hmax  = rmax(1)
@@ -967,6 +1016,11 @@ subroutine m_state_printstate(p, s)
     end if
     sblk(2) = sblk(2) + s%sfmean
     sblk(3) = sblk(3) + s%sfmean
+  end if
+  ! 水田のタンクの貯留は地表の水として S(S_surf)に算入(§127。無効時は既存の式に触れない別枝)
+  if (s%pd_active) then
+    sblk(1) = sblk(1) + s%pdmean
+    if (ns == 3) sblk(3) = sblk(3) + s%pdmean
   end if
 
   ! --- 保存量列の書式 ---
@@ -1075,6 +1129,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%af)) deallocate(s%af)
   if (allocated(s%wfr)) deallocate(s%wfr)
   if (allocated(s%sdep)) deallocate(s%sdep)
+  if (allocated(s%sfl)) deallocate(s%sfl)
   if (allocated(s%gv)) deallocate(s%gv)
   if (allocated(s%lm)) deallocate(s%lm)
   if (allocated(s%hg)) deallocate(s%hg)
@@ -1088,6 +1143,17 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%vzp)) deallocate(s%vzp)
   if (allocated(s%sfp)) deallocate(s%sfp)
   if (allocated(s%sfe)) deallocate(s%sfe)
+  if (allocated(s%hpn)) deallocate(s%hpn)
+  if (allocated(s%hpd)) deallocate(s%hpd)
+  if (allocated(s%pdv)) deallocate(s%pdv)
+  if (allocated(s%pdfr)) deallocate(s%pdfr)
+  if (allocated(s%cpn)) deallocate(s%cpn)
+  if (allocated(s%cpd)) deallocate(s%cpd)
+  if (allocated(s%pdfa)) deallocate(s%pdfa)
+  if (allocated(s%pdfc)) deallocate(s%pdfc)
+  if (allocated(s%pdcr)) deallocate(s%pdcr)
+  if (allocated(s%fmpd)) deallocate(s%fmpd)
+  if (allocated(s%pdsd)) deallocate(s%pdsd)
   if (allocated(s%wvh)) deallocate(s%wvh)
   if (allocated(s%wvdir)) deallocate(s%wvdir)
   if (allocated(s%wvub)) deallocate(s%wvub)
@@ -1647,10 +1713,20 @@ pure real function sect_vh(s, i, j, h) result(v)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real, intent(in) :: h
-  real :: d
+  real :: d, f
   d = s%sdep(i,j)
+  f = s%sfl(i,j)
   if (d <= 0.0) then
     v = h
+  else if (f > 0.0) then
+    ! 階段形(§26.3。sect_v と同じ式)
+    if (h >= d) then
+      v = h - d * (1.0 - f)
+    else if (h <= 0.0) then
+      v = h
+    else
+      v = f * h
+    end if
   else if (h >= d) then
     v = h - d * s%sect_mfac
   else if (h <= 0.0) then
@@ -1665,10 +1741,20 @@ pure real function sect_h_of(s, i, j, v) result(h)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real, intent(in) :: v
-  real :: d, vd
+  real :: d, vd, f
   d = s%sdep(i,j)
+  f = s%sfl(i,j)
   if (d <= 0.0) then
     h = v
+  else if (f > 0.0) then
+    ! 階段形(§26.3。sect_hinv と同じ式)
+    if (v >= d * f) then
+      h = v + d * (1.0 - f)
+    else if (v <= 0.0) then
+      h = v
+    else
+      h = v / f
+    end if
   else
     vd = d * s%sect_rmp1
     if (v >= vd) then
@@ -1701,6 +1787,8 @@ pure real function sect_sig(s, i, j, h) result(sg)
   d = s%sdep(i,j)
   if (d <= 0.0 .or. h >= d) then
     sg = 1.0
+  else if (s%sfl(i,j) > 0.0) then
+    sg = s%sfl(i,j)                     ! 階段形(§26.3)
   else if (h <= 0.0) then
     sg = sgmin
   else

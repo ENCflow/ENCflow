@@ -1,0 +1,57 @@
+!======================================================================
+! paddy: 双方向(二室化。f_pd_exchange = 1。developer.md §127.6)その 4: 浸水が引いた後の落水
+!   10 × 8 セル(Δx = Δy = 10 m)の平らな格子。全セルが水田面積率 0.6、取組率 0.5(通常の落水口と田んぼダム)。
+!   地表の水深 0.50 m(畦畔高より上)、水田は満水(湛水深 0.30 m)から、四辺の自由流出で浸水が引く 12 h。
+!   区画 3000 m2、装置は既定(通常 = 水位調整板、田んぼダム = 機能分離型)、減水深 0。
+!   確認(Check_paddy.py tw_drain): 湛水深 ≤ 畦畔高、地表の水位が畦畔より下がった後に水田の水が落水口から
+!   抜け(通常のほうが速い)、台帳が閉じる
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt = 43200
+  dt_disp = 1800
+  dt_file = 43200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_tw_drain'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+&list_initial
+  f_htype = 0
+  h0 = 0.50
+/
+&list_geoinfo
+  nx = 10
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+&list_bound_edge
+  f_bc_w = 1
+  f_bc_e = 1
+  f_bc_n = 1
+  f_bc_s = 1
+/
+&list_paddy
+  pd_frac = 0.6
+  pd_adopt = 0.5
+  pd_hlev = 0.30
+  pd_h0 = 0.30
+  pd_perc_mmd = 0.0
+  f_pd_exchange = 1         ! 双方向(二室化)
+/

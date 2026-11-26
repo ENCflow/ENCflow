@@ -1977,13 +1977,13 @@ module subroutine calc_suspend_bmix(gm, p, g, s, dtw)
         cc = 0.0
         if (s%hs(i,j) > 0.0) then
           if (sct%have_sect) then
-            cc = s%hs(i,j) / sect_v(s%h(i,j), sct%sdep(i,j))
+            cc = s%hs(i,j) / sect_v(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j))
           else
             cc = s%hs(i,j) / s%h(i,j)
           end if
         end if
         fx = gm%wf * (ceq - gm%beta * cc) * dtw
-        if (sct%have_sect) fx = fx * sect_sigma(s%h(i,j), sct%sdep(i,j))
+        if (sct%have_sect) fx = fx * sect_sigma(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j))
         if (fx > 0.0) then
           ! 交換層にある粒径階 1 の量まで(河床側は ×morfac・poroi で減るため換算して制限)
           fx = min(fx, le * s%bmf(i,j,1) / (gm%morfac * gm%poroi))

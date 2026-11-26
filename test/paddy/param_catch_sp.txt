@@ -1,0 +1,74 @@
+!======================================================================
+! paddy: 集水面積率(fn_pd_catch)の雨を 3 × 3 の近傍の水田へ配る(developer.md §127.15): 雨だけの閉じた箱
+!   10 × 8 セル(Δx = Δy = 10 m)の平らな閉じた箱。面積率 frac_sp.txt(0.5。列 i = 4 は水田のない農道で 0、
+!   i = 8〜10・j = 6〜8 は 0.8、(6,2) は 0.2)、取組率 adopt_sp.txt(i ≤ 4 は通常の落水口だけ、i = 5 は半々、
+!   i ≥ 6 は田んぼダムだけ)、集水面積率 catch_sp.txt(農道の両側の列 i = 3・5、行 j = 4 の i = 7〜10、角 (1,1)、
+!   (6,2)、(9,7)。どれも帯の境をまたいで配る)。一様な雨 20 mm/h を 2 h、事前の湛水深 0.01 m(濃度 0)、減水深なし。
+!   水位調整板の天端 0.10 m は湛水深(最大 72 mm)より高いので落水しない。雨の濃度 2 mg/L(水質)。
+!   Run.sh は sed で双方向(f_pd_exchange = 1)も解く。
+!   確認(Check_paddy.py catch_sp・catch_sp_tw): セルごとのタンクの水深 = 事前の湛水 + 雨 × (1 + Σ c_m/A_m)
+!   (A_m = m を中心とする 3 × 3 のセルの水田面積率の和。両方の種類が同じ水深)、paddy.csv の種類ごとの平均湛水深・
+!   平均濃度・rain・catch、地表の水 = Σ (1 − a − c) × 雨(S − 水田の貯留)、台帳と wq.csv の閉合
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt = 7200
+  dt_disp = 1800
+  dt_file = 7200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_precip = '-'
+  fn_paddy = '-'
+  fn_wq = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_catch_sp'
+  f_output_mode = 3         ! テキストと単精度のバイナリ(検定は Hpn0001.bil・Hpd0001.bil を読む)
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+&list_geoinfo
+  nx = 10
+  ny = 8                    ! np = 4 でもランクあたり 2 行
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+&list_bound_edge
+/
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 20
+  prval(1:2,2) = 99999, 20
+/
+&list_paddy
+  fn_pd_frac = 'frac_sp.txt'
+  fn_pd_adopt = 'adopt_sp.txt'
+  fn_pd_catch = 'catch_sp.txt'
+  pd_aplot = 3000.0
+  pd_hlev = 0.30
+  pd_h0 = 0.01
+  pd_perc_mmd = 0.0
+  pd_dev_type(1:2) = 0, 0
+  pd_board_h(1:2) = 0.10, 0.10
+  pd_board_w(1:2) = 0.30, 0.30
+  pd_cw(1:2) = 0.6, 0.6
+/
+&list_wq
+  wq_c0 = 0.0
+  wq_rain_conc = 2.0        ! 雨の濃度 (mg/L)
+/
