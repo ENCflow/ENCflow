@@ -932,11 +932,11 @@
     {
       "source": "examples/ashfall_lahar/README.md",
       "target": "examples/ashfall_lahar/en/README.md",
-      "source_sha256": "4155d56f517b946d4d82e3f26fbfc2ff3069461412c7e7700f47190ef73e3a19",
-      "target_sha256": "70766b6633d3e2f86ce2a7531b4f5f590f248e57696b4e30a9569f09b98647e1",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "820ed97d2c66511d4361d0758885eaaf028a76f72eeeeef936679e68a3f45531",
+      "target_sha256": "c084f4e7f5f6d524313879497bcbe44031c1ee828b1d3eb130526cb391b9e576",
+      "reviewer": "Claude (Claude Code session; ashfall_lahar recomputed with main 8ba02f2: values, sensitivity notes and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/ashfall_lahar/figs/laws.png",
@@ -950,11 +950,11 @@
     {
       "source": "examples/ashfall_lahar/figs/maps.png",
       "target": "examples/ashfall_lahar/en/figs/maps.png",
-      "source_sha256": "a7452760a16001b63494d2b596a73dbcfffab96d6ab0fd0c63f467c54166eafe",
-      "target_sha256": "70b85d7610a47ade52f58182d0bb6359c2a105fdc2f84b67c53b2aae58bfaa7e",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "91e5b82e14fb6cc07c91af40bc610c58760c81601135837eda9da7c532a10dde",
+      "target_sha256": "6910a40497b609f56103a7eff0fbf9abe66413b717eaeb96e2eaf2231ed3449a",
+      "reviewer": "Claude (Claude Code session; ashfall_lahar recomputed with main 8ba02f2: values, sensitivity notes and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/ashfall_lahar/figs/mechanism.png",
@@ -968,29 +968,29 @@
     {
       "source": "examples/ashfall_lahar/figs/profile.png",
       "target": "examples/ashfall_lahar/en/figs/profile.png",
-      "source_sha256": "acb18a9f1df820ddafc49b6aaf9f83130d3270b3b8ff4a067d03f6262d70cd03",
-      "target_sha256": "6157af1b60e6688085595652a4ad916ed9c6d7b749a8684b5d4936bbcf3dd759",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "092219a502193378815718061d5bce92b3f6db95107cd209ab5421ab8fd2e54b",
+      "target_sha256": "6509428cdfbbbae1c8299ad7355cfa74bb571cb05aeeeb01639bf5cac05bf5a8",
+      "reviewer": "Claude (Claude Code session; ashfall_lahar recomputed with main 8ba02f2: values, sensitivity notes and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/ashfall_lahar/figs/rotated.png",
       "target": "examples/ashfall_lahar/en/figs/rotated.png",
-      "source_sha256": "bf2ba3b242954e26c4fa462721ed01e48d14f949ea6edc9e056d899cb3846418",
-      "target_sha256": "3db7b64a31e26cefb7bf8e8ed586d2cb38c0d4fcc85b0866aa0130427b6e85fd",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "fafe0df3eb95c6e117c542ac911bfa780b5211bee9d7f20c70e4ce7ca4bf8dac",
+      "target_sha256": "997f1cc565187a9414bfd5203cd225667d1261f1ab891e3f719a8e5cb8794858",
+      "reviewer": "Claude (Claude Code session; ashfall_lahar recomputed with main 8ba02f2: values, sensitivity notes and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/ashfall_lahar/figs/rotated_profile.png",
       "target": "examples/ashfall_lahar/en/figs/rotated_profile.png",
-      "source_sha256": "d9e023219de3b1603c8f49c241850995b3c309b3e02a98e0e752e96c453f48c0",
-      "target_sha256": "5bbe5dae41880f69f70bc3c53e5f7baafee4cebf942c4329471f970723950c92",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "3ae0f74529bf445817792bab4d845529f06c83835a023353068255c93c9f7af7",
+      "target_sha256": "61f364059e9097735e1ec9a8d6ffa38257d092e65a6e949721f760984f79fd8f",
+      "reviewer": "Claude (Claude Code session; ashfall_lahar recomputed with main 8ba02f2: values, sensitivity notes and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/ashfall_lahar/figs/rotated_setup.png",
@@ -1004,11 +1004,11 @@
     {
       "source": "examples/ashfall_lahar/figs/series.png",
       "target": "examples/ashfall_lahar/en/figs/series.png",
-      "source_sha256": "c5564f1af0deaa56ba39dec743d38cf3a4513c4d2cf2283547ee9dd6d47e66be",
-      "target_sha256": "f22f90a183909e49e67d1cc94d0b04a04e9234076a46dde0cb1d07176762d896",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "fd8d850a1173060a642ca5bca2fba47b47c2b2684587350ecf0ddbdc47e2ef53",
+      "target_sha256": "15979b7481051a809f21e20c5b24791f46163cfa25729f791b15ef0c23d35310",
+      "reviewer": "Claude (Claude Code session; ashfall_lahar recomputed with main 8ba02f2: values, sensitivity notes and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/ashfall_lahar/figs/setup.png",
