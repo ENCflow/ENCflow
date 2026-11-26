@@ -272,7 +272,7 @@ set (intake weirs, diversion channels).
 
 ## Dams and lakes (&list_struct_dam)
 
-Operation rules (constant, rate cut, rating, orifice, square-root law, emergency ramp): [supplement](hydraulics.md#4-operation-of-dams-and-lakes).
+Operation rules (constant, rate cut, rating, orifice, square-root law, emergency ramp, restricted level, regulation start flow, record time series): [supplement](hydraulics.md#4-operation-of-dams-and-lakes).
 
 A bucket model in which the cells of the **water surface (capture
 set)** absorb all arriving water every step into storage, and release
@@ -330,9 +330,11 @@ program does not check this -- it is the user's responsibility.
 
 | Value | Operation | Parameters |
 |---|---|---|
-| 1 | constant release | dam_q0 (m3/s) |
-| 2 | constant-rate release (inflow x r) | dam_rate (0-1). **r=1.0 is pass-through** (storage untouched, inflow = release; no HV needed) |
+| 1 | constant release | dam_q0 (m3/s). With the restricted level dam_hlim it is the constant-release method (see [operating rules from practice](#operating-rules-from-practice-modes-1-and-2) below) |
+| 2 | constant-rate release (inflow x r) | dam_rate (0-1). **r=1.0 is pass-through** (storage untouched, inflow = release; no HV needed). With the regulation start flow dam_qon, the release cap dam_qmax and the restricted level dam_hlim it takes the form of the constant-rate constant-release method up to the peak (same section) |
 | 3 | natural regulation (level-release rating) | one of the following (in priority order): (a) polyline dam_hq_rule (b) orifice dimensions dam_ori_width/height/zbase (c) design maximum release dam_qmax (auto-built with the sqrt law; needs a surcharge level) |
+| 4 | release time series (replaying records) | dam_qout_val(:,k,n) = time (min), release (m3/s), or the file fn_dam_qout_val(n) (see [replaying operation records](#replaying-operation-records-modes-4-and-5) below) |
+| 5 | water-level time series (replaying records) | dam_h_val(:,k,n) = time (min), level (m), or the file fn_dam_h_val(n) (same section) |
 | none (and no release cells) | **level-held lake**: all inflow vanishes; the level stays at dam_h_init (not lowered even by evaporation). A "large water surface not solved" = the inland version of the sea mask | dam_h_init (mandatory) |
 
 **How to give HV (level-storage)**
@@ -355,9 +357,14 @@ to it as long as the floor is not hit).
   the release ramps up toward the inflow over the interval up to the
   surcharge level. Any excess above the surcharge spills automatically.
 - The initial level is `dam_h_init` (default = minimum level = empty;
-  for multi-purpose dams specify the restricted level explicitly).
-  Water below the minimum level is dead storage and cannot be drawn
-  down.
+  for multi-purpose dams specify the restricted level explicitly; in
+  mode 5 the default is the value of the level series at the start
+  time). Water below the minimum level is dead storage and cannot be
+  drawn down. Mode 1, and mode 2 with `dam_qon`, keep releasing while
+  the inflow is small and lower the reservoir to the floor. If the
+  initial level is above the minimum level and `dam_hlim` (the
+  restricted level) is not given, the reservoir is lowered to the
+  minimum level before the flood (a `note:` is printed at start-up).
 - At every recording time, (t, H, V, Qin, Qout, Qspill, Qgw) is
   written to `result/dams/dam0001.csv` (a level-held lake records Qin
   = the vanished volume; Qgw is the exchange of the groundwater-head
@@ -372,11 +379,117 @@ to it as long as the floor is not hit).
   combined with ponds or channel-width cells. A multi-cell release is
   divided equally by the number of cells (cells may be far apart).
 
+### Operating rules from practice (modes 1 and 2)
+
+Of the flood-control methods for Japanese dams (the MLIT technical
+standards for river and sabo works, planning, technical materials; see the
+references of the [supplement](hydraulics.md#4-operation-of-dams-and-lakes)),
+the constant-release method and the constant-rate constant-release method
+are represented in a form that keeps no past state (no history).
+
+- `dam_hlim(n)` (restricted level, elevation m): rule releases never lower
+  the reservoir below this level (the floor). It corresponds to the lower
+  end of the flood-control capacity (the flood-storage preparation level).
+  Default: the minimum level (as before, release down to the dead storage).
+  It must be below the emergency-release start level.
+- `dam_qon(n)` (regulation start flow Qon, m3/s, mode 2): while the inflow is
+  at or below it, the target is Qon -- at the floor the inflow passes through
+  and the level is held; above the floor the reservoir is brought back to the
+  floor at Qon.
+- `dam_qmax(n)` (in mode 2, the release cap Qmax, m3/s; needs a surcharge level).
+
+| Setting | Release Q above the floor | Release at the floor |
+|---|---|---|
+| mode 1 + dam_hlim (constant-release method) | Q0 = dam_q0 | min(inflow, Q0). An inflow below Q0 passes through |
+| mode 2 + dam_qon (+ dam_qmax) (constant-rate constant-release method up to the peak) | Qon if inflow <= Qon; min(Qon + r(inflow - Qon), Qmax) if inflow > Qon | min(inflow, the value on the left) |
+
+```
+  ! multi-purpose dam: hold the restricted level 345 m; once the inflow exceeds
+  ! 300 m3/s, add 40% of the excess to the release (at most 600 m3/s)
+  f_dam_mode(1) = 2
+  dam_rate(1) = 0.4
+  dam_qon(1) = 300.0
+  dam_qmax(1) = 600.0
+  dam_hlim(1) = 345.0
+  dam_h_init(1) = 345.0
+```
+
+**What it cannot do (limits)**
+
+- The "constant release after the inflow reaches its peak" of the
+  constant-rate constant-release method is not represented (detecting the
+  peak needs history). After the peak the release keeps following the
+  formula and decreases, so more water is stored than under the real rule
+  (the reservoir level comes out higher).
+- The release that brings the reservoir back to the restricted level after
+  a flood is approximated by Qon (mode 2) or Q0 (mode 1). Limits on how fast
+  the release may increase, gate-operation intervals and operations that
+  watch the level at a downstream reference point are not represented.
+- Switching between flood-season and non-flood-season restricted levels,
+  preliminary or pre-flood release (release in advance based on a flood
+  forecast) and the variable-rate method are not available.
+- The emergency release (abnormal-flood operation) remains the linear
+  ramp of storage approximation.
+- The form of the formula (the rate applied to the excess over the start
+  flow, continuous at the start flow), the simplification without the
+  post-peak constant release, bringing the reservoir back at Qon after a
+  flood, and the cap Qmax are choices of this project (original). The
+  source defines the methods in words.
+
+### Replaying operation records (modes 4 and 5)
+
+To reproduce a past flood, give the recorded release or reservoir level as
+it is. The time series uses the same format as the boundary conditions: a
+polyline of (time (min), value) in the namelist, or a file (each line
+"time(min) value", relative to dir_data; the file takes precedence). The
+time is the model time t in minutes (convert calendar dates beforehand),
+and the value at the end time of each step is taken by linear
+interpolation (end values hold outside the range). Repeating a time point
+makes the value change in a step at that time (step changes of gate
+operations).
+
+- **Mode 4** (`dam_qout_val` / `fn_dam_qout_val`): the release of each step =
+  the release at that time. Downstream receives the recorded release. The
+  reservoir level is a result of the computation, and its difference from
+  the record shows the accumulated error of the model inflow (a check of the
+  upstream side). Give the recorded value as the initial level `dam_h_init`
+  (if omitted, the run starts empty and a `note:` is printed at start-up).
+- **Mode 5** (`dam_h_val` / `fn_dam_h_val`): the release makes the storage at
+  the end of each step equal to the storage of the target level (release =
+  inflow - change of the target storage). The reservoir state matches the
+  record, and the upstream error goes downstream through the release. When
+  the inflow is not enough for a rising target, the release is 0 and the
+  level falls below the target. If `dam_h_init` is omitted, the run starts
+  from the value of the series at the start time. Give levels between the
+  minimum level and the surcharge (out-of-range values stop with an error).
+
+```
+  ! dam 1: the recorded release (each line of the file: "min m3/s")
+  f_dam_mode(1) = 4
+  fn_dam_qout_val(1) = 'dam1_qout.txt'
+  dam_h_init(1) = 352.4             ! recorded initial level
+```
+
+- Intervals where the recorded release could not be met (the dead storage
+  was reached) show up as Qout in the CSV below the given value. Any excess
+  above the surcharge becomes the forced spill (Qspill).
+- The emergency-release ramp is not applied (it is contained in the record;
+  writing `dam_tadashigaki` stops with an error).
+- Mode 4 can also be used by additional release works of `dam_lake` (records
+  of intake, for example). A lake in mode 5 cannot be referenced by additional
+  release works (two operations would decide the same level; give the total
+  recorded release to the lake itself).
+- As long as the model inflow differs from the record, the reservoir level
+  departs from the record in mode 4 and the release departs in mode 5. Choose
+  which one to match to the record by what you want to reproduce (the flow
+  downstream or the state of the reservoir).
+
 ### Which pattern needs which parameters (pattern guide)
 
 | Pattern | Surface | HV | Operation | Level |
 |---|---|---|---|---|
-| **Dam** (design data available) | capture line (dam_in_cell etc.) | dam_hv (the HV curve from references) | f_dam_mode = 1 / 2 / 3 | dam_h_init = initial level (restricted level for multi-purpose dams; omitted = empty) |
+| **Dam** (design data available) | capture line (dam_in_cell etc.) | dam_hv (the HV curve from references) | f_dam_mode = 1 / 2 / 3 (for multi-purpose dams in modes 1 and 2, add dam_hlim = the restricted level) | dam_h_init = initial level (restricted level for multi-purpose dams; omitted = empty) |
+| **Reproducing a past flood** (operation records available) | capture line | dam_hv | f_dam_mode = 4 (recorded release) / 5 (recorded level) | mode 4: dam_h_init = the recorded initial level. Mode 5: may be omitted (the start value of the record) |
 | **Storage lake** (unknown depth is fine) | paint the surface in fn_dam_map | dam_hmin = about normal level - 5 m | f_dam_mode = 3 + dam_hq_rule (level of Q=0 = outlet river sill) etc. | dam_h_init = normal level |
 | **Pass-through lake** (small lake / connecting water surface with negligible retention) | either | not needed | f_dam_mode = 2, dam_rate = 1.0 | not needed (holds no level state) |
 | **Level-held lake** (large surface not solved / terminal lake) | fn_dam_map | not needed | none (no release cells) | dam_h_init = the fixed level |
@@ -458,18 +571,24 @@ mandatory.
 | dam_hv(:,k,n) | -- | HV curve (water level m, storage m3). At least 2 points (minimum level and surcharge). Monotonically increasing in both level and storage. Exclusive with dam_hmin |
 | dam_hmin(n) | -- | Lower-bound level of the auto linear HV (elevation m). The alternative to dam_hv. Surface area = number of capture cells x cell area |
 | dam_hsur(n) | none | Surcharge level of the auto linear HV (elevation m). Omitted = no upper bound (no spill). Mandatory for modes 1, 2 (except pass-through) and the sqrt law |
-| f_dam_mode(n) | -- | Operation mode. 1: constant release, 2: constant-rate cut, 3: natural regulation. None + no release cells = a level-held lake |
+| f_dam_mode(n) | -- | Operation mode. 1: constant release, 2: constant-rate cut, 3: natural regulation, 4: release time series, 5: water-level time series. None + no release cells = a level-held lake |
 | dam_lake(n) | 0 | >0: lake reference (structure n is an additional release work drawing from the storage of lake m=dam_lake(n) with its own rule and release cells). The referenced lake must be a lower-numbered lake with a main release. No surface / dam_hv / dam_hmin / dam_h_init on the referencing structure |
 | dam_gw(n) | 0 | 1: fix the groundwater head to the lake level on the surface cells (see "Forcing the groundwater head" above). Requires f_gwlateral=1 of fn_gwflow. Not allowed on pass-through lakes and referencing structures |
 | dam_q0(n) | -- | Constant release of mode 1 (m3/s). Mandatory in mode 1 |
 | dam_rate(n) | -- | Release ratio r of mode 2 (0-1). Mandatory in mode 2. 1.0 = pass-through |
+| dam_qon(n) | none | Regulation start flow of mode 2 (m3/s, 0 or more). At or below it the target is dam_qon (at the floor the inflow passes through); above it, dam_qon + r(inflow - dam_qon). Writing it for modes other than 2 stops with an error |
+| dam_hlim(n) | minimum level | Restricted level (elevation m; modes 1, 2). Rule releases never lower the reservoir below it. At or above the minimum level and below the emergency-release start level. Writing it for modes other than 1, 2 stops with an error |
+| dam_qout_val(:,k,n) | -- | Mode 4: release time series (time min, m3/s). 0 or more. Times must not decrease (repeating a time makes a step). Either this or fn_dam_qout_val is mandatory in mode 4 |
+| fn_dam_qout_val(n) | "" | Mode 4: file of the release time series (relative to dir_data; each line "time(min) release(m3/s)"). Takes precedence over dam_qout_val |
+| dam_h_val(:,k,n) | -- | Mode 5: water-level time series (time min, elevation m). Between the minimum level and the surcharge. Either this or fn_dam_h_val is mandatory in mode 5 |
+| fn_dam_h_val(n) | "" | Mode 5: file of the water-level time series (relative to dir_data; each line "time(min) level(m)"). Takes precedence over dam_h_val |
 | dam_hq_rule(:,k,n) | -- | Mode 3(a): level-release polyline (m, m3/s). Levels monotonically increasing |
 | dam_ori_width(n) / dam_ori_height(n) / dam_ori_zbase(n) | -- | Mode 3(b): orifice width B (m), height D (m), and invert elevation (m). Specify the three together |
 | dam_ori_ce(n) | 0.5 | Entrance loss coefficient of mode 3(b) |
-| dam_qmax(n) | -- | Mode 3(c): design maximum release (m3/s, at surcharge). Auto-builds the sqrt law Q(H)=Qmax*sqrt((H-invert)/(Hsur-invert)) (needs a surcharge level) |
+| dam_qmax(n) | -- | Design maximum release (m3/s). Mode 3(c): the release at surcharge, auto-building the sqrt law Q(H)=Qmax*sqrt((H-invert)/(Hsur-invert)) (needs a surcharge level). Mode 2: the release cap (at least dam_qon; needs a surcharge level) |
 | dam_zbase(n) | minimum level | Invert elevation of the mode 3(c) sqrt law (m). Below the surcharge level |
-| dam_tadashigaki(n) | minimum + 0.9 x (surcharge - minimum) | Start level of the emergency release (m; modes 1, 2). Strictly between the minimum and surcharge levels |
-| dam_h_init(n) | minimum level (empty) | Initial water level (m). Between the minimum level and the surcharge. For a level-held lake, the fixed level (mandatory) |
+| dam_tadashigaki(n) | minimum + 0.9 x (surcharge - minimum) | Start level of the emergency release (m; modes 1, 2). Strictly between the minimum and surcharge levels. Writing it for modes 4, 5 stops with an error |
+| dam_h_init(n) | minimum level (empty). In mode 5 the value of the series at the start time | Initial water level (m). Between the minimum level and the surcharge. For a level-held lake, the fixed level (mandatory) |
 | fn_dam_in_cell(n) / fn_dam_out_cell(n) | "" | File specification of the cell sets (from dir_data; each line "i j") |
 
 The former `dam_area` (direct specification of the impounded area) was
@@ -520,8 +639,9 @@ Structures themselves are not written as fields.
 **Restart**
 
 - The storage of ponds and capture zones (hrs) is part of the core state
-  save. Operation rules are functions of the current state without
-  history, so restart is unaffected.
+  save. Operation rules are functions of the current state (and, in the
+  time-series modes, of the time) without history, so restart is
+  unaffected (the time series are read again at restart).
 
 **How to read and check**
 
@@ -544,6 +664,7 @@ For levee overtopping and breach and channel conveyance, see the
 - [test/coastal_drain](../../../test/coastal_drain/en/README.md): drainage with a pumping station drawing directly from the conduit layer (`f_pump_src=1`) and an outfall into sea cells.
 - [examples/coastal_compound_flood](../../../examples/coastal_compound_flood/en/README.md): a coastal town whose outfall is closed by a storm surge, compared with and without a pumping station drawing from the conduits (`f_pump_src=1`, discharging out of the domain).
 - [test/damwq](../../../test/damwq/en/README.md): dam capture, constant release and reservoir storage coupled with water quality, checked against mass balances and analytical complete-mixing values.
+- [test/damops](../../../test/damops/en/README.md): verification of dam operation rules. The constant-release method, the constant-rate constant-release form (restricted level, regulation start flow, release cap), the release and water-level time series and the release of additional release works match the formulas and series at every recorded row; the volume of the closed system is conserved; a restart continuation matches the straight run; settings that do not fit the mode stop at start-up.
 - [test/driftwood](../../../test/driftwood/en/README.md) (configuration 6): checks that the discharge of a culvert with `culv_jam = 1` agrees with the discharge law including the loss of the wood jammed at the inlet (both the weir and the full-pipe regimes), that the share jamming at the inlet agrees with the share of the water drawn by the culvert, and that the flow with `culv_jam = 0` and with `f_dwjam = 0` is byte-identical to a run without driftwood.
 - [test/wqstruct](../../../test/wqstruct/en/README.md): checks that pumps (in the domain, out of the domain, from a pond, from the conduit layer), culverts (forward and reverse flow), diversions (in and out of the domain), sinks of internal sources and well pumping carry the water-quality substance with the water (water at 1 mg/L stays at 1 wherever it moves, closure of the ledger, `out_intake_g` = volume of water leaving the system × concentration).
 

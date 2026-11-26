@@ -88,7 +88,7 @@
 ### 内部水理構造物・堤防・家屋
 
 - 現行: [内部水理構造物](users_guide/structure.md)・[構造物と境界の水理則の解説](users_guide/hydraulics.md)・[家屋破壊・瓦礫](users_guide/bldgdebris.md)・[家屋破壊・瓦礫モデルの解説](users_guide/bldgdebris_models.md)
-- 記録: [§17](developer/017.md)(堤防)・[§22](developer/022.md)(構造物族)・[§63](developer/063.md)(家屋破壊・瓦礫)・[§68.25](developer/068.md)(堤防天端の下限)・[§103](developer/103.md)(fn_reservoir の廃止)・[§107](developer/107.md)(家屋の抗力項の次元の修正)
+- 記録: [§17](developer/017.md)(堤防)・[§22](developer/022.md)(構造物族)・[§63](developer/063.md)(家屋破壊・瓦礫)・[§68.25](developer/068.md)(堤防天端の下限)・[§103](developer/103.md)(fn_reservoir の廃止)・[§107](developer/107.md)(家屋の抗力項の次元の修正)・[§132](developer/132.md)(ダムの運転則の拡張: 実績の時系列・制限水位・洪水調節開始流量)
 
 ### 降雨・気象・蒸発散・雪氷
 
@@ -305,3 +305,4 @@
 - [§129](developer/129.md) 連行則の改良: Hungr の則(f_dbed = 5)・連行する流動深の下限(db_hent)・取り込んだ質量の運動量(f_dbmom)(2026-11-25。利用者の決定。既定は変えず、無効時はビット一致)
 - [§130](developer/130.md) 沢の向きへの依存の原因と修正: 塞がれた開口の動的振り替えの塞がり率を、土砂流動の計算では流動深で測る(横断方向の応力の試作、一様な V 字水路の厳密解との比較、検定 test/vchannel、例題 snow_avalanche の再計算、例題 debris_fan での振り替えの有無の比較。2026-11-25〜26)
 - [§131](developer/131.md) 例題 examples/confluence_backwater: 合流点の背水による支川の氾濫と、粗い格子・合流の形の確かめ(2026-11-26。利用者の依頼。計算本体は変えていない)
+- [§132](developer/132.md) ダムの運転則の拡張: 実績の再生(放流量・貯水位の時系列)と、履歴を持たない実務の操作規則(制限水位・洪水調節開始流量・放流量の上限)(2026-11-26 設計合意・実装。無効時はビット一致)
