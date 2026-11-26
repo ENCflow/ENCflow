@@ -12,3 +12,9 @@ junction/Screen_*.log
 junction/encflow
 junction/encflow_mpi
 junction/__pycache__/
+coarse_check/data_*/
+coarse_check/result_*/
+coarse_check/Screen_*.log
+coarse_check/encflow
+coarse_check/encflow_mpi
+coarse_check/__pycache__/
