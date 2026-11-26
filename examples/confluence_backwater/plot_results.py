@@ -856,7 +856,10 @@ def tables():
             hc = np.loadtxt(f"result_coarse_{c}/H9999.txt")
             a = float(((hm > 0.1) & FP).sum()) * m.DX * m.DX / 1e6
             ac = float(((hc > 0.1) & (KC == 5)).sum()) * mc.DXC * mc.DXC / 1e6
-            print(f"== 表 2 粗い格子 {c}: 堤内地の最大水量 {v.max() / 1e6:.2f} → {vc.max() / 1e6:.2f} 百万 m3、浸水面積 {a:.2f} → {ac:.2f} km2、"
+            _, e1, _ = probe(c, 1)
+            _, ec1, _ = probe(f"coarse_{c}", 1)
+            print(f"== 表 2 粗い格子 {c}: 合流点の本川の最高水位(北岸の P1){e1.max():.2f} → {ec1.max():.2f} m、"
+                  f"堤内地の最大水量 {v.max() / 1e6:.2f} → {vc.max() / 1e6:.2f} 百万 m3、浸水面積 {a:.2f} → {ac:.2f} km2、"
                   f"最大水深 {hm[FP].max():.2f} → {hc[KC == 5].max():.2f} m")
     rows = backwater_table()
     if rows:
