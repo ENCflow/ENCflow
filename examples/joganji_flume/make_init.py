@@ -16,6 +16,8 @@
   z.txt mask.txt rn.txt sd.txt fa1.txt fa2.txt fa3.txt        地盤高・領域マスク・粗度・移動層厚・表層の割合
   geoinfo.txt                                                 &list_geoinfo(格子の大きさとファイル名)
   z_outlet.txt geoinfo_outlet.txt                             下流端の延長を固定床高にした感度の構成の地盤高(param_outlet.txt)
+  z_sill.txt geoinfo_sill.txt                                 下流端の延長を「端に接する 1 セルの敷 + その先の段落ち」にした
+                                                              構成の地盤高(param_sill.txt)
   boundary.txt boundary_single.txt boundary_spinup.txt       &list_bound_edge・&list_bound_inflow(混合粒径・単一粒径・助走)
   inflow_cells.txt inflow_q.txt inflow_qbmix.txt inflow_qb.txt inflow_q_spinup.txt
                                                               流入セル・流量・粒径階ごとの給砂・合計の給砂
@@ -38,6 +40,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data_nilim")
 D_CLASS = (0.00057, 0.0030, 0.0066)   # 粒径集団 1〜3 の D50 (m)(元のファイルの 3_粒径集団)
+SILL_DROP = 0.10                      # 下流端の敷の先の段落ちの高さ (m)(param_sill.txt。限界水深 1〜2 cm より十分大きい値)
 SUB0 = (0.374, 0.414, 0.212)          # 下層の組成(敷き均した混合砂の配合。小橋ら 2026。README)
 
 
@@ -302,10 +305,12 @@ def main():
         h = np.where(np.abs(z_new - z_old) > 1.0e-3, 0.0, h)  # 助走計算と地盤高が違うセルは乾いた状態から
         write_raster("h_spinup.txt", h, "%.6f")
         print("h_spinup.txt from %s (max %.4f m)" % (frames[-1], h.max()))
-        if os.path.exists("z_outlet.txt"):           # 下流端の延長を固定床高にした感度の構成(param_outlet.txt)
-            z_o = np.loadtxt("z_outlet.txt")
-            write_raster("h_outlet.txt", np.where(np.abs(z_o - z_new) > 1.0e-3, 0.0, h), "%.6f")
-            print("h_outlet.txt (the lowered outlet extension starts dry)")
+        for name, label in (("outlet", "param_outlet.txt"), ("sill", "param_sill.txt")):
+            # 下流端の延長を下げた構成(下げたセルだけ乾いた状態から)
+            if os.path.exists("z_%s.txt" % name):
+                z_o = np.loadtxt("z_%s.txt" % name)
+                write_raster("h_%s.txt" % name, np.where(np.abs(z_o - z_new) > 1.0e-3, 0.0, h), "%.6f")
+                print("h_%s.txt for %s (the lowered outlet extension starts dry)" % (name, label))
         return
 
     m = build(args.dx)
@@ -324,7 +329,26 @@ def main():
         if end == -1:
             z_out[j, i] = section_profile(m["nodes"]["zfix"], -1, jj)
     write_raster("z_outlet.txt", z_out)
-    for name, fz in (("geoinfo.txt", "z.txt"), ("geoinfo_outlet.txt", "z_outlet.txt")):
+    # 構成 param_sill.txt: 下流端の延長のうち、延長でない有効なセル(移動床・高水敷)に 8 近傍で接するセルを端の断面の
+    # 初期の河床高の固定の敷のまま残し、その先を SILL_DROP だけ下げる。外縁の自由流出(限界流の段落ち)の代わりに、
+    # 敷の先の段落ちで流れが移動床の端から加速するようにする(水位を決める高さは基本の構成と同じ初期の河床高)
+    z_sill = np.where(mask, m["z"], 9.0)
+    nsill = nstep = 0
+    for (j, i), (end, jj) in m["ext"].items():
+        if end != -1:
+            continue
+        touch = any(0 <= j + dj < ras.ny and 0 <= i + di < ras.nx and mask[j + dj, i + di]
+                    and (j + dj, i + di) not in m["ext"]
+                    for dj in (-1, 0, 1) for di in (-1, 0, 1) if (dj, di) != (0, 0))
+        if touch:
+            nsill += 1
+        else:
+            z_sill[j, i] = section_profile(m["nodes"]["z0"], -1, jj) - SILL_DROP
+            nstep += 1
+    write_raster("z_sill.txt", z_sill)
+    print("z_sill.txt: %d sill cells, %d lowered cells (drop %.2f m)" % (nsill, nstep, SILL_DROP))
+    for name, fz in (("geoinfo.txt", "z.txt"), ("geoinfo_outlet.txt", "z_outlet.txt"),
+                     ("geoinfo_sill.txt", "z_sill.txt")):
         with open(name, "w") as f:
             f.write("! make_init.py が書いた格子(dx = %g m。西端 x = %.3f m、北端 y = %.3f m)\n" % (ras.dx, ras.x0, ras.y1))
             f.write("&list_geoinfo\n  lx = %.4f\n  ly = %.4f\n  nx = %d\n  ny = %d\n" % (lx, ly, ras.nx, ras.ny))
