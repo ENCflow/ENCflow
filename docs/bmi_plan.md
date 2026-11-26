@@ -833,7 +833,7 @@ S 区分の適用、§3 の set_value の列挙)、handoff.md の保留項目の
 |---|---|
 | 構成 | bmi/(vendor/bmi.f90 同梱、bmi_encflow.f90、bind(c) 層 bmi_encflow_c.f90、静的ドライバ test_bmi.f90、Python ラッパー python/encflow.py・encflow_bmi.py)。本体 src/ は BMI を知らない(§53 の公開ライフサイクル API 経由) |
 | 公開変数 | どのケースにも存在する 12(h・z・pre・e・vv・qq・ux・uy・期間最大 3・rn)+ 機能依存 7(hg・swe・sd・hs・cqc・hi・hl。動的変数表 §76)+ ダムの量 6(水位・貯水量・流入・放流・スピル・目標放流量。ルート格子のダムの点の格子 = unstructured。2026-11-26、§133)。set は h(S)・z(Q)・pre(F)・rn(P)・hg・swe(S)・ダムの目標放流量(F。外部運転 f_dam_mode = 6 のダムだけ)の 7。ネスト系は `~grid<k>` 修飾名で格子ごと(§73) |
-| 非対応(方針) | get_value_ptr(参照渡し)、エッジ配置量 u/v/m/n の公開、独立した複数モデル(1 プロセス 1 モデル。ネスト系は 1 component)、MPI 版の共有ライブラリ |
+| 非対応(方針) | get_value_ptr(参照渡し)、エッジ配置量 u/v/m/n の公開、独立した複数モデル(1 プロセス 1 モデル。ネスト系は 1 component)、MPI 版の共有ライブラリ、ネストの子格子のダムの公開・ダムの目標放流量の保存(保存は呼び出し側の責任。developer.md §133.7) |
 | 検証 | CLI との等価性(BMI 経由の完走が Log で ULP=0)、CSDMS bmi-tester(単一格子・ネスト系・機能依存変数・ダム)、set の等価性と同値 set の不変性(test_set_value.py・bmi_vars)、ダムの外部運転の等価性(bmi_dam)、MPI np=1,2,4 の静的ドライバ一致。Nightly の bmi ジョブで毎晩 |
 | 文書・教材 | bmi/README.md(日英)、tutorials/bmi(7 段、日英)、README の「外部連携(BMI)」節、ユーザーガイド、docs/csdms_registration.md |
 | 既知の制約 | 共有ライブラリ経由はコンパイル条件の差で CLI とビットまでは一致しないことがある(表示桁では一致。厳密比較は静的ドライバ)。非静水圧の OpenMP 複数スレッドは実行間非決定(§71 の検証メモ)。C API の格子関数は 2026-10-10 に grid 引数が加わった(Python ラッパー経由なら無関係) |
@@ -845,7 +845,7 @@ S 区分の適用、§3 の set_value の列挙)、handoff.md の保留項目の
   (handle 方式)。
 - 公開変数の第2弾以降(§11.2): hg2・hgc・塩水層・swi・流木/瓦礫の get、
   hs・cq の set(S)、気温の外部供給(F。tsrc=外部の新設)、ネスト境界の
-  η_e・u_e(F。nesting_plan.md §15.6)、子格子のダムの公開(developer.md §133.5)。
+  η_e・u_e(F。nesting_plan.md §15.6)。
 - 認知経路(§10.1): CSDMS への提出、GitHub topics、Landlab 結合の notebook、
   GLOFRIM / eWaterCycle への打診、pymt component 化(babelizer。重いので
   需要を見てから)、学術経路(全体のモデル記述論文は未刊行)。
