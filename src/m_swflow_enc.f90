@@ -904,11 +904,16 @@ module m_swflow_enc
       real, intent(out) :: ux, uy
       logical :: ok
     end function
-    module function bank_edge(g, s, i, j, in, jn) result(res)
+    pure module function bank_edge(g, s, i, j, in, jn) result(res)
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
       integer, intent(in) :: i, j, in, jn
       logical :: res
+    end function
+    pure module function breach_crest(ic, jc, il, jl, zc) result(z)
+      integer, intent(in) :: ic, jc, il, jl
+      real, intent(in) :: zc
+      real :: z
     end function
     module subroutine breach_init(p, g, s, ch)
       type(t_sysparam), intent(in) :: p

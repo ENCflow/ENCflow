@@ -168,6 +168,44 @@ module subroutine adv_dispose()
 end subroutine
 
 
+!----------------------------------------------------------------------
+! 隣り合う 2 セル (ai,aj)-(bi,bj) の間に、河道の堤防の仮想壁面(fn_bank)が立っているか。移流項が隣のセルの
+! 状態を読む判定(流向面の風上の供給元・側方面の平行リンク・斜めエッジの開口率・屈曲の規則の供給元と「線が続く」
+! 判定・スキーム 1 のセル中心の勾配)で、壁の向こうのセルを、濡れていても乾いたセルと同じに数えないために使う
+! (developer.md §134。ENCflow 独自)。
+!   - 壁のエッジは bank_wall が流速・流量を上書きするエッジ(bank_edge。天端が両側の地盤より高い)。破堤サイトは
+!     実効天端(breach_crest)で判定し、天端が地盤まで下がって開いた破堤口は壁と数えない。水位には依らない
+!     (越流中も壁: 壁のエッジの流量は堰の式で決まり、運動量の式を通らない)。
+!   - 同じセル・8 近傍でない組・確保範囲の外・無効のセルを含む組は偽(呼び出し側の cell_ok・wet_weight が
+!     偽・0 を返すので、判定はそれで足りる)。鏡像のセル(側方 Neumann の辺の外)は、呼び出し側が両方を鏡像に
+!     寄せてから渡す。
+!   - 読む行は 2 セルの行だけ(確保範囲の中)。破堤サイトの照合も 2 セルの行に限られる(breach_crest のコメント)。
+!   - 入れないもの: MUSCL のさらに風上のセルの判定 far_ok(水深を見ない静的な判定で、乾いたセルも数える。解像した
+!     堤防の乾いた天端のセルと同じ扱いのまま。行 j ± 3 まで読むので確保範囲の外にも出る)と、面を横切るリンクの
+!     流量で重みを付ける規則(lateral_rep・lateral_flux・lateral_join・path_value の流入・stream_share。壁のエッジの
+!     流量は 0 か越流の分だけなので、もともと壁を越える水だけを数える)。
+!----------------------------------------------------------------------
+pure function vwall_between(g, s, ai, aj, bi, bj) result(res)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: ai, aj, bi, bj
+  logical :: res
+  res = .false.
+  if (.not. chn%have_bank) return
+  if (max(abs(ai - bi), abs(aj - bj)) /= 1) return
+  if (ai < lbound(s%z, 1) .or. ai > ubound(s%z, 1) .or. aj < dcp%jsh .or. aj > dcp%jeh) return
+  if (bi < lbound(s%z, 1) .or. bi > ubound(s%z, 1) .or. bj < dcp%jsh .or. bj > dcp%jeh) return
+  if (g%x(ai,aj) <= 0 .or. g%x(bi,bj) <= 0) return
+  res = bank_edge(g, s, ai, aj, bi, bj)
+  if (.not. (res .and. chn%have_breach)) return
+  if (g%rw(ai,aj) > 0) then
+    res = is_wall(breach_crest(ai, aj, bi, bj, g%zbank(ai,aj)), s%z(ai,aj), s%z(bi,bj))
+  else
+    res = is_wall(breach_crest(bi, bj, ai, aj, g%zbank(bi,bj)), s%z(bi,bj), s%z(ai,aj))
+  end if
+end function
+
+
 !======================================================================
 !======================================================================
 !----------------------------------------------------------------------
@@ -300,7 +338,8 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         qn = s%m(in,jn) * geo%n8x(k) + s%n(in,jn) * geo%n8y(k)
 
         ! 流向面の風上化流速(面 c: 流入なら u_m 側、流出なら u_e 側)。
-        ! 風上側の供給エッジが壁・領域外・乾燥セルに接する(cell_ok が偽)
+        ! 風上側の供給エッジが壁・領域外・乾燥セルに接する(cell_ok が偽。
+        ! 河道の堤防の仮想壁面の向こうのセルも、濡れていても同じ = ok_from。§134)
         ! ときは ū = u_e とする(壁・乾床は運動量を供給しない。これを 0 と
         ! 読むと、ラスタ河道の屈曲セルで下流エッジが「壁側から流速 0 の
         ! 水が流入する」扱いになり、屈曲ごとに人工的な損失水頭が生じる。
@@ -325,7 +364,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 重み付けした平均を風上値にする旧 2 は持ち込むので、河岸の段差をまたぐ交換リンクへ本流の
         ! 運動量が注入されて横流入の水路が深くなり、渦・壁の検定も悪くした。2026-11-07 廃止。§102)
         if (qc >= 0) then
-          if (cell_ok(i - din(k), j - djn(k))) then
+          if (ok_from(i, j, i - din(k), j - djn(k))) then
             ubc = face_value(um, ue, umm, far_ok(i - 2 * din(k), j - 2 * djn(k)))
             if (opt%f_advection_donor == 3) then
               wsh = donor_share(i, j, 9 - k)      ! 面のセル c と線 k の供給元 c − d(c の 9 − k 近傍)
@@ -344,7 +383,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         if (qn >= 0) then
           ubn = face_value(ue, up, um, far_ok(i - din(k), j - djn(k)))
         else
-          if (cell_ok(in + din(k), jn + djn(k))) then
+          if (ok_from(in, jn, in + din(k), jn + djn(k))) then
             ubn = face_value(up, ue, upp, far_ok(in + 2 * din(k), jn + 2 * djn(k)))
             if (opt%f_advection_donor == 3) then
               wsh = donor_share(in, jn, k)        ! 面のセル n と線 k の供給元 n + d(n の k 近傍)
@@ -412,7 +451,8 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
           qtm = axis_open(i, j, k, -1) * 0.5 * (mnk(i, j, kkm(k)) + mnk(in, jn, kkm(k)))
         end if
         ! 側方面も同様: 平行な隣接エッジの両セルが有効・湿潤のときだけ
-        ! その流速を流入値に使う(壁・乾床側からは ū = u_e)
+        ! その流速を流入値に使う(壁・乾床側からは ū = u_e。仮想壁面の向こうのセルも
+        ! 数えない: ok_from・wet_from、斜めエッジの開口率は axis_open。§134)
         ! f_advection_donor = 3 は、この乾湿判定(水深 ≥ dd で有効、未満で無効の切り替え)と斜めエッジの
         ! 開口率 axis_open の乾湿判定を、dd 未満では水深に比例して中立へ寄せる連続な重み min(1, h/dd)
         ! にする(lateral_u_w・wet_weight。dd 以上の水深では 0 と同じ値)。河岸の水膜が dd を割った瞬間に
@@ -783,7 +823,7 @@ contains
     if (kk == 2 .or. kk == 4) then
       oi = ci + sgn * dti(kk)
       oj = cj + sgn * dtj(kk)
-      if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
+      if (ok_from(ci, cj, oi, oj) .and. ok_from(ci + din(kk), cj + djn(kk), oi + din(kk), oj + djn(kk))) then
         u = uvk(oi, oj, kk)
       else
         u = ue0
@@ -796,7 +836,7 @@ contains
     h1 = 0.0
     oi = ci + sgn * dti(kk)
     oj = cj
-    if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
+    if (ok_from(ci, cj, oi, oj) .and. ok_from(ci + din(kk), cj + djn(kk), oi + din(kk), oj + djn(kk))) then
       u1 = uvk(oi, oj, kk)
       h1 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
       usum = usum + u1
@@ -804,7 +844,7 @@ contains
     end if
     oi = ci
     oj = cj + sgn * dtj(kk)
-    if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
+    if (ok_from(ci, cj, oi, oj) .and. ok_from(ci + din(kk), cj + djn(kk), oi + din(kk), oj + djn(kk))) then
       u1 = uvk(oi, oj, kk)
       h1 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
       usum = usum + u1
@@ -848,6 +888,35 @@ contains
     w = min(1.0, max(0.0, s%h(mi,mj)) / p%dd)
   end function
 
+  ! 隣のセル (oi, oj) と、それを読むセル (ri, rj) の間に仮想壁面があるか(vwall_between。両方を鏡像に寄せる。§134)
+  pure function walled(ri, rj, oi, oj) result(r)
+    integer, intent(in) :: ri, rj, oi, oj
+    logical :: r
+    integer :: mri, mrj, moi, moj
+    call mirror_cell(ri, rj, mri, mrj)
+    call mirror_cell(oi, oj, moi, moj)
+    r = vwall_between(g, s, mri, mrj, moi, moj)
+  end function
+
+  ! セル (ri, rj) から見て、隣のセル (oi, oj) が運動量の供給元になれるか(cell_ok に、間の仮想壁面を足したもの。
+  ! 壁の向こうのセルは、濡れていても乾いたセルと同じに数えない。§134)
+  pure function ok_from(ri, rj, oi, oj) result(ok)
+    integer, intent(in) :: ri, rj, oi, oj
+    logical :: ok
+    ok = cell_ok(oi, oj)
+    if (ok .and. chn%have_bank) ok = .not. walled(ri, rj, oi, oj)
+  end function
+
+  ! wet_weight の、セル (ri, rj) から見た版(間に仮想壁面があれば 0。§134)
+  pure function wet_from(ri, rj, oi, oj) result(w)
+    integer, intent(in) :: ri, rj, oi, oj
+    real :: w
+    w = wet_weight(oi, oj)
+    if (w > 0.0 .and. chn%have_bank) then
+      if (walled(ri, rj, oi, oj)) w = 0.0
+    end if
+  end function
+
   ! lateral_u の f_advection_donor = 3 版(developer.md §102)。平行リンクの有効判定(両端セルの cell_ok)
   ! を、両端セルの wet_weight の小さい方 w ∈ [0, 1] に置き換える。
   !   法線エッジ: ū = u_e + w (u_par − u_e)。
@@ -864,7 +933,7 @@ contains
     if (kk == 2 .or. kk == 4) then
       oi = ci + sgn * dti(kk)
       oj = cj + sgn * dtj(kk)
-      w1 = min(wet_weight(oi, oj), wet_weight(oi + din(kk), oj + djn(kk)))
+      w1 = min(wet_from(ci, cj, oi, oj), wet_from(ci + din(kk), cj + djn(kk), oi + din(kk), oj + djn(kk)))
       if (w1 >= 1.0) then
         u = uvk(oi, oj, kk)
       else if (w1 > 0.0) then
@@ -878,7 +947,7 @@ contains
     h1 = 0.0
     oi = ci + sgn * dti(kk)
     oj = cj
-    w1 = min(wet_weight(oi, oj), wet_weight(oi + din(kk), oj + djn(kk)))
+    w1 = min(wet_from(ci, cj, oi, oj), wet_from(ci + din(kk), cj + djn(kk), oi + din(kk), oj + djn(kk)))
     if (w1 > 0.0) then
       u1 = uvk(oi, oj, kk)
       h1 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
@@ -887,7 +956,7 @@ contains
     h2 = 0.0
     oi = ci
     oj = cj + sgn * dtj(kk)
-    w2 = min(wet_weight(oi, oj), wet_weight(oi + din(kk), oj + djn(kk)))
+    w2 = min(wet_from(ci, cj, oi, oj), wet_from(ci + din(kk), cj + djn(kk), oi + din(kk), oj + djn(kk)))
     if (w2 > 0.0) then
       u2 = uvk(oi, oj, kk)
       h2 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
@@ -932,7 +1001,7 @@ contains
     if (kk == 2 .or. kk == 4) then
       oi = ci + sgn * dti(kk)
       oj = cj + sgn * dtj(kk)
-      w1 = min(wet_weight(oi, oj), wet_weight(oi + din(kk), oj + djn(kk)))
+      w1 = min(wet_from(ci, cj, oi, oj), wet_from(ci + din(kk), cj + djn(kk), oi + din(kk), oj + djn(kk)))
       if (w1 > 0.0) w1 = w1 * lateral_rep(ci, cj, kk, sgn, min(hcell(oi, oj), hcell(oi + din(kk), oj + djn(kk))))
       if (opt%adv_latflux .and. w1 > 0.0) w1 = w1 * lateral_flux(ci, cj, kk, sgn, oi, oj)
       if (w1 >= 1.0) then
@@ -949,7 +1018,7 @@ contains
     h1 = 0.0
     oi = ci + sgn * dti(kk)
     oj = cj
-    w1 = min(wet_weight(oi, oj), wet_weight(oi + din(kk), oj + djn(kk)))
+    w1 = min(wet_from(ci, cj, oi, oj), wet_from(ci + din(kk), cj + djn(kk), oi + din(kk), oj + djn(kk)))
     if (w1 > 0.0) w1 = w1 * lateral_rep(ci, cj, kk, sgn, min(hcell(oi, oj), hcell(oi + din(kk), oj + djn(kk))))
     if (opt%adv_latflux .and. w1 > 0.0) w1 = w1 * lateral_flux(ci, cj, kk, sgn, oi, oj)
     if (w1 > 0.0) then
@@ -960,7 +1029,7 @@ contains
     h2 = 0.0
     oi = ci
     oj = cj + sgn * dtj(kk)
-    w2 = min(wet_weight(oi, oj), wet_weight(oi + din(kk), oj + djn(kk)))
+    w2 = min(wet_from(ci, cj, oi, oj), wet_from(ci + din(kk), cj + djn(kk), oi + din(kk), oj + djn(kk)))
     if (w2 > 0.0) w2 = w2 * lateral_rep(ci, cj, kk, sgn, min(hcell(oi, oj), hcell(oi + din(kk), oj + djn(kk))))
     if (opt%adv_latflux .and. w2 > 0.0) w2 = w2 * lateral_flux(ci, cj, kk, sgn, oi, oj)
     if (w2 > 0.0) then
@@ -1371,17 +1440,22 @@ contains
       if (din(kk) + din(kn) /= din(kc) .or. djn(kk) + djn(kn) /= djn(kc)) then
         wn = open_rep(ci, cj, kk, sgn, ci + din(kk) + din(kn), cj + djn(kk) + djn(kn))
       end if
+      ! 仮想壁面のある軸リンクは閉じている(リンクごと: c 側は c と角のセル、n 側は n と角のセルの間。§134)
+      if (chn%have_bank) then
+        if (walled(ci, cj, ci + din(kc), cj + djn(kc))) wc = 0.0
+        if (walled(ci + din(kk), cj + djn(kk), ci + din(kk) + din(kn), cj + djn(kk) + djn(kn))) wn = 0.0
+      end if
       phi = phi - tx%cwd * (1.0 - wc)
       phi = phi - tx%cwd * (1.0 - wn)
       return
     end if
     if (opt%f_advection_donor == 3) then
-      phi = phi - tx%cwd * (1.0 - wet_weight(ci + din(kc), cj + djn(kc)))
-      phi = phi - tx%cwd * (1.0 - wet_weight(ci + din(kk) + din(kn), cj + djn(kk) + djn(kn)))
+      phi = phi - tx%cwd * (1.0 - wet_from(ci, cj, ci + din(kc), cj + djn(kc)))
+      phi = phi - tx%cwd * (1.0 - wet_from(ci + din(kk), cj + djn(kk), ci + din(kk) + din(kn), cj + djn(kk) + djn(kn)))
       return
     end if
-    if (.not. cell_ok(ci + din(kc), cj + djn(kc))) phi = phi - tx%cwd
-    if (.not. cell_ok(ci + din(kk) + din(kn), cj + djn(kk) + djn(kn))) phi = phi - tx%cwd
+    if (.not. ok_from(ci, cj, ci + din(kc), cj + djn(kc))) phi = phi - tx%cwd
+    if (.not. ok_from(ci + din(kk), cj + djn(kk), ci + din(kk) + din(kn), cj + djn(kk) + djn(kn))) phi = phi - tx%cwd
   end function
 
   ! セル (ci, cj) からその kk 近傍へ向かう ENC エッジの実流量 [m³/s](時刻 n。流出が正。
@@ -1560,7 +1634,7 @@ contains
 
       ! 流向面の風上化流速(adv_prepare_mc と同じ)
       if (qc >= 0) then
-        if (cell_ok(ci - din(k), cj - djn(k))) then
+        if (ok_from(ci, cj, ci - din(k), cj - djn(k))) then
           ubc = face_value(um, ue, umm, far_ok(ci - 2 * din(k), cj - 2 * djn(k)))
         else
           ubc = ue
@@ -1571,7 +1645,7 @@ contains
       if (qn >= 0) then
         ubn = face_value(ue, up, um, far_ok(ci - din(k), cj - djn(k)))
       else
-        if (cell_ok(in + din(k), jn + djn(k))) then
+        if (ok_from(in, jn, in + din(k), jn + djn(k))) then
           ubn = face_value(up, ue, upp, far_ok(in + 2 * din(k), jn + 2 * djn(k)))
         else
           ubn = ue
@@ -1731,6 +1805,24 @@ contains
     ok = s%h(mi,mj) >= p%dd
   end function
 
+  ! 隣のセル (oi, oj) と、それを読むセル (ri, rj) の間に仮想壁面があるか(adv_prepare_mc の walled と同じ。§134)
+  pure function walled(ri, rj, oi, oj) result(r)
+    integer, intent(in) :: ri, rj, oi, oj
+    logical :: r
+    integer :: mri, mrj, moi, moj
+    call mirror_cell(ri, rj, mri, mrj)
+    call mirror_cell(oi, oj, moi, moj)
+    r = vwall_between(g, s, mri, mrj, moi, moj)
+  end function
+
+  ! セル (ri, rj) から見て、隣のセル (oi, oj) が運動量の供給元になれるか(adv_prepare_mc の ok_from と同じ。§134)
+  pure function ok_from(ri, rj, oi, oj) result(ok)
+    integer, intent(in) :: ri, rj, oi, oj
+    logical :: ok
+    ok = cell_ok(oi, oj)
+    if (ok .and. chn%have_bank) ok = .not. walled(ri, rj, oi, oj)
+  end function
+
   ! セルの水深(枠外は鏡像。cell_ok が真のセルにだけ使う)
   pure function hcell(ci, cj) result(h)
     integer, intent(in) :: ci, cj
@@ -1754,8 +1846,8 @@ contains
       kn = nax_n(kk)
     end if
     phi = 1.0
-    if (.not. cell_ok(ci + din(kc), cj + djn(kc))) phi = phi - tx%cwd
-    if (.not. cell_ok(ci + din(kk) + din(kn), cj + djn(kk) + djn(kn))) phi = phi - tx%cwd
+    if (.not. ok_from(ci, cj, ci + din(kc), cj + djn(kc))) phi = phi - tx%cwd
+    if (.not. ok_from(ci + din(kk), cj + djn(kk), ci + din(kk) + din(kn), cj + djn(kk) + djn(kn))) phi = phi - tx%cwd
   end function
 
   ! 側方面(sgn = ±1 の t 側)の流入流速(adv_prepare_mc の lateral_u を 8 方向に広げたもの)
@@ -1774,7 +1866,7 @@ contains
     if (kk == 2 .or. kk == 4 .or. kk == 5 .or. kk == 7) then
       oi = ci + ti
       oj = cj + tj
-      if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
+      if (ok_from(ci, cj, oi, oj) .and. ok_from(ci + din(kk), cj + djn(kk), oi + din(kk), oj + djn(kk))) then
         u = uvk8(oi, oj, kk)
       else
         u = ue0
@@ -1787,7 +1879,7 @@ contains
     h1 = 0.0
     oi = ci + ti
     oj = cj
-    if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
+    if (ok_from(ci, cj, oi, oj) .and. ok_from(ci + din(kk), cj + djn(kk), oi + din(kk), oj + djn(kk))) then
       u1 = uvk8(oi, oj, kk)
       h1 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
       usum = usum + u1
@@ -1795,7 +1887,7 @@ contains
     end if
     oi = ci
     oj = cj + tj
-    if (cell_ok(oi, oj) .and. cell_ok(oi + din(kk), oj + djn(kk))) then
+    if (ok_from(ci, cj, oi, oj) .and. ok_from(ci + din(kk), cj + djn(kk), oi + din(kk), oj + djn(kk))) then
       u1 = uvk8(oi, oj, kk)
       h1 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
       usum = usum + u1
@@ -1981,7 +2073,7 @@ contains
     en = 0.0
     if (qc >= 0) then
       w = 1.0
-      if (.not. cell_ok(ci - din(k), cj - djn(k))) then
+      if (.not. ok_from(ci, cj, ci - din(k), cj - djn(k))) then
         w = 0.0
       else if (thin) then
         ! 流れごとの重みは、adv_prepare_mc が同じ面について計算した控えを読む(同じ式・同じ値。thin が真の面は
@@ -2002,7 +2094,7 @@ contains
     end if
     if (qn < 0) then
       w = 1.0
-      if (.not. cell_ok(in + din(k), jn + djn(k))) then
+      if (.not. ok_from(in, jn, in + din(k), jn + djn(k))) then
         w = 0.0
       else if (thin) then
         w = -1.0
@@ -2253,7 +2345,7 @@ contains
         if (cq(l) <= 0.0) cycle
         oi = ci + din(9 - l)
         oj = cj + djn(9 - l)
-        if (.not. cell_ok(oi, oj)) cycle
+        if (.not. ok_from(ci, cj, oi, oj)) cycle      ! 壁の向こうのセルは同じ水体でない(§134)
         beta = 1.0 - min(1.0, hcell(oi, oj) / hlim)
         if (beta < 1.0) cm(l) = cm(l) + (1.0 - beta) * max(0.0, cs(l) * he - cm(l))
       end do
@@ -2530,6 +2622,24 @@ contains
     ok = s%h(mi,mj) >= p%dd
   end function
 
+  ! 隣のセル (oi, oj) と、それを読むセル (ri, rj) の間に仮想壁面があるか(adv_prepare_mc の walled と同じ。§134)
+  pure function walled(ri, rj, oi, oj) result(r)
+    integer, intent(in) :: ri, rj, oi, oj
+    logical :: r
+    integer :: mri, mrj, moi, moj
+    call mirror_cell(ri, rj, mri, mrj)
+    call mirror_cell(oi, oj, moi, moj)
+    r = vwall_between(g, s, mri, mrj, moi, moj)
+  end function
+
+  ! セル (ri, rj) から見て、隣のセル (oi, oj) が運動量の供給元になれるか(adv_prepare_mc の ok_from と同じ。§134)
+  pure function ok_from(ri, rj, oi, oj) result(ok)
+    integer, intent(in) :: ri, rj, oi, oj
+    logical :: ok
+    ok = cell_ok(oi, oj)
+    if (ok .and. chn%have_bank) ok = .not. walled(ri, rj, oi, oj)
+  end function
+
   pure function hcell(ci, cj) result(h)
     integer, intent(in) :: ci, cj
     real :: h
@@ -2589,6 +2699,15 @@ subroutine adv_prepare_v1(p, g, s, sx, tx)
       ww(:) = get_ww(s%u(i,j), s%v(i,j), s%vv(i,j))
       forall(k=1:8) wwx(k) = geo%w8x(k) * ww(k)
       forall(k=1:8) wwy(k) = geo%w8y(k) * ww(k)
+      ! 河道の堤防の仮想壁面の向こうのセルは、濡れていても勾配に数えない(乾いたセルと同じ。§134)
+      if (chn%have_bank) then
+        do k = 1, 8
+          if (vwall_between(g, s, i, j, i + din(k), j + djn(k))) then
+            wwx(k) = 0.0
+            wwy(k) = 0.0
+          end if
+        end do
+      end if
       call get_diff_v1(tx%ulm, tx%vlm, s%h, p%dd, wwx, wwy, g%x, i, j, dux, duy, dvx, dvy)
       tx%taxy(1,i,j) = -(s%u(i,j) * dux + s%v(i,j) * duy)
       tx%taxy(2,i,j) = -(s%u(i,j) * dvx + s%v(i,j) * dvy)

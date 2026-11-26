@@ -70,6 +70,20 @@ once the channel level exceeds the crest) and 2 forced drainage (for compatibili
 and experiments). Real pumping stations and sluices use the pumps and
 culverts of the [structures chapter](structure.md).
 
+**Advection.** The advection term does not count a cell behind a virtual wall
+as a momentum donor, a parallel link or an opening, even when it is wet (it is
+treated like a dry cell; [advection schemes](advection.md) §4.4,
+[test/wallpond](../../../test/wallpond/en/README.md)). Even when the landside
+behind the walls is flooded, the flow in the channel does not change. Because
+whether an edge is a wall does not depend on the water level, the cell behind
+the wall is not counted during overtopping or submergence either. For shallow
+overtopping this matches a resolved levee, whose thin overflow sheet on the
+crest cell hardly affects the momentum exchange at the lateral faces; when a
+levee is deeply submerged and both banks form one flow, it is an approximation
+that does not count the lateral momentum exchange across the wall (the shear
+between the channel flow and the landside flow; the exchange of water is
+counted by the weir formula. developer.md §134).
+
 ## 2. Subgrid channel width
 
 On a cell with width $`W`$ the plan-area fraction
@@ -294,6 +308,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 - [test/bendloss](../../../test/bendloss/en/README.md): straight, bent and diagonal channels, subgrid width and opening correction, assessed against Manning uniform flow or a straight-channel comparison.
 - [test/chichibu](../../../test/chichibu/en/README.md): real-terrain examples comparing channel masks, roughness, width and levee settings through flood-wave behaviour.
+- [test/wallpond](../../../test/wallpond/en/README.md): a test with a still pond behind the virtual walls of straight and 45° channels, judging that the channel level agrees with the runs whose landside behind the walls is dry and with a resolved levee (that the advection term does not count the cells behind the wall).
 - [test/gwsect](../../../test/gwsect/en/README.md): exchange of water between cells with a section shape and groundwater (seepage, infiltration), the conduit layer and snowmelt; checks that the total storage of a closed valley is conserved and that the concentration of a rain tracer stays at 1.
 
 ## References

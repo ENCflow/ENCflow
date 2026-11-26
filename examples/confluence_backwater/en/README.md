@@ -240,21 +240,24 @@ the landside. (d) Profile of the maximum water level along the tributary.
 
 | Case | Highest main-river stage at the confluence (m)<br>20 m → 100 m | Max. water on the landside (million m³)<br>20 m → 100 m | Flooded area (km²)<br>20 m → 100 m |
 |---|---|---|---|
-| main | 24.14 → 24.33 | 2.49 → 4.09 | 3.08 → 3.95 |
-| same | 24.24 → 24.43 | 4.00 → 5.60 | 3.93 → 4.67 |
+| main | 24.14 → 24.23 | 2.49 → 2.18 | 3.08 → 2.90 |
+| same | 24.24 → 24.35 | 4.00 → 3.71 | 3.93 → 3.74 |
 
-- **On the coarse grid the main-river stage at the confluence comes out 0.19 m higher, and the water on the landside
-  1.4–1.6 times as much**: the difference arises after the overtopping begins.
+- **On the coarse grid the main-river stage at the confluence comes out 0.1 m higher, and the water on the landside
+  about 0.9 times as much**: the difference arises after the overtopping begins.
   - Before the overtopping (3–5 h), the main-river stage at the confluence agrees with the fine grid within 0.02 m.
-  - From about 6 h, when the overtopping begins, the coarse grid comes out higher, by 0.18–0.21 m at 7–8 h.
-  - One of the main causes is that on the coarse grid the main river and the tributary border the landside directly
-    across the virtual walls of the channel levees. When the landside is flooded, the advection term counts momentum
-    exchange with the stagnant water beyond the walls and slows the channel flow (a limitation of how the computational
-    core handles this; [developer.md](../../../docs/developer.md) §131.12, in Japanese). On the fine grid the main river
-    borders dry levee cells.
-- **The overtopping volume changes greatly with small differences of the stage at the confluence**: the depth over the
-  tributary levees is only 0.4–0.5 m in the main part. Since the overflow is roughly proportional to the 1.5 power of
-  the overflow depth, a stage 0.2 m higher at the confluence makes the overflow about 1.7 times as large.
+  - From about 6 h, when the overtopping begins, the coarse grid comes out higher, by 0.09–0.12 m at 7–8 h.
+  - On the coarse grid the main river and the tributary border the landside directly across the virtual walls of the
+    channel levees. The advection term does not count the cells behind the walls in the momentum exchange even when
+    they are wet ([advection schemes](../../../docs/en/users_guide/advection.md) §4.4 of the user's guide), so the
+    channel flow is not slowed down when the landside is flooded. On the fine grid the main river borders dry levee
+    cells.
+- **The overtopping volume depends on the stage at the confluence and on how the overflow is represented**: the depth
+  over the tributary levees is only 0.4–0.5 m in the main part. Since the overflow is roughly proportional to the 1.5
+  power of the overflow depth, a stage difference of 0.1 m at the confluence changes the overflow by 30–40 %. On the
+  coarse grid the stage at the confluence is higher but the water on the landside is less, so the difference in how
+  the overflow is represented (the weir formula of the virtual walls, and the shallow-water flow over the levee cells
+  of the fine grid) is thought to matter as well. The breakdown of the remaining difference has not been separated.
 
 **Where the difference of the main-river stage arises**
 
@@ -462,9 +465,8 @@ the mouth. The downstream uniform-flow velocity is 2.59 m/s.
   represent, such as the size of the separation zone and secondary currents, is not included.
 - **On a coarse grid the representation of the main river governs the result**: as in supplement 1, without
   thickening the steps of the bend the stage at the confluence comes out 0.3–0.4 m higher. Even with them thickened, the
-  stage at the confluence is 0.2 m higher while the levees are overtopped, and the overtopping volume is 1.4–1.6 times
-  as large. One of the main causes is that when the landside beyond the virtual walls is flooded, the advection term
-  slows the channel flow (supplement 1). For a
+  stage at the confluence is 0.1 m higher while the levees are overtopped, and the water on the landside is about 0.9
+  times as much (supplement 1; the breakdown has not been separated). For a
   width that is not a multiple of the cell size, the representation changes the stage by more than 1 m. A channel
   1–2 cells wide laid in a direction other than the axes and 45° conveys up to 60 % too little because of the waists
   in the band. For a channel 2 cells wide, thickening the steps restores it, but there is no representation yet for
