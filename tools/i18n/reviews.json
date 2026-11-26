@@ -1850,17 +1850,17 @@
     {
       "source": "examples/confluence_backwater/README.md",
       "target": "examples/confluence_backwater/en/README.md",
-      "source_sha256": "5c1a0149fad4920006e0418e2016c59afe8eeafc490d2b8ed3ce0bbb2102df5c",
-      "target_sha256": "3a3f07934b8cf8647bb5851a27af8ecfc236d42ac6537754570c2ab99ab0d41b",
-      "reviewer": "Claude (Claude Code session; confluence_backwater update: thickening the steps of oblique bands (2 rows shared at steps; THICK in make_coarse.py) added to supplement 1 tables and notes; Japanese and English compared line by line, values from the runs of coarse_check and oblique.py)",
+      "source_sha256": "6bf0c39090ba749d4682cdefa4384ddfd03831564c0c972de6a71be66f89e465",
+      "target_sha256": "ea5ac970b1d25c7e8eb586dcb9ba19dfbbceeb29c9e04b1e03241218159bd4e2",
+      "reviewer": "Claude (Claude Code session; confluence_backwater update: cause of the overflow-phase difference on the coarse grid (advection does not see the virtual walls of fn_bank; developer.md §131.12) added to supplement 1 and the limitations; Japanese and English compared line by line)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/confluence_backwater/figs/backwater.png",
       "target": "examples/confluence_backwater/en/figs/backwater.png",
-      "source_sha256": "0db7f16135659ac89392f4add43b7abdf3fb4e46961434a7734aa923ea6ad577",
-      "target_sha256": "0067093749cff94873ac6e4caf565ebe3dcebf6e382017da4171d856824b4a4f",
+      "source_sha256": "25bd0324ee5d03a9c0c1a5d8d6eb42fe67c0e77e44b3b57e5ad1c3e835b701a8",
+      "target_sha256": "d40a78ee26b417c4f02e5e5200663eab3a61864d56f1d6f206722086a5363d05",
       "reviewer": "Claude (Claude Code session; figure redrawn by plot_results.py from the rerun results, same data as the Japanese figure, English labels checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
@@ -1868,8 +1868,8 @@
     {
       "source": "examples/confluence_backwater/figs/coarse.png",
       "target": "examples/confluence_backwater/en/figs/coarse.png",
-      "source_sha256": "98e3f6e16dda82de9379b5e951f8cfc7c37aef65f8f6a9d43addfc6f3db2cab6",
-      "target_sha256": "fcce8849db7458d41f41cf50e9926a415c2a7dd5de56aacf4301a5c5431b89a9",
+      "source_sha256": "f4bd1725c6f0088c4fb246087c140e19895af6aac25ec2b0c60ca9377a9a63cd",
+      "target_sha256": "0dfc16a25f66bc4439bfd6bcca89141dfa1bb35d22e09b4cab2dc311efad1ee4",
       "reviewer": "Claude (Claude Code session; figure redrawn by plot_results.py from the rerun results, same data as the Japanese figure, English labels checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
@@ -1940,29 +1940,29 @@
     {
       "source": "examples/debris_bedrock/README.md",
       "target": "examples/debris_bedrock/en/README.md",
-      "source_sha256": "a89a790d67fae7647981cb2b6ba502deaeb4f54b44e4fb44951a1c231a272cdb",
-      "target_sha256": "bcbbb29597563f7355c2fd080fb1eeeb2b3ac7ce0ed114796f11b9f805a30428",
-      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10: the six changed numbers (C_b and C_c table cells and ledger, C_b deposit at 120 m, C_c mobile layer and erosion at 101 m, the 91 cm of the long chain) compared against the Japanese source, the printed tables of plot_results.py and the 1 s output analysis; no model execution)",
+      "source_sha256": "c0d72bd40ce030814ceb810b00933c7fad5e604d931e76976fdabcab2df3da9f",
+      "target_sha256": "234a53e9fe287c5bf444bac265bf0b57f2cfdd7c164d0f82281d95f9b4b6c1c9",
+      "reviewer": "Claude (Claude Code session; debris_bedrock recomputed with main 39bdd82: values, run times and event figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/debris_bedrock/figs/cover.png",
       "target": "examples/debris_bedrock/en/figs/cover.png",
-      "source_sha256": "a9174f17df5fa5916e6fe835067bb779d2e973e97324369e8dcf2aca563e753d",
-      "target_sha256": "fa8361943e216e7695703add76fd65d5f49e02cfb7be03997336afa7131c5d01",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "824084d3417d909cb8f9ef93a404cbb40e837102ff415f3612107537ca9fedf8",
+      "target_sha256": "fa72c7e72f581adb59ef8a5bf0dcfc9ae0d780827c0b9404cb8a23aaaef473ac",
+      "reviewer": "Claude (Claude Code session; debris_bedrock recomputed with main 39bdd82: values, run times and event figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/debris_bedrock/figs/erosion.png",
       "target": "examples/debris_bedrock/en/figs/erosion.png",
-      "source_sha256": "bebcd3a454791f853f764a5dd7fd6a96f017b819a4e3d23f1e37782755cea02d",
-      "target_sha256": "b59fe89b75982d0fc81fe1b1dc1389238048527ae8e959a203b99e12a201a77f",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "f80fa0192f7cc1b1c14f5f4d282bbd700a723e96bf96cff28ad607672da788fb",
+      "target_sha256": "7f114318f531f11f55928390bd1109ed801c08999b2e1522de8fe493a0acec48",
+      "reviewer": "Claude (Claude Code session; debris_bedrock recomputed with main 39bdd82: values, run times and event figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/debris_bedrock/figs/long_cover.png",
@@ -2021,11 +2021,11 @@
     {
       "source": "examples/debris_bedrock/figs/threshold.png",
       "target": "examples/debris_bedrock/en/figs/threshold.png",
-      "source_sha256": "1345af074613e5f710c0346967117ec86583ccb77735eea8fbe3f2e0aa91e17f",
-      "target_sha256": "643922e4f53b65203a557debb390a11db08f329f9b7187eaee175efb4dda38e3",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "8e7ab3b108e14e69c1115c1467b32bf89f4669ac6bf88b3a5f1cf26b31ab15af",
+      "target_sha256": "0435b529efb6aada34d3d39d7e4a62a3222057d2b00ad26827e2f9975ae6d65a",
+      "reviewer": "Claude (Claude Code session; debris_bedrock recomputed with main 39bdd82: values, run times and event figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/debris_dam/README.md",
