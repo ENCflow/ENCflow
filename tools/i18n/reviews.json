@@ -1850,9 +1850,9 @@
     {
       "source": "examples/confluence_backwater/README.md",
       "target": "examples/confluence_backwater/en/README.md",
-      "source_sha256": "b67260a7c2035d7a116d385ba495d7247d6e31ea301b5c3b2da86ad051538119",
-      "target_sha256": "9e3b6a56d67bc0035c5a0a83d5f2815a7ad6ccff44ff2f1cd3ea6777da97906f",
-      "reviewer": "Claude (Claude Code session; confluence_backwater update: coarse grid default THICK = 2 (steps of the bend thickened); supplements 1 and 2, limitations and sensitivity entries updated with the rerun coarse results; Japanese and English compared line by line)",
+      "source_sha256": "6bf0c39090ba749d4682cdefa4384ddfd03831564c0c972de6a71be66f89e465",
+      "target_sha256": "ea5ac970b1d25c7e8eb586dcb9ba19dfbbceeb29c9e04b1e03241218159bd4e2",
+      "reviewer": "Claude (Claude Code session; confluence_backwater update: cause of the overflow-phase difference on the coarse grid (advection does not see the virtual walls of fn_bank; developer.md §131.12) added to supplement 1 and the limitations; Japanese and English compared line by line)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
     },
