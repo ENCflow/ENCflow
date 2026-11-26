@@ -19,6 +19,10 @@
   dg1  45° の直線の河道を 4 連結の 1 セルの階段(解像。tutorials/chichibu の河道マスクと同じ型)で表す。
        流量 300 m³/s。移流項の規則の組み合わせを 3 つ(既定の 4・2・2・4、3・1・0・3、0・1・0・3。値は
        f_advection_donor・f_advection_bend・f_advection_lateral・f_dry_head_cap の順)と、スキーム 1(セル中心勾配)で回す
+  ob2  26.6°(勾配 1:2)の直線の河道(幅 200 m)を、解像したセルの帯で表す。帯は中心線からの距離が川幅に収まる
+       4 列のセルで、隣り合う列の境目で中心線に最も近い 2 行が両方の列の河道セルになるように太らせたもの
+       (examples/coarse_channel の k2 と同じ。段のある帯の縁で、側方面の規則が線の上流側の隣 = 壁の向こうの
+       セルを読む。§134.10)。流量 1,000 m³/s、既定の構成
   海岸堤防(sdry・swet): ax2 と dg1(既定の構成)の河道を、海側マスク(fn_seaside。sw でない通常のセル)の帯にし、
        両側の陸に海岸堤防(seawall0 = 35 m の絶対標高。越流しない)を立てたもの。河道の設定(&list_channel)は使わない
 堤内地は水平(地盤 = 区間の中ほどの河床 + 1 m)。湛水は水深 1.5 m の静かな池。堤防の天端は河床 + 10 m(越流しない)。
@@ -42,8 +46,10 @@ for o in OPTS:
 # 海岸堤防の仮想壁(§134.9)
 CASES += [("ax2_sdry", "ax2", "sdry", "o4"), ("ax2_swet", "ax2", "swet", "o4"),
           ("dg1_o4_sdry", "dg1", "sdry", "o4"), ("dg1_o4_swet", "dg1", "swet", "o4")]
+# 斜めの 2 セルの帯(§134.10)
+CASES += [("ob2_dry", "ob2", "dry", "o4"), ("ob2_wet", "ob2", "wet", "o4")]
 SEAWALL0 = Z0 + CREST + 5.0        # 海岸堤防の天端(絶対標高。どの地盤より高い)
-MPI_CASES = ["ax2_wet", "ax1_wet", "dg1_o4_wet", "dg1_s1_wet", "ax2_swet", "dg1_o4_swet"]
+MPI_CASES = ["ax2_wet", "ax1_wet", "dg1_o4_wet", "dg1_s1_wet", "ax2_swet", "dg1_o4_swet", "ob2_wet"]
 
 
 def hn(q):
@@ -93,6 +99,45 @@ def geom_diag(var):
             if -w / 2 < d <= w / 2:
                 kind[j][i] = 1
             elif abs(d) <= w / 2 + B:
+                kind[j][i] = 5
+    return kind, sal, nx, ny, L
+
+
+def geom_oblique(var):
+    """26.6°(勾配 1:2)の直線の河道(幅 200 m)を、段で 2 行を共有するように太らせた解像セルの帯で表す。中心線は
+    西端から北東へ東端まで(examples/coarse_channel の make_cases.py の k2 と同じ作り方)"""
+    p, q, bw = 1, 2, 200.0
+    r = math.hypot(p, q)
+    st, ct = p / r, q / r
+    d = DX / r                                    # セルの中心が並ぶ列の間隔
+    nx = 40
+    margin = B + bw
+    y0 = (DX / q) * ((p + q - 1) / 2.0 + math.ceil(margin / (DX / q)))   # 中心線が 2 列の真ん中を通る
+    ny = int(math.ceil((y0 + nx * DX * st / ct + margin) / DX))
+    ly = ny * DX
+    L = nx * DX / ct
+    n = int(math.floor(bw / d + 1e-9))
+    kmin = -int(math.ceil(n / 2))
+    kind = [[0] * nx for _ in range(ny)]
+    sal = [[0.0] * nx for _ in range(ny)]
+    dn = [[0.0] * nx for _ in range(ny)]
+    for j in range(ny):                           # j = 0 が北端の行
+        for i in range(nx):
+            x, y = (i + 0.5) * DX, ly - (j + 0.5) * DX
+            dn[j][i] = -st * x + ct * (y - y0)
+            sal[j][i] = min(max(ct * x + st * (y - y0), 0.0), L)
+            k = math.floor(dn[j][i] / d + 1e-6)
+            if kmin <= k <= kmin + n - 1:
+                kind[j][i] = 1
+    for i in range(nx - 1):                       # 段で、中心線に最も近い 2 行を両方の列の河道セルにする
+        yc = y0 + (i + 1) * DX * st / ct
+        rows = sorted(range(ny), key=lambda j: (round(abs(ly - (j + 0.5) * DX - yc), 6), j))[:2]
+        for j in rows:
+            kind[j][i] = kind[j][i + 1] = 1
+    edge = max(abs(dn[j][i]) for j in range(ny) for i in range(nx) if kind[j][i] == 1)
+    for j in range(ny):
+        for i in range(nx):
+            if kind[j][i] == 0 and abs(dn[j][i]) <= edge + B:
                 kind[j][i] = 5
     return kind, sal, nx, ny, L
 
@@ -160,6 +205,9 @@ def gen_case(name, geo, var, opt):
     if geo == "dg1":
         kind, sal, nx, ny, L = geom_diag(var)
         q, width = 300.0, None
+    elif geo == "ob2":
+        kind, sal, nx, ny, L = geom_oblique(var)
+        q, width = 1000.0, None
     else:
         kind, sal, nx, ny, L = geom_axis(2 if geo == "ax2" else 1, var)
         q, width = 1000.0, (None if geo == "ax2" else 80.0)
@@ -167,7 +215,7 @@ def gen_case(name, geo, var, opt):
     z = [[-9999.0] * nx for _ in range(ny)]
     h0 = [[0.0] * nx for _ in range(ny)]
     mask = [[0] * nx for _ in range(ny)]
-    chan_w = width if width else (200.0 if geo == "ax2" else DX)
+    chan_w = width if width else (200.0 if geo in ("ax2", "ob2") else DX)
     for j in range(ny):
         for i in range(nx):
             k = kind[j][i]

@@ -1,9 +1,10 @@
 #!/bin/bash
 # wallpond: 河道の堤防の仮想壁面の向こうの湛水が、河道の流れを変えないことの検定(逐次実行。developer.md §134)
 #   ./Run.sh
-# make_wallpond.py が 14 ケース(軸に沿う直線の河道を解像 2 セル・サブグリッド 1 セルで、45° の直線の河道を
-# 4 連結の 1 セルの階段で表し、堤内地を乾いた・湛水した、などに変えたもの。階段は移流項の構成 4 つ)の入力と
-# 設定を生成し、全ケースを実行して Check_wallpond.py が判定する。reference は持たない。画面出力は Screen.log
+# make_wallpond.py が 20 ケース(軸に沿う直線の河道を解像 2 セル・サブグリッド 1 セルで、45° の直線の河道を
+# 4 連結の 1 セルの階段で、26.6° の直線の河道を段で 2 行を共有する 2 セルの帯で表し、堤内地を乾いた・湛水した、
+# などに変えたもの。階段は移流項の構成 4 つ)の入力と設定を生成し、全ケースを実行して Check_wallpond.py が判定する。
+# reference は持たない。画面出力は Screen.log
 sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh serial || exit 1
 

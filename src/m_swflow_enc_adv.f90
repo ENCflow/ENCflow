@@ -590,6 +590,11 @@ contains
     if (qk < qe) then
       w = qk / qe
       hd = hcell(ci + din(kk), cj + djn(kk))        ! 供給元の水深(辺の外は鏡像。cell_ok と同じセル)
+      ! 仮想壁面の向こうの隣は、濡れていても乾いたセルと同じに数える(面の供給元の呼び出しは ok_from で壁の
+      ! 向こうを除いてから呼ぶが、join_share は線の上流側の隣をそのまま渡す。§134.10)
+      if (chn%have_vwall) then
+        if (walled(ci, cj, ci + din(kk), cj + djn(kk))) hd = 0.0
+      end if
       he = opt%p_adv_donor_eps * hcell(ci, cj)      ! 面のセルの水深の ε 倍
       if (hd >= he) then
         w = 1.0
