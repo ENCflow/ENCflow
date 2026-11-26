@@ -31,8 +31,8 @@
     {
       "source": "bmi/README.md",
       "target": "bmi/README.en.md",
-      "source_sha256": "9b25f76f4d740516496001edee7e3e3c6ca1cd13cc8d0be13a40e40f3eab7614",
-      "target_sha256": "7b737d865d59f00eda70d79fd3b4d3ec3ecdd5b8d5ef7c896fd0b75b226a92af",
+      "source_sha256": "23ab3e245f7f958b13f6579bd67e1a3d4e58ab5cd1eb27e3bf7fc2fd9ea530fc",
+      "target_sha256": "964937e65ed24d5ca6ee23fae7048a65de5cdaafd803d3c433240c8110973816",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"
@@ -527,8 +527,8 @@
     {
       "source": "docs/users_guide/structure.md",
       "target": "docs/en/users_guide/structure.md",
-      "source_sha256": "8a24f99ec80f957dff091e81cc0d0de2b98055879490dd66c87d3904f9ad49b5",
-      "target_sha256": "f1b47c3674dd99ffca05a185d1ddd1ca204f61a60c040a9dd17496df787d72f2",
+      "source_sha256": "6042a8e117f026a41f7f013f764187b41aa4f80c6af5d6749143c7eb0b4225d3",
+      "target_sha256": "0bd42075f33fc2736e9b44df6c80b27d9fecff964c9447bfbb0f5286830f5818",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-26"

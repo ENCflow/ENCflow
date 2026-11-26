@@ -278,8 +278,8 @@ the representative points of the dams.
   `dam_lake`, the first release cell). They are in the same coordinate
   system as the raster grids (measured from the lower-left corner of the
   origin, x east and y north).
-- Only the dams of the root grid are exposed (the dams of nested child
-  grids are not listed).
+- Only the dams of the root grid are exposed. The dams of nested child
+  grids are not supported (they are not listed).
 
 | CSDMS Standard Name | Quantity | Units | Exists when | set |
 | --- | --- | --- | --- | --- |
@@ -319,10 +319,12 @@ the representative points of the dams.
   met. A target that is too large never creates water.
 - A negative value is an error (BMI_FAILURE; BmiError in Python), and the
   target stays unchanged.
-- The target is not saved. A restart begins again from `dam_q0`, so the
-  caller sets it again right after the restart. Run with `encflow` without
-  BMI, the dam releases the constant `dam_q0` (a `note:` is printed at
-  startup).
+- The target is not saved; saving it is the caller's responsibility. To
+  operate across a restart, the caller saves the target and the state of its
+  controller (such as the target of the previous step) and sets the target
+  again right after the restart (until it is set, the dam releases
+  `dam_q0`). Run with `encflow` without BMI, the dam releases the constant
+  `dam_q0` (a `note:` is printed at startup).
 
 ```python
 import numpy as np
@@ -475,9 +477,11 @@ cd ../bmi_nest && ./Run.sh          # nested system (acceptance test + bmi-teste
   physical outputs agree to the printed precision). For verification
   that needs strict bit reproducibility, use the static
   `test_encflow_bmi` driver.
-- Only the dams of the root grid are exposed. The target release of the
-  external operation is not saved, so the caller sets it again after a
-  restart ([Dams](#dam-reservoir-quantities-and-external-operation) above).
+- Only the dams of the root grid are exposed (the dams of nested child
+  grids are not supported). The target release of the external operation
+  is not saved, so saving it and setting it again after a restart are the
+  caller's responsibility
+  ([Dams](#dam-reservoir-quantities-and-external-operation) above).
 
 ## For developers
 
