@@ -7,7 +7,9 @@ module m_main
                           m_saltwater_dispose
   use m_boundary, only : t_boundary, m_boundary_init, m_boundary_set_etaref, m_boundary_dispose, m_boundary_makebdc, &
                          m_boundary_dam_seed, m_boundary_dam_record, &
-                         m_boundary_dam_gwcheck, m_boundary_dam_gwforce
+                         m_boundary_dam_gwcheck, m_boundary_dam_gwforce, &
+                         m_boundary_dam_count, m_boundary_dam_has_ext, m_boundary_dam_get, &
+                         m_boundary_dam_set_target, m_boundary_dam_cell
   use m_state, only : t_state, m_state_init, m_state_dispose, m_state_updatetime, m_state_calcstat, m_state_printstate
   use m_record, only : t_record, m_record_init, m_record_dispose, m_record_probe, m_record_flux, m_record_summary
   use m_geomorph, only : t_geomorph, m_geomorph_init, m_geomorph_calc, m_geomorph_dispose
@@ -58,6 +60,7 @@ module m_main
   public :: m_main_has_value
   public :: m_main_get_value
   public :: m_main_set_value
+  public :: m_main_dam_count, m_main_get_dam, m_main_set_dam, m_main_get_dam_xy   ! BMI のダムの量(§133)
   public :: m_main_instances_alloc
   public :: m_main_select
   public :: m_main_get_ngrids
@@ -750,6 +753,13 @@ integer function var_state(name)
     var_state = cond(ready, allocated(enc%s%hi))
   case ('hl')                     ! 溶岩厚(fn_lavaflow)
     var_state = cond(ready, allocated(enc%s%hl))
+  ! --- ダム・湖沼(&list_struct_dam。ルート格子のダムだけ = BMI のダムの点の格子。§133)---
+  case ('dam_h', 'dam_v', 'dam_qin', 'dam_qout', 'dam_qsp')
+    var_state = 4
+    if (ready) var_state = cond(ready, kcur == 1 .and. m_boundary_dam_count(enc%b) > 0)
+  case ('dam_qtgt')               ! 目標放流量: 外部運転(f_dam_mode = 6)のダムがあるとき
+    var_state = 4
+    if (ready) var_state = cond(ready, kcur == 1 .and. m_boundary_dam_has_ext(enc%b))
   case default
     var_state = 1
   end select
@@ -980,6 +990,108 @@ subroutine m_main_set_value(name, src, ierr)
   case default
     ierr = 1
   end select
+end subroutine
+
+
+!----------------------------------------------------------------------
+! アクセサ: ダム・湖沼の数(ルート格子。BMI のダムの点の格子の大きさ。§133)
+!   未初期化・finalize 後は 0
+!----------------------------------------------------------------------
+integer function m_main_dam_count()
+  m_main_dam_count = 0
+  if (ninst <= 0) return
+  if (.not. encs(1)%initialized) return
+  m_main_dam_count = m_boundary_dam_count(encs(1)%b)
+end function
+
+
+!----------------------------------------------------------------------
+! アクセサ: ダムの量を番号順に取り出す(ルート格子。§133)
+!   name は内部名 'dam_h'(水位 m)・'dam_v'(貯水量 m3)・'dam_qin'・'dam_qout'・
+!   'dam_qsp'(流入・放流・スピル m3/s)・'dam_qtgt'(目標放流量 m3/s。外部運転の
+!   ダムは設定値、ほかはその運転則の放流)。値はこの歩の終わりの診断量で全ランク
+!   同値(collective なし。MPI でも全ランクで呼んでよい)。dest の長さはダム数。
+!   ierr: 0 = 成功、1 = 未対応の名前か長さの不一致、4 = 既知だが存在しない
+!----------------------------------------------------------------------
+subroutine m_main_get_dam(name, dest, ierr)
+  character(len=*), intent(in) :: name
+  real, intent(inout) :: dest(:)
+  integer, intent(out) :: ierr
+  ierr = var_state(name)
+  if (ierr /= 0) return
+  if (size(dest) /= m_boundary_dam_count(encs(1)%b)) then
+    ierr = 1
+    return
+  end if
+  call m_boundary_dam_get(encs(1)%b, trim(name(5:)), dest)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! アクセサ: 外部運転のダムの目標放流量を設定する(ルート格子。BMI の F 区分 =
+! 次の set まで持続。§133)
+!   name = 'dam_qtgt' のみ。src はダム数の長さで番号順。外部運転(f_dam_mode = 6)で
+!   ないダムの要素は無視する。MPI では全ランク collective に呼び、src は rank0 の
+!   値を使う(get・set_value と同じ規約。§58): 値検査を rank0 で行い、判定を
+!   allreduce で揃えてから、rank0 の値を総和で全ランクへ配る(他ランクは 0 を
+!   足すだけなので値は厳密に rank0 と同じ)。save しない(再開時は dam_q0)。
+!   ierr: 0 = 成功、1 = 未対応の名前か長さの不一致、3 = 負の値、4 = 既知だが
+!   存在しない(外部運転のダムがない)
+!----------------------------------------------------------------------
+subroutine m_main_set_dam(name, src, ierr)
+  character(len=*), intent(in) :: name
+  real, intent(in) :: src(:)
+  integer, intent(out) :: ierr
+  real, allocatable :: v(:)
+  integer :: n, flag
+  ierr = var_state(name)
+  if (ierr /= 0) return
+  if (trim(name) /= 'dam_qtgt') then
+    ierr = 1
+    return
+  end if
+  n = m_boundary_dam_count(encs(1)%b)
+  allocate(v(n), source = 0.0)
+  flag = 0
+  if (is_root) then
+    if (size(src) /= n) then
+      flag = 1
+    else
+      v = src(1:n)
+      if (any(v < 0.0)) flag = 3
+    end if
+  end if
+  call par_allreduce_maxi(flag)
+  if (flag /= 0) then
+    ierr = flag
+    return
+  end if
+  if (.not. is_root) v = 0.0
+  call par_allreduce_sumr(v)
+  call m_boundary_dam_set_target(encs(1)%b, v)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! アクセサ: ダムの代表点の座標(ルート格子。BMI のダムの点の格子の節点。§133)
+!   代表セル(捕捉集合の先頭セル。捕捉集合を持たない追加の放流工は放流セルの
+!   先頭)の中心。座標は BMI の格子と同じ(x 東・y 北。原点はルート格子の左下隅 =
+!   get_grid_origin。行 j = 1 が北端なので y = y0 + (ny − j + 0.5) dy)
+!----------------------------------------------------------------------
+subroutine m_main_get_dam_xy(x, y)
+  double precision, intent(out) :: x(:), y(:)
+  double precision :: x_ll, y_ll
+  integer :: k, i, j, n
+  x = 0.0d0
+  y = 0.0d0
+  n = min(m_main_dam_count(), size(x), size(y))
+  if (n <= 0) return
+  call grid_origin(1, x_ll, y_ll)
+  do k = 1, n
+    call m_boundary_dam_cell(encs(1)%b, k, i, j)
+    x(k) = x_ll + (dble(i) - 0.5d0) * dble(encs(1)%g%dx)
+    y(k) = y_ll + (dble(encs(1)%g%ny - j) + 0.5d0) * dble(encs(1)%g%dy)
+  end do
 end subroutine
 
 

@@ -335,6 +335,7 @@ program does not check this -- it is the user's responsibility.
 | 3 | natural regulation (level-release rating) | one of the following (in priority order): (a) polyline dam_hq_rule (b) orifice dimensions dam_ori_width/height/zbase (c) design maximum release dam_qmax (auto-built with the sqrt law; needs a surcharge level) |
 | 4 | release time series (replaying records) | dam_qout_val(:,k,n) = time (min), release (m3/s), or the file fn_dam_qout_val(n) (see [replaying operation records](#replaying-operation-records-modes-4-and-5) below) |
 | 5 | water-level time series (replaying records) | dam_h_val(:,k,n) = time (min), level (m), or the file fn_dam_h_val(n) (same section) |
+| 6 | external operation (BMI) | the release is given from outside as the BMI target release. dam_q0 = the first target (0 when omitted) (see [external operation](#external-operation-mode-6) below) |
 | none (and no release cells) | **level-held lake**: all inflow vanishes; the level stays at dam_h_init (not lowered even by evaporation). A "large water surface not solved" = the inland version of the sea mask | dam_h_init (mandatory) |
 
 **How to give HV (level-storage)**
@@ -484,12 +485,54 @@ operations).
   which one to match to the record by what you want to reproduce (the flow
   downstream or the state of the reservoir).
 
+### External operation (mode 6)
+
+The release is given from outside instead of by an operating rule of the
+model. A caller such as Python sets the BMI target release
+([dams in BMI](../../../bmi/README.en.md#dam-reservoir-quantities-and-external-operation)).
+Rules that the built-in operating rules cannot express — rules that remember
+an earlier state (such as a limit on how fast the release may rise or fall),
+pre-releases based on forecast rainfall, coupling with other models, trials
+for optimizing the operation — are written in the caller's program.
+
+- The target release (m3/s) lasts until the next set. Until the first set,
+  the dam releases `dam_q0` (0 when omitted).
+- The actual release is limited to the part of the storage of that step
+  (inflow included) above the dead storage. What exceeds the surcharge
+  becomes the forced spill (Qspill). Check with Qout in the CSV (or through
+  BMI) whether the target was met.
+- The emergency-release ramp is not applied (writing `dam_tadashigaki` stops
+  with an error). Without `dam_h_init` the reservoir starts empty (a `note:`
+  is printed at start-up).
+- The target is not saved. A restart begins again from `dam_q0`, so the
+  caller sets it again right after the restart. Run with `encflow` without
+  BMI, the dam releases the constant `dam_q0` (a `note:` is printed at
+  start-up).
+- Mode 6 can also be used by additional release works of `dam_lake`. Only the
+  dams of the root grid (the parent of a nest) can be operated from outside;
+  the dams of child grids are not exposed through BMI.
+
+```
+  ! dam 1: operated from outside (BMI; 5 m3/s until the first target)
+  f_dam_mode(1) = 6
+  dam_q0(1) = 5.0
+  dam_h_init(1) = 352.4
+```
+
+The sample controller [bmi/python/dam_control.py](../../../bmi/python/dam_control.py)
+gives a release that brings the storage back to its initial value, with a
+cap and a limit on the rate of change (it remembers the previous target). It
+is a sample and does not represent the operating rules of an actual dam. How
+the release given from outside was decided is not kept in the outputs of
+ENCflow, so keep the program of the rule together with the results.
+
 ### Which pattern needs which parameters (pattern guide)
 
 | Pattern | Surface | HV | Operation | Level |
 |---|---|---|---|---|
 | **Dam** (design data available) | capture line (dam_in_cell etc.) | dam_hv (the HV curve from references) | f_dam_mode = 1 / 2 / 3 (for multi-purpose dams in modes 1 and 2, add dam_hlim = the restricted level) | dam_h_init = initial level (restricted level for multi-purpose dams; omitted = empty) |
 | **Reproducing a past flood** (operation records available) | capture line | dam_hv | f_dam_mode = 4 (recorded release) / 5 (recorded level) | mode 4: dam_h_init = the recorded initial level. Mode 5: may be omitted (the start value of the record) |
+| **Operated by an outside rule** (a Python controller, coupling with another model) | capture line | dam_hv | f_dam_mode = 6 + the BMI target release | dam_h_init = initial level |
 | **Storage lake** (unknown depth is fine) | paint the surface in fn_dam_map | dam_hmin = about normal level - 5 m | f_dam_mode = 3 + dam_hq_rule (level of Q=0 = outlet river sill) etc. | dam_h_init = normal level |
 | **Pass-through lake** (small lake / connecting water surface with negligible retention) | either | not needed | f_dam_mode = 2, dam_rate = 1.0 | not needed (holds no level state) |
 | **Level-held lake** (large surface not solved / terminal lake) | fn_dam_map | not needed | none (no release cells) | dam_h_init = the fixed level |
@@ -571,10 +614,10 @@ mandatory.
 | dam_hv(:,k,n) | -- | HV curve (water level m, storage m3). At least 2 points (minimum level and surcharge). Monotonically increasing in both level and storage. Exclusive with dam_hmin |
 | dam_hmin(n) | -- | Lower-bound level of the auto linear HV (elevation m). The alternative to dam_hv. Surface area = number of capture cells x cell area |
 | dam_hsur(n) | none | Surcharge level of the auto linear HV (elevation m). Omitted = no upper bound (no spill). Mandatory for modes 1, 2 (except pass-through) and the sqrt law |
-| f_dam_mode(n) | -- | Operation mode. 1: constant release, 2: constant-rate cut, 3: natural regulation, 4: release time series, 5: water-level time series. None + no release cells = a level-held lake |
+| f_dam_mode(n) | -- | Operation mode. 1: constant release, 2: constant-rate cut, 3: natural regulation, 4: release time series, 5: water-level time series, 6: external operation (BMI). None + no release cells = a level-held lake |
 | dam_lake(n) | 0 | >0: lake reference (structure n is an additional release work drawing from the storage of lake m=dam_lake(n) with its own rule and release cells). The referenced lake must be a lower-numbered lake with a main release. No surface / dam_hv / dam_hmin / dam_h_init on the referencing structure |
 | dam_gw(n) | 0 | 1: fix the groundwater head to the lake level on the surface cells (see "Forcing the groundwater head" above). Requires f_gwlateral=1 of fn_gwflow. Not allowed on pass-through lakes and referencing structures |
-| dam_q0(n) | -- | Constant release of mode 1 (m3/s). Mandatory in mode 1 |
+| dam_q0(n) | -- | Constant release of mode 1 (m3/s). Mandatory in mode 1. In mode 6, the release until a target is given from outside (0 or more; 0 when omitted) |
 | dam_rate(n) | -- | Release ratio r of mode 2 (0-1). Mandatory in mode 2. 1.0 = pass-through |
 | dam_qon(n) | none | Regulation start flow of mode 2 (m3/s, 0 or more). At or below it the target is dam_qon (at the floor the inflow passes through); above it, dam_qon + r(inflow - dam_qon). Writing it for modes other than 2 stops with an error |
 | dam_hlim(n) | minimum level | Restricted level (elevation m; modes 1, 2). Rule releases never lower the reservoir below it. At or above the minimum level and below the emergency-release start level. Writing it for modes other than 1, 2 stops with an error |
@@ -587,7 +630,7 @@ mandatory.
 | dam_ori_ce(n) | 0.5 | Entrance loss coefficient of mode 3(b) |
 | dam_qmax(n) | -- | Design maximum release (m3/s). Mode 3(c): the release at surcharge, auto-building the sqrt law Q(H)=Qmax*sqrt((H-invert)/(Hsur-invert)) (needs a surcharge level). Mode 2: the release cap (at least dam_qon; needs a surcharge level) |
 | dam_zbase(n) | minimum level | Invert elevation of the mode 3(c) sqrt law (m). Below the surcharge level |
-| dam_tadashigaki(n) | minimum + 0.9 x (surcharge - minimum) | Start level of the emergency release (m; modes 1, 2). Strictly between the minimum and surcharge levels. Writing it for modes 4, 5 stops with an error |
+| dam_tadashigaki(n) | minimum + 0.9 x (surcharge - minimum) | Start level of the emergency release (m; modes 1, 2). Strictly between the minimum and surcharge levels. Writing it for modes 4, 5, 6 stops with an error |
 | dam_h_init(n) | minimum level (empty). In mode 5 the value of the series at the start time | Initial water level (m). Between the minimum level and the surcharge. For a level-held lake, the fixed level (mandatory) |
 | fn_dam_in_cell(n) / fn_dam_out_cell(n) | "" | File specification of the cell sets (from dir_data; each line "i j") |
 
@@ -642,6 +685,8 @@ Structures themselves are not written as fields.
   save. Operation rules are functions of the current state (and, in the
   time-series modes, of the time) without history, so restart is
   unaffected (the time series are read again at restart).
+- The target release of the external operation (mode 6) is not saved. A
+  restart begins again from `dam_q0`, so the caller sets it again.
 
 **How to read and check**
 
@@ -665,6 +710,7 @@ For levee overtopping and breach and channel conveyance, see the
 - [examples/coastal_compound_flood](../../../examples/coastal_compound_flood/en/README.md): a coastal town whose outfall is closed by a storm surge, compared with and without a pumping station drawing from the conduits (`f_pump_src=1`, discharging out of the domain).
 - [test/damwq](../../../test/damwq/en/README.md): dam capture, constant release and reservoir storage coupled with water quality, checked against mass balances and analytical complete-mixing values.
 - [test/damops](../../../test/damops/en/README.md): verification of dam operation rules. The constant-release method, the constant-rate constant-release form (restricted level, regulation start flow, release cap), the release and water-level time series and the release of additional release works match the formulas and series at every recorded row; the volume of the closed system is conserved; a restart continuation matches the straight run; settings that do not fit the mode stop at start-up.
+- [test/bmi_dam](../../../test/bmi_dam/en/README.md): verification of the external operation (mode 6). A dam given, through BMI, the same release as a time series matches the time-series dam (mode 4) on every row; the target, level and release of the dam operated by the sample controller; a set for dams not in external operation is ignored; the volume of the closed system is conserved.
 - [test/driftwood](../../../test/driftwood/en/README.md) (configuration 6): checks that the discharge of a culvert with `culv_jam = 1` agrees with the discharge law including the loss of the wood jammed at the inlet (both the weir and the full-pipe regimes), that the share jamming at the inlet agrees with the share of the water drawn by the culvert, and that the flow with `culv_jam = 0` and with `f_dwjam = 0` is byte-identical to a run without driftwood.
 - [test/wqstruct](../../../test/wqstruct/en/README.md): checks that pumps (in the domain, out of the domain, from a pond, from the conduit layer), culverts (forward and reverse flow), diversions (in and out of the domain), sinks of internal sources and well pumping carry the water-quality substance with the water (water at 1 mg/L stays at 1 wherever it moves, closure of the ledger, `out_intake_g` = volume of water leaving the system × concentration).
 

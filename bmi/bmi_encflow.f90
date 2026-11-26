@@ -41,6 +41,13 @@
 !     表は initialize ごとに格子ごとの判定で作り直す(ensure_items)。
 !     流速成分は vv・qdir からの導出量で、y 成分は標準形(+y=北)へ符号
 !     変換して返す(§60)。
+!   - **ダム・湖沼(§133)**: ルート格子の &list_struct_dam のダムを、ダムの代表点を
+!     節点とする非構造格子(type "unstructured"、辺と面なし = 点の集合。bmi-tester は
+!     "points" を受け付けない)で公開する。grid id = ラスタの格子数(ネストなしでは 1)。
+!     値はダムの番号順の 1 次元(大きさ = ダム数)。get: 水位・貯水量・流入・放流・
+!     スピル。set: 目標放流量(外部運転 f_dam_mode = 6 のダムがあるときだけ表に
+!     載る。F 区分 = 次の set まで持続。外部運転でないダムの要素は無視)。
+!     子格子のダムは公開しない(拡張するときは grid id = 格子数 + k、名前は ~grid<k>)
 !   - 該当機能がない問い合わせは BMI_FAILURE を返す(仕様が許容)。
 !   - 本ファイルは計算本体(src/)の外の optional アダプタであり、
 !     src/ のビルドはこのファイルに依存しない(方針10 追記 2026-08-28)
@@ -51,7 +58,9 @@ module bmi_encflow
                      m_main_finalize, m_main_get_timeinfo, &
                      m_main_get_gridinfo, m_main_get_ierror, &
                      m_main_get_value, m_main_set_value, &
-                     m_main_select, m_main_get_ngrids, m_main_has_value
+                     m_main_select, m_main_get_ngrids, m_main_has_value, &
+                     m_main_dam_count, m_main_get_dam, m_main_set_dam, &
+                     m_main_get_dam_xy
   use m_util, only : itoa
   implicit none
   private
@@ -77,7 +86,7 @@ module bmi_encflow
     logical :: input
   end type
 
-  integer, parameter :: n_vars = 19
+  integer, parameter :: n_vars = 25
   type(t_var), parameter :: vars(n_vars) = [ &
     t_var("surface_water__depth",                            "h",   "m",      .true.), &
     t_var("land_surface__elevation",                         "z",   "m",      .true.), &
@@ -100,7 +109,14 @@ module bmi_encflow
     t_var("surface_water_sediment~suspended__volume-per-area", "hs", "m",     .false.), &
     t_var("surface_water_solute__mass_concentration",        "cqc", "mg l-1", .false.), &
     t_var("glacier_ice__thickness",                          "hi",  "m",      .false.), &
-    t_var("lava__thickness",                                 "hl",  "m",      .false.) ]
+    t_var("lava__thickness",                                 "hl",  "m",      .false.), &
+    ! --- ダム・湖沼(内部名 dam_*。ルート格子のダムの点の格子に載る。§133)---
+    t_var("reservoir_water_surface__elevation",              "dam_h",    "m",      .false.), &
+    t_var("reservoir_water__volume",                         "dam_v",    "m3",     .false.), &
+    t_var("reservoir_water~incoming__volume_flow_rate",      "dam_qin",  "m3 s-1", .false.), &
+    t_var("reservoir_water~outgoing__volume_flow_rate",      "dam_qout", "m3 s-1", .false.), &
+    t_var("reservoir_water~spilled__volume_flow_rate",       "dam_qsp",  "m3 s-1", .false.), &
+    t_var("reservoir_water~outgoing~target__volume_flow_rate", "dam_qtgt", "m3 s-1", .true.) ]
 
   character(len=BMI_MAX_COMPONENT_NAME), target :: &
     component_name = "ENCflow"
@@ -270,7 +286,11 @@ contains
       k = var_index(base)
       if (k > 0) then
         iname = vars(k)%iname
-        if (has_value_on_grid(iname, grid)) return     ! ierr = 0
+        if (has_value_on_grid(iname, grid)) then
+          ! ダムの量はルート格子のダムの点の格子に載る(§133)
+          if (is_dam_iname(iname)) grid = dam_grid()
+          return                                        ! ierr = 0
+        end if
       end if
     end if
     iname = ""
@@ -317,8 +337,28 @@ contains
   !--------------------------------------------------------------------
   logical function grid_ok(grid)
     integer, intent(in) :: grid
-    grid_ok = (grid >= 0 .and. grid < m_main_get_ngrids())
+    grid_ok = (grid >= 0 .and. grid < m_main_get_ngrids()) .or. is_dam_grid(grid)
   end function grid_ok
+
+  !--------------------------------------------------------------------
+  ! ダム・湖沼の点の格子(§133): 内部名がダムの量か、ダムの格子の grid id
+  ! (ルート格子にダムがなければ -1)、grid がダムの格子か
+  !--------------------------------------------------------------------
+  logical function is_dam_iname(iname)
+    character(len=*), intent(in) :: iname
+    is_dam_iname = (len_trim(iname) >= 4)
+    if (is_dam_iname) is_dam_iname = (iname(1:4) == "dam_")
+  end function is_dam_iname
+
+  integer function dam_grid()
+    dam_grid = -1
+    if (m_main_dam_count() > 0) dam_grid = m_main_get_ngrids()
+  end function dam_grid
+
+  logical function is_dam_grid(grid)
+    integer, intent(in) :: grid
+    is_dam_grid = (grid >= 0 .and. grid == dam_grid())
+  end function is_dam_grid
 
   !--------------------------------------------------------------------
   ! 格子 grid を「現在のインスタンス」にする / ルートに戻す。
@@ -560,7 +600,7 @@ contains
       location = ""
       bmi_status = BMI_FAILURE
     else
-      location = "node"               ! uniform grid のノード = ENCflow のセル中心
+      location = "node"               ! uniform grid のノード = セル中心。ダムの点の格子では節点 = ダムの代表点
       bmi_status = BMI_SUCCESS
     end if
   end function
@@ -632,6 +672,18 @@ contains
     call var_internal(name, iname, grid, ierr)
     if (ierr /= 0) then
       bmi_status = BMI_FAILURE
+      return
+    end if
+    if (is_dam_iname(iname)) then      ! ダムの量: 番号順の 1 次元(§133)
+      nx = m_main_dam_count()
+      ny = 1
+      if (n /= nx) then
+        bmi_status = BMI_FAILURE
+        return
+      end if
+      allocate(buf(nx, 1))
+      call m_main_get_dam(iname, buf(:,1), ierr)
+      bmi_status = merge(BMI_SUCCESS, BMI_FAILURE, ierr == 0)
       return
     end if
     call grid_info(grid, nx, ny, dx, dy, x0, y0)
@@ -762,6 +814,15 @@ contains
       bmi_status = BMI_FAILURE
       return
     end if
+    if (is_dam_iname(iname)) then      ! ダムの目標放流量: 番号順の 1 次元(§133)
+      if (size(src) /= m_main_dam_count()) then
+        bmi_status = BMI_FAILURE
+        return
+      end if
+      call m_main_set_dam(trim(iname), src, ierr)
+      bmi_status = merge(BMI_SUCCESS, BMI_FAILURE, ierr == 0)
+      return
+    end if
     call grid_info(grid, nx, ny, dx, dy, x0, y0)
     if (size(src) /= nx*ny) then
       bmi_status = BMI_FAILURE
@@ -860,6 +921,11 @@ contains
       bmi_status = BMI_FAILURE
       return
     end if
+    if (is_dam_grid(grid)) then         ! ダムの点の格子: 節点数 = ダム数(§133)
+      size = m_main_dam_count()
+      bmi_status = BMI_SUCCESS
+      return
+    end if
     call grid_info(grid, nx, ny, dx, dy, x0, y0)
     size = nx * ny
     bmi_status = BMI_SUCCESS
@@ -873,6 +939,9 @@ contains
     if (.not. grid_ok(grid)) then
       type = ""
       bmi_status = BMI_FAILURE
+    else if (is_dam_grid(grid)) then
+      type = "unstructured"           ! 節点だけ(辺・面なし)= 点の集合(§133)
+      bmi_status = BMI_SUCCESS
     else
       type = "uniform_rectilinear"
       bmi_status = BMI_SUCCESS
@@ -886,8 +955,8 @@ contains
     integer :: bmi_status
     integer :: nx, ny
     double precision :: dx, dy, x0, y0
-    if (.not. grid_ok(grid) .or. size(shape) < 2) then
-      bmi_status = BMI_FAILURE
+    if (.not. grid_ok(grid) .or. size(shape) < 2 .or. is_dam_grid(grid)) then
+      bmi_status = BMI_FAILURE          ! ダムの点の格子は形を持たない(非構造)
       return
     end if
     call grid_info(grid, nx, ny, dx, dy, x0, y0)
@@ -902,7 +971,7 @@ contains
     integer :: bmi_status
     integer :: nx, ny
     double precision :: dx, dy, x0, y0
-    if (.not. grid_ok(grid) .or. size(spacing) < 2) then
+    if (.not. grid_ok(grid) .or. size(spacing) < 2 .or. is_dam_grid(grid)) then
       bmi_status = BMI_FAILURE
       return
     end if
@@ -918,7 +987,7 @@ contains
     integer :: bmi_status
     integer :: nx, ny
     double precision :: dx, dy, x0, y0
-    if (.not. grid_ok(grid) .or. size(origin) < 2) then
+    if (.not. grid_ok(grid) .or. size(origin) < 2 .or. is_dam_grid(grid)) then
       bmi_status = BMI_FAILURE
       return
     end if
@@ -934,7 +1003,16 @@ contains
     integer, intent(in) :: grid
     double precision, dimension(:), intent(out) :: x
     integer :: bmi_status
+    double precision, allocatable :: xd(:), yd(:)
+    integer :: n
     bmi_status = BMI_FAILURE          ! uniform_rectilinear は shape/spacing/origin で表現
+    if (.not. is_dam_grid(grid)) return
+    n = m_main_dam_count()            ! ダムの点の格子: 代表点の x(§133)
+    if (size(x) < n) return
+    allocate(xd(n), yd(n))
+    call m_main_get_dam_xy(xd, yd)
+    x(1:n) = xd
+    bmi_status = BMI_SUCCESS
   end function
 
   function encflow_grid_y(this, grid, y) result(bmi_status)
@@ -942,7 +1020,16 @@ contains
     integer, intent(in) :: grid
     double precision, dimension(:), intent(out) :: y
     integer :: bmi_status
+    double precision, allocatable :: xd(:), yd(:)
+    integer :: n
     bmi_status = BMI_FAILURE
+    if (.not. is_dam_grid(grid)) return
+    n = m_main_dam_count()            ! ダムの点の格子: 代表点の y(§133)
+    if (size(y) < n) return
+    allocate(xd(n), yd(n))
+    call m_main_get_dam_xy(xd, yd)
+    y(1:n) = yd
+    bmi_status = BMI_SUCCESS
   end function
 
   function encflow_grid_z(this, grid, z) result(bmi_status)
@@ -966,7 +1053,9 @@ contains
     integer, intent(in) :: grid
     integer, intent(out) :: count
     integer :: bmi_status
-    bmi_status = BMI_FAILURE          ! 非構造格子の口は対象外
+    bmi_status = BMI_FAILURE          ! ラスタの格子には非構造格子の口はない
+    count = 0
+    if (is_dam_grid(grid)) bmi_status = BMI_SUCCESS   ! ダムの点の格子: 辺なし(§133)
   end function
 
   function encflow_grid_face_count(this, grid, count) result(bmi_status)
@@ -975,6 +1064,8 @@ contains
     integer, intent(out) :: count
     integer :: bmi_status
     bmi_status = BMI_FAILURE
+    count = 0
+    if (is_dam_grid(grid)) bmi_status = BMI_SUCCESS   ! ダムの点の格子: 面なし(§133)
   end function
 
   function encflow_grid_edge_nodes(this, grid, edge_nodes) result(bmi_status)

@@ -20,7 +20,7 @@ submodule (m_boundary) m_boundary_structure
                          par_allreduce_sumr, par_allreduce_maxi, par_sum_rows
   use m_gwflow_conduit, only : t_gwcond, gwflow_conduit_ready, gwflow_conduit_head_of, &
                                gwflow_conduit_cap_of
-  use m_util, only : itoa, es_out
+  use m_util, only : itoa, rtoa, es_out
   use m_state, only : wfr_of
   use m_sysdep_util, only : sysdep_mkdir
   use m_fileio, only : fileio_read_matrix
@@ -1070,6 +1070,8 @@ end subroutine
 !     5: 貯水位の時系列 dam_h_val / fn_dam_h_val(各歩の終わりの貯水量を
 !        目標水位の貯水量に合わせる放流。dam_h_init の省略時は時系列の
 !        計算開始時刻 t0 の値。湖沼参照構造物からの参照は不可。§132)
+!     6: 外部運転(BMI の目標放流量 qext。set は次の set まで持続 = F 区分。
+!        初期値 dam_q0(省略時 0)。save しない。§133)
 !   モード1,2 の制限水位 dam_hlim: 運転の放流はこの水位の貯水量 vfl より
 !   下げない(省略時 vfl = Vmin = 従来の死水の下限)。モード2 の洪水調節
 !   開始流量 dam_qon と放流量の上限 dam_qmax: 流入 ≤ Qon は Qon を目標
@@ -1327,6 +1329,10 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       call par_stop("list_struct_dam: dam_tadashigaki of dam "//itoa(id)//" does not apply to " &
                     //"f_dam_mode=4 or 5 (the time series already contains the actual operation)")
     end if
+    if (list%dam_tadashigaki(id) > -9998.0 .and. list%f_dam_mode(id) == 6) then
+      call par_stop("list_struct_dam: dam_tadashigaki of dam "//itoa(id)//" does not apply to " &
+                    //"f_dam_mode=6 (the release is given from outside)")
+    end if
 
     !--- 放流セルなし = 水位固定湖沼(流入は全量消失、水位は dam_h_init で
     !    一定。HV・運転モードの指定は矛盾として停止。lake_plan.md §3.4) ---
@@ -1537,11 +1543,24 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
                           //" must lie between the minimum and surcharge levels")
           end if
         end do
+      case (6)      ! 外部運転(BMI の目標放流量。初期値 dam_q0、省略時 0。§133)
+        if (list%dam_q0(id) > -9998.0) then
+          if (list%dam_q0(id) < 0.0) then
+            call par_stop("list_struct_dam: dam_q0 of dam "//itoa(id) &
+                          //" (mode 6: the release until a target is set from outside) must be >= 0")
+          end if
+          b%struct(ist)%qext = list%dam_q0(id)
+        else
+          b%struct(ist)%qext = 0.0
+        end if
+        call par_info(" note: dam "//itoa(id)//" (f_dam_mode=6) is operated from outside (BMI); " &
+                      //"until a target release is set, it releases "//rtoa(b%struct(ist)%qext) &
+                      //" m3/s (dam_q0)")
       case default
         call par_stop("list_struct_dam: f_dam_mode of dam "//itoa(id)//" must be " &
                       //"1(constant release), 2(constant-ratio cut), 3(natural regulation), " &
-                      //"4(release time series) or 5(water-level time series): " &
-                      //itoa(list%f_dam_mode(id)))
+                      //"4(release time series), 5(water-level time series) or " &
+                      //"6(external operation via BMI): "//itoa(list%f_dam_mode(id)))
     end select
 
     ! モード1,2の但し書き・スピルはサーチャージ水位を要する(例外:
@@ -1645,9 +1664,10 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
                       //"dam_hlim; its rule releases can lower it to the minimum level " &
                       //"(give dam_hlim = the restricted level to keep the water above it)")
       end if
-      if (b%struct(ist)%dmode == 4 .and. list%dam_h_init(id) <= -9998.0) then
-        call par_info(" note: dam "//itoa(id)//" (f_dam_mode=4) starts at the minimum level " &
-                      //"because dam_h_init is not given")
+      if ((b%struct(ist)%dmode == 4 .or. b%struct(ist)%dmode == 6) &
+          .and. list%dam_h_init(id) <= -9998.0) then
+        call par_info(" note: dam "//itoa(id)//" (f_dam_mode="//itoa(b%struct(ist)%dmode) &
+                      //") starts at the minimum level because dam_h_init is not given")
       end if
     end if
 
@@ -1983,6 +2003,8 @@ module subroutine dam_operate(b, ist, p, g, s, vabs_row, vrow, vdraw)
     case (5)      ! 貯水位の時系列(この歩の終わりの貯水量 = 目標水位の貯水量。§132)
       vt = max(vnow - struct_v_of_h(b%struct(ist), &
                interp_series(b%struct(ist)%ts, b%struct(ist)%nts, s%t)), 0.0)
+    case (6)      ! 外部運転: BMI の目標放流量(0 以上を set が保証。§133)
+      vt = b%struct(ist)%qext * p%dt
     case default  ! 3: 自然調節 = rating(H(V))
       hh = struct_h_of_v(b%struct(ist), vnow)
       if (b%struct(ist)%nrule >= 2) then
@@ -2091,6 +2113,8 @@ module subroutine dam_draw(b, ist, p, g, s, vdraw)
       end if
     case (4)      ! 放流量の時系列(取水量などの実績の再生。§132)
       vt = max(interp_series(b%struct(ist)%ts, b%struct(ist)%nts, s%t), 0.0) * p%dt
+    case (6)      ! 外部運転: BMI の目標放流量(取水などを外から運転。§133)
+      vt = b%struct(ist)%qext * p%dt
     case default  ! 3: 自然調節 = rating(H(V))(5 は init が止める)
       hh = struct_h_of_v(b%struct(ist), vnow)
       if (b%struct(ist)%nrule >= 2) then
@@ -2271,6 +2295,104 @@ module subroutine m_boundary_dam_gwforce(b, p, g, s, dts)
     b%struct(ist)%dqgw = vap / dts
   end do
 
+end subroutine
+
+!======================================================================
+! BMI 向けのダムの量の読み書き(§133。m_main_get_dam / m_main_set_dam が使う)
+!   ダムの並びは &list_struct_dam の番号順(b%struct のダムの部分の並び)。
+!   値はすべて全ランク同値の診断量・設定値なので collective を含まない
+!======================================================================
+
+module function m_boundary_dam_count(b) result(n)
+  type(t_boundary), intent(in) :: b
+  integer :: n
+  integer :: ist
+  n = 0
+  do ist = 1, b%nstruct
+    if (b%struct(ist)%kind == e_struct_dam) n = n + 1
+  end do
+end function
+
+
+module function m_boundary_dam_has_ext(b) result(yes)
+  type(t_boundary), intent(in) :: b
+  logical :: yes
+  integer :: ist
+  yes = .false.
+  do ist = 1, b%nstruct
+    if (b%struct(ist)%kind == e_struct_dam .and. b%struct(ist)%dmode == 6) yes = .true.
+  end do
+end function
+
+
+module subroutine m_boundary_dam_get(b, what, vals)
+  type(t_boundary), intent(in) :: b
+  character(len=*), intent(in) :: what
+  real, intent(out) :: vals(:)
+  integer :: ist, k
+  vals = 0.0
+  k = 0
+  do ist = 1, b%nstruct
+    if (b%struct(ist)%kind /= e_struct_dam) cycle
+    k = k + 1
+    if (k > size(vals)) exit
+    select case (trim(what))
+      case ('h')
+        vals(k) = b%struct(ist)%dh
+      case ('v')
+        vals(k) = b%struct(ist)%dv
+      case ('qin')
+        vals(k) = b%struct(ist)%dqin
+      case ('qout')
+        vals(k) = b%struct(ist)%dqout
+      case ('qsp')
+        vals(k) = b%struct(ist)%dqsp
+      case ('qtgt')            ! 外部運転は設定値、ほかはその運転則の放流
+        if (b%struct(ist)%dmode == 6) then
+          vals(k) = b%struct(ist)%qext
+        else
+          vals(k) = b%struct(ist)%dqout
+        end if
+    end select
+  end do
+end subroutine
+
+
+module subroutine m_boundary_dam_set_target(b, vals)
+  type(t_boundary), intent(inout) :: b
+  real, intent(in) :: vals(:)
+  integer :: ist, k
+  k = 0
+  do ist = 1, b%nstruct
+    if (b%struct(ist)%kind /= e_struct_dam) cycle
+    k = k + 1
+    if (k > size(vals)) exit
+    if (b%struct(ist)%dmode == 6) b%struct(ist)%qext = vals(k)
+  end do
+end subroutine
+
+
+module subroutine m_boundary_dam_cell(b, k, i, j)
+  type(t_boundary), intent(in) :: b
+  integer, intent(in) :: k
+  integer, intent(out) :: i, j
+  integer :: ist, n
+  i = 0
+  j = 0
+  n = 0
+  do ist = 1, b%nstruct
+    if (b%struct(ist)%kind /= e_struct_dam) cycle
+    n = n + 1
+    if (n /= k) cycle
+    if (b%struct(ist)%ncin > 0) then
+      i = b%struct(ist)%cin(1,1)
+      j = b%struct(ist)%cin(2,1)
+    else if (b%struct(ist)%ncout > 0) then
+      i = b%struct(ist)%cout(1,1)
+      j = b%struct(ist)%cout(2,1)
+    end if
+    return
+  end do
 end subroutine
 
 end submodule

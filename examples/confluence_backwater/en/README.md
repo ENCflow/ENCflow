@@ -129,7 +129,8 @@ cd examples/confluence_backwater
 make                    # links and inputs (data/, data_coarse/, junction/data/)
 make run                # the 6 cases of the main part (about 6 minutes per case with 4 threads)
 make coarse             # supplement 1: the 3 coarse-grid cases (about 2 minutes in total)
-make coarse_check       # supplement 1: the 13 cases that locate the coarse-grid difference, and the table (about 5 minutes in total)
+make coarse_check       # supplement 1: the 16 cases that locate the coarse-grid difference, and the table (about 5 minutes in total)
+make coarse_oblique     # supplement 1: the 67 cases on representing oblique channels, and the table (about 30 minutes in total)
 make steady             # supplement 2: the steady case on the main grid (about 3 minutes with 4 threads)
 make junction           # supplement 3: the 9 junction-shape cases (about 2 minutes per case with 4 threads)
 make junction_fine      # supplement 3: the 2 grid-check cases (about 10 minutes per case with 4 threads)
@@ -137,7 +138,7 @@ python3 plot_results.py # figs/*.png and tables (argument en draws the English v
 ```
 
 The settings files are written by make_params.py (main part and supplements 1 and 2), coarse_check/make_check.py
-(the checks of supplement 1) and junction/make_junction.py (supplement 3).
+and oblique.py (the checks of supplement 1) and junction/make_junction.py (supplement 3).
 
 ## Results
 
@@ -221,7 +222,9 @@ case gate, and the pump discharge obtained from the operating rule.
 
 The same area on a grid used for catchment-scale computations.
 
-- **Main river**: a resolved channel about 2 cells wide.
+- **Main river**: a resolved channel about 2 cells wide. At the steps of the bend, main-river cells are added at 6
+  places so that neighbouring columns share the 2 rows nearest the centreline (`THICK = 2` in make_coarse.py; see the
+  breakdown and "oblique channels" below for the reason).
 - **Narrows** (120 m wide): the southern cell is a resolved channel (100 m), and the northern cell is a subgrid channel
   of the remaining 20 m. The transitions before and after it have the same form (the northern cell is 40 and 80 m
   wide).
@@ -237,38 +240,47 @@ the landside. (d) Profile of the maximum water level along the tributary.
 
 | Case | Highest main-river stage at the confluence (m)<br>20 m → 100 m | Max. water on the landside (million m³)<br>20 m → 100 m | Flooded area (km²)<br>20 m → 100 m |
 |---|---|---|---|
-| main | 24.14 → 24.36 | 2.49 → 5.70 | 3.08 → 4.71 |
-| same | 24.24 → 24.49 | 4.00 → 7.11 | 3.93 → 5.28 |
+| main | 24.14 → 24.33 | 2.49 → 4.09 | 3.08 → 3.95 |
+| same | 24.24 → 24.43 | 4.00 → 5.60 | 3.93 → 4.67 |
 
-- **On the coarse grid the main-river stage at the confluence comes out 0.22–0.24 m higher, and the water on the
-  landside 1.8–2.3 times as much**: the difference of the main-river stage arises mainly in the bend (see the
-  breakdown below).
+- **On the coarse grid the main-river stage at the confluence comes out 0.19 m higher, and the water on the landside
+  1.4–1.6 times as much**: the difference arises after the overtopping begins.
+  - Before the overtopping (3–5 h), the main-river stage at the confluence agrees with the fine grid within 0.02 m.
+  - From about 6 h, when the overtopping begins, the coarse grid comes out higher, by 0.18–0.21 m at 7–8 h.
+  - One of the main causes is that on the coarse grid the main river and the tributary border the landside directly
+    across the virtual walls of the channel levees. When the landside is flooded, the advection term counts momentum
+    exchange with the stagnant water beyond the walls and slows the channel flow (a limitation of how the computational
+    core handles this; [developer.md](../../../docs/developer.md) §131.12, in Japanese). On the fine grid the main river
+    borders dry levee cells.
 - **The overtopping volume changes greatly with small differences of the stage at the confluence**: the depth over the
   tributary levees is only 0.4–0.5 m in the main part. Since the overflow is roughly proportional to the 1.5 power of
-  the overflow depth, and the overtopped reach and duration also grow, a difference of only 0.2 m in the stage at the
-  confluence roughly doubles the overtopping volume.
+  the overflow depth, a stage 0.2 m higher at the confluence makes the overflow about 1.7 times as large.
 
 **Where the difference of the main-river stage arises**
 
 Constant flows in the main river (and the tributary) are run for 4 h, and the steady stages computed in the channels
 only are compared (coarse_check/).
 
-| Main river | Δx = 20 m | Δx = 100 m | Difference | 1-D |
-|---|---:|---:|---:|---:|
-| straight | 23.60 | 23.59 | 0.00 | 23.60 |
-| straight + narrows | 24.34 | 24.30 | −0.04 | 24.25 |
-| bend | 23.63 | 24.07 | +0.44 | 23.55 |
-| bend + narrows (main river of this example) | 24.33 | 24.66 | +0.33 | 24.19 |
-| bend + narrows + tributary 300 m³/s | 24.78 | 25.13 | +0.35 | 24.60 |
+| Main river | Δx = 20 m | Δx = 100 m (steps not thickened) | Difference | Δx = 100 m (steps thickened) | Difference | 1-D |
+|---|---:|---:|---:|---:|---:|---:|
+| straight | 23.60 | 23.59 | 0.00 | — | — | 23.60 |
+| straight + narrows | 24.34 | 24.30 | −0.04 | — | — | 24.25 |
+| bend | 23.63 | 24.07 | +0.44 | 23.65 | +0.02 | 23.55 |
+| bend + narrows (main river of this example) | 24.33 | 24.66 | +0.33 | 24.34 | +0.01 | 24.19 |
+| bend + narrows + tributary 300 m³/s | 24.78 | 25.13 | +0.35 | 24.84 | +0.06 | 24.60 |
 
-Main-river stage at the confluence location (m). The main river carries 2,800 m³/s. The 1-D column is the solution of
-the gradually varied flow equation (rectangular section, Manning), without contraction, expansion or junction losses.
+Main-river stage at the confluence location (m). The main river carries 2,800 m³/s. The coarse grid of this example has
+the steps thickened. A straight main river has no steps, so thickening changes nothing there. The 1-D column is the
+solution of the gradually varied flow equation (rectangular section, Manning), without contraction, expansion or
+junction losses.
 
-- **Most of the difference arises in the staircase of the bend**: for a straight main river the stage is the same on
-  both grids, but with the bend the coarse grid comes out 0.44 m higher. On the coarse grid the bend becomes a
-  staircase 2 cells wide, and its width across the flow narrows.
+- **Without thickening the steps, the coarse grid comes out high in the bend**: for a straight main river the stage is
+  the same on both grids, but with the bend the coarse grid comes out 0.44 m higher. On the coarse grid the bend becomes
+  a staircase 2 cells wide, and the band has waists at the steps ("oblique channels" below).
+- **Thickening the main river at the steps removes the difference in the bend**: adding cells at the 6 steps so that
+  neighbouring columns share the 2 rows nearest the centreline brings the difference down to 0.01–0.06 m.
 - **The difference in reproducing the confluence is small**: adding the tributary raises the stage by 0.45 m at
-  Δx = 20 m and by 0.47 m at Δx = 100 m.
+  Δx = 20 m and by 0.50 m at Δx = 100 m (steps thickened).
 
 **At the narrows, the representation of a width that is not a multiple of the cell size changes the stage by more
 than 1 m**
@@ -293,13 +305,51 @@ Stage at the confluence location for the straight main river with the narrows. A
 - With the southern cell resolved and the northern cell a subgrid channel of the remaining 20 m, the diagonal edges are
   also limited by the 20 m width (0.28), and the result agrees with Δx = 20 m within 0.04 m.
   - Channel cells side by side are outside the assumption of the subgrid channel (a channel one cell wide along a
-    line). This is a result checked for the form of this example (a straight reach), not for oblique channels.
+    line). For oblique channels there are directions where it does not agree (next table).
+
+**For oblique channels, the shape of the band of cells on the coarse grid changes the conveyance**
+
+A straight channel of uniform width is laid obliquely to the grid axes, and the conveyance width back-calculated from
+the steady uniform-flow depth is compared with the channel width (coarse_check/oblique.py).
+
+| Direction | n resolved rows | n+1 resolved rows | resolved + remainder | equal split | 2 rows shared at steps | Δx = 20 m |
+|---|---:|---:|---:|---:|---:|---:|
+| 0° | 0.83 / 1.00 | 1.67 / — | 0.97 / — | 1.37 / — | 1.67 / 1.00 | 1.00 / 1.00 |
+| 18.4° (1:3) | 0.71 / 0.73 | 0.53 / 0.95 | 0.61 / 0.79 | 0.13 / 0.50 | 1.63 / 0.95 | 0.91 / 0.95 |
+| 26.6° (1:2) | 0.68 / 0.73 | 0.96 / 1.01 | 1.05 / 0.89 | 0.62 / 0.73 | 1.70 / 1.01 | 0.95 / 0.98 |
+| 33.7° (2:3) | 0.40 / 0.80 | 0.93 / 1.03 | 0.55 / 0.82 | 0.30 / 0.56 | 1.74 / 1.03 | 0.95 / 0.97 |
+| 45° | 0.59 / 0.76 | 1.26 / 1.11 | 1.08 / 1.05 | 1.11 / 1.02 | 1.85 / 1.11 | 1.02 / 1.01 |
+
+Conveyance width ÷ channel width (120 m / 200 m wide). Cell centres lie in rows whose spacing depends on the direction
+of the channel (100 m at 0°, 71 m at 45°, 45 m at 26.6°, and so on), and n is the number of rows that fit in the
+channel width. "2 rows shared at steps" is the band of n resolved rows thickened so that, at the boundary between
+neighbouring columns, the 2 rows nearest the centreline are resolved cells in both columns. Δx = 20 m is divided by
+the width it represents. At 0°, 200 m is exactly 2 resolved rows.
+
+- **Resolved + remainder agrees at 0° and 45°**: the deviation is within 10 %.
+- **In other directions the band develops "waists" and conveys too little**: runs of a few cells side by side are
+  connected to each other only through an overlap of one cell or through a corner. The flow turns and is squeezed
+  there.
+  - How large the shortfall is varies irregularly with the direction and the width. Resolved + remainder does not fix
+    the waists and scatters between 0.55 and 1.05 times. An equal split is worse still.
+- **Thickening the band so that 2 rows are shared at the steps removes the waists and evens out the conveyance**:
+  conveyance ÷ width of the represented area becomes 0.86–0.93 at 18.4–33.7° and 1.01 at 45°.
+  - For a channel 2 cells wide the conveyance returns to 0.95–1.11 times the channel width.
+  - For a channel 1.2 cells wide the area swells to almost twice the width, giving 1.6–1.9 times. There is no
+    representation yet for laying a channel of this width obliquely.
+- **Even on the fine grid (6–10 cells across the channel) the directions 18.4–33.7° convey 2–9 % too little**: the
+  banks become staircases.
+- **The higher stage in the bend on the coarse grid without thickened steps (the breakdown above) is due to these
+  waists**: the bend in this example slopes at up to 30° and is a band 2 cells per column.
+- With resolved + remainder, the storage of the remainder cells is larger than their share of the width, because the
+  channel length counts the neighbouring channel cells as well; the storage width is 1.3 times the channel width at 0°.
+  This does not affect the steady stage, but it does affect the delay and attenuation of a flood wave.
 
 When looking at backwater flooding on a coarse grid, check the main-river stage at the confluence first. The backwater
 profile of the tributary itself agrees well with 1-D theory even on the coarse grid (supplement 2). Most of the error
 enters the stage at the confluence through the representation of the main river. It is safe to compare the
-representation of the bends and of widths that are not a multiple of the cell size with a finer grid or a 1-D
-calculation, and to match it to observed stages before reading the results.
+representation of the bends and oblique reaches, and of widths that are not a multiple of the cell size, with a finer
+grid or a 1-D calculation, and to match it to observed stages before reading the results.
 
 ## Supplement 2: how far up the tributary the backwater reaches (steady backwater profile)
 
@@ -315,12 +365,14 @@ depth 150 m above the mouth.
 | Grid | Depth 150 m above the mouth (m) | Max. difference from theory (m) | Reach affected by backwater (normal depth + 0.1 m)<br>model / theory |
 |---|---:|---:|---:|
 | Δx = 20 m (resolved channel) | 3.29 | 0.004 | 2,750 m / 2,750 m |
-| Δx = 100 m (subgrid channel) | 3.49 | 0.018 | 2,950 m / 2,950 m |
+| Δx = 100 m (subgrid channel) | 3.31 | 0.018 | 2,750 m / 2,770 m |
 
 - **The backwater profile of the tributary agrees with 1-D theory on both grids**: even for the tributary as a subgrid
   channel the difference is within 2 cm. The difference of the reach affected by backwater is within one cell (100 m).
-- **The longer reach on the coarse grid is due to the 0.20 m higher stage at the confluence** (the same reason as in
-  supplement 1), not to a different shape of the backwater profile.
+- **The reach affected by backwater on the coarse grid is the same as in the main part**: the depth 150 m above the
+  mouth differs by 0.02 m. On a coarse grid without thickened steps in the bend (`THICK = 0` in make_coarse.py), the
+  higher stage at the confluence makes the depth 0.20 m greater and the reach 200 m longer. This is not a difference in
+  the shape of the backwater profile.
 - **A guide to the reach affected by backwater**: where the rise Δh caused by the main-river stage is larger than the
   normal depth h, the water surface extends almost level up the tributary. Its length is about Δh / S.
   - Upstream of that, the rise decreases by a factor e every distance L_e = 0.3 h (1 − Fr²) / S. For the tributary of
@@ -408,9 +460,15 @@ the mouth. The downstream uniform-flow velocity is 2.59 m/s.
 - **The junction loss comes out small**: as in supplement 3, it is smaller than the 1-D momentum theory even for
   resolved channels and depends on the grid. Three-dimensional flow that the depth-averaged 2-D equations cannot
   represent, such as the size of the separation zone and secondary currents, is not included.
-- **On a coarse grid the representation of the main river governs the result**: as in supplement 1, the staircase of
-  the bend raises the stage at the confluence by 0.2–0.4 m, which roughly doubles the overtopping volume. For a
-  width that is not a multiple of the cell size, the representation changes the stage by more than 1 m.
+- **On a coarse grid the representation of the main river governs the result**: as in supplement 1, without
+  thickening the steps of the bend the stage at the confluence comes out 0.3–0.4 m higher. Even with them thickened, the
+  stage at the confluence is 0.2 m higher while the levees are overtopped, and the overtopping volume is 1.4–1.6 times
+  as large. One of the main causes is that when the landside beyond the virtual walls is flooded, the advection term
+  slows the channel flow (supplement 1). For a
+  width that is not a multiple of the cell size, the representation changes the stage by more than 1 m. A channel
+  1–2 cells wide laid in a direction other than the axes and 45° conveys up to 60 % too little because of the waists
+  in the band. For a channel 2 cells wide, thickening the steps restores it, but there is no representation yet for
+  laying a channel 1–1.5 cells wide obliquely.
 - **The downstream stage is the normal depth of the sum of the inflows**: the drop of the stage when flooding reduces
   the main-river discharge, and the delay by storage in the channels, are not counted.
 - **Sediment does not move**: bed changes by deposition and scour at the confluence are not computed.
@@ -435,6 +493,8 @@ After changing make_terrain.py or make_coarse.py, rebuild the inputs with `make`
 - `pump_rule` (pump capacity) and `culv_width` (gate width) in param_gate.txt.
 - `REP` in make_coarse.py (how the narrows is represented on the coarse grid: the default mix, or round, split, full):
   as in supplement 1, the main-river stage at the confluence changes by about 1 m.
+- `THICK` in make_coarse.py (number of rows by which the steps of the bend are thickened on the coarse grid; default
+  2): with 0, the main-river stage comes out 0.3–0.4 m higher in the bend (supplement 1).
 
 ## References
 

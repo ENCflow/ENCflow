@@ -225,6 +225,81 @@ get / set / メタデータ問い合わせは未知の名前と同じエラー�
 (降雨なら分オーダー)。細かすぎる交換は無駄なだけですが、粗すぎる
 交換は結合誤差になります。
 
+### ダム(貯水池)の量と外部運転
+
+ダム・湖沼(`&list_struct_dam`。[構造物](../docs/users_guide/structure.md#ダム湖沼list_struct_dam))が
+あるケースでは、ダムごとの量を get でき、外部運転(`f_dam_mode = 6`)と宣言した
+ダムには目標放流量を set できます(developer.md §133)。放流をモデルの運転則
+ではなく、呼び出し側のプログラムで決めるための口です。前の状態を覚える規則
+(放流量の増減の速さの制限など)、予測を使う規則、他モデルとの結合は、組み込みの
+運転則では表せないので、呼び出し側に書きます。
+
+ダムの量は、ダムの代表点を節点とする**ダムの点の格子**に載ります。
+
+- 格子の種類は "unstructured"(節点だけで、辺と面はない)。grid id はラスタの
+  格子数(ネストなしなら 1)。
+- 値はダムの番号順の 1 次元(大きさ = ダムの数)。節点 k = `&list_struct_dam` の
+  k 番のダムです。
+- 節点の座標(`get_grid_x` / `get_grid_y`)は、捕捉集合の先頭のセルの中心
+  (追加の放流工〔`dam_lake`〕は放流セルの先頭)。座標系はラスタの格子と同じ
+  (origin の左下隅が基準、x 東・y 北)。
+- ルート格子のダムだけを公開します(ネストの子格子のダムは載りません)。
+
+| CSDMS Standard Name | 内容 | 単位 | 存在条件 | set |
+| --- | --- | --- | --- | --- |
+| `reservoir_water_surface__elevation` | 貯水位 | m | ダム・湖沼がある | 不可(get のみ) |
+| `reservoir_water__volume` | 貯水量 | m³ | 同上 | 不可(get のみ) |
+| `reservoir_water~incoming__volume_flow_rate` | 流入量(捕捉集合が吸収した量) | m³/s | 同上 | 不可(get のみ) |
+| `reservoir_water~outgoing__volume_flow_rate` | 放流量(実際の放流。スピルを含まない) | m³/s | 同上 | 不可(get のみ) |
+| `reservoir_water~spilled__volume_flow_rate` | スピル(サーチャージ超過の強制放流) | m³/s | 同上 | 不可(get のみ) |
+| `reservoir_water~outgoing~target__volume_flow_rate` | 目標放流量 | m³/s | 外部運転のダムがある | 可(外部運転のダムの要素だけ。次の set まで持続) |
+
+- 流入・放流・スピルは、その時点で終わっている最後のステップの平均の流量で、
+  ダムの CSV(`result/dams/dam000n.csv`)の Qin・Qout・Qspill と同じ量です。
+  initialize の直後は 0 です。
+- 追加の放流工(`dam_lake`)の水位・貯水量は参照先の湖沼の値で、流入は 0 です。
+  水位固定湖沼(放流セルなし)は、水位 = 固定水位、貯水量 = 0、流入 = 消失量です。
+
+**目標放流量**(`VAR_RESERVOIR_TARGET`)
+
+- 外部運転のダムが 1 つ以上あるときだけ入力表に載ります。set する配列はダム全部の
+  長さで、外部運転でないダムの要素は無視されます(そのダムは自分の運転則で放流
+  します)。get は、外部運転のダムでは今の目標を、ほかのダムでは直前のステップの
+  運転則の放流を返します。
+- 目標は次の set まで持続する指示で、次の update のステップから放流に効きます
+  (降水強度と同じく持続する外力の扱い)。set の直後の get は設定した値を
+  返します。最初の set までは `dam_q0`(省略時 0)を放流します。持続するので、
+  set は判断を変えるときだけで足ります。
+- 実際の放流は、そのステップの貯水量(流入を含む)のうち死水より上の分までです。
+  サーチャージを超える分は強制スピルになります(但し書きのランプは掛けません)。
+  目標どおりに放流できたかは放流量(`VAR_RESERVOIR_OUTFLOW`)で確かめます。
+  目標が大きすぎても、水を作り出すことはありません。
+- 負の値はエラー(BMI_FAILURE。Python では BmiError)で、目標は変わりません。
+- 目標は保存(save)されません。再開(restart)すると `dam_q0` から始まるので、
+  呼び出し側が再開の直後に set し直してください。BMI を使わずに `encflow` で
+  実行すると、`dam_q0` の一定量放流になります(起動時に `note:` を表示します)。
+
+```python
+import numpy as np
+from encflow import (ENCflow, VAR_RESERVOIR_VOLUME, VAR_RESERVOIR_INFLOW,
+                     VAR_RESERVOIR_OUTFLOW, VAR_RESERVOIR_TARGET)
+with ENCflow("param.txt") as m:
+    print(m.ndam, m.dam_xy())                    # ダムの数と代表点の座標 (x, y)
+    v0 = m.get(VAR_RESERVOIR_VOLUME)             # 番号順の 1 次元
+    while m.time < m.end_time:
+        q = m.get(VAR_RESERVOIR_INFLOW) + (m.get(VAR_RESERVOIR_VOLUME) - v0) / 1800.0
+        m.set(VAR_RESERVOIR_TARGET, np.clip(q, 0.0, 2.0))   # 外部運転のダムにだけ効く
+        m.update()
+        q_real = m.get(VAR_RESERVOIR_OUTFLOW)    # 実際の放流(死水に当たると目標より小さい)
+```
+
+見本の制御器 [python/dam_control.py](python/dam_control.py) は、これに放流量の
+上限と変化の速さの制限(前のステップの目標を覚える)を足したもので、コマンド
+としても使えます(`python3 ../../bmi/python/dam_control.py param.txt --csv out.csv`)。
+見本であり、実際のダムの操作規則を表すものではありません。外から与えた放流の
+決め方は ENCflow の出力に残らないので、規則のプログラムは結果と一緒に保存して
+ください。受け入れ試験は [test/bmi_dam](../test/bmi_dam/) です。
+
 ### ネスト系(多段格子)の変数と格子
 
 ルートのパラメータに `fn_nest` があるケース(docs/users_guide/nest.md)は、
@@ -258,9 +333,11 @@ georef がなければ親の原点と整列位置から導かれるので、全�
   では `origin='lower'` で地図の向きどおりに表示されます)。
 - 格子は uniform_rectilinear(ネストなしは grid 0 のみ、ネスト系は格子ごと)、
   shape は [ny, nx] 順。georef(hdr)を使うケースでは origin に実座標が
-  入ります(ネストの子は親から導いた座標)。
-- 参照渡し(get_value_ptr)と非構造格子系の問い合わせは非対応です
-  (BMI 仕様が認める BMI_FAILURE / NotImplementedError を返します)。
+  入ります(ネストの子は親から導いた座標)。ダムがあるケースには、これに
+  ダムの点の格子(unstructured。節点だけ)が加わります([ダム](#ダム貯水池の量と外部運転))。
+- 参照渡し(get_value_ptr)と、ラスタの格子への非構造格子系の問い合わせ
+  (get_grid_x・辺・面など)は非対応です(BMI 仕様が認める BMI_FAILURE /
+  NotImplementedError を返します)。
 
 ![ENCflow のセル番地と BMI の配列順・地図表示](../docs/figs/bmi_arrays.png)
 
@@ -300,6 +377,7 @@ mpirun -np 4 ./test_encflow_bmi_mpi param.txt
 | [python/test_set_value.py](python/test_set_value.py) | set_value の等価性テスト(ファイル強制と外部供給で結果が一致すること、h・z・rn の同値 set の不変性、rn の set が効くこと。[test/wave](../test/wave/) で実行) |
 | [python/test_vars.py](python/test_vars.py) | 機能依存の変数の受け入れ試験(変数表の内容・値・再 initialize・hg / swe の同値 set の不変性と受理条件。[test/bmi_vars](../test/bmi_vars/) で実行。`Run.sh` が静的ドライバと bmi-tester も含めて一括実行) |
 | [python/test_nest.py](python/test_nest.py) | 多格子公開の受け入れ試験(格子情報・変数表・比 1:1 自己ネストの恒等・再 initialize・同値 set。[test/bmi_nest](../test/bmi_nest/) で実行。`Run.sh` が静的ドライバと bmi-tester も含めて一括実行) |
+| [python/test_dam.py](python/test_dam.py) | ダムの量と外部運転の受け入れ試験(ダムの点の格子・外部から与えた放流量が時系列のダムと全行一致・見本の制御器・外部運転でないダムへの set の無視・get と CSV の一致・体積保存・再 initialize。[test/bmi_dam](../test/bmi_dam/) で実行。`Run.sh` が見本・静的ドライバ・bmi-tester も含めて一括実行) |
 | `python/check_bmi.sh` | CSDMS 公式適合性テスト bmi-tester の実行スクリプト(param の後に、param が参照する入力ファイルを列挙) |
 
 適合性テストの再現手順:
@@ -321,7 +399,8 @@ cd ../bmi_nest && ./Run.sh          # ネスト系(受け入れ試験 + bmi-test
 | `python/encflow.py` | Python ラッパー。`ENCflow` クラス(日常利用はこちら) |
 | `python/encflow_bmi.py` | bmipy 準拠クラス `EncflowBmi`(bmi-tester・pymt 系ツール用) |
 | `python/live_view.py` | ライブ表示サンプル |
-| `python/test_set_value.py`, `python/test_nest.py`, `python/test_vars.py` | 受け入れ試験(上記) |
+| `python/dam_control.py` | ダムの外部運転の見本(貯水位を保つ制御器。[ダム](#ダム貯水池の量と外部運転)) |
+| `python/test_set_value.py`, `python/test_nest.py`, `python/test_vars.py`, `python/test_dam.py` | 受け入れ試験(上記) |
 
 ## 制約・注意
 
@@ -333,6 +412,8 @@ cd ../bmi_nest && ./Run.sh          # ネスト系(受け入れ試験 + bmi-test
   スタンドアロン実行とビットまでは一致しないことがあります(物理量の
   出力は表示桁で一致します)。厳密なビット再現が必要な検証には
   静的な `test_encflow_bmi` を使ってください。
+- ダムの量はルート格子のダムだけを公開します。外部運転の目標放流量は保存
+  されないので、再開後は呼び出し側が set し直します(上の[ダム](#ダム貯水池の量と外部運転))。
 
 ## 開発者向け
 
@@ -343,4 +424,4 @@ cd ../bmi_nest && ./Run.sh          # ネスト系(受け入れ試験 + bmi-test
 設計の経緯・全体計画は [docs/bmi_plan.md](../docs/bmi_plan.md)、
 決定事項と検証記録の正本は
 [docs/developer.md](../docs/developer.md) の §53〜§60、§73(多格子)、
-§76(動的変数表と機能依存の変数)、§77(粗度の外部上書き)にあります。
+§76(動的変数表と機能依存の変数)、§77(粗度の外部上書き)、§133(ダムの量と外部運転)にあります。
