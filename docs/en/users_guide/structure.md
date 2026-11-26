@@ -504,13 +504,15 @@ for optimizing the operation — are written in the caller's program.
 - The emergency-release ramp is not applied (writing `dam_tadashigaki` stops
   with an error). Without `dam_h_init` the reservoir starts empty (a `note:`
   is printed at start-up).
-- The target is not saved. A restart begins again from `dam_q0`, so the
-  caller sets it again right after the restart. Run with `encflow` without
-  BMI, the dam releases the constant `dam_q0` (a `note:` is printed at
-  start-up).
+- The target is not saved; saving it is the caller's responsibility. To
+  operate across a restart, the caller saves the target and the state of its
+  controller and sets the target again right after the restart (until it is
+  set, the dam releases `dam_q0`). Run with `encflow` without BMI, the dam
+  releases the constant `dam_q0` (a `note:` is printed at start-up).
 - Mode 6 can also be used by additional release works of `dam_lake`. Only the
   dams of the root grid (the parent of a nest) can be operated from outside;
-  the dams of child grids are not exposed through BMI.
+  the dams of child grids are not supported (they are not exposed through
+  BMI).
 
 ```
   ! dam 1: operated from outside (BMI; 5 m3/s until the first target)
@@ -686,7 +688,8 @@ Structures themselves are not written as fields.
   time-series modes, of the time) without history, so restart is
   unaffected (the time series are read again at restart).
 - The target release of the external operation (mode 6) is not saved. A
-  restart begins again from `dam_q0`, so the caller sets it again.
+  restart begins again from `dam_q0`. Saving the target and setting it again
+  after the restart are the caller's responsibility.
 
 **How to read and check**
 

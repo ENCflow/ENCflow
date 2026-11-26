@@ -9,7 +9,8 @@
   figs/series.png    結果 1: 表現 B の雨、集落の浸水深、排水機場の前の水位、区画の平均水深(N・D・Du・Dd)
   figs/scale.png     結果 2: 同じ条件の表現 B と表現 A(片方向・双方向・双方向で集水面積率を与える)の比べ(集落の浸水深と
                      水田の平均水深)
-数表(README の 2 つの表)は標準出力に Markdown で出す。引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は
+  figs/wq.png        結果 3: 雨の前の湛水に溶けた物質の行方(排水機場から出た割合、水田に残った割合、排水機場の前の濃度)
+数表(README の表)は標準出力に Markdown で出す。引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は
 共通)。図のパネルの番号は (1)(2)… とする(表現 A・B の記号と紛れないように)。
 """
 import os
@@ -348,6 +349,126 @@ def fig_scale():
     plt.close(fig)
 
 
+# ---------------------------------------------------------------- 結果 3: 雨の前の湛水に溶けた物質の行方
+def wq(case):
+    """wq.csv の列(dt_record ごと。時刻 0 を含む)"""
+    with open(f"result_{case}/wq.csv") as f:
+        head = [h.strip() for h in f.readline().strip().split(",")]
+    a = np.loadtxt(f"result_{case}/wq.csv", delimiter=",", skiprows=1)
+    return {k: a[:, i] for i, k in enumerate(head)}
+
+
+def have_wq(case):
+    return have(case) and os.path.isfile(f"result_{case}/wq.csv")
+
+
+def probe_c(case, n):
+    """プローブ n の時刻 (h)・水深・濃度 C (mg/L)"""
+    a = np.loadtxt(f"result_{case}/probes/probe{n:04d}.csv", delimiter=",", comments="#")
+    return a[:, 0], a[:, 3], a[:, 11]
+
+
+def fates(c):
+    """雨の前の湛水の物質(初めの質量 m0)に対する割合 (%) の時系列: 時刻 h、排水機場から域外へ、水田に残る、減水深で
+    抜ける、地表(排水路・農道・集落)に残る。水田の中の物質は種類ごとの濃度 × 水の量(A はタンクのプール、B は区画の
+    セルの水。B の区画の水は wq.csv では地表の質量に入るので、地表から引く)"""
+    w = wq(c)
+    m0 = w["mass_surface_g"][0] + w["mass_paddy_g"][0]
+    th = w["time_s"] / 3600.0
+    p = paddy(c)
+    tp = np.concatenate([[0.0], p["time(s)"] / 3600.0])
+    mp = np.concatenate([[m0], p["c1(mg/L)"] * p["store1(m3)"] + p["c2(mg/L)"] * p["store2(m3)"]])
+    inpd = np.interp(th, tp, mp)
+    out = w["out_intake_g"]
+    perc = w["out_paddy_perc_g"]
+    surf = w["mass_surface_g"] + w["mass_paddy_g"] - inpd
+    f = 100.0 / m0
+    return th, out * f, inpd * f, perc * f, surf * f, m0
+
+
+def fig_wq():
+    groups = ["N", "D"]
+    if not any(have_wq(r[0] % g) for g in groups for r in REPS):
+        return
+    fig, axs = plt.subplots(3, 2, figsize=(9.8, 9.0), sharex=True, sharey="row")
+    for col, g in enumerate(groups):
+        for fmt, rname, color, ls in REPS:
+            c = fmt % g
+            if not have_wq(c):
+                continue
+            th, out, inpd, perc, surf, m0 = fates(c)
+            axs[0, col].plot(th, out, color=color, ls=ls, lw=2, label=rname)
+            axs[1, col].plot(th, inpd, color=color, ls=ls, lw=2, label=rname)
+            t, h, cc = probe_c(c, 2)
+            axs[2, col].plot(t, cc, color=color, ls=ls, lw=2, label=rname)
+        axs[0, col].set_title(T("(%d) 排水機場から地区の外へ出た割合 — %s" % (col + 1, SCEN[g]),
+                                "(%d) share pumped out of the district — %s" % (col + 1, SCEN[g])),
+                              fontsize=9, loc="left", color=INK)
+        axs[1, col].set_title(T("(%d) 水田に残った割合 — %s" % (col + 3, SCEN[g]),
+                                "(%d) share remaining in the paddies — %s" % (col + 3, SCEN[g])),
+                              fontsize=9, loc="left", color=INK)
+        axs[2, col].set_title(T("(%d) 排水機場の前の濃度(プローブ 2)— %s" % (col + 5, SCEN[g]),
+                                "(%d) concentration at the pumping station — %s" % (col + 5, SCEN[g])),
+                              fontsize=9, loc="left", color=INK)
+        axs[2, col].set_xlabel(T("時刻 (h)", "time (h)"), fontsize=8, color=INK2)
+        axs[2, col].set_xlim(0, 48)
+        axs[2, col].set_xticks(range(0, 49, 6))
+    axs[0, 0].set_ylabel(T("初めの物質に対する % ", "% of the initial substance"), fontsize=8, color=INK2)
+    axs[1, 0].set_ylabel(T("初めの物質に対する % ", "% of the initial substance"), fontsize=8, color=INK2)
+    axs[2, 0].set_ylabel(T("濃度 (mg/L)", "concentration (mg/L)"), fontsize=8, color=INK2)
+    for ax in axs.flat:
+        style(ax)
+    axs[1, 0].legend(fontsize=7, frameon=False, loc="lower left")   # N の水田に残った割合のパネルは左下が空いている
+    fig.tight_layout()
+    fig.savefig(os.path.join(FIGDIR, "wq.png"), dpi=130)
+    plt.close(fig)
+
+
+def table_wq():
+    """表 4(結果 3): 雨の前の湛水の物質の行き先(初めの質量に対する %)と濃度"""
+    print()
+    print(T("表 4(結果 3。雨の前の湛水 10 mg/L に溶けた物質の行き先。初めの質量に対する %)",
+            "Table 4 (result 3; where the substance dissolved in the ponding before the rain (10 mg/L) went, % of the "
+            "initial mass)"))
+    print(T("| 落水口 | 表現 | 初めの質量 kg | 排水機場から出た 24 h / 48 h | 水田に残った 24 h / 48 h | 減水深で抜けた 48 h | "
+            "地表に残った 48 h | 排水機場の前の最高濃度 mg/L(時刻) | 集落の浸水の最高濃度 mg/L |",
+            "| Outlets | Representation | initial mass kg | pumped out 24 h / 48 h | in the paddies 24 h / 48 h | "
+            "percolated 48 h | on the surface 48 h | max concentration at the pumping station mg/L (time) | "
+            "max concentration of the settlement flooding mg/L |"))
+    print("|---|---|---:|---:|---:|---:|---:|---:|---:|")
+    for g in ["N", "D"]:
+        for fmt, rname, _, _ in REPS:
+            c = fmt % g
+            if not have_wq(c):
+                continue
+            th, out, inpd, perc, surf, m0 = fates(c)
+            k24 = int(np.argmin(np.abs(th - 24.0)))
+            t2, h2, c2 = probe_c(c, 2)
+            k = int(np.argmax(c2))
+            t1, h1, c1 = probe_c(c, 1)
+            wet = h1 > 0.05                                 # 集落が 5 cm より深く浸かっている時刻だけ
+            cv = "%.2f" % c1[wet].max() if wet.any() else "—"
+            print("| %s | %s | %.1f | %.0f / %.0f | %.0f / %.0f | %.0f | %.0f | %.2f(%.1f h) | %s |"
+                  % (g, rname, m0 / 1000.0, out[k24], out[-1], inpd[k24], inpd[-1], perc[-1], surf[-1],
+                     c2[k], t2[k], cv))
+    # 表現 B の区画ごとの濃度(24 h。区画の水の物質 / 水の量)の範囲: 区画を通り抜ける水による洗い流しの違い
+    plot = np.loadtxt("data/plot.txt")
+    for g in ["N", "D"]:
+        c = "B10_%s" % g
+        if not (have_wq(c) and os.path.isfile(f"result_{c}/C0024.txt")):
+            continue
+        cc = np.loadtxt(f"result_{c}/C0024.txt")
+        hh = np.loadtxt(f"result_{c}/H0024.txt")
+        conc = []
+        for pid in np.unique(plot[plot > 0]):
+            sel = plot == pid
+            w = hh[sel].sum()
+            if w > 0.0:
+                conc.append((cc[sel] * hh[sel]).sum() / w)
+        print(T("%s の 24 h の区画ごとの濃度: %.3f〜%.2f mg/L(%d 区画)" % (c, min(conc), max(conc), len(conc)),
+                "concentration of each plot at 24 h in %s: %.3f to %.2f mg/L (%d plots)" % (c, min(conc), max(conc), len(conc))))
+
+
 # ---------------------------------------------------------------- 数表
 def stats(c):
     """集落の最大浸水深と時刻、0.1 m を超えた時間、排水機場の前の最高水位、水田の最大の平均水深、台帳"""
@@ -438,4 +559,6 @@ if __name__ == "__main__":
     fig_maps()
     fig_series()
     fig_scale()
+    fig_wq()
     table()
+    table_wq()
