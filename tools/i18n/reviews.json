@@ -1940,29 +1940,29 @@
     {
       "source": "examples/debris_bedrock/README.md",
       "target": "examples/debris_bedrock/en/README.md",
-      "source_sha256": "a89a790d67fae7647981cb2b6ba502deaeb4f54b44e4fb44951a1c231a272cdb",
-      "target_sha256": "bcbbb29597563f7355c2fd080fb1eeeb2b3ac7ce0ed114796f11b9f805a30428",
-      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10: the six changed numbers (C_b and C_c table cells and ledger, C_b deposit at 120 m, C_c mobile layer and erosion at 101 m, the 91 cm of the long chain) compared against the Japanese source, the printed tables of plot_results.py and the 1 s output analysis; no model execution)",
+      "source_sha256": "c0d72bd40ce030814ceb810b00933c7fad5e604d931e76976fdabcab2df3da9f",
+      "target_sha256": "234a53e9fe287c5bf444bac265bf0b57f2cfdd7c164d0f82281d95f9b4b6c1c9",
+      "reviewer": "Claude (Claude Code session; debris_bedrock recomputed with main 39bdd82: values, run times and event figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/debris_bedrock/figs/cover.png",
       "target": "examples/debris_bedrock/en/figs/cover.png",
-      "source_sha256": "a9174f17df5fa5916e6fe835067bb779d2e973e97324369e8dcf2aca563e753d",
-      "target_sha256": "fa8361943e216e7695703add76fd65d5f49e02cfb7be03997336afa7131c5d01",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "824084d3417d909cb8f9ef93a404cbb40e837102ff415f3612107537ca9fedf8",
+      "target_sha256": "fa72c7e72f581adb59ef8a5bf0dcfc9ae0d780827c0b9404cb8a23aaaef473ac",
+      "reviewer": "Claude (Claude Code session; debris_bedrock recomputed with main 39bdd82: values, run times and event figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/debris_bedrock/figs/erosion.png",
       "target": "examples/debris_bedrock/en/figs/erosion.png",
-      "source_sha256": "bebcd3a454791f853f764a5dd7fd6a96f017b819a4e3d23f1e37782755cea02d",
-      "target_sha256": "b59fe89b75982d0fc81fe1b1dc1389238048527ae8e959a203b99e12a201a77f",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "f80fa0192f7cc1b1c14f5f4d282bbd700a723e96bf96cff28ad607672da788fb",
+      "target_sha256": "7f114318f531f11f55928390bd1109ed801c08999b2e1522de8fe493a0acec48",
+      "reviewer": "Claude (Claude Code session; debris_bedrock recomputed with main 39bdd82: values, run times and event figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/debris_bedrock/figs/long_cover.png",
@@ -2021,11 +2021,11 @@
     {
       "source": "examples/debris_bedrock/figs/threshold.png",
       "target": "examples/debris_bedrock/en/figs/threshold.png",
-      "source_sha256": "1345af074613e5f710c0346967117ec86583ccb77735eea8fbe3f2e0aa91e17f",
-      "target_sha256": "643922e4f53b65203a557debb390a11db08f329f9b7187eaee175efb4dda38e3",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "8e7ab3b108e14e69c1115c1467b32bf89f4669ac6bf88b3a5f1cf26b31ab15af",
+      "target_sha256": "0435b529efb6aada34d3d39d7e4a62a3222057d2b00ad26827e2f9975ae6d65a",
+      "reviewer": "Claude (Claude Code session; debris_bedrock recomputed with main 39bdd82: values, run times and event figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-26"
     },
     {
       "source": "examples/debris_dam/README.md",
