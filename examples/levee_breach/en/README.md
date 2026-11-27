@@ -330,7 +330,7 @@ initial terrain z.txt of the resolved levee; the same in both rows).
 | Case | Peak discharge through the opening (m³/s) / time (min) | Flood volume (10⁴ m³) | Inundated area (ha; h > 0.01 m) | Maximum inundation depth (m) | Start of inundation at the toe (min) |
 |---|---:|---:|---:|---:|---:|
 | Resolved levee + prescribed bed motion | 138 / 120 | 36.2 | 69.4 | 1.13 | 76 |
-| Virtual wall + &list_channel_breach (f_br_diag = 1) | 134 / 120 | 36.5 | 69.2 | 0.91 | 76 |
+| Virtual wall + &list_channel_breach (f_br_diag = 1) | 134 / 120 | 36.5 | 69.3 | 0.92 | 76 |
 
 - With the resolved levee, once the levee cells drop to the floor the opening becomes
   ordinary cells and the shallow-water equations solve the flow directly (all links of the
@@ -358,10 +358,10 @@ param_supp.txt and param_supp_vwall.txt):
 
 | Width (cells / sites) | Resolved levee Q (m³/s) | Broad-crested weir 1.7·B·H^1.5 (m³/s) | Virtual wall f_br_diag = 0 Q / ratio to resolved | f_br_diag = 1 Q / ratio to resolved |
 |---:|---:|---:|---:|---:|
-| 1 | 34.3 | 37 | 12.7 / 0.37 | 53.9 / 1.57 |
-| 2 | 64.6 | 71 | 25.1 / 0.39 | 77.7 / 1.20 |
-| 3 | 92.2 | 103 | 37.1 / 0.40 | 98.4 / 1.07 |
-| 5 | 138.1 | 162 | 60.5 / 0.44 | 134.0 / 0.97 |
+| 1 | 34.3 | 37 | 12.7 / 0.37 | 54.1 / 1.58 |
+| 2 | 64.6 | 71 | 25.1 / 0.39 | 78.0 / 1.21 |
+| 3 | 92.2 | 103 | 37.1 / 0.40 | 98.5 / 1.07 |
+| 5 | 138.1 | 162 | 60.5 / 0.44 | 134.1 / 0.97 |
 
 The resolved levee gives 0.85-0.93 times the broad-crested weir estimate (B = cells × dx, H = river level
 − floor ≈ 1.5-1.7 m), falling further below the weir formula as the opening widens because the
@@ -369,7 +369,7 @@ landside water level rises (138 against 162 for 5 cells). The discharge of the v
 with f_br_diag = 0 is nearly proportional to the number of sites and stays at 0.37-0.44 times
 that of the resolved levee (close to the passage-width share of the normal edge, 0.414);
 f_br_diag = 1 is nearly the same as the resolved levee for 3-5 cells (1.07 and 0.97 times),
-and too large for one cell (1.57 times) by the two diagonals at both ends (0.59 cell widths).
+and too large for one cell (1.58 times) by the two diagonals at both ends (0.59 cell widths).
 f_br_diag = 1 gives the diagonal edges the same effective crest as adding the diagonal pairs
 explicitly as sites. How the
 effective crest of the breach sites and the linkage of the diagonal edges work is explained in
