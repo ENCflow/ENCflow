@@ -21,6 +21,8 @@
           0.3〜10 セル × 格子に対する中心線の位置のずれ 3 つ(0・0.25・0.5 セル)× 作り方(t50・t50s・all)と、閾値と
           下限の感度(t30s・t70s と、t50s・all の下限 0・15 % = _c0・_c15。川幅 1.2〜6 セル、ずれ 0)。屈曲(bend)にも
           t50・t50s・all と下限の感度を加える
+  fmin    河道にする占有率の下限を上げる(氾濫原の面積を残す)作り方: all の下限 15・30・50 %(_c15・_c30・_c50)×
+          向き 6 つ × 川幅 1.2〜10 セル × ずれ 3 つ。屈曲(川幅 2 セル)の下限 30・50 %
 
 セルの中心は、勾配 p/q の向きでは、中心線からの距離が間隔 δ = Δ/√(p² + q²) の「列」に並ぶ(0°: 100 m、11.3°: 19.6 m、
 18.4°: 31.6 m、26.6°: 44.7 m、33.7°: 27.7 m、45°: 70.7 m)。直線の河道の表し方は、この列を選んで作る:
@@ -68,6 +70,8 @@ OCC_THR = {"t50": 0.5, "t50s": 0.5, "t30s": 0.3, "t70s": 0.7, "all": 0.999}
 FMIN = 0.05                           # これより小さい占有率のセルは河道にしない(名前の _c0・_c15 で 0・15 % に変える)
 OCC_CUT = ("c0", "c15")               # 下限の感度(t50s・all。川幅 OCC_SENS_W、ずれ 0。屈曲も)
 OCC_M = 64                            # 占有率を数える標本点(直線は 1 セルに M × M、屈曲は 24 × 24)
+FMIN_CUT = ("c15", "c30", "c50")      # 下限を上げる系列(fmin。all だけ。川幅 FMIN_W、ずれ OCC_OFF)
+FMIN_W = tuple(b for b in OCC_W if b >= 120.0)
 
 
 def hn(q):
@@ -130,12 +134,22 @@ def cases(series):
                 if b in OCC_SENS_W:
                     for rep in OCC_SENS + tuple(f"{r}_{c}" for r in ("t50s", "all") for c in OCC_CUT):
                         out.append((occ_name(an, b, 0.0, rep), "straight", dict(an=an, b=b, rep=rep, dx=DX, off=0.0)))
+    elif series == "fmin":
+        for an in ANGLES:
+            for b in FMIN_W:
+                for off in OCC_OFF:
+                    for c in FMIN_CUT:
+                        rep = f"all_{c}"
+                        out.append((occ_name(an, b, off, rep), "straight", dict(an=an, b=b, rep=rep, dx=DX, off=off)))
+        for r in BEND_R:
+            for c in FMIN_CUT[1:]:
+                out.append((f"bend_r{int(r):04d}_all_{c}", "bend", dict(r=r, b=BEND_W, rep=f"all_{c}", dx=DX)))
     else:
         raise ValueError(series)
     return out
 
 
-SERIES = ("axis", "oblique", "wide", "mask", "bend", "wet", "occ")
+SERIES = ("axis", "oblique", "wide", "mask", "bend", "wet", "occ", "fmin")
 
 
 def occ_name(an, b, off, rep):

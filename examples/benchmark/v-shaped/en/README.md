@@ -376,6 +376,11 @@ The theoretical t50 is 39 min and 90 % of the peak is reached at 47 min (eight n
   a channel that touches the edge of the domain depends in this way on how the edge is treated.
 - Infiltration, interception and structures are not used; of the channel features only the sub-grid
   channel width of the addendum. There is no comparison with observations of a real catchment.
+- The channel cells of the addendum (a 20 m wide channel in 40 m cells) have no hillslope for the remaining
+  20 m of the cell ([Channels](../../../../docs/en/users_guide/channel.md#subgrid-channel-width) of the user's
+  guide). Rain falling there goes straight into the channel (the volume is kept). This is the same as shortening
+  the flow path over the hillslopes by 10 m on each side of the channel, a small effect in this catchment
+  (hillslopes 800 m long).
 - There is no regression reference. The verdict of `check.py` follows the guide values above, and the
   last digits change with rounding and the machine (the two 20 m cases are checked in CI by test/vshaped
   with the same guide values).

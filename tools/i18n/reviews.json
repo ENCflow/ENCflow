@@ -185,8 +185,8 @@
     {
       "source": "docs/users_guide/channel.md",
       "target": "docs/en/users_guide/channel.md",
-      "source_sha256": "6769393e7099057ad5ec0cc909bbd89a0f14f8b72787ed4b5a5ea912a5ffcbf0",
-      "target_sha256": "ebf94873d350b18eab03c0427b2737fb95657897ec10180eaf7482f39352209e",
+      "source_sha256": "e8ccceb67bca5d2d6ecee148c3fea8e5b1e3649262164be442cbcd726be5ffbc",
+      "target_sha256": "89a3c0fea3d1a4926f1979db598d3822a391803a8b47197c82da5546742a038e",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
@@ -194,8 +194,8 @@
     {
       "source": "docs/users_guide/channel_models.md",
       "target": "docs/en/users_guide/channel_models.md",
-      "source_sha256": "ec3b1bd7fb8ff672e38156643fdce285b60b07c8dd155e5d36e41a4e6af1caff",
-      "target_sha256": "b77d0dcc28a40e54497c8d7d0b269c6207648a64c44e8db41b3871701a3e3d92",
+      "source_sha256": "0eccfa22827adfb906dfe15a2a73a7ae76a81cbe6cd8823606574842cbaa1839",
+      "target_sha256": "34790a2a21a6cb483c5646a1fefe11d2a5bedb037721d19aa1b4c54c8732a8f3",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
@@ -1409,11 +1409,11 @@
     {
       "source": "examples/benchmark/v-shaped/README.md",
       "target": "examples/benchmark/v-shaped/en/README.md",
-      "source_sha256": "d36dd8fce5d1ec35855119b031142bb1a81ef83e6f8f7f35ce46d3045b10b1b6",
-      "target_sha256": "682c8ae11291d7b9bbc48013666e77bd9837da4756970f1596ba6807d420dff5",
-      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
+      "source_sha256": "196c15074122eef2cbedb81a0664d51645898a99e480c8432b4e77c7cbd35dbb",
+      "target_sha256": "5816d7f108205c95765db5b7400560f0bb7b0795e955eafbb7393c1af97da7cc",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/benchmark/v-shaped/figs/depths.png",
@@ -1562,11 +1562,11 @@
     {
       "source": "examples/catchment_metal/README.md",
       "target": "examples/catchment_metal/en/README.md",
-      "source_sha256": "408455f4bde040af76e91348ddb6c20f4fd922315e964aad5832cae4c3631887",
-      "target_sha256": "c4c134387a6e8858947e505d61650c46c9b8f44352d1f7d176aae0ca649c9f4d",
-      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
+      "source_sha256": "411e47dc7c962d9652897a75cb193d7c416032f59e85e83985f058c83492f449",
+      "target_sha256": "a18dbe3594c7aeba68a24ca691e1982750439b70734f6f6f26b7b0ad526ade0e",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/catchment_metal/figs/mechanism.png",
@@ -1778,8 +1778,8 @@
     {
       "source": "examples/coarse_channel/README.md",
       "target": "examples/coarse_channel/en/README.md",
-      "source_sha256": "d4368f914852a6b13349885334a2dec04f7c9ad5aac7e4b9a99447e3d6b447c6",
-      "target_sha256": "ac7d0f9463bc6c05b88e6d3877057cef92cd5bbdbde5657e463a94fb1f121199",
+      "source_sha256": "beda434cde42abbf9ecfbb667ae3370f0d23181621603dd32ea838b9b26b0306",
+      "target_sha256": "4127b31b4aa28e346c9a3cefbf6963d3f888cda403e5d055a307c1f7b1a14e6b",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
@@ -1799,6 +1799,15 @@
       "source_sha256": "b2715c1dc9462484f4553541c80d3d2627e252ae62aa434ca6e504f8858aa726",
       "target_sha256": "4a18616177e21ae66f6e38a06e44b35bcfaa6933c4a1617f986b8aac101173de",
       "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
+    },
+    {
+      "source": "examples/coarse_channel/figs/fmin.png",
+      "target": "examples/coarse_channel/en/figs/fmin.png",
+      "source_sha256": "92e6b201c71c6db01c7f499b9514b915c69380b4520a8cef0374d8e189e6cfbf",
+      "target_sha256": "b65a54653170fc55d46c61e7106f11da7c153dc159413ae3a74cddc782e04619",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels and legends match the Japanese figure)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -1967,8 +1976,8 @@
     {
       "source": "examples/confluence_backwater/README.md",
       "target": "examples/confluence_backwater/en/README.md",
-      "source_sha256": "e538475e6f8dfd6b501fcca4b064e70f71db2466c1060c2638d3623d524e7678",
-      "target_sha256": "8b1e4b13b6b56a1e080956a8670fa59f9690a81504ab98dcc630461c972debf1",
+      "source_sha256": "a78dfe9084ef8f2ac198f077a9d77ce14de2305ab296b5e386504854ec3c276d",
+      "target_sha256": "a5b622938bd8d7089fb0e5e44a8292f8064af251d7c42312196a7c5818c79ccd",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
@@ -3317,11 +3326,11 @@
     {
       "source": "examples/paddy_dam/README.md",
       "target": "examples/paddy_dam/en/README.md",
-      "source_sha256": "9684badb88d6a0b6f1c518981bb1b5a685fd888dbd597e34b7e325efa34de6c1",
-      "target_sha256": "7c052a12bdd2bc97a68f9daa0fc5afcbadfe5e3e42b147224f1c47e8fa9ebebd",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "010a37eb5cf587739b7693cb178e2f0ebca743df1427fb9bb242ba8faaadce29",
+      "target_sha256": "bb23d64324c934cc720cf8d1a378bb1875773a072b31bcde82a62208ff7c4e17",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/qanat/README.md",

@@ -1,7 +1,7 @@
 # ENCflow/examples/coarse_channel/Makefile
 #   make           ../../bin/ の実行ファイルへのリンクと、全系列の入力(runs/)を作る
 #   make run       全系列を計算する(4 コアで 50 分前後。計算済みのケースは飛ばす)
-#   make occ | axis | oblique | wide | mask | bend | wet   系列ごとに計算する
+#   make occ | axis | oblique | wide | mask | bend | wet | fmin   系列ごとに計算する
 #   make figs      図(figs/ と en/figs/)を描き、数表を書く
 #   make clean     リンクと runs/ を削除する
 # 並列数は NP(既定 4): make run NP=2
@@ -9,7 +9,7 @@
 TOPDIR	= ../..
 BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
-SERIES	= occ axis oblique wide mask bend wet
+SERIES	= occ axis oblique wide mask bend wet fmin
 NP	?= 4
 
 all: links inputs

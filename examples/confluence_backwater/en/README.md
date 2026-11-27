@@ -340,6 +340,13 @@ The main-river stage at the confluence is that on the north bank (P1). Brackets:
   observations.
 - The backwater profile of the tributary itself agrees well with 1-D theory even on the coarse grid (supplement 2).
   Most of the error enters the stage at the confluence through the representation of the main river.
+- Channel cells of the coarse grid have no landside
+  ([Channels](../../../docs/en/users_guide/channel.md#subgrid-channel-width) of the user's guide). The landside inside
+  the tributary column (an 80 m river in 100 m cells; 0.25 km² on the fine grid) is not computed, and overtopping water
+  goes straight into the neighbouring landside cells. In this example the landside cells east of the tributary contain
+  part of the fine grid's tributary and levee, so the total landside area is nearly the same as on the fine grid
+  (10.57 km² and 10.38 km²), but the floodplain along the river is shifted. For rivers much narrower than the cells,
+  the floodplain itself becomes narrower.
 
 ## Supplement 2: how far up the tributary the backwater reaches (steady backwater profile)
 
