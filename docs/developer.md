@@ -58,7 +58,7 @@
 ### 通過幅(開口補正)と斜めの配分
 
 - 現行: [通過幅の調整](users_guide/passage_width.md)・[斜めの配分比 d の決め方](users_guide/diagratio.md)・[斜めエッジの流束による数値拡散](users_guide/diagonal_diffusion.md)。塞がれた開口の動的振り替えの既定 f_opening_dynamic = 3 は [§68.41](developer/068.md)。塞がり率の水柱は、土砂流動の計算では流動深 h + hs([§130](developer/130.md))。振り替えなし(0)を使うのは V 字の沢を進む流れに限り、平らな谷底の谷では既定のまま([§130.11](developer/130.md))
-- 記録: [§18](developer/018.md)(開口補正の導入)・[§52](developer/052.md)・[§68.10](developer/068.md)・[§68.11](developer/068.md)・[§68.13](developer/068.md)〜[§68.15](developer/068.md)・[§68.38](developer/068.md)(既定 2)・[§68.41](developer/068.md)・[§68.43](developer/068.md)〜[§68.45](developer/068.md)・[§96](developer/096.md)(拡散型プロセスの 9 点化)・[§98](developer/098.md)(地下水の層の通過幅)・[§99](developer/099.md)(氷河・溶岩流の 8 近傍化)・[§130](developer/130.md)(土砂流動の計算では塞がり率を流動深で測る。一様な V 字水路の厳密解との比較と検定 test/vchannel)・[§136](developer/136.md)(幅の極端に狭いサブグリッド河道のセルを、振り替えと通水率で計算の外と同じに数える。検定 test/sliver)
+- 記録: [§18](developer/018.md)(開口補正の導入)・[§52](developer/052.md)・[§68.10](developer/068.md)・[§68.11](developer/068.md)・[§68.13](developer/068.md)〜[§68.15](developer/068.md)・[§68.38](developer/068.md)(既定 2)・[§68.41](developer/068.md)・[§68.43](developer/068.md)〜[§68.45](developer/068.md)・[§96](developer/096.md)(拡散型プロセスの 9 点化)・[§98](developer/098.md)(地下水の層の通過幅)・[§99](developer/099.md)(氷河・溶岩流の 8 近傍化)・[§130](developer/130.md)(土砂流動の計算では塞がり率を流動深で測る。一様な V 字水路の厳密解との比較と検定 test/vchannel)・[§137](developer/137.md)(幅の極端に狭いサブグリッド河道のセルを、振り替えと通水率で計算の外と同じに数える。検定 test/sliver)
 
 ### 移流項
 
@@ -83,7 +83,7 @@
 ### 河道
 
 - 現行: [河道](users_guide/channel.md)・[河道の解説](users_guide/channel_models.md)。設計の文書は docs/channel_model.md
-- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)・[§128](developer/128.md)(堤防の越流の上限が読む af のハロ)・[§131](developer/131.md)(サブグリッド河道の支川の背水曲線、粗い格子の湾曲部の階段、セル幅の倍数でない川幅の表し方)・[§134](developer/134.md)(移流項が仮想壁面の向こうのセルを数えない)・[§135](developer/135.md)(粗い格子で川を表す表し方と通水の精度: 川幅・向き・屈曲・河道マスクの連結・占有率で作る河道マスクと下限。例題 coarse_channel)・[§136](developer/136.md)(占有率の細片を開口の振り替えと通水率で閉じた開口と数える)
+- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)・[§128](developer/128.md)(堤防の越流の上限が読む af のハロ)・[§131](developer/131.md)(サブグリッド河道の支川の背水曲線、粗い格子の湾曲部の階段、セル幅の倍数でない川幅の表し方)・[§134](developer/134.md)(移流項が仮想壁面の向こうのセルを数えない)・[§135](developer/135.md)(粗い格子で川を表す表し方と通水の精度: 川幅・向き・屈曲・河道マスクの連結・占有率で作る河道マスクと下限。例題 coarse_channel)・[§137](developer/137.md)(占有率の細片を開口の振り替えと通水率で閉じた開口と数える)
 
 ### 内部水理構造物・堤防・家屋
 
@@ -311,4 +311,4 @@
 - [§133](developer/133.md) ダムの量の BMI 公開と外部運転(f_dam_mode = 6): ダムの点の格子と目標放流量の set(2026-11-26 設計合意・実装。無効時はビット一致)
 - [§134](developer/134.md) 移流項の近傍の判定に河道の堤防の仮想壁面を見せる: 壁の向こうの湛水が河道を減速させない(handoff 00al。2026-11-26 設計合意・実装。仮想壁面を使わない計算と、壁の向こうが乾いている計算はビット一致)
 - [§135](developer/135.md) 例題 examples/coarse_channel: 粗い格子で川を表す表し方(川幅・向き・屈曲・河道マスクの連結・河道の脇の水)と通水の精度の系統的な確かめ(2026-11-26。利用者の依頼。計算本体は §134.10 の修正だけ)
-- [§136](developer/136.md) 幅の極端に狭いサブグリッド河道のセルを、開口の動的振り替えと通水率で計算の外と同じに数える(占有率の細片。2026-11-27。利用者の依頼。挙動の変更)
+- [§137](developer/137.md) 幅の極端に狭いサブグリッド河道のセルを、開口の動的振り替えと通水率で計算の外と同じに数える(占有率の細片。2026-11-27。利用者の依頼。挙動の変更)

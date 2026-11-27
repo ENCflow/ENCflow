@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """sliver: 幅が 0 に近いサブグリッド河道のセル(占有率で作った河道マスクの角をかすめる細片)が、そのセルの無い構成と
-同じ流れになることの検定の入力と設定を生成する(developer.md §136)。
+同じ流れになることの検定の入力と設定を生成する(developer.md §137)。
 
   python3 make_sliver.py          → d_<case>/(z・rn・mask・h0・rw・width・境界の表・kind・info)と p_<case>.txt
   python3 make_sliver.py list     → ケース名を 1 行に 1 つ書く(Run.sh 用)
@@ -9,7 +9,7 @@
 開口の動的な振り替え(f_opening_dynamic)は、辺の角のセルが計算の外なら塞がった開口として、その分の通過幅を辺へ
 返す。サブグリッド河道幅のセルの流速は、周りの辺の幅キャップの平均(通水率)で割り戻す。角や隣に幅の極端に狭い
 河道のセルがあると、「開いている」と数えて通過幅が返らず、通水率も下がって、河道の通水が落ちていた。比べる側の
-セルの幅(面長で頭打ち)の 5 % 未満の幅のセルは、振り替えと通水率で計算の外と同じに数える(§136)。この検定は、
+セルの幅(面長で頭打ち)の 5 % 未満の幅のセルは、振り替えと通水率で計算の外と同じに数える(§137)。この検定は、
 同じ河道に幅 0.01 m のセルを添えた構成(tiny)と添えない構成(none)で、河道の水位が一致することを確かめる
 (Check_sliver.py)。
 
@@ -68,7 +68,7 @@ def geom_ax(tiny):
     return kind, sal, nx, ny, nx * DX
 
 
-PARAM = """! test/sliver: {name}(make_sliver.py が生成。developer.md §136)
+PARAM = """! test/sliver: {name}(make_sliver.py が生成。developer.md §137)
 &list_sysparam
   f_gridsystem = 0
   dt = 2.0

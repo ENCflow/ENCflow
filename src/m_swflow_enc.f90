@@ -27,7 +27,7 @@ module m_swflow_enc
   public :: m_swflow_enc_dispose
   public :: m_swflow_enc_ctx_alloc, m_swflow_enc_ctx_swap, m_swflow_enc_ctx_dispose   ! 文脈の付け替え(複数インスタンス。§71)
   public :: sblk                      ! 塞がり率(submodule の build_cwd が参照。同下)
-  public :: width_closed              ! 幅の極端に狭い河道のセルの判定(submodule の通水率が参照。§136)
+  public :: width_closed              ! 幅の極端に狭い河道のセルの判定(submodule の通水率が参照。§137)
   public :: is_wall                   ! 堤防壁の述語(submodule から参照。private だと
                                       !   gfortran の LTO でシンボル未解決になるため公開)
   public :: m_swflow_enc_set_debris   ! 土石流抵抗則の設定口(m_geomorph の
@@ -384,7 +384,7 @@ module m_swflow_enc
   !   現行と厳密一致(退化性)。frw は init で構築する静的テーブルで、
   !   時間ループでは読み取り専用(w8mx 等の重み定数と同格の扱い)
 
-  ! 幅の極端に狭いサブグリッド河道のセルを閉じた開口と数える幅の比(developer.md §136。独自)。
+  ! 幅の極端に狭いサブグリッド河道のセルを閉じた開口と数える幅の比(developer.md §137。独自)。
   !   開口の動的振り替え(build_fwd の角のセル)と通水率の開口和(build_cw・cw_cell・build_cwd の
   !   隣のセル)で、比べる側のセルの幅(面長で頭打ち)のこの割合より狭いセルを、領域の外と同じに数える
   real, parameter :: p_wclose = 0.05
@@ -4540,7 +4540,7 @@ end function
 !   盛り上がり。平面の上で 0)で頭打ちにする(§68.41)。両岸が高い河道では
 !   河岸の高さで決まり、2 とほぼ同じ値になる(差は河床の縦断の勾配の分)。
 !   サブグリッド河道幅のある計算では、斜め先 (id,jd) が幅の極端に狭い河道のセル
-!   (corner_closed。§136)なら 1(その道は斜め先の幅キャップでほぼ閉じている)。
+!   (corner_closed。§137)なら 1(その道は斜め先の幅キャップでほぼ閉じている)。
 !   io, jo, kap は build_fwd だけが渡す
 !----------------------------------------------------------------------
 function sblk(g, s, ic, jc, id, jd, io, jo, kap) result(res)
@@ -4572,7 +4572,7 @@ function sblk(g, s, ic, jc, id, jd, io, jo, kap) result(res)
   end if
   res = 0.0
   if (g%sw(ii,jj) > 0) return
-  ! 幅の極端に狭いサブグリッド河道の斜め先は、領域の外と同じに塞がり 1(§136。幅を 0 に近づけた
+  ! 幅の極端に狭いサブグリッド河道の斜め先は、領域の外と同じに塞がり 1(§137。幅を 0 に近づけた
   ! セルが、そのセルの無い構成と同じ振り替えになる)。io, jo を渡すのは build_fwd だけ
   if (present(io) .and. chn%have_width) then
     if (corner_closed(g, ic, jc, id, jd, ii, jj, io, jo)) then
@@ -4599,7 +4599,7 @@ end function
 
 
 !----------------------------------------------------------------------
-! 幅の極端に狭いサブグリッド河道のセルか(developer.md §136。独自)
+! 幅の極端に狭いサブグリッド河道のセルか(developer.md §137。独自)
 !   wx: そのセルの河道幅、wref: 比べる側のセルの幅(幅情報なしは huge)、face: その道の
 !   面長(軸の面 dy・dx、斜めの面 dx·dy/dr)。wx < p_wclose·min(wref, face) なら真。
 !   幅情報なし(wx <= 0)のセルは解像扱いで閉じない。比べる側と同じ幅のセル(一様な幅の
@@ -4617,7 +4617,7 @@ end function
 
 !----------------------------------------------------------------------
 ! 辺 (ic,jc)–(io,jo) の振り替えで、角のセル (ii,jj)(方向は (id,jd))を閉じた開口と
-! 数えるか(§136)。辺の両端と角がすべて河道のセルで(道 c→角 に幅キャップが掛かる)、
+! 数えるか(§137)。辺の両端と角がすべて河道のセルで(道 c→角 に幅キャップが掛かる)、
 ! 角のセルの幅が、両端の狭い方の幅(道の面長で頭打ち)の p_wclose 未満のとき真。
 ! (ii,jj) は sblk が側方 Neumann の鏡像で寄せた後のセル。wrw > 0 は有効な河道の
 ! 陸セルに限られる(setup_width が非河道を 0 にする)。読むのは帯+ハロの wrw・rw

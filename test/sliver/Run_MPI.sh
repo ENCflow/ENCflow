@@ -1,5 +1,5 @@
 #!/bin/bash
-# sliver: MPI 実行(N ランク)+ 検定(developer.md §136)
+# sliver: MPI 実行(N ランク)+ 検定(developer.md §137)
 #   ./Run_MPI.sh [N](既定 2。N <= 4。計算する行が 2〜3 行だけの ax_* は 2 ランクまでで回す)
 # 全ケースを N ランクで回して Check_sliver.py で判定し、細片を添えた 2 ケース(make_sliver.py mpi)は 1 ランク
 # (同じ実行ファイル)でも回して、Log.txt・水位 E0003・水深 H0003 をバイト比較する。帯の境は河道と細片を横切る

@@ -128,7 +128,7 @@ move to a resolved channel.
   dynamic opening correction and the conveyance ratio count a channel cell
   whose width is below 5 % of the width of the cell it is compared with as
   outside the domain ([passage width](passage_width.md) §4.3;
-  developer.md §136, Japanese; specific to ENCflow). The advection term still
+  developer.md §137, Japanese; specific to ENCflow). The advection term still
   counts such a cell as a wet neighbour, so the result differs slightly from
   the configuration without the slivers (0.6 % of the depth when a row of
   cells 0.01 m wide is added beside an axis-aligned two-cell channel). When

@@ -277,7 +277,7 @@ For the same reason, the normalisation of the in-channel velocity (conveyance
 ratio) leaves out of its opening sums the edges to neighbours whose width is
 below 5 % of the cell's own width. Channels of uniform width (one-cell-wide
 line channels and 4-connected staircases) are unchanged. The 5 % is a value
-specific to ENCflow (developer.md §136, Japanese).
+specific to ENCflow (developer.md §137, Japanese).
 
 The column $`h_c`$ is the depth of the flow: the water depth h in water-only
 computations, and the flow depth h + hs when the sediment-flow model is active

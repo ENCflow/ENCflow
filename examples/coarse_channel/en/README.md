@@ -147,7 +147,7 @@ Medians and minimum to maximum over the four oblique directions (11.3–33.7°) 
   an opening as blocked when the corner cell of a diagonal edge lies outside the computation and reassigns its passage
   width to nearby open edges. The computational core counts a channel cell whose width is below 5 % of the width of the
   cell it is compared with as outside the computation in this reassignment and in the normalisation of the in-channel
-  velocity (the conveyance ratio) (developer record §136). The advection term still counts such a cell as a wet
+  velocity (the conveyance ratio) (developer record §137). The advection term still counts such a cell as a wet
   neighbour, so the result differs slightly from that with a 5 % cutoff.
 
 ### 3. Bends
