@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "e986eee437ff1ddc744282d0e638db238c1d35c185cd17b8b93e4a4438d95544",
-      "target_sha256": "9d4829a3a804c9863866e19c0716ec24bf0bdc45d19dd01fae621f4e659ff09d",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
+      "source_sha256": "c5dc7106adc042569620c853fb0303ef60a8ab507e0f4b8832aa98c3a57cd7f5",
+      "target_sha256": "ed6cc5b68da5228e73e266626150f57dc538e47fee94afe0c1ab087d7a81cd10",
+      "reviewer": "Claude (Claude Code session; Part II entry and task-table row for interoperability (BMI) added, developer.md §35.5; both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/advection.md",
