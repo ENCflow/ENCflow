@@ -302,11 +302,11 @@
     {
       "source": "docs/users_guide/geoinfo.md",
       "target": "docs/en/users_guide/geoinfo.md",
-      "source_sha256": "cbef1a41df3e8566f1ffd49533c4f29c834df704ca77d8fb865fa13e60f6674a",
-      "target_sha256": "a4eb1af9e435d9c15ecd6e78d80c03dd78dad262862c0684eec1ca812c4890e4",
-      "reviewer": "Claude (Claude Code session; the Seawall section gained the paragraph on flows along the wall (advection and dynamic reassignment, f_opening_dynamic = 0) in both files; compared sentence by sentence, the rest unchanged)",
+      "source_sha256": "ffb8249ae60a4118b0fc82f540f64635f1967b9ce70d913513544b5034ddf7b5",
+      "target_sha256": "b188b62a1a9f061b99ff8cb206a1db4d47edd7e54d0ede53699fb667ec6d929e",
+      "reviewer": "Claude (Claude Code session; the BMI roughness-override reference made a link to the section of bmi/README(.en).md, developer.md §35.5; changed paragraph compared side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/geomorph.md",
@@ -401,11 +401,11 @@
     {
       "source": "docs/users_guide/nest.md",
       "target": "docs/en/users_guide/nest.md",
-      "source_sha256": "ed5f583418cb6e0752ef16d0b80f64cc3e228bc7dd64670ab48184741347f989",
-      "target_sha256": "19f1c71320baf81dc7b84f271ec150025f97b43e1246a7288c3dd118a5528f87",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "6622bf78e056cffd7255f83cc1195f4466b645a733105370aa664897cd6d2987",
+      "target_sha256": "140fc53a91fb0da09dba2683f6584e0ffadd7a18cb41970785db1792f9027a56",
+      "reviewer": "Claude (Claude Code session; the bmi/README reference in \"Using it from BMI\" made a link to the nested-system section of bmi/README(.en).md, developer.md §35.5; changed paragraph compared side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/nest_models.md",
