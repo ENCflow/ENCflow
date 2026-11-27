@@ -2050,7 +2050,11 @@ end subroutine
 !   界面(z − L_e)が上がるとき: 交換層の余り t を交換層の組成で下層へ(下層は一様に混ぜる)
 !   下がるとき: 不足 dd を下層から下層の組成で交換層へ
 !   土層がなくなったら組成は前の値のまま(次に積もるとき入る土砂の組成で作り直す)。
-!   丸めの負の内容は 0 にして、動かした厚さを vc に返す
+!   丸めの負の内容は 0 にして、動かした厚さを vc に返す。
+!   厚さが倍精度の下限に近い膜(1e-307 m 級。流れの土砂が幾何級数で減った末の堆積でできる)では、内容と下層
+!   からの補充の積がすべて 0 に落ちて(-Ofast では正規化数より小さい値が 0 になる)割合の和が 0 になりうる。
+!   そのときは交換層を下層の組成にする(割合がすべて 0 のままだと、平均粒径 d_m が 0 になり、遮蔽係数の
+!   計算が 0 除算になる)
 !----------------------------------------------------------------------
 pure subroutine bmix_update(nc, la, sd0, dz, a, fa, fb, vc)
   integer, intent(in) :: nc
@@ -2084,7 +2088,11 @@ pure subroutine bmix_update(nc, la, sd0, dz, a, fa, fb, vc)
     fa(1:nc) = (a(1:nc) + dd * fb(1:nc)) / le1
   end if
   sm = sum(fa(1:nc))
-  if (sm > 0.0) fa(1:nc) = fa(1:nc) / sm
+  if (sm > 0.0) then
+    fa(1:nc) = fa(1:nc) / sm
+  else
+    fa(1:nc) = fb(1:nc)
+  end if
   sm = sum(fb(1:nc))
   if (sm > 0.0) fb(1:nc) = fb(1:nc) / sm
 end subroutine
