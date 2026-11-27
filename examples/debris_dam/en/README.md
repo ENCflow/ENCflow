@@ -92,15 +92,16 @@ breach conditions). Bottom right: long profile of the tributary and the failure 
   [explanation of debris flows and slope failures](../../../docs/en/users_guide/massflow.md)).
 - **Options of the stability test**: Slopes and the dam under the lake are also judged, so the seepage force
   is taken from the gradient of the total head (`f_slide_seep = 1`), only failures caused by pore pressure
-  are mobilized (`f_slide_wet = 1`), and cells under a dense mixture are not judged (`f_slide_noflow = 1`).
-  The depth judged and mobilized at one time, `slide_dmax`, is 3 m (the thickness of the colluvium). The
-  colluvium saturates from its base, so the slip surface is at the base of the layer, and a smaller value
-  delays the failure. On the other hand, if it is large relative to the grid spacing, the step left by a
-  mobilization brings down the neighbouring cells and the mobilization propagates (in this example it does
-  at 0.6 times the grid spacing and does not at 0.3 times). The 5 m cases of the pre-built-dam series
-  (`dam_dx5`, `dam_tilt_dx5`) therefore use 1.5 m. The 5 m case with the failure slope (`g5`) keeps 3 m (with
-  1.5 m and `f_slide_noflow = 1`, only the upper half of the colluvium fails and the lower half stays on the
-  slope; see the [section below](#soil-left-under-a-thin-film)).
+  are mobilized (`f_slide_wet = 1`), and cells under a dense mixture are not judged (`f_slide_noflow = 1`;
+  the default when the stability test is used; cells whose mixture is thin are judged). The depth judged and
+  mobilized at one time, `slide_dmax`, is 3 m (the thickness of the colluvium). The colluvium saturates from
+  its base, so the slip surface is at the base of the layer, and a smaller value delays the failure. On the
+  other hand, if it is large relative to the grid spacing, the step left by a mobilization brings down the
+  neighbouring cells and the mobilization propagates (on the 5 m grid of this example it does at 0.6 times
+  the grid spacing and does not at 0.3 times). The 5 m cases of the pre-built-dam series (`dam_dx5`,
+  `dam_tilt_dx5`) therefore use 1.5 m. On the 5 m grid with the failure slope, both 3 m (`g5`) and 1.5 m
+  (`dmax15_dx5`) are computed (neither builds the same dam as the base case; see the
+  [section below](#how-the-dam-forms-pore-water-treatment-options-of-the-stability-test-grid-spacing-judged-depth)).
 - **Debris flow and erosion of the dam**: the stony type of Takahashi & Nakagawa (1991). Grain size 3 cm,
   internal friction angle 35°, erosion coefficient δe = 0.0007 (default; Takahashi's general value),
   deposition coefficient δd = 0.5 (the value the paper applied to Horadani). Gentle slopes use the
@@ -130,22 +131,20 @@ note "基本ケースは …", i.e. the value of the base case).
 | | `wet0` | no pore-water entrainment (`f_dbwet = 0`; no water is exchanged with the bed in erosion and deposition) | 30 min |
 | | `wet2` | no exchange of retained water (`f_dbwet = 2`; only the drainable water is exchanged) | 30 min |
 | | `slide0` | none of the four options of the stability test | 30 min |
+| | `noflow0` | cells under a dense mixture are also judged (`f_slide_noflow = 0`) | 30 min |
 | | `g5` | grid spacing 5 m | 30 min |
-| | `dmax15` | `slide_dmax` = 1.5 m (half the thickness of the colluvium; the initial saturation is set to 0.9035 so that the failure occurs at the same time) | 30 min |
-| Condition for skipping the test | `noflow2` | cells whose mixture is thin are judged (`f_slide_noflow = 2`) | 30 min |
-| | `dmax15_n2`, `dmax15_n2_dx5` | the settings of `dmax15` with `f_slide_noflow = 2` (grid spacing 10 m and 5 m) | 30 min |
-| | `noflow2_ref`, `noflow2_face25` | `dam_ref` and `dam_face25` of the pre-built-dam series with `f_slide_noflow = 2` | 60 min |
+| | `dmax15`, `dmax15_dx5` | `slide_dmax` = 1.5 m (half the thickness of the colluvium; the initial saturation is set to 0.9035 so that the failure occurs at the same time; grid spacing 10 m and 5 m) | 30 min |
 | Spread of the results | `base_m2`, `base_m1`, `base_eps`, `base_p05`, `base_p1`, `base_p2` | only the inflow of the base case is changed to 39.2, 39.6, 40.0001, 40.2, 40.4 and 40.8 m³/s (−2 to +2 %; the initial depth stays that of 40 m³/s) | 270 min |
 | | `dam_ref_p1`, `dam_face25_p1` | only the inflow of two cases of the pre-built-dam series (level crest) is changed to 40.4 m³/s (+1 %) | 60 min |
-| | `dam_tilt_m1`, `dam_tilt_eps`, `dam_tilt_p1`; `dam_tilt_dx5_m1`, `dam_tilt_dx5_eps`, `dam_tilt_dx5_p1` | only the inflow of the tilted-crest dam (10 m and 5 m grids) is changed to 39.6, 40.0001 and 40.4 m³/s | 60 min |
-| Pre-built dam | `dam_ref` and 19 others | a 13 m high dam is placed at the junction and the lake starts filled to the crest (no rain, no colluvium). Lake volume, dam shape (face slope, crest length, tilt of the crest), grain size, inflow, downstream slope, grid spacing and the choice of laws are changed one at a time ([section below](#conditions-for-a-rapid-breach-computation-and-real-natural-dams)) | 60 min (90 min for the six cases that rise slowly) |
+| | `dam_tilt_m1`, `dam_tilt_eps`, `dam_tilt_p1`; `dam_tilt_dx5_m1`, `dam_tilt_dx5_eps`, `dam_tilt_dx5_p1` | only the inflow of the tilted-crest dam (10 m and 5 m grids) is changed to 39.6, 40.0001 and 40.4 m³/s | 60 min (120 min on the 5 m grid) |
+| Pre-built dam | `dam_ref` and 19 others | a 13 m high dam is placed at the junction and the lake starts filled to the crest (no rain, no colluvium). Lake volume, dam shape (face slope, crest length, tilt of the crest), grain size, inflow, downstream slope, grid spacing and the choice of laws are changed one at a time ([section below](#conditions-for-a-rapid-breach-computation-and-real-natural-dams)) | 60 min (90 min for the six cases that rise slowly, 120 min for the three cases on the 5 m grid) |
 
 ## How to run
 
 ```bash
 cd examples/debris_dam
 make                     # links, and the inputs and settings of all cases (make_init.py)
-make run                 # compute the 35 cases in turn
+make run                 # compute the 32 cases in turn
 make perturb             # compute the 14 cases that show the spread of the results (only the inflow is changed slightly)
 python3 plot_results.py  # figs/*.png and tables (argument en writes the English version to en/figs/; setup.png can be drawn before the computation)
 ```
@@ -171,42 +170,42 @@ volume). (c) Water level just upstream of the dam and the elevation of the dam c
 dashed vertical lines mark the failure and the start of overtopping.
 
 1. **Rain infiltration and failure (0–11 min)**: Rain infiltrates and the saturation of the colluvium rises
-   from 0.83 to 0.852 in 10 minutes. At 10.5 minutes the safety factor falls below 1 and 482 of the 500 cells
-   with a soil layer fail within 40 seconds (18 cells at the edge of the slope remain).
-2. **Debris flow (11–14 min)**: The failed mass (bulk volume 137,000 m³) flows out with the water it contains
-   and runs down the tributary valley at up to 24 m/s (the flow depth is 7–8 m in the middle of the valley
+   from 0.83 to 0.852 in 10 minutes. At 10.5 minutes the safety factor falls below 1 and 494 of the 500 cells
+   with a soil layer fail within 30 seconds.
+2. **Debris flow (11–14 min)**: The failed mass (bulk volume 149,000 m³) flows out with the water it contains
+   and runs down the tributary valley at up to 22 m/s (the flow depth is 7–9 m in the middle of the valley
    and up to 15 m at the junction). The front reaches the junction about 30 seconds after the failure.
 3. **Blockage (until 16 min)**: The debris flow fills the valley of the main river and stops; the deposit is
-   more than 10 m thick 2 minutes after the failure. 79,000 m³ deposits in the main river and 57,000 m³ in
-   the tributary valley, and 5 minutes after the failure a dam 13.0 m high (crest elevation 65.1 m) has
-   formed. The dam is a triangle 210 m long along the river (x = 815–1,025 m), with a slope of 0.16 on the
-   upstream face and 0.10 on the downstream face. The discharge just below the dam drops to 1 m³/s
-   3 minutes after the failure, and the river at the village dwindles (half the discharge at 20 minutes,
-   3 m³/s at 30 minutes, below 1 m³/s at 45 minutes).
-4. **Ponding (16–202 min)**: The 40 m³/s of the main river ponds in the basin upstream, and the water level
-   takes 3 hours to reach the crest (stored volume 460,000 m³). During this time the shape of the dam does
-   not change and the river downstream stays dry (depth in the low-water channel at the village
-   0.71 m → 0.01 m).
-5. **Overtopping and breach (from 202 min)**: When the water overtops the crest, the flow starts to erode the
-   downstream face. The discharge just below the dam reaches 170 m³/s 4 minutes after the start of
-   overtopping and 270 m³/s after 7 minutes, and the crest is lowered by 4.6 m in 6 minutes
-   (65.1 → 60.6 m). At this point the walls of the breach (10 m wide) collapse and fill its bottom by about
-   2 m; the discharge falls back to 120–210 m³/s and stalls for about 8 minutes. Once the collapsed sediment
-   has been carried away the discharge rises again and peaks at 490 m³/s (12 times the inflow) 20 minutes
-   after the start of overtopping (this stall and the size of the peak change with slight differences in
-   the conditions; see "Spread of the results" below). Sixty minutes after the start of overtopping the lake level has fallen
-   by 7.3 m, and the water released in excess of the inflow amounts to 430,000 m³ (94 % of the stored
-   volume). At the end of the computation (270 min) a dam 3.5 m high remains.
-6. **Flood downstream (from 210 min)**: The front of the flood reaches the village 1.5 km downstream
-   8 minutes after the start of overtopping. The discharge of the river, which had run dry, exceeds
-   150 m³/s within a minute and reaches a first crest of 240 m³/s after 11 minutes. After falling back to
-   150 m³/s it peaks at 425 m³/s after 25 minutes (4.4 times the 96 m³/s that the low-water channel carries
-   when full). The discharge stays above 1.5 times the normal flow for 40 minutes.
+   more than 10 m thick at 12 minutes. 75,000 m³ deposits in the main river and 72,000 m³ in the tributary
+   valley, and by 16 minutes a dam 13.4 m high (crest elevation 65.5 m) has formed. The dam is a triangle
+   180 m long along the river (x = 825–1,005 m), with a slope of 0.19 on the upstream face and 0.12 on the
+   downstream face. The crest is higher on the tributary side, and a width of about 30 m on the opposite
+   side is low ((f) of "Spread of the results" below). The discharge just below the dam drops to 1 m³/s at
+   14 minutes, and the river at the village dwindles (half the discharge at 20 minutes, 3 m³/s at
+   30 minutes, below 1 m³/s at 40 minutes).
+4. **Ponding (16–215 min)**: The 40 m³/s of the main river ponds in the basin upstream, and the water level
+   takes a little over 3 hours to reach the crest (stored volume 490,000 m³). During this time the shape of
+   the dam does not change and the river downstream stays dry (depth in the low-water channel at the
+   village 0.71 m → 0.01 m).
+5. **Overtopping and breach (from 215 min)**: When the water overtops the crest, the flow starts to erode the
+   downstream face. The overtopping starts on the low side opposite the tributary and spreads over the full
+   width of the valley within 5 minutes. The discharge just below the dam reaches 290 m³/s 4 minutes after
+   the start of overtopping and 410 m³/s after 6 minutes, and the crest is lowered by 5.5 m in 5 minutes
+   (65.4 → 59.9 m). The discharge peaks at 470 m³/s (12 times the inflow) 9 minutes after the start of
+   overtopping and then falls with the lake level (240 m³/s after 20 minutes, 110 m³/s after 30 minutes).
+   Sixty minutes after the start of overtopping the lake level has fallen by 7.4 m, and the water released
+   in excess of the inflow amounts to 450,000 m³ (92 % of the stored volume). At the end of the computation
+   (270 min) a dam 4.1 m high remains.
+6. **Flood downstream (from 222 min)**: The front of the flood reaches the village 1.5 km downstream
+   7 minutes after the start of overtopping. The discharge of the river, which had run dry, exceeds
+   150 m³/s in less than a minute and peaks at 455 m³/s 12 minutes after the start of overtopping
+   (4.7 times the 96 m³/s that the low-water channel carries when full). The discharge stays above
+   1.5 times the normal flow for 36 minutes.
 
 ![long profile](figs/profile.png)
 
 Long profile of the main river (solid = bed, dashed = water surface). The dam is eroded from the top, and
-the eroded sediment deposits from the toe downstream (27,000 m³ at x = 1,000–1,500 m, up to 5 m thick). The
+the eroded sediment deposits from the toe downstream (25,000 m³ at x = 1,000–1,500 m, up to 5 m thick). The
 face becomes gentler as it extends downstream, which slows the erosion.
 
 ### Damage in the village
@@ -216,21 +215,21 @@ face becomes gentler as it extends downstream, which slows the erosion.
 Maximum flow depth in the village (blue) and damage ratio of the houses (colour of the squares). From the
 top: base case, grain size 10 cm, drain pipe.
 
-In the base case the floodplain is inundated up to 130 m from the bank (maximum depth in the low-water
-channel 2.5 m). The damage is graded by the distance from the bank.
+In the base case the floodplain is inundated up to 140 m from the bank (maximum depth in the low-water
+channel 2.4 m). The damage is graded by the distance from the bank.
 
 | Row (distance from the bank) | Maximum flow depth (m) | Maximum load (m³/s²; mean and maximum of 35 cells) | Damage ratio (mean and maximum) |
 |---|---|---|---|
-| Row 1 (25 m) | 0.9 | 8.8 / 10.1 | 1.00 / 1.00 (destroyed) |
-| Row 2 (55 m) | 0.6 | 3.7 / 5.6 | 0.99 / 1.00 |
-| Row 3 (85 m) | 0.4 | 1.1 / 2.0 | 0.03 / 0.26 |
-| Row 4 (115 m) | 0.1 | 0.1 / 0.4 | 0 |
+| Row 1 (25 m) | 0.9 | 9.7 / 10.6 | 1.00 / 1.00 (destroyed) |
+| Row 2 (55 m) | 0.7 | 4.2 / 5.9 | 1.00 / 1.00 (destroyed) |
+| Row 3 (85 m) | 0.4 | 1.3 / 2.2 | 0.07 / 0.37 |
+| Row 4 (115 m) | 0.2 | 0.2 / 0.4 | 0 |
 
 What decides it is where the load exceeds the 1 m³/s² at which damage starts and the 4 m³/s² at which the
 destructible fraction becomes 1. The load on the third row is just above the value at which damage starts,
-so the damage of this row is sensitive to the size and the duration of the flood. The damage ratio of the
-second row also varies between 0.56 and 1.00 with the spread of the peak discharge of the breach ("Spread of the
-results" below).
+so the damage of this row is sensitive to the size and the duration of the flood. In the 7 runs with slightly
+different inflows too, the first two rows are destroyed in every run, and the mean damage ratio of the third row
+varies between 0.05 and 0.09 ("Spread of the results" below).
 
 ### Spread of the results (computations with slightly different inflows)
 
@@ -239,73 +238,80 @@ results" below).
 (a), (b) Discharge just below the dam and at the village for the base case with only the inflow changed to
 39.2–40.8 m³/s (aligned at the start of overtopping). (c) Dams with a level crest (two cases of the series)
 computed with inflows of 40 and 40.4 m³/s. (d), (e) The dam whose crest is tilted across the valley
-(`dam_tilt`) on the 10 m and 5 m grids (inflows of 39.6–40.4 m³/s). (f) Cross-section of the crest before
-overtopping.
+(`dam_tilt`) on the 10 m and 5 m grids (inflows of 39.6–40.4 m³/s). The horizontal axis of (c)–(e) is the
+time from the start of the computation (the 5 m grid is computed up to 120 minutes). (f) Cross-section of
+the crest before overtopping.
 
 | Case | Inflow (m³/s) | Start of overtopping (min) | Peak discharge: just below the dam / village (m³/s) | Time from the start of overtopping to the peak (min) | Dip on the way | Mean damage ratio of the houses: row 1 / row 2 / row 3 from the bank |
 |---|---|---|---|---|---|---|
-| `base_m2` | 39.2 | 206 | 416 / 380 | 18 | 0.45 | 1.00 / 0.59 / 0 |
-| `base_m1` | 39.6 | 204 | 480 / 437 | 20 | 0.34 | 1.00 / 0.98 / 0.03 |
-| `base` (base case) | 40 | 202 | 486 / 425 | 20 | 0.44 | 1.00 / 0.99 / 0.03 |
-| `base_eps` | 40.0001 | 202 | 547 / 449 | 15 | 0.43 | 1.00 / 1.00 / 0.04 |
-| `base_p05` | 40.2 | 201 | 450 / 395 | 14 | 0.61 | 1.00 / 0.90 / 0.01 |
-| `base_p1` | 40.4 | 200 | 407 / 338 | 14 | 0.62 | 1.00 / 0.56 / 0 |
-| `base_p2` | 40.8 | 198 | 448 / 417 | 18 | 0.49 | 1.00 / 0.72 / 0.01 |
-| `dam_ref` | 40 | 10 | 397 / 386 | 18 | 0.96 | 1.00 / 0.78 / 0 |
-| `dam_ref_p1` | 40.4 | 10 | 399 / 388 | 17 | 0.99 | 1.00 / 0.80 / 0.01 |
-| `dam_face25` | 40 | 10 | 1,078 / 1,050 | 7 | 1.00 | 1.00 / 1.00 / 1.00 |
-| `dam_face25_p1` | 40.4 | 10 | 1,079 / 1,048 | 7 | 1.00 | 1.00 / 1.00 / 1.00 |
-| `dam_tilt_m1` | 39.6 | 18 | 394 / 358 | 13 | 0.45 | 1.00 / 0.56 / 0 |
-| `dam_tilt` | 40 | 18 | 349 / 311 | 15 | 0.47 | 1.00 / 0.23 / 0 |
-| `dam_tilt_eps` | 40.0001 | 18 | 435 / 360 | 18 | 0.35 | 1.00 / 0.60 / 0 |
-| `dam_tilt_p1` | 40.4 | 18 | 347 / 327 | 13 | 0.60 | 1.00 / 0.24 / 0 |
-| `dam_tilt_dx5_m1` | 39.6 | 16 | 299 / 259 | 26 | 0.38 | 0.90 / 0 / 0 |
-| `dam_tilt_dx5` | 40 | 16 | 305 / 273 | 29 | 0.34 | 1.00 / 0.01 / 0 |
-| `dam_tilt_dx5_eps` | 40.0001 | 16 | 309 / 287 | 30 | 0.51 | 1.00 / 0.02 / 0 |
-| `dam_tilt_dx5_p1` | 40.4 | 16 | 303 / 276 | 33 | 0.41 | 1.00 / 0.01 / 0 |
+| `base_m2` | 39.2 | 219 | 498 / 447 | 8.5 | 0.71 | 1.00 / 1.00 / 0.07 |
+| `base_m1` | 39.6 | 217 | 488 / 457 | 8.8 | 0.72 | 1.00 / 1.00 / 0.09 |
+| `base` (base case) | 40 | 215 | 470 / 455 | 9.2 | 0.96 | 1.00 / 1.00 / 0.07 |
+| `base_eps` | 40.0001 | 215 | 464 / 443 | 8.0 | 0.94 | 1.00 / 1.00 / 0.06 |
+| `base_p05` | 40.2 | 214 | 486 / 463 | 8.3 | 0.92 | 1.00 / 1.00 / 0.09 |
+| `base_p1` | 40.4 | 212 | 468 / 444 | 8.2 | 0.81 | 1.00 / 1.00 / 0.05 |
+| `base_p2` | 40.8 | 210 | 475 / 457 | 9.0 | 0.93 | 1.00 / 1.00 / 0.07 |
+| `dam_ref` | 40 | 10 | 396 / 384 | 17.7 | 0.96 | 1.00 / 0.77 / 0 |
+| `dam_ref_p1` | 40.4 | 10 | 398 / 387 | 16.7 | 0.99 | 1.00 / 0.79 / 0.01 |
+| `dam_face25` | 40 | 10 | 1,057 / 1,017 | 6.3 | 1.00 | 1.00 / 1.00 / 1.00 |
+| `dam_face25_p1` | 40.4 | 10 | 1,054 / 1,017 | 6.2 | 0.99 | 1.00 / 1.00 / 1.00 |
+| `dam_tilt_m1` | 39.6 | 18 | 321 / 310 | 14.2 | 0.85 | 1.00 / 0.13 / 0 |
+| `dam_tilt` | 40 | 18 | 321 / 315 | 14.8 | 0.80 | 1.00 / 0.18 / 0 |
+| `dam_tilt_eps` | 40.0001 | 18 | 312 / 305 | 16.0 | 0.84 | 1.00 / 0.12 / 0 |
+| `dam_tilt_p1` | 40.4 | 18 | 325 / 314 | 14.2 | 0.72 | 1.00 / 0.24 / 0 |
+| `dam_tilt_dx5_m1` | 39.6 | 16 | 455 / 384 | 59.5 | 0.00 | 1.00 / 0.65 / 0.00 |
+| `dam_tilt_dx5` | 40 | 16 | 438 / 374 | 50.3 | 0.00 | 1.00 / 0.51 / 0.00 |
+| `dam_tilt_dx5_eps` | 40.0001 | 16 | 356 / 322 | 39.3 | 0.00 | 1.00 / 0.19 / 0 |
+| `dam_tilt_dx5_p1` | 40.4 | 16 | 340 / 306 | 13.8 | 0.94 | 1.00 / 0.06 / 0 |
 
 The "dip on the way" is the minimum, between the start of overtopping and the peak, of the discharge divided by
 its largest value up to that time (below 0.5 the discharge fell to less than half before the peak).
 
-- **Dams with a level crest are stable against slight differences**. The dams of the pre-built-dam series have a
-  crest that is level across the valley ((f)). With the inflow increased by 1 %, the peak discharge changes by only
-  +0.5 % for the reference dam (397 → 399 m³/s) and +0.1 % for the dam with faces of 0.25 (1,078 → 1,079 m³/s)
-  (the two lines coincide in (c)). Differences between the cases of the series can be read as the effect of the
-  conditions.
-- **The base case of the chain changes with slight differences**. In 7 computations with the inflow varied between
-  39.2 and 40.8 m³/s (±2 %), the peak discharge just below the dam is 407–547 m³/s, the peak at the village
-  338–449 m³/s, and the time from the start of overtopping to the peak 14–20 minutes. The peaks are
-  not ordered by the inflow (table). Merely changing the inflow to 40.0001 m³/s (+0.00025 %) gives a peak of 547 m³/s (+13 %).
-  The mean damage ratio of the houses is 0.56–1.00 in the second row from the bank and 0.00–0.04 in the
-  third.
-- **The runs part where the walls of the breach collapse**. In all computations the discharges differ by less than
-  a tenth for the first 8 minutes after the start of overtopping and part from there ((a)). The dam built by the
-  debris flow is higher on the tributary side and about 4 m lower on the opposite side ((f)), so the overflow
-  concentrates in a narrow breach (1–4 cells = 10–40 m wide) on the opposite side. When a wall of the breach (the
-  thick deposit on the tributary side) collapses and blocks it, the discharge falls to less than half of what it
-  was (5 of the 7 runs; "dip on the way" below 0.5 in the table). The timing and volume of the collapse change
-  with slight differences in the conditions.
-- **With a tilted crest the same happens for a pre-built dam**. When the crest of the reference dam is tilted into
-  the shape of the dam built by the debris flow (`dam_tilt`; (f)), the peak scatters over 347–435 m³/s in four
-  runs with inflows of 39.6–40.4 m³/s, and merely changing the inflow to 40.0001 m³/s changes it from 349 to
-  435 m³/s ((d)). In 3 of the four runs the discharge falls to less than half on the way. The spread of the results
-  does not come from the history of the debris flow or the ponding but from the shape of the dam, which
-  concentrates the overflow in a narrow breach.
-- **Computation on the 5 m grid** ((e)): The same dam computed on the 5 m grid (`slide_dmax` is 1.5 m, 0.3 times the
-  grid spacing) gives peaks of 299–309 m³/s in the four runs (mean 304 m³/s), 0.80 times the 10 m grid
-  (347–435 m³/s, mean 381 m³/s). The difference of the means exceeds the spread of the four runs on the 10 m grid: the breach of a dam whose overflow concentrates in a narrow breach depends on the grid spacing.
-  On the 5 m grid the four runs differ by only 4 % (25 % on the 10 m grid): the spread of the results on the 10 m grid becomes smaller when the grid is refined.
-  The time from the start of overtopping to the peak is 26–33 minutes on the 5 m grid and 13–18 minutes on
-  the 10 m grid (on the 5 m grid the collapsed sediment blocks the breach for longer). The discharge falls to less than half on the way in 3 of the four runs on the 5 m grid and in 3
-  on the 10 m grid. Because the values change between the two grid spacings, the breach of this dam has not converged with respect to the
-  grid spacing. The breach in the chain is of the same kind, so take the numbers of the 10 m grid as dependent on the grid
-  spacing (the chain is not computed through the breach on the 5 m grid; "Grid spacing" in the section below).
+- **Dams with a level crest are stable against slight differences**. The dams of the pre-built-dam series have a crest that is level across the valley ((f)). With the inflow
+  increased by 1 %, the peak discharge changes by only +0.5 % for the reference dam (396 → 398 m³/s) and −0.3 % for the
+  dam with faces of 0.25 (1,057 → 1,054 m³/s) (the two lines coincide in (c)). Differences between the cases of the
+  series can be read as the effect of the conditions.
+- **The base case of the chain also changes little with slight differences**. In 7 computations with the inflow
+  varied between 39.2 and 40.8 m³/s (±2 %), the peak discharge just below the dam is 464–498 m³/s (a spread of
+  7 % of the mean), the peak at the village 443–463 m³/s, and the time from the start of overtopping to the peak
+  8–9 minutes. The peaks are not ordered by the inflow (table), and merely changing the inflow to 40.0001 m³/s
+  (+0.00025 %) changes the peak from 470 to 464 m³/s. In none of the runs does the discharge fall to less than
+  half on the way (dips of 0.71–0.96). The mean damage ratio of the houses is 1.00 (destroyed) in the first two
+  rows from the bank in every run and 0.05–0.09 in the third.
+- **The overflow starts over a wide width, so the course is the same**. The dam built by the debris flow is higher
+  on the tributary side (3.6 m higher at the foot of the valley wall), while three cells (30 m wide) on the opposite
+  side are nearly flat, within 0.5 m of each other ((f)). The overflow starts over these three cells and spreads
+  over the full width of the crest in about 5 minutes. In the 7 runs the times at which the discharge exceeds 200,
+  300 and 400 m³/s lie within 30 seconds of each other, and the discharges nearly coincide up to the peak ((a)).
+  The runs differ noticeably only after 30 minutes from the start of overtopping, when the lake has been drawn
+  down. In some runs 1–2 m of sediment settles on the bottom of the breach and the discharge falls below the
+  inflow (2 of the 7 runs; 29 m³/s at the lowest).
+- **With a tilted crest too, the results on the 10 m grid agree**. When the crest of the reference dam is tilted across the
+  valley with its lowest part a notch 10 m wide (one cell) (`dam_tilt`; 3.9 m higher on the tributary side; (f)), the
+  overflow concentrates in the notch. Even so, the peaks of the four runs with inflows of 39.6–40.4 m³/s agree within
+  312–325 m³/s (a spread of 4 %) ((d)), and in none of them does the discharge fall to less than half on the way
+  (dips of 0.72–0.85).
+- **On the 5 m grid the breach is blocked and the results scatter**. When the same dam is computed on the 5 m
+  grid (`dam_tilt_dx5`; `slide_dmax` 1.5 m), all four runs reach a first crest of 300–347 m³/s 12–14 minutes
+  after overtopping starts, and within 3 minutes the discharge just below the dam then falls below 10 m³/s
+  ((e)). Near the crest (x = 860–890 m) the floor and walls of the breach are fluidised by the slope-stability
+  test and drop by 2–5 m; the dense sediment set in motion stops 20–30 m downstream and raises the floor of the
+  breach there by 2–4 m. The four runs then part. In the two runs with inflows of 40 and 39.6 m³/s the
+  discharge is below the inflow for a total of 21 and 30 minutes (the lake level rises by 0.6 and 0.7 m), and
+  after the breach reopens it peaks at 438 and 455 m³/s, 66 and 76 minutes after the start of the computation.
+  In the two runs with 40.0001 and 40.4 m³/s the discharge is below the inflow for a total of 7–8 minutes and
+  swings between 0 and 250 m³/s before reaching a second crest of 356 and 336 m³/s at 55–56 minutes (in
+  `dam_tilt_dx5_p1` the first crest is the peak and the blockage comes after it, so its dip on the way is 0.94).
+  The peak discharges of the four runs scatter over 340–455 m³/s (29 % of the mean; 1.1–1.4 times the 10 m
+  grid), the peaks at the village over 306–384 m³/s, and the mean damage ratio of the second row of houses over
+  0.06–0.65.
 - **How to read the results**: Read the numbers of the chain cases (peak discharge, damage to houses) with this
-  spread in mind. Details of the course such as the stall of the base case are one of the courses that can
-  occur. The differences from the drain case (no overtopping) and from the 10 cm grains (peak 214 m³/s) are
-  well beyond this spread. The effect of the conditions (lake volume, face slope, grain size, inflow) is read
-  more reliably from the series of dams with a level crest. For a real site too, run several computations with
-  slightly different conditions and check the spread of the results.
+  spread in mind (7 % in the peak discharge of the base case). The differences from the drain case (no overtopping),
+  the 10 cm grains (peak 292 m³/s) and the doubled inflow (544 m³/s) are larger than this spread. The effect of the
+  conditions (lake volume, face slope, grain size, inflow) is read more reliably from the series of dams with a level
+  crest (a 1 % change in the inflow changes the peak by only 0.5 %). Where the overflow concentrates in a narrow
+  breach that becomes blocked (the tilted-crest dam on the 5 m grid), the peak changes by about 30 %. For a real
+  site too, run several computations with slightly different conditions and check the spread of the results.
 
 ### Countermeasure and different conditions (chain cases)
 
@@ -316,36 +322,36 @@ downstream of this line). (c) Discharge at the village.
 
 | Case | Dam height (m) | Start of overtopping (min) | Peak discharge: just below the dam / village (m³/s) | Ratio to the inflow | Rise time (min) | Dam height at the end (m) | Mean damage ratio of the houses: row 1 / row 2 / row 3 from the bank |
 |---|---|---|---|---|---|---|---|
-| `base` | 13.0 | 202 | 486 / 425 | 12.2 | 18 | 3.5 | 1.00 / 0.99 / 0.03 |
-| `drain` | 13.0 | no overtopping | — / 38 | — | — | 13.0 | 0 / 0 / 0 |
-| `coarse` | 12.4 | 181 | 214 / 205 | 5.4 | 20 | 4.7 | 0.41 / 0 / 0 |
-| `q80` | 13.0 | 107 | 552 / 494 | 6.9 | 14 | 2.5 | 1.00 / 1.00 / 0.16 |
+| `base` | 13.4 | 215 | 470 / 455 | 11.8 | 8 | 4.1 | 1.00 / 1.00 / 0.07 |
+| `drain` | 13.4 | no overtopping | — / 38 | — | — | 13.4 | 0 / 0 / 0 |
+| `coarse` | 13.4 | 221 | 292 / 270 | 7.3 | 14 | 7.0 | 1.00 / 0.01 / 0 |
+| `q80` | 13.3 | 112 | 544 / 510 | 6.8 | 8 | 3.9 | 1.00 / 1.00 / 0.31 |
 
 The "rise time" is the time from the discharge just below the dam exceeding the inflow to its peak.
 
 - **Drain (`drain`)**: The culvert starts to carry water at 45 minutes, when the lake level exceeds the
   invert of its inlet (59.5 m). Its discharge grows as the level rises, and at 270 minutes it carries
-  38 m³/s (96 % of the inflow) at a level of 62.9 m, which is almost in balance. The level stops 2.3 m below
-  the crest (65.1 m), and neither overtopping nor a breach occurs. The dam stays 13 m high. The river at
+  38 m³/s (96 % of the inflow) at a level of 62.9 m, which is almost in balance. The level stops 2.6 m below
+  the crest (65.5 m), and neither overtopping nor a breach occurs. The dam stays 13.4 m high. The river at
   the village starts to flow again at about 70 minutes and slowly approaches its normal discharge
   (20 m³/s at 110 minutes). The floodplain is not inundated.
-- **Coarse sediment (`coarse`)**: With a grain size of 10 cm the deposit of the debris flow is slightly flatter
-  (dam height 12.4 m, downstream face 0.095) and overtopping starts earlier (181 minutes). The erosion is
-  slow: the discharge grows to 46 m³/s in 10 minutes and to 140 m³/s in 20 minutes, and peaks at 214 m³/s
-  (5.4 times the inflow, 0.44 times the base case) 28 minutes after overtopping starts. In the village the
-  floodplain is inundated up to 80 m from the bank, and the houses of the row nearest the bank start to be
-  damaged under a load of 1.7 m³/s² (2.0 at most), but their mean damage ratio stays at 0.41 (0.76 at
-  most). The houses of the second row and beyond are not damaged. A dam 4.7 m high remains at the end of
-  the computation.
-- **Double inflow (`q80`)**: The time to fill is halved (overtopping starts at 107 minutes) and the peak
-  rises to 552 m³/s, but its ratio to the inflow falls from 12.2 to 6.9. The initial rise is faster: the
-  discharge reaches 390 m³/s 7 minutes after overtopping starts (270 m³/s in the base case). Here too the
-  walls collapse and fill the breach, the discharge falls back to 160 m³/s, and the peak comes after
-  16 minutes. All houses of the first two rows from the bank are destroyed (loads of 11 and 5.2 m³/s²), and
-  part of the third row starts to be damaged (mean damage ratio 0.16, 0.60 at most). The peak of the
-  base case varies between 407 and 547 m³/s with slight differences in the inflow ("Spread of the results"
-  above), so the effect of the inflow cannot be read from the difference in the peaks (486 → 552 m³/s);
-  read it from the pre-built-dam series (section below).
+- **Coarse sediment (`coarse`)**: With a grain size of 10 cm the dam built by the debris flow hardly changes
+  (13.4 m high; the upstream face is slightly gentler at 0.17 and the downstream face is the same 0.10).
+  Overtopping starts at 221 minutes. The erosion is slow: the discharge just below the dam grows to
+  160 m³/s 10 minutes after overtopping starts and to 240 m³/s after 15 minutes, and peaks at 292 m³/s
+  (7.3 times the inflow, 0.62 times the base case) after 20 minutes. In the village the floodplain is
+  inundated up to 100 m from the bank. The houses of the row nearest the bank are destroyed under a load of
+  3.5 m³/s² (4.1 at most), but the second row takes a load of 0.9 m³/s² (1.7 at most) and its mean damage
+  ratio stays at 0.01 (0.21 at most). The houses of the third row and beyond are not damaged. A dam 7.0 m
+  high remains at the end of the computation.
+- **Double inflow (`q80`)**: The time to fill is halved (overtopping starts at 112 minutes) and the peak
+  rises to 544 m³/s, but its ratio to the inflow falls from 11.8 to 6.8. The initial rise is faster: the
+  discharge reaches 440 m³/s 5 minutes after overtopping starts (360 m³/s in the base case) and peaks after
+  9 minutes. All houses of the first two rows from the bank are destroyed (loads of 12 and 5.6 m³/s²), and
+  part of the third row is damaged (mean damage ratio 0.31, 0.86 at most). The peak of the base case
+  changes between 464 and 498 m³/s with slight differences in the inflow ("Spread of the results" above). The
+  difference from the base case (470 → 544 m³/s, +16 %) exceeds this spread. A comparison with the same dam and only
+  the inflow changed is given by `dam_q20` and `dam_q80` of the series with a pre-built dam (section below).
 - **No rain (`norain`)**: Without rain there is no failure, and the main river keeps flowing at 40 m³/s. The depth
   in the low-water channel at the village is 0.71 m and the floodplain is not inundated (control).
 
@@ -357,96 +363,53 @@ The "rise time" is the time from the discharge just below the dam exceeding the 
 
 | Case | Dam height (m) | Dam length (along the river; m) | Face slopes: upstream / downstream | Deposit in the main river (10⁴ m³) | Deposit in the tributary (10⁴ m³) | Sediment still moving (10⁴ m³) | Colluvium left on the slope (10⁴ m³) |
 |---|---|---|---|---|---|---|---|
-| `base` | 13.0 | 210 | 0.16 / 0.10 | 7.9 | 5.7 | 0.2 | 1.3 |
-| `wet0` (no pore-water exchange) | 10.5 | 230 | 0.12 / 0.075 | 7.7 | 5.7 | 0.2 | 1.5 |
-| `wet2` (no exchange of retained water) | 10.2 | 160 | 0.15 / 0.11 | 6.5 | 6.8 | 0.2 | 1.5 |
-| `slide0` (no options of the stability test) | not yet terrain | — | — | 2.4 | 1.5 | 11.0 | 0.0 |
-| `g5` (5 m grid) | 11.8 | 185 | 0.16 / 0.11 | 6.7 | 6.7 | 1.0 | 0.6 |
-| `dmax15` (`slide_dmax` = 1.5 m) | 7.4 | 160 | 0.092 / 0.092 | 4.3 | 4.5 | 0.4 | 5.7 |
+| `base` | 13.4 | 180 | 0.19 / 0.12 | 7.5 | 7.2 | 0.1 | 0.1 |
+| `wet0` (no pore-water exchange) | 9.2 | 230 | 0.10 / 0.066 | 7.6 | 6.6 | 0.2 | 0.6 |
+| `wet2` (no exchange of retained water) | 8.6 | 160 | 0.12 / 0.096 | 5.5 | 8.7 | 0.6 | 0.2 |
+| `slide0` (no options of the stability test) | not yet terrain | — | — | 3.4 | 2.4 | 9.1 | 0.0 |
+| `noflow0` (judged under a dense mixture) | not yet terrain | — | — | 2.3 | 1.1 | 11.6 | 0.0 |
+| `g5` (5 m grid) | 9.0 | 175 | 0.13 / 0.086 | 4.9 | 5.1 | 4.7 | 0.2 |
+| `dmax15` (`slide_dmax` = 1.5 m) | 7.8 | 180 | 0.078 / 0.097 | 6.0 | 7.0 | 0.2 | 1.8 |
+| `dmax15_dx5` (the same settings on the 5 m grid) | 6.5 | 175 | 0.076 / 0.072 | 5.6 | 7.3 | 0.4 | 1.7 |
 
 Values at 28 minutes (17.5 minutes after the failure).
 
 - **Pore-water treatment**: In the base case (`f_dbwet = 3`) the failed mass flows out with all the water of
   the soil layer (drainable and retained), and takes up the same proportion of water from the flow when it
   deposits. In `wet2` and `wet0` the failed mass carries only the drainable water and is denser
-  (concentration 0.78). In `wet2` more sediment stays in the tributary valley (68,000 m³) and the dam is
-  2.8 m lower. In `wet0` the deposit takes no water from the flow, so it spreads flatter and longer (faces
-  0.12 and 0.075) and the dam is 2.5 m lower. The dam height sets the lake volume, so the pore-water
+  (concentration 0.78). In `wet2` more sediment stays in the tributary valley (87,000 m³) and the dam is
+  4.8 m lower. In `wet0` the deposit takes no water from the flow, so it spreads flatter and longer (faces
+  0.10 and 0.066) and the dam is 4.2 m lower. The dam height sets the lake volume, so the pore-water
   treatment changes even the size of the later breach.
 - **Options of the stability test**: In `slide0`, without the four options, the deposited sediment is
-  fluidised again and again and does not become terrain; at 28 minutes 110,000 m³ is still moving sediment
+  fluidised again and again and does not become terrain; at 28 minutes 91,000 m³ is still moving sediment
   (the river is blocked, but the mass does not consolidate into a dam). This is because the conventional
   formula estimates the safety factor of a submerged slope at about half its value and fluidises a thick
   deposit down to its base at once (§4 of the
-  [explanation of debris flows and slope failures](../../../docs/en/users_guide/massflow.md)).
-- **Grid spacing**: With the 5 m grid (`g5`) more sediment stays in the tributary valley (67,000 m³; 57,000 m³
-  on the 10 m grid) and the dam is 1.2 m lower (11.8 m). The tributary floor (20 m wide) is 2 cells on the 10 m grid
-  and 4 cells on the 5 m grid, which changes the flow and the shape of the deposit inside the valley. The dam
-  height depends on the grid spacing by about 9 %.
+  [explanation of debris flows and slope failures](../../../docs/en/users_guide/massflow.md)). In `noflow0`,
+  where only `f_slide_noflow`, the option that skips cells under a dense mixture, is set to 0, no dam forms
+  either (116,000 m³ is still moving at 28 minutes): the bed under the flow is judged and fluidised, and the
+  dense sediment that cannot move returns to the bed, saturates and is fluidised again, over and over.
+- **Grid spacing**: With the 5 m grid (`g5`) the deposited sediment is fluidised again and again; at
+  28 minutes 47,000 m³ is still moving in the tributary valley and on the dam, and the dam is only 9.0 m high.
+  `slide_dmax` (3 m) is 0.6 times the grid spacing, so the step left by mobilizing one cell brings down the
+  saturated neighbouring cell ("Grid spacing" in "Artefacts of the model" below). In `dmax15_dx5`, at
+  0.3 times the grid spacing, this does not repeat (4,000 m³ moving), but the failure takes place in two stages
+  as in the next item. With a thick soil layer and a fine grid, no setting builds the same dam as the base case.
 - **Upper limit of the judged and mobilized depth**: With `slide_dmax` set to 1.5 m, half the thickness of the
   colluvium (`dmax15`; the initial saturation is raised to 0.9035 so that the failure occurs at the same time),
-  only the upper half of the colluvium fails and the lower half (57,000 m³) stays on the slope, because the
-  layer left behind is not judged while the mobilized sediment lies on it as a thin film
-  (`f_slide_noflow = 1`). The dam is only 7.4 m high. A `slide_dmax` shallower than the layer that is to fail
-  is combined with `f_slide_noflow = 2` (next section; §4 of the
+  the failure takes place in two stages, the lower layer failing after the upper layer has flowed away, and
+  the dam is only 7.8 m high. The 18,000 m³ left on the slope is a deposit that settled again at the foot of
+  the slope (median thickness 2.9 m, with cells thicker than the original layer; safety factor 1 or more).
+  The same happens on the 5 m grid (`dmax15_dx5`), where the dam is 6.5 m high. A `slide_dmax` shallower than
+  the layer that is to fail delays the failure and lowers the dam (§4 of the
   [explanation of debris flows and slope failures](../../../docs/en/users_guide/massflow.md)).
-
-### Soil left under a thin film
-
-![Soil left under a thin film](figs/film.png)
-
-(a) Long profile of the main river at 28 min. (b) Soil depth left on the failure slope.
-
-The option `f_slide_noflow`, which leaves cells under a dense mixture out of the stability test, has the
-values 1 (the setting of this example) and 2. 1 decides by the concentration of the mixture alone. 2 judges
-the cells whose mixture is thin (its thickness as a deposit is less than half the judged depth). The two
-are compared for a `slide_dmax` of 3 m (the thickness of the colluvium) and of 1.5 m.
-
-| Case | `f_slide_noflow` | `slide_dmax` (m) | Grid spacing (m) | Colluvium left on the slope (10⁴ m³) | Cells with soil left (%) | Dam height (m) | Deposit in the main river (10⁴ m³) | Deposit in the tributary (10⁴ m³) |
-|---|---|---|---|---|---|---|---|---|
-| `base` | 1 | 3 | 10 | 1.3 | 12 | 13.0 | 7.9 | 5.7 |
-| `noflow2` | 2 | 3 | 10 | 0.1 | 2 | 13.4 | 8.2 | 6.5 |
-| `dmax15` | 1 | 1.5 | 10 | 5.7 | 86 | 7.4 | 4.3 | 4.5 |
-| `dmax15_n2` | 2 | 1.5 | 10 | 1.7 | 10 | 8.8 | 6.2 | 6.9 |
-| `dmax15_n2_dx5` | 2 | 1.5 | 5 | 2.1 | 12 | 7.3 | 5.9 | 6.6 |
-
-Values at 28 min.
-
-- **1 does not judge the layer under a thin film**: while a film a few centimetres thick remains after the
-  debris flow has passed, the layer under it is not judged even if it is saturated. In the base case
-  13,000 m³ remain along the lateral edges and the foot of the colluvium (12 % of the
-  cells). The sediment lying on them is about 3 cm thick as a deposit. In `dmax15`, where `slide_dmax` is
-  half the thickness of the colluvium, the film left after the upper layer has been fluidised keeps the
-  lower layer from being judged over almost the whole slope (86 % of the cells).
-- **2 judges the cells once the film has become thin**: in `noflow2` only one row at the foot remains
-  (1,000 m³), and the dam is 0.3 m higher (13.4 m). In `dmax15_n2` the lower layer
-  fails as well. The 17,000 m³ that remain are sediment redeposited at the foot of the slope (median
-  thickness 3.3 m, thicker than the original layer; the safety factor is 1 or more).
-- **A `slide_dmax` shallower than the layer gives a lower dam**: the dam of `dmax15_n2` is 8.8 m
-  high, 4.5 m lower than in `noflow2`. The lower layer fails after the upper one has flowed away,
-  so more sediment stays at the foot of the slope and in the tributary valley (20,000 m³ in total).
-- **5 m grid**: on the 5 m grid with `slide_dmax` at 0.3 times the grid spacing, 1.5 m (`dmax15_n2_dx5`),
-  the lower layer also fails with 2 (the 21,000 m³ that remain are again a deposit at the foot of the
-  slope). The dam is 7.3 m high, 1.5 m lower than with the same settings on the 10 m grid
-  (the difference between `g5` and `base`, with a `slide_dmax` of 3 m, is 1.2 m).
-- **The difference in the breach stage is small**: replacing only `f_slide_noflow` by 2 in the two cases
-  of the pre-built dam series that have a level crest (`noflow2_ref`, `noflow2_face25`) changes the peak
-  discharge by +0.1 % and −2.2 %.
-
-| Case | `f_slide_noflow` | Peak discharge (m³/s) | Difference from 1 (%) | From the start of overtopping to the peak (min) | Peak discharge at the village (m³/s) | Dam height at 60 min (m) |
-|---|---|---|---|---|---|---|
-| `dam_ref` | 1 | 397 | — | 17.5 | 386 | 4.7 |
-| `noflow2_ref` | 2 | 397 | +0.1 | 17.7 | 385 | 5.0 |
-| `dam_face25` | 1 | 1,078 | — | 6.5 | 1,050 | 2.0 |
-| `noflow2_face25` | 2 | 1,055 | −2.2 | 6.3 | 1,013 | 1.8 |
-
-The other cases of this example are computed with 1.
 
 ## Conditions for a rapid breach (computation and real natural dams)
 
-In the base case the discharge reached 12 times the inflow 20 minutes after overtopping started. For dams of
+In the base case the discharge reached 12 times the inflow 9 minutes after overtopping started. For dams of
 the same height, the peak discharge of the breach varies by a factor of 5 and the rise time of the discharge by a
-factor of 9, depending on the conditions.
+factor of 10, depending on the conditions (the series on the 10 m grid).
 Here a dam 13 m high is placed at the junction from the start and the computation begins
 with the lake filled to the crest (no rain and no colluvium; the dam is saturated), and the conditions are
 changed one at a time. The reference (`dam_ref`) is a triangle with face slopes of 0.12, close to the dam that
@@ -506,71 +469,76 @@ case (the chain).
 
 | Condition changed | Case | Lake volume (10⁴ m³) | Peak discharge (m³/s) | Ratio to the inflow | Time of the peak (min) | Rise time (min) | Largest fall of the lake level in 10 min (m) | Dam height after 60 min (m) | Mean damage ratio of the houses |
 |---|---|---|---|---|---|---|---|---|---|
-| Reference (faces 0.12, basin 150 m, grain size 3 cm, inflow 40 m³/s) | `dam_ref` | 45 | 397 | 9.9 | 27 | 9.8 | 2.5 | 4.7 | 0.45 |
-| Small lake (gorge only) | `dam_small` | 18 | 211 | 5.3 | 18 | 8.8 | 2.6 | 5.5 | 0.03 |
-| Large lake (basin 300 m) | `dam_large` | 81 | 641 | 16.0 | 37 | 12.5 | 2.6 | 4.5 | 0.76 |
-| Faces 0.25 (1:4) | `dam_face25` | 46 | 1,078 | 27.0 | 16 | 3.7 | 7.3 | 2.0 | 0.96 |
-| Faces 0.25, crest 40 m (trapezoid) | `dam_crest40` | 45 | 602 | 15.1 | 37 | 13.5 | 4.4 | 1.8 | 0.60 |
-| Crest tilted across the valley (3.9 m higher on the tributary side) | `dam_tilt` | 44 | 349 | 8.7 | 33 | 13.3 | 2.3 | 4.5 | 0.31 |
-| Grain size 1 cm | `dam_d1cm` | 45 | 428 | 10.7 | 19 | 7.5 | 2.8 | 5.0 | 0.51 |
-| Grain size 10 cm | `dam_d10cm` | 45 | 197 | 4.9 | 60 | 34.2 | 1.2 | 7.4 | 0.07 |
+| Reference (faces 0.12, basin 150 m, grain size 3 cm, inflow 40 m³/s) | `dam_ref` | 45 | 396 | 9.9 | 27 | 10.0 | 2.5 | 5.2 | 0.44 |
+| Small lake (gorge only) | `dam_small` | 18 | 210 | 5.3 | 18 | 8.5 | 2.6 | 5.9 | 0.03 |
+| Large lake (basin 300 m) | `dam_large` | 81 | 639 | 16.0 | 38 | 12.8 | 2.5 | 4.7 | 0.76 |
+| Faces 0.25 (1:4) | `dam_face25` | 46 | 1,057 | 26.4 | 16 | 3.5 | 6.9 | 1.8 | 0.96 |
+| Faces 0.25, crest 40 m (trapezoid) | `dam_crest40` | 45 | 809 | 20.2 | 34 | 10.7 | 5.2 | 1.6 | 0.66 |
+| Crest tilted across the valley (3.9 m higher on the tributary side) | `dam_tilt` | 44 | 321 | 8.0 | 32 | 13.0 | 2.0 | 4.9 | 0.30 |
+| Grain size 1 cm | `dam_d1cm` | 45 | 426 | 10.7 | 20 | 7.5 | 2.8 | 5.0 | 0.51 |
+| Grain size 10 cm | `dam_d10cm` | 45 | 194 | 4.9 | 60 | 34.5 | 1.2 | 7.4 | 0.07 |
 | Erosion coefficient δe = 0.0001 | `dam_delte` | 45 | 354 | 8.9 | 34 | 14.2 | 2.2 | 5.7 | 0.35 |
-| Inflow 20 m³/s | `dam_q20` | 45 | 321 | 16.0 | 44 | 19.3 | 2.4 | 4.7 | 0.31 |
-| Inflow 80 m³/s | `dam_q80` | 45 | 505 | 6.3 | 18 | 6.8 | 2.8 | 4.8 | 0.55 |
-| River-bed slope 0.10 downstream (400 m below the junction) | `dam_steep` | 45 | 565 | 14.1 | 28 | 11.3 | 4.1 | 3.8 | 0.61 |
-| No bed load (Takahashi & Nakagawa laws only) | `dam_nofluv` | 45 | 234 | 5.9 | 34 | 15.8 | 1.3 | 7.1 | 0.19 |
-| Effective-shear ratio of the bed load 1 | `dam_tau1` | 45 | 559 | 14.0 | 22 | 7.2 | 3.8 | 3.8 | 0.63 |
-| No gentle-slope equilibrium concentration (`f_dbimm = 0`) | `dam_imm0` | 45 | 571 | 14.3 | 26 | 10.0 | 4.0 | 4.0 | 0.76 |
-| Unsaturated dam (initial saturation 0.83) | `dam_unsat` | 45 | 402 | 10.1 | 26 | 9.3 | 2.6 | 5.0 | 0.45 |
-| Unsaturated dam, saturated-bed erosion law (`f_dbunsat = 0`) | `dam_unsat0` | 45 | 394 | 9.9 | 29 | 11.2 | 2.6 | 4.7 | 0.45 |
-| Grid spacing 5 m (`slide_dmax` 0.3 times, 1.5 m) | `dam_dx5` | 45 | 433 | 10.8 | 28 | 11.2 | 2.3 | 5.2 | 0.34 |
-| Grid spacing 5 m, `slide_dmax` kept at 3 m | `dam_dx5d3` | 45 | 204 | 5.1 | 25 | 8.2 | 1.0 | 7.6 | 0.00 |
-| Tilted crest, grid spacing 5 m (`slide_dmax` 1.5 m) | `dam_tilt_dx5` | 44 | 305 | 7.6 | 45 | 26.7 | 2.1 | 4.5 | 0.25 |
+| Inflow 20 m³/s | `dam_q20` | 45 | 329 | 16.4 | 42 | 17.7 | 2.3 | 4.6 | 0.30 |
+| Inflow 80 m³/s | `dam_q80` | 45 | 506 | 6.3 | 18 | 6.8 | 2.8 | 4.9 | 0.55 |
+| River-bed slope 0.10 downstream (400 m below the junction) | `dam_steep` | 45 | 577 | 14.4 | 28 | 11.8 | 4.0 | 1.9 | 0.61 |
+| No bed load (Takahashi & Nakagawa laws only) | `dam_nofluv` | 45 | 233 | 5.8 | 33 | 15.0 | 1.3 | 7.1 | 0.19 |
+| Effective-shear ratio of the bed load 1 | `dam_tau1` | 45 | 560 | 14.0 | 22 | 7.7 | 3.8 | 3.8 | 0.63 |
+| No gentle-slope equilibrium concentration (`f_dbimm = 0`) | `dam_imm0` | 45 | 575 | 14.4 | 26 | 10.3 | 3.9 | 4.0 | 0.75 |
+| Unsaturated dam (initial saturation 0.83) | `dam_unsat` | 45 | 402 | 10.0 | 26 | 9.5 | 2.6 | 5.2 | 0.45 |
+| Unsaturated dam, saturated-bed erosion law (`f_dbunsat = 0`) | `dam_unsat0` | 45 | 390 | 9.7 | 29 | 11.3 | 2.5 | 4.6 | 0.43 |
+| Grid spacing 5 m (`slide_dmax` 0.3 times, 1.5 m) | `dam_dx5` | 45 | 308 | 7.7 | 25 | 8.5 | 2.6 | 2.5 | 0.25 |
+| Grid spacing 5 m, `slide_dmax` kept at 3 m | `dam_dx5d3` | 45 | 558 | 14.0 | 52 | 35.5 | 4.1 | 0.3 | 0.62 |
+| Tilted crest, grid spacing 5 m (`slide_dmax` 1.5 m) | `dam_tilt_dx5` | 44 | 438 | 10.9 | 66 | 47.7 | 3.3 | 5.1 | 0.38 |
 
 The time of the peak is counted from the start of the computation (the lake starts filled to the crest, and
 the overflow reaches the section just below the dam after 6–18 minutes). The rise time is the time from the
-discharge just below the dam exceeding the inflow to the peak. The damage ratio of the houses is the value at
-the end of the computation.
+discharge just below the dam exceeding the inflow to the peak; for `dam_dx5d3` and `dam_tilt_dx5` on the 5 m grid
+it includes the time during which the breach was blocked ("Artefacts of the model" below). The damage ratio of
+the houses is the value at the end of the computation.
 
-- **Lake volume**: With 180,000, 450,000 and 810,000 m³ the peak is 211, 397 and 641 m³/s
+- **Lake volume**: With 180,000, 450,000 and 810,000 m³ the peak is 210, 396 and 639 m³/s
   (5.3, 9.9 and 16.0 times the inflow). The peak grows roughly as the lake volume to the power 0.75. With a
   small lake the level falls early, and the overflow depth stops growing before the discharge has developed.
-- **Slope of the downstream face**: Steepening the faces from 0.12 to 0.25 raises the peak from 397 to
-  1,078 m³/s (2.7 times) and shortens the rise from 10 to 4 minutes; the lake level falls by 7 m in
+- **Slope of the downstream face**: Steepening the faces from 0.12 to 0.25 raises the peak from 396 to
+  1,057 m³/s (2.7 times) and shortens the rise from 10 to 3.5 minutes; the lake level falls by 7 m in
   10 minutes. The dam is cut down to its base in about 10 minutes. This is the most rapid breach of the series.
-- **Crest length**: With the same faces of 0.25 and a crest 40 m long (a trapezoid), the peak falls to 602 m³/s
-  (0.56 of the triangle) and comes 20 minutes later. The flat crest is not eroded; the head of the downstream
-  face has to cut back through the crest (40 m in 9 minutes) and reach the lake side before the crest starts to be
-  lowered.
-- **Tilt of the crest**: Tilting the crest across the valley so that the tributary side is 3.9 m higher (`dam_tilt`,
-  the shape of a dam built by a debris flow) concentrates the overflow in a narrow breach on the low side. The
-  peak is 349 m³/s (0.88 times the reference), and partway through the breach a wall collapse blocks it
-  and the discharge falls back. The peak of this dam varies between 347 and 435 m³/s with slight differences in
-  the inflow ("Spread of the results" above).
-- **Grain size**: With 1 cm the peak is 428 m³/s (1.1 times) at 19 minutes (reference: 27 minutes). With 10 cm it is
-  197 m³/s (0.5 times) and comes after 60 minutes.
-- **Inflow**: With 20, 40 and 80 m³/s the peak is 321, 397 and 505 m³/s. A larger inflow gives a larger and
-  earlier peak (44, 27 and 18 minutes), but its ratio to the inflow decreases (16, 9.9 and 6.3 times).
+- **Crest length**: With the same faces of 0.25 and a crest 40 m long (a trapezoid), the peak falls to 809 m³/s
+  (0.77 of the triangle) and comes 18 minutes later. The flat crest is not eroded; the head of the downstream
+  face has to cut back through the crest (40 m in 10 minutes) and reach the lake side before the crest starts to be
+  lowered. Once the crest is lowered, the walls of the deepened breach fail again and again in the slope-stability
+  test, and between 32 and 41 minutes the discharge just below the dam swings between 230 and 810 m³/s. The peak is a
+  crest of these swings; the largest 1-minute mean is 695 m³/s (0.66 of the triangle), and the peak at the village
+  589 m³/s (0.58 of the triangle).
+- **Tilt of the crest**: Tilting the crest across the valley so that the tributary side is 3.9 m higher (`dam_tilt`;
+  its lowest part is a notch 10 m wide; the dam built by a debris flow is also higher on the tributary side)
+  concentrates the overflow in a narrow breach on the low side, and the peak falls to 321 m³/s (0.81 times the
+  reference). Four runs with slightly different inflows give 312–325 m³/s ("Spread of the results" above). On the
+  5 m grid (`dam_tilt_dx5`) the breach is blocked for a while, and the peak is 438 m³/s ("Artefacts of the model"
+  below).
+- **Grain size**: With 1 cm the peak is 426 m³/s (1.1 times) at 20 minutes (reference: 27 minutes). With 10 cm it is
+  194 m³/s (0.5 times) and comes after 60 minutes.
+- **Inflow**: With 20, 40 and 80 m³/s the peak is 329, 396 and 506 m³/s. A larger inflow gives a larger and
+  earlier peak (42, 27 and 18 minutes), but its ratio to the inflow decreases (16, 9.9 and 6.3 times).
 - **River-bed slope downstream**: With a slope of 0.10 over the 400 m below the dam, the eroded sediment is carried
-  away instead of depositing at the toe, and the peak becomes 565 m³/s (1.4 times).
-- **Choice of the laws**: Without bed load the peak is 234 m³/s (0.6 times), with the full shear stress in the
-  bed-load formula 559 m³/s (1.4 times), and without the gentle-slope equilibrium concentration 571 m³/s
-  (1.4 times). For the same dam, the choice of the laws alone changes the peak by a factor of 2.4.
-- **Damage to houses**: The mean damage ratio of the houses in the village (four rows, 140 cells) is 0.19 or
-  less for peaks below 250 m³/s, 0.31–0.51 for 250–480 m³/s, 0.55–0.76 for 480–800 m³/s, and 0.96 for the
-  1,078 m³/s of `dam_face25`. The rapidity of the breach translates directly into the difference in damage
+  away instead of depositing at the toe, and the peak becomes 577 m³/s (1.5 times).
+- **Choice of the laws**: Without bed load the peak is 233 m³/s (0.6 times), with the full shear stress in the
+  bed-load formula 560 m³/s (1.4 times), and without the gentle-slope equilibrium concentration 575 m³/s
+  (1.5 times). For the same dam, the choice of the laws alone changes the peak by a factor of 2.5.
+- **Damage to houses**: The mean damage ratio of the houses in the village (four rows, 140 cells) in the cases on
+  the 10 m grid is 0.19 or less for peaks below 250 m³/s, 0.30–0.51 for 250–480 m³/s, 0.55–0.76 for 480–810 m³/s,
+  and 0.96 for the 1,057 m³/s of `dam_face25`. The rapidity of the breach translates directly into the difference in damage
   downstream.
 
 ### Correspondence with what is known about real natural dams
 
 | Condition | Computation of this example | Reports on real natural dams, experiments and other computations | Correspondence |
 |---|---|---|---|
-| Lake volume (lake area, dam height) | With lake volumes of 180,000, 450,000 and 810,000 m³ the peak is 211, 397 and 641 m³/s; roughly as the lake volume to the power 0.75 | The peak discharge correlates strongly with the dam height and the river-bed slope (for the same height, a gentler river stores more water) (64 computed cases of Ishikawa et al. 1992). The regression is a power of stored volume × dam height (Costa 1988, as cited by PWRI 2008) | Agrees. The relation follows from the water balance of the lake and does not depend on the model |
-| Slope of the downstream face | From faces of 0.12 to 0.25 the peak goes from 397 to 1,078 m³/s (2.7 times) and the rise from 10 to 4 minutes | If the face is steeper than the slope needed for a debris flow to form and is long enough, the overflow becomes a debris flow (Ishikawa et al. 1992). In the computations of the same paper (faces 1:2 and 1:4) the peak discharge shows no clear relation with the face slope | Agrees conditionally. Both faces of Ishikawa et al. are steeper than the slope at which a debris flow forms (0.20–0.23 when the values of this example are put into the formula of that paper). The difference in this example is the difference between being above and below that slope |
-| Crest length (dam shape) | With the same faces of 0.25, 1,078 m³/s for the triangle and 602 m³/s for the trapezoid (crest 40 m). The trapezoid peaks 20 minutes later | In computations for dams that are nearly the same except for their shape, the peak discharge of a triangular dam is more than 5 times that of a trapezoidal one (Satofuka et al. 2007, as cited by PWRI 2008). In flume experiments the peak is the same for triangular and trapezoidal dams, and the trapezoidal one peaks later (Akazawa et al. 2014). In the computations of Ishikawa et al. (1992) there is no clear relation with the crest length | The reports themselves disagree. In this computation the trapezoid is smaller (the triangle is 1.8 times the trapezoid) and later. The direction agrees with both reports and the size lies between them |
+| Lake volume (lake area, dam height) | With lake volumes of 180,000, 450,000 and 810,000 m³ the peak is 210, 396 and 639 m³/s; roughly as the lake volume to the power 0.75 | The peak discharge correlates strongly with the dam height and the river-bed slope (for the same height, a gentler river stores more water) (64 computed cases of Ishikawa et al. 1992). The regression is a power of stored volume × dam height (Costa 1988, as cited by PWRI 2008) | Agrees. The relation follows from the water balance of the lake and does not depend on the model |
+| Slope of the downstream face | From faces of 0.12 to 0.25 the peak goes from 396 to 1,057 m³/s (2.7 times) and the rise from 10 to 3.5 minutes | If the face is steeper than the slope needed for a debris flow to form and is long enough, the overflow becomes a debris flow (Ishikawa et al. 1992). In the computations of the same paper (faces 1:2 and 1:4) the peak discharge shows no clear relation with the face slope | Agrees conditionally. Both faces of Ishikawa et al. are steeper than the slope at which a debris flow forms (0.20–0.23 when the values of this example are put into the formula of that paper). The difference in this example is the difference between being above and below that slope |
+| Crest length (dam shape) | With the same faces of 0.25, 1,057 m³/s for the triangle and 809 m³/s for the trapezoid (crest 40 m) (1,046 and 695 m³/s as 1-minute means). The trapezoid peaks 18 minutes later | In computations for dams that are nearly the same except for their shape, the peak discharge of a triangular dam is more than 5 times that of a trapezoidal one (Satofuka et al. 2007, as cited by PWRI 2008). In flume experiments the peak is the same for triangular and trapezoidal dams, and the trapezoidal one peaks later (Akazawa et al. 2014). In the computations of Ishikawa et al. (1992) there is no clear relation with the crest length | The reports themselves disagree. In this computation the trapezoid is smaller (the triangle is 1.3 times the trapezoid; 1.5 times as 1-minute means) and later. The direction agrees with both reports and the size lies between them |
 | Grain size | The peak for 1 cm is 1.1 times that for 3 cm. For 10 cm it is 0.5 times, and it comes after 60 minutes (27 minutes for 3 cm) | In the estimation formulas of Ishikawa et al. (1992), the peak for a mean grain size of 0.25 mm is 1.6 to 2 times that for 2.5 mm. Dams of coarse material remain stable under ordinary inflows (experiments of Shi et al. 2022) | The direction agrees. With a single grain size, however, the effect of coarse grains staying behind and stopping the erosion is not included |
-| Inflow | With inflows of 20, 40 and 80 m³/s the peak is 321, 397 and 505 m³/s, the time of the peak 44, 27 and 18 minutes, and the ratio to the inflow 16, 9.9 and 6.3 (the inflow to the power −0.67) | The larger the inflow, the larger the peak and the shorter the time to the peak (experiments of Zhou et al. 2021 and Akazawa et al. 2014). The ratio to the inflow decreases as the inflow grows (the inflow to the power −0.565 in the formula of Tabata et al., as cited by PWRI 2008) | Agrees |
-| River-bed slope downstream | Steepening only the 400 m below the dam to 0.10, without changing the lake volume, makes the peak 1.4 times larger | For the same dam height, the gentler the river the larger the peak (Ishikawa et al. 1992; a gentler river stores more water) | No contradiction. This example steepens only the reach below the dam without changing the lake volume. In a real river a gentler slope increases the stored volume, and that effect is larger |
+| Inflow | With inflows of 20, 40 and 80 m³/s the peak is 329, 396 and 506 m³/s, the time of the peak 42, 27 and 18 minutes, and the ratio to the inflow 16, 9.9 and 6.3 (the inflow to the power −0.69) | The larger the inflow, the larger the peak and the shorter the time to the peak (experiments of Zhou et al. 2021 and Akazawa et al. 2014). The ratio to the inflow decreases as the inflow grows (the inflow to the power −0.565 in the formula of Tabata et al., as cited by PWRI 2008) | Agrees |
+| River-bed slope downstream | Steepening only the 400 m below the dam to 0.10, without changing the lake volume, makes the peak 1.5 times larger | For the same dam height, the gentler the river the larger the peak (Ishikawa et al. 1992; a gentler river stores more water) | No contradiction. This example steepens only the reach below the dam without changing the lake volume. In a real river a gentler slope increases the stored volume, and that effect is larger |
 | Size of the dam | The length of the dam is not varied | In a regression of 43 Japanese cases, larger discharge and dam height make a dam less stable, and larger dam width and length make it more stable (Dong et al. 2011) | The direction for the dam height agrees. Width and length are not compared |
 | Mode of failure | Erosion by overtopping only | Mostly overtopping. Sliding and progressive failure when the material is highly permeable (PWRI 2008). Large slides increase the peak discharge (Takayama et al. 2020) | Modes other than overtopping are not represented |
 
@@ -580,7 +548,7 @@ In summary, the conditions for a rapid breach that also hold for real natural da
    the inflow is "the rate at which the crest is lowered × the lake area", which is the water balance itself.
 2. **A downstream face that is steeper than the slope at which a debris flow forms, and long**. A dam formed
    by a failed mass filling the valley as it is tends to have steep faces, while a dam deposited by a debris
-   flow that ran into the river is gentler (0.10 in the base case). That the face slope matters agrees with
+   flow that ran into the river is gentler (0.10 in the base case before overtopping). That the face slope matters agrees with
    the description of Ishikawa et al. (1992), but "a dam built by a debris flow is gentle and therefore
    breaches slowly" is what this computation says, and has not been checked against cases.
 3. **Dam material that is not coarse, and a large inflow**. Coarse material makes the breach slower and
@@ -589,47 +557,53 @@ In summary, the conditions for a rapid breach that also hold for real natural da
 
 ### Artefacts of the model
 
-- **Transport law on gentle reaches**: Without bed load, with an effective-shear ratio of 0.6 (reference) and with 1, the peak is 234, 397 and 559 m³/s. With `f_dbimm = 0` it is 571 m³/s.
+- **Transport law on gentle reaches**: Without bed load, with an effective-shear ratio of 0.6 (reference) and with 1, the peak is 233, 396 and 560 m³/s. With `f_dbimm = 0` it is 575 m³/s.
   In reality the transport capacity of gentle reaches is set by the range of grain sizes (fine grains are
   carried in suspension). In this single-grain-size model the choice of the laws stands in for it.
 - **Erosion coefficient**: Changing δe from 0.0007 to 0.0001 (the value Takahashi & Nakagawa applied to Horadani) changes the
-  peak from 397 to 354 m³/s (0.89 times) and its time from 27 to 34 minutes. A coefficient seven times
+  peak from 396 to 354 m³/s (0.89 times) and its time from 27 to 34 minutes. A coefficient seven times
   smaller changes the peak by only a tenth: the breach of this dam is set by the amount of sediment the flow
   can carry (equilibrium concentration and bed-load transport) rather than by the coefficient of the erosion
   rate.
 - **Saturation of the dam**: Making the dam unsaturated (initial saturation 0.83) leaves the peak at 402 m³/s, the same as the saturated
-  reference (397 m³/s). Using the saturated-bed erosion law on the unsaturated dam (`f_dbunsat = 0`) gives 394 m³/s.
-  The three differ by 2 %: the breach of this dam is set by the amount of sediment the flow can carry rather
+  reference (396 m³/s). Using the saturated-bed erosion law on the unsaturated dam (`f_dbunsat = 0`) gives 390 m³/s.
+  The three differ by 3 %: the breach of this dam is set by the amount of sediment the flow can carry rather
   than by the law for the erosion rate (as with the erosion coefficient above).
 - **Grid spacing**: With the depth mobilized at one time, `slide_dmax`, kept at 0.3 times the grid spacing, the 5 m grid
-  (`dam_dx5`, 1.5 m) peaks at 433 m³/s after 28 minutes, 1.09 times the 10 m grid (397 m³/s after 27 minutes).
-  With `slide_dmax` left at 3 m on the 5 m grid (`dam_dx5d3`) the peak falls to 204 m³/s (0.47 times). The step left by
-  mobilizing 3 m in one cell (3 m ÷ 5 m = 0.6), together with the slope of the water surface, brings the safety
-  factor of the saturated neighbouring cells below 1; the mobilization propagates across the lake-side face and
-  the sediment set in motion fills the breach. A step of 0.3 does not propagate. The dam built by the debris
-  flow is 1.2 m lower on the 5 m grid ("How the dam forms" above). The 5 m case of the first half of the
-  chain (`g5`) keeps `slide_dmax` at 3 m. With 3 m the mobilization propagates during the breach, as in
-  `dam_dx5d3`. With 1.5 m combined with `f_slide_noflow = 2` the lower layer fails as well, but the failure
-  takes place in two stages and the dam is lower than in the base case (7.3 m in `dmax15_n2_dx5`;
-  "Soil left under a thin film" above). With a thick soil layer and a fine grid no setting builds the same
-  dam as the base case, so the chain is not computed through the breach on the 5 m grid. The breach of a dam whose
-  overflow concentrates in a narrow breach is compared between the 10 m and 5 m grids with the tilted-crest dam
-  ("Spread of the results" above). The breach cannot be narrower than the grid spacing, so a dependence on the
-  grid spacing remains. The numbers of this example are those of the 10 m grid.
+  (`dam_dx5`, 1.5 m) peaks at 308 m³/s after 25 minutes, 0.78 times the 10 m grid (396 m³/s after 27 minutes).
+  The form of the breach also differs. On the 10 m grid the crest is lowered over the full width of the valley,
+  but on the 5 m grid the breach splits into two channels along the valley walls on both banks about
+  15 minutes after overtopping starts, leaving a ridge about 12 m high in the middle of the valley. After the
+  peak at 25 minutes the discharge falls to about 70 m³/s at 28 minutes, stays at 200–270 m³/s from 40 to
+  60 minutes, and is nearly back to the inflow by 80 minutes (at 120 minutes about 6 m of the dam remains on the north side of the
+  valley, the tributary side). With `slide_dmax` left at 3 m on the 5 m grid (`dam_dx5d3`), the whole downstream face is
+  mobilized about 10 minutes after overtopping starts, the sediment set in motion blocks the breach, and the
+  discharge just below the dam is zero for a little over 10 minutes. The flow is released at once after the
+  lake level has risen by 0.3 m, and peaks at 558 m³/s (1.8 times `dam_dx5`) 52 minutes after the start of the
+  computation. The step left by mobilizing 3 m in one cell (3 m ÷ 5 m = 0.6), together with the slope of the
+  water surface, brings the safety factor of the saturated neighbouring cells below 1, and the mobilization
+  propagates. A step of 0.3 does not propagate (on the tilted-crest dam, however, fluidisation of the floor and
+  walls of the breach blocks the breach; see the next item). In the first half of the chain with the failure slope, the
+  5 m grid with 3 m (`g5`) keeps fluidising the deposited sediment, and with 1.5 m (`dmax15_dx5`) the failure
+  takes place in two stages; both give a dam lower than the base case (9.0 m and 6.5 m; "How the dam forms"
+  above). With a thick soil layer and a fine grid no setting builds the same dam as the base case, so the
+  chain is not computed through the breach on the 5 m grid. Because the breach cannot be narrower than the grid
+  spacing and the steepness of the step left by the stability test changes with the grid spacing, the course of
+  the breach depends on the grid spacing. The numbers of this example are those of the 10 m grid.
 - **Width of the breach and collapse of its walls**: The dams of the series have a crest that is level across
   the valley; they are overtopped over the full width of the valley and the crest is lowered uniformly. The dam
-  built by the debris flow (the chain) is higher on the tributary side and about 4 m lower on the opposite
-  side, so the overflow concentrates in a narrow breach (1–4 cells wide) on the opposite side, and the
-  discharge falls to less than half when a wall collapse blocks the breach. Its timing and volume change with
-  slight differences in the conditions, and the peak discharge scatters over 407–547 m³/s. The same happens
-  for a pre-built dam whose crest is tilted into the same shape (347–435 m³/s in four runs on the 10 m
-  grid; "Spread of the
-  results" above). The four runs on the 5 m grid give 299–309 m³/s: the spread becomes smaller, but the values are
-  0.80 times those of the 10 m grid (no convergence with respect to the grid spacing).
-  Real natural dams also have uneven crests and narrow breaches, but the breach of this
-  computation cannot be narrower than the grid spacing, and the wall collapse is represented by an
-  approximation that moves the part above the angle of repose to the neighbouring cell and by the cell-wise
-  slope-stability test.
+  built by the debris flow (the chain) is higher on the tributary side, but three cells (30 m wide) on the
+  opposite side are nearly flat, so the overflow spreads over the full width of the crest in about 5 minutes
+  ("Spread of the results" above). For the dam whose crest is tilted with its lowest part a notch 10 m wide
+  (`dam_tilt`), the overflow concentrates in a narrow breach. On the 10 m grid the results still agree (peaks of
+  312–325 m³/s), but on the 5 m grid, even with `slide_dmax` at 0.3 times the grid spacing, the floor and walls
+  of the breach near the crest are fluidised by the slope-stability test and the sediment set in motion blocks
+  the breach. The duration of the blockage (a total of 7–30 minutes with the discharge below the inflow) and the
+  peak discharge (340–455 m³/s; 1.1–1.4 times the 10 m grid) change with slight differences in the inflow, and
+  they do not converge with respect to the grid spacing either ("Spread of the results" above). Real natural
+  dams also have uneven crests and narrow breaches, but the breach of this computation cannot be narrower than
+  the grid spacing, and the wall collapse is represented by an approximation that moves the part above the
+  angle of repose to the neighbouring cell and by the cell-wise slope-stability test.
 - **Single grain size**: Without armouring the dam keeps eroding more than a real one would. A dam rich in
   fines would in reality produce a flow of higher concentration.
 
@@ -637,13 +611,13 @@ In summary, the conditions for a rapid breach that also hold for real natural da
 
 | Case | Lake volume (10⁴ m³) | Computation (m³/s) | Costa (1988) | Tabata et al. | Ishikawa et al. (1992) |
 |---|---|---|---|---|---|
-| `dam_small` | 18 | 211 | 264 | 67 | 64 |
-| `dam_ref` | 45 | 397 | 387 | 67 | 82 |
-| `dam_large` | 81 | 641 | 500 | 67 | 97 |
-| `dam_face25` | 46 | 1,078 | 393 | 67 | 83 |
-| `base` (chain) | 46 | 486 | 390 | 67 | 82 |
-| `dam_q20` | 45 | 321 | 387 | 50 | — |
-| `dam_q80` | 45 | 505 | 387 | 91 | — |
+| `dam_small` | 18 | 210 | 264 | 67 | 64 |
+| `dam_ref` | 45 | 396 | 387 | 67 | 82 |
+| `dam_large` | 81 | 639 | 500 | 67 | 97 |
+| `dam_face25` | 46 | 1,057 | 393 | 67 | 83 |
+| `base` (chain) | 49 | 470 | 405 | 68 | 85 |
+| `dam_q20` | 45 | 329 | 387 | 50 | — |
+| `dam_q80` | 45 | 506 | 387 | 91 | — |
 
 Costa (1988) is Q = 181 (V h / 10⁶)^0.43 (V: stored volume in m³, h: dam height in m); Tabata et al. is
 q/q_in = 0.542 [(g h³)^0.5 / (tanθ q_in 1,000)]^0.565 (q, q_in: discharge per unit width in m²/s; both were
@@ -657,8 +631,8 @@ width).
   the regression (power 0.43), in the same direction.
 - The formulas of Tabata et al. and Ishikawa et al. give 1/3 to 1/10 of the computation for the gentle-faced
   dams. The computations of Ishikawa et al. are for trapezoidal dams with crests 100–500 m long (in the series of this example, a
-  crest of only 40 m already reduces the peak to 0.56 times) and for sand of 0.25–2.5 mm. The dependence on
-  the inflow is weaker in the computation (power 0.33) than in the formula of Tabata et al. (inflow to the
+  crest of only 40 m already reduces the peak to 0.77 times) and for sand of 0.25–2.5 mm. The dependence on
+  the inflow is weaker in the computation (power 0.31) than in the formula of Tabata et al. (inflow to the
   power 0.435), in the same direction.
 - The steep-faced triangular dam (`dam_face25`) gives 2.7 times the regression of Costa.
 - The empirical formulas differ from one another by a factor of 4 to 7. All of them are presented as
@@ -678,7 +652,7 @@ width).
 - **Sediment transport on gentle reaches**: The Takahashi & Nakagawa law (bedload-like collective flow) and
   a bed-load formula are added together. There is no formula connecting the two regimes, and on slopes of
   0.03–0.14 some transport is counted twice. The choice of the laws changes the peak discharge by a factor
-  of 2.4 ("choice of laws" in the section above).
+  of 2.5 ("choice of laws" in the section above).
 - **Breach modes other than overtopping**: Progressive failure by seepage inside the dam (piping) is not
   represented. Sliding failure is only the cell-wise test of the infinite-slope safety factor (deep slides
   such as circular slips are not represented). Seepage is the lateral flow inside the soil layer (hydraulic
@@ -688,9 +662,10 @@ width).
   is an approximation that moves the part above the angle of repose (35°) to the neighbouring cell. The
   mobilization by the stability test is an approximation that turns the top `slide_dmax` of the soil layer
   of a cell into moving sediment in place, and the steepness of the step it leaves changes with the grid
-  spacing ("Grid spacing" in the section above). Because the breach is only 1–2 cells wide, a wall collapse
-  that blocks it changes the discharge strongly, and its timing and volume are sensitive to slight
-  differences in the conditions ("Spread of the results").
+  spacing ("Grid spacing" in the section above). When the breach is only a few cells wide, sediment from its
+  collapsed floor and walls can block it and change the discharge strongly, and the duration of the blockage
+  and the peak after reopening are sensitive to slight differences in the conditions (the tilted-crest dam on
+  the 5 m grid; "Spread of the results").
 - **Failure**: Only the slope given a soil layer fails, and the location and size of the failure are set by
   the distribution of the soil layer. The failed mass is moved into the flow, together with the water in
   place, in the update at which the safety factor falls below 1 (the sliding along a slip surface and the
@@ -711,19 +686,20 @@ width).
 
 ## Notes
 
-- **Computation time**: With one thread, the base case (270 minutes) takes a little over an hour and a case
-  of the pre-built-dam series 15–25 minutes (about 2 hours each for the three cases on the 5 m grid).
-  The 35 cases of `make run` take about 5 hours when run four at a time with one thread each. The 14 cases of
-  `make perturb` (six base cases, and five 10 m and three 5 m cases of the pre-built-dam series) amount to
-  about the same. The output of all cases is about 4 GB (remove it with `make clean`).
+- **Computation time**: With one thread, the base case (270 minutes) takes about an hour and a case of the
+  pre-built-dam series 9–17 minutes (about 2 hours 40 minutes each for the three cases on the 5 m grid); these
+  are values with four cases running side by side. The 32 cases of `make run` take about 17 hours in total and
+  the 14 cases of `make perturb` (six base cases, and five 10 m and three 5 m cases of the pre-built-dam series)
+  about 13 hours; run four at a time with one thread each, they take a little over 4 hours and a little over
+  3 hours respectively. The output of all cases is about 5 GB (remove it with `make clean`).
 - **Reproducibility of the numbers**: The numbers of the chain cases from the overtopping onward (peak discharge,
-  damage to houses) change when only the sixth digit of the inflow is changed (40 → 40.0001 m³/s changes the
-  peak from 486 to 547 m³/s; "Spread of the results"). A different machine or compiler introduces
-  rounding differences, so the same settings may give results that differ from the values in this README
-  within that spread (the same holds for the tilted-crest dam on the 10 m grid). The numbers from the failure to the
-  ponding
-  (the dam height is 13.0 m in all 7 runs) and those of the series of dams with a level crest are stable
-  against such differences.
+  damage to houses) change even when only the sixth digit of the inflow is changed (40 → 40.0001 m³/s changes the
+  peak from 470 to 464 m³/s; the 7 runs spread by 7 %; "Spread of the results"). A different machine or compiler
+  introduces rounding differences, so the same settings may give results that differ from the values in this README
+  within that spread (the same holds for the tilted-crest dam; on the 5 m grid the blockage of the breach changes
+  and the peak varies over 340–455 m³/s). The numbers from the failure to the ponding
+  (the dam height is 13.4 m in all 7 runs) and those of the series of dams with a level crest are stable against such
+  differences.
 - **Messages at the end**: `slide min Fs = …, fluidized cells = …`, `angle-of-repose avalanching moved …`
   and `fluvial supply limiter … fired`, printed at the end of a run, are cumulative counts and amounts.
   A thin deposit left on steep bedrock repeatedly stops, returns to the bed, is saturated by rain or flow

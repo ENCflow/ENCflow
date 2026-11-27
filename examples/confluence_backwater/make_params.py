@@ -188,12 +188,12 @@ CASES = [
 
 
 COARSE = """!======================================================================
-! confluence_backwater 補足: 同じ地区を Δx = 100 m の粗い格子で表す({title})
+! confluence_backwater 補足 1: 同じ地区を Δx = 100 m の粗い格子で表す({title}。河道マスクの作り方: {mtitle})
 {desc}
-!   流域規模の計算での表し方: 本川(幅 200 m)は 2 セル前後の解像した河道、狭窄部は 1 セル、支川(幅 80 m)は
-!   1 セルのサブグリッド河道(fn_width = 80 m)。堤防は地形で表せないので、河道の堤防(仮想壁面)の天端を
-!   絶対標高で与える(fn_bank、f_bank_datum = 2)。地形の式と流量は本編と同じ。入力は make_coarse.py が
-!   data_coarse/ に作る
+!   河道マスクは、本編の Δx = 20 m の河道マスクから 100 m のセルごとに本川が占める割合(占有率)を数えて作る
+!   (make_coarse.py)。{mdesc}
+!   堤防は地形で表せないので、河道の堤防(仮想壁面)の天端を絶対標高で与える(fn_bank、f_bank_datum = 2)。
+!   地形の式と流量は本編と同じ。入力は make_coarse.py が data_coarse_{method}/ に作る
 !======================================================================
 &list_sysparam
   f_gridsystem = 0
@@ -209,8 +209,8 @@ COARSE = """!===================================================================
   fn_boundary = '-'
   fn_channel = '-'          ! 河道(サブグリッド河道幅・堤防の仮想壁面)
   fn_record = '-'
-  dir_data = 'data_coarse'
-  dir_result = 'result_coarse_{case}'
+  dir_data = 'data_coarse_{method}'
+  dir_result = 'result_coarse_{case}_{method}'
   f_out_h = 1
   f_out_hmax = 1
 /
@@ -241,7 +241,7 @@ COARSE = """!===================================================================
 &list_channel
   fn_bank = 'bank.txt'      ! 堤防の天端(河道のセルに絶対標高。本川 = 河床 + 8.5 m、支川 = 河床 + 4.5 m)
   f_bank_datum = 2
-  fn_width = 'width.txt'    ! 河道幅(本川は 9999 = 解像扱い、支川は 80 m)
+{width_line}
 /
 
 &list_bound_stage
@@ -283,9 +283,24 @@ COARSE = """!===================================================================
 """
 
 COARSE_CASES = [
-    ("param_coarse_main.txt", "main", "ケース main: 本川だけの出水", "!   本編の param_main.txt と同じ流量", "flood", "base", "flood_base"),
-    ("param_coarse_same.txt", "same", "ケース same: 両方の出水(ピークが重なる)", "!   本編の param.txt と同じ流量", "flood", "same", "flood_same"),
+    ("main", "ケース main: 本川だけの出水", "!   本編の param_main.txt と同じ流量", "flood", "base", "flood_base"),
+    ("same", "ケース same: 両方の出水(ピークが重なる)", "!   本編の param.txt と同じ流量", "flood", "same", "flood_same"),
 ]
+# 粗い格子の河道マスクの作り方(make_coarse.py の METHODS)
+COARSE_METHODS = [
+    ("simple", "簡便", "簡便: 占有率 50 % 以上のセルを本川の河道にし、幅は与えない(解像)。支川(幅 80 m)は中心線の\n"
+     "!   1 列の解像した河道"),
+    ("occ", "占有率のまま", "占有率のまま: 占有率 5 % 以上のセルをすべて本川の河道にし、幅を占有率 × 100 m にする。\n"
+     "!   支川(幅 80 m)は中心線の 1 列にし、幅 80 m を与える(fn_width)"),
+    ("fixed", "直したもの", "直したもの: 占有率のままの河道マスクの、格子の軸に沿う区間(狭窄部とその前後)を、列ごとに\n"
+     "!   解像したセル + 残りの幅のセル 1 つに詰め直す(狭窄部の 60 m × 2 → 100 m + 20 m)。支川は占有率のままと同じ"),
+]
+# 河道幅の行: 簡便は幅を与えない(河道マスクだけ)
+WIDTH_LINE = {
+    "simple": "  ! fn_width は与えない(河道マスクだけ。河道のセルはどれもセル幅いっぱいの河道)",
+    "occ": "  fn_width = 'width.txt'    ! 河道幅(9999 = 解像。それ以外はサブグリッド河道の幅)",
+    "fixed": "  fn_width = 'width.txt'    ! 河道幅(9999 = 解像。それ以外はサブグリッド河道の幅)",
+}
 
 
 STEADY = """!======================================================================
@@ -389,15 +404,18 @@ def main():
         print("wrote", fn)
     for fn, rname, title, base, dt, chan_fn, ddir, geo, fl1 in (
             ("param_steady.txt", "steady", "本編の格子 Δx = 20 m", "本編", "1.0", "", "data", GEO_FINE, "128, 305, 133, 305"),
-            ("param_coarse_steady.txt", "coarse_steady", "粗い格子 Δx = 100 m", "粗い格子の補足", "2.0",
-             "  fn_channel = '-'\n", "data_coarse", GEO_COARSE, "26, 63, 27, 63")):
+            ("param_coarse_steady.txt", "coarse_steady", "粗い格子 Δx = 100 m。河道マスクは補足 1 の「直したもの」",
+             "粗い格子の補足 1", "2.0", "  fn_channel = '-'\n", "data_coarse_fixed", GEO_COARSE, "26, 63, 27, 63")):
         with open(os.path.join(HERE, fn), "w") as f:
             f.write(STEADY.format(title=title, base=base, dt=dt, chan_fn=chan_fn, ddir=ddir, rname=rname, geo=geo, fl1=fl1))
         print("wrote", fn)
-    for fn, case, title, desc, qm, qt, stage in COARSE_CASES:
-        with open(os.path.join(HERE, fn), "w") as f:
-            f.write(COARSE.format(title=title, desc=desc, case=case, qm=qm, qt=qt, stage=stage))
-        print("wrote", fn)
+    for case, title, desc, qm, qt, stage in COARSE_CASES:
+        for method, mtitle, mdesc in COARSE_METHODS:
+            fn = f"param_coarse_{case}_{method}.txt"
+            with open(os.path.join(HERE, fn), "w") as f:
+                f.write(COARSE.format(title=title, desc=desc, case=case, qm=qm, qt=qt, stage=stage,
+                                      method=method, mtitle=mtitle, mdesc=mdesc, width_line=WIDTH_LINE[method]))
+            print("wrote", fn)
 
 
 if __name__ == "__main__":

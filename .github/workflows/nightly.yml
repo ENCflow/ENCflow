@@ -1,7 +1,7 @@
-# ENCflow Nightly: フル回帰+MPI np=1,2,4+debug(-fcheck=all)+BMI 適合性
-#   毎 push の CI(ci.yml: 高速 32 ケース×逐次、うち 28 ケース×np=2)を補う夜間の全数検査。
-#   4 ジョブ構成:
-#     full-serial : release 逐次で reference 全 24 ケース(chichibu・chichibu_cond 含む)
+# ENCflow Nightly: フル回帰+MPI np=1,2,4+debug(-fcheck=all)+BMI 適合性+毎 push から移した実行時間の長い検定
+#   毎 push の CI(ci.yml: 29 ケース×逐次、うち 27 ケース×np=2)を補う夜間の全数検査。
+#   6 ジョブ構成:
+#     full-serial : release 逐次で reference 全 25 ケース(chichibu・chichibu_cond・paddy 含む)
 #                   +トップレベル make(utils の追随漏れ検出。developer.md §10)
 #     full-mpi    : release MPI np=1,2,4 で逐次 reference と照合
 #                   (sewer_wq は Run スクリプト側で RTOL=1e-5、damwq は ULP=1。developer.md §10。
@@ -12,6 +12,34 @@
 #                   (確保範囲・FPE の実行時検査。developer.md §10)
 #     bmi         : CSDMS bmi-tester 適合性+BMI 経由実行の逐次 reference 一致
 #                   +多格子(bmi_nest)・機能依存変数(bmi_vars)・ダム(bmi_dam)の受け入れ試験
+#     verify-serial: 毎 push の ci.yml から移した、実行時間の長い検定型(reference を持たない)の 5 ケース
+#                   (VERIFY_CASES)を release 逐次で回す。Run.sh の終了コードで判定(2026-11-27。ci.yml の
+#                   逐次のジョブが 30 分の制限で打ち切られていたため。developer.md §10)
+#     verify-mpi  : そのうち ci.yml で MPI np=2 も回していた 2 ケース(VERIFY_MPI_CASES)を release MPI np=2 で
+#                   (ci.yml の MPI のジョブと同じ環境。Run_MPI.sh の終了コードで判定)
+#   VERIFY_CASES の 5 ケース:
+#     tjunction は、1 セル幅の T 字の合流(格子の軸に沿う合流と 45° 回した合流)の上流の水深を運動量の理論と比べる
+#     検定(定常・質量の収支・エネルギーが増えないことを判定する。合流の堰上げが岸の濡れによらないこと・理論の中での
+#     位置・格子の向きによらないことは、側方面の扱い f_advection_lateral = 1(古い値の組み合わせ)と、深くて遅い隣の
+#     セルの扱いの既定の 4 つの値の組み合わせ(f_advection_donor = 4・f_advection_bend = 2・f_advection_lateral = 2・
+#     f_dry_head_cap = 4)で判定し、0 では限界として記録)。逐次と MPI の両方で回す(np = 2 では合流の周りの辺が帯の
+#     境界をまたぐ。1 と 4 つの値の組み合わせは、流入元のセルの流量をエッジ行 j − 3 まで読むので、幅 2 のハロ交換を
+#     通る)
+#     stairbank は、格子に斜めの 1 セル幅の河道と、脇の高いセル(段・階段の角のセル)の検定(岸が壁だけの河道の
+#     定常・質量の収支・流量の上げ下げで同じ水深になることを判定する。段・角のセルのある河道の、同じ流量での
+#     2 つの水深・せき上げ・最大流速は、古い値の組み合わせ(3・1・1・3)の限界として記録し、既定の 4 つの値の組み
+#     合わせの構成では、上げ下げの一致・最大流速が壁だけの河道を超えないこと・流量の揺れを判定する)。逐次と MPI の
+#     両方で回す(1 つの階段の形は 8 行で、np = 2 では帯の境界が階段のまわりを通る)
+#     vchannel は、一様な勾配の V 字水路の流れの横断分布と流量を、各列の流速が自分の流動深だけで決まる厳密解と
+#     比べる検定(流れの向き 0°・22.5°・45°。水のマニング則と、土砂流動の Voellmy 則)。塞がれた開口の動的振り替えの
+#     塞がり率を、土砂流動の計算では流動深 h + hs で測ることの見張りを兼ねる(水深 h だけで測ると、摩擦なしの
+#     加速度が g S の 1.12 倍になって不合格になる。developer.md §130)。逐次だけで回す(MPI np = 2 は回していない。
+#     手元の np = 2 は合格し、分布出力は逐次とバイト一致する。handoff 00ah)
+#     bldgdrag は、家屋の抗力項を含む等流の理論値との比較で、逐次だけで回す(辺ごとの局所の式で、MPI は同じ式を
+#     通るだけなので足さない)
+#     driftwood は、流木の材積保存・集積の抵抗による堰上げの解析解・カルバートの流量則と流入口の捕捉の検定で、
+#     逐次だけで回す(Run_MPI.sh の逐次の保存状態とのバイト比較は、-Ofast のビルド間の差で警告扱いになるので、
+#     MPI には足さない)
 #   手動実行は workflow_dispatch から。
 name: Nightly
 
@@ -28,6 +56,10 @@ concurrency:
 env:
   # reference がコミットされている回帰ケース(比較込みで PASS/FAIL 判定)
   REF_CASES: wave dambreak frost pump conduit salt coastal_drain damwq damops gwseep kdpart sewer_wq splash tide chichibu chichibu_cond vzcol vzzone sfzone wfshoal wfshadow wfcurrent wfdoppler wfsed paddy
+  # 毎 push の ci.yml から移した、実行時間の長い検定型のケース(reference を持たない。Run.sh・Run_MPI.sh の終了コードで
+  # 判定。developer.md §10)。VERIFY_MPI_CASES は ci.yml で MPI np=2 も回していたもの
+  VERIFY_CASES: tjunction stairbank vchannel bldgdrag driftwood
+  VERIFY_MPI_CASES: tjunction stairbank
 
 jobs:
   full-serial:
@@ -84,6 +116,51 @@ jobs:
           for c in $REF_CASES; do
             echo "===== test/$c (np=${{ matrix.np }}) ====="
             (cd "test/$c" && ./Run_MPI.sh ${{ matrix.np }})
+          done
+
+  verify-serial:
+    name: verification cases moved from CI (serial, release)
+    if: github.event_name != 'schedule' || github.repository_owner == 'ENCflow'
+    # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
+    # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
+    runs-on: ubuntu-24.04
+    # 5 ケースは普通のランナーで約 17 分、速いランナーで約 12 分(developer.md §10)
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y gfortran make
+      - name: Build
+        run: make -C src install
+      - name: Verification tests (serial)
+        run: |
+          set -e
+          for c in $VERIFY_CASES; do
+            echo "===== test/$c ====="
+            (cd "test/$c" && ./Run.sh)
+          done
+
+  verify-mpi:
+    name: verification cases moved from CI (MPI np=2, release)
+    if: github.event_name != 'schedule' || github.repository_owner == 'ENCflow'
+    # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
+    # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
+    runs-on: ubuntu-24.04
+    # 2 ケースは遅いランナーで約 9 分(developer.md §10)
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y gfortran make openmpi-bin libopenmpi-dev
+      - name: Build (MPI)
+        run: make -C src MODE=mpi install
+      - name: Verification tests (np=2)
+        run: |
+          set -e
+          export OMP_NUM_THREADS=1
+          for c in $VERIFY_MPI_CASES; do
+            echo "===== test/$c (np=2) ====="
+            (cd "test/$c" && ./Run_MPI.sh 2)
           done
 
   debug-fcheck:

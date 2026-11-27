@@ -149,7 +149,7 @@ the lowland ground (+0.9 m) and the outfall is closed. (b) Area where the maximu
 | Surge only | 0 | 0 | 0 | 0 | 0 |
 | Rain only | 1,500 m³ (thin sheet) | 0 | 0 | 0.01 m | 0 |
 | Rain only, high water table | 1,500 m³ (thin sheet) | 0 | 0 | 0.01 m | 0 |
-| Rain + surge | 5,700 m³ | 1.6 ha | 0.04 ha | 0.31 m | 2.1 h |
+| Rain + surge | 5,700 m³ | 1.7 ha | 0.04 ha | 0.31 m | 2.1 h |
 | Rain + surge + high water table (compound) | 15,800 m³ | 7.0 ha | 1.1 ha | 0.47 m | 2.5 h |
 | Compound + pumps stopped | 24,100 m³ | 8.0 ha | 2.8 ha | 0.57 m | 2.8 h |
 
@@ -165,7 +165,7 @@ the lowland ground (+0.9 m) and the outfall is closed. (b) Area where the maximu
 - **When rain and surge coincide, the town floods**: from 4.1 to 6.9 h the tide is above the lowland
   ground, the outfall is closed, and only the 1.5 m³/s of the pumping station leaves to the sea.
   With a low water table half of the rain (54 mm) infiltrates into the soil, so the flooding stays
-  within 1.6 ha of the depression (0.31 m at most).
+  within 1.7 ha of the depression (0.31 m at most).
 - **With a high water table the water on the surface is 2.8 times larger**: only 20 mm of room is left in the soil, and
   80 mm of the rain runs off. The water on the surface peaks at 15,800 m³; 7.0 ha, including the
   whole lowland, are under 0.1 m or more and the depression under up to 0.47 m. The water starts to

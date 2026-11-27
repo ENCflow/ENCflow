@@ -9,7 +9,7 @@
 #   台帳が働く)も回す(save_wetdry/。設定は param_wet.txt から作る)
 # 構成5〜8(make_fs.py が設定 p_fs_*.txt と入力 d_fs/ を書く): 斜面安定判定の選択子
 #   f_slide_seep(浸透力を全水頭の勾配で)・slide_dmax(深さの上限)・f_slide_wet(間隙水圧の崩壊に限る)・
-#   f_slide_noflow(濃い混合体の下を判定しない。2 は薄い膜の下を判定する)。安全率の出力を式の値と比べる
+#   f_slide_noflow(濃い混合体の下を判定しない。薄い膜の下は判定する)。安全率の出力を式の値と比べる
 #   (Check_slide_fs.py。developer.md §28.19・§28.24)
 # 実行後の save/, save_fs/ などは *_serial/ にも複製する(Run_MPI.sh 用)
 
@@ -86,7 +86,7 @@ python3 "$sdir/Check_slide_fs.py" ledger fs_gdyn || rc=1
 python3 "$sdir/Check_slide_fs.py" dmax1 fs_d1 || rc=1
 python3 "$sdir/Check_slide_fs.py" wet fs_w1 fs_w0 fs_w2 || rc=1
 python3 "$sdir/Check_slide_fs.py" noflow fs_n1 fs_n0 || rc=1
-python3 "$sdir/Check_slide_fs.py" film fs_n2 fs_n1 fs_f1 fs_f2 fs_f0 fs_k2 fs_k0 || rc=1
+python3 "$sdir/Check_slide_fs.py" film fs_f1 fs_f0 fs_k1 fs_k0 || rc=1
 
 if [ $rc -eq 0 ]; then
     echo "=== slide verification PASS ==="

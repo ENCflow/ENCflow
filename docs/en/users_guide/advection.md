@@ -382,6 +382,41 @@ With `f_advection_donor` = 3 or 4 (the default is 4) the wet/dry test of the par
   cases of [test/bendloss](../../../test/bendloss/en/README.md)). The upwind
   value of such a face is therefore not taken from the wall side but built
   from the water that actually enters the face cell (next item).
+- **Cells behind the virtual walls of channel levees and seawalls supply no momentum either.**
+  When channel levees are represented as virtual walls (`fn_bank` in
+  `&list_channel`; [channel models](channel_models.md) §1) or seawalls as
+  virtual walls (`seawall0` and `fn_seawall` in `&list_geoinfo`; "Seawall"
+  in [geographic information](geoinfo.md)), the cell behind the wall is, on the
+  grid, a neighbour of the cell in front of it. The checks
+  with which the advection term reads the state of a neighbour cell (the upwind
+  donor of a flow-direction face, the parallel link of a lateral face, the
+  opening ratio of a diagonal edge, the donor of the rule for the edge just
+  after a bend, and the cell-centre gradient of scheme 1) count a cell behind
+  the wall like a dry cell, even when it is wet. Counting it would mix the
+  velocity (0) of the still water behind the wall into the momentum of the
+  channel and slow the channel down: the conveyance width of a straight
+  two-cell channel became 0.92 times the channel width, and the level of a
+  45° one-cell staircase channel rose by 0.14 m
+  ([test/wallpond](../../../test/wallpond/en/README.md)).
+  - Whether an edge is a wall is decided by the same check as in the levee
+    discharge (for a channel levee an edge whose crest is higher than the
+    ground on both sides, for a seawall an edge between a sea-side cell
+    and a land cell with a crest) and does not depend on the water level (the cell is not counted during
+    overtopping either: the discharge of a wall edge comes from the weir
+    formula and does not pass through the momentum equation). A breach site
+    is judged by its effective crest, and an opened breach whose crest has
+    dropped to the ground is not counted as a wall.
+  - The rules weighted by the discharge of the links crossing the face (the
+    junction deficit `lateral_join` and others) count only the water that
+    actually crosses the wall (overtopping), so they are unchanged. The check
+    of the cell further upwind in MUSCL stays the static check that does not
+    look at the depth, the same treatment as the dry crest cell of a
+    resolved levee.
+  - Results of runs without virtual walls and runs whose landside behind the
+    walls is dry do not change. This treatment is a convention of ENCflow's
+    own (developer.md §134). That it is an approximation that does not count
+    the lateral momentum exchange across the wall even over a deeply
+    submerged levee is noted in [channel models](channel_models.md) §1.
 - **Upwind value on the edge just after a bend (`f_advection_bend = 1`; the
   default 2 adds to this rule the acceleration of the item "A deep neighbour
   cell that hardly flows" below).** A flow-direction face whose donor is a wall or dry is a face that the
@@ -1173,6 +1208,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   does not depend on the wetness of the banks, its position within the theory,
   and that mirrored grid orientations give the same values; the values with 0
   are displayed as limits (`Check_tjunction.py`).
+- **[test/wallpond](../../../test/wallpond/en/README.md)** -- straight channels with a still pond behind the
+  virtual walls of the levees (an axis-aligned two-cell resolved channel and one-cell subgrid channel, a 45°
+  one-cell staircase, and a 26.6° two-cell band thickened at the steps). Judges that the channel level agrees with the runs whose landside behind the walls is dry,
+  whose landside is not computed, and with a resolved levee (three combinations of the advection rules and scheme 1;
+  `Check_wallpond.py`).
 - **[test/hillslope](../../../test/hillslope/en/README.md)** -- smooth hillslope and V-shaped catchment. Confirms
   that schemes 1 and 3 agree.
 - **[test/chichibu](../../../test/chichibu/en/README.md)** -- real terrain (100 m). The place for grid convergence

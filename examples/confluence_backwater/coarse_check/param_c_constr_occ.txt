@@ -1,0 +1,61 @@
+!======================================================================
+! confluence_backwater 補足 1 の切り分け: 直線の本川 + 狭窄部、粗い格子 Δx = 100 m。河道マスクは占有率のまま(5 % 以上の全セル + 幅)
+!   本川 2,800 m3/s の一定の流量を 4 h 流した定常。計算するのは河道だけ(あふれない)。
+!   入力は make_check.py が data_c_constr_occ/ に作る。数表は python3 make_check.py table
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt_c = '4h'
+  dt_disp_c = '1h'
+  dt_file_c = '1h'          ! 最後の 2 つの出力で定常を確かめる
+  fn_geoinfo = '-'
+  fn_enc = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_channel = '-'
+  dir_data = 'data_c_constr_occ'
+  dir_result = 'result_c_constr_occ'
+  f_out_h = 1
+  f_out_e = 1
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'h0.txt'       ! 流量に合う等流水深
+/
+
+&list_enc
+  f_exflux_reduction = 1
+/
+
+&list_geoinfo
+  nx = 60
+  ny = 74
+  dx = 100.0
+  dy = 100.0
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 1
+  fn_rn = 'rn.txt'
+  f_masktype = 1
+  fn_mask = 'mask.txt'
+  fn_rw = 'rw.txt'
+/
+
+&list_channel
+  fn_bank = 'bank.txt'
+  f_bank_datum = 2
+  fn_width = 'width.txt'
+/
+
+&list_bound_stage
+  fn_stage_cell(1) = 'cells_out.txt'
+  fn_stage_val(1) = 'stage.txt'
+/
+&list_bound_inflow
+  fn_inflow_cell(1) = 'cells_main.txt'
+  fn_inflow_val(1) = 'q_main.txt'
+  inflow_dist(1) = 2
+/

@@ -404,6 +404,10 @@ From result 2, here are hints for making inputs of representation A by coarsenin
   catchment fraction (the rain of the catchment enters the paddy fields of the surrounding 3 × 3 cells without travel
   time, and the tracing is a simple equal division among the lower neighbours).
 - With the paddy area fraction capped at 0.99, the paddy area is 0.3 ha smaller than in representation B.
+- The channel cells of the branch and main drains (10 m wide in 30 m cells) have no land surface for the rest of the
+  cell ([Channels](../../../docs/en/users_guide/channel.md#subgrid-channel-width) of the user's guide). In this district
+  most of it is the edge of the terrace (about 70 % of the area of the drain cells); rain falling there goes straight
+  into the drain, and water overflowing the drain goes straight into the next cell.
 - In the one-way mode the water of the drains does not return to the paddy fields, and in the two-way mode the inflow over
   the levees is instantaneous (without an overflow length).
 - The substance in a tank is fully mixed; the concentrated water that leaves a plot first and the flushing by water

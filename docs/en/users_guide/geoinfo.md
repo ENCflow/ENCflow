@@ -94,8 +94,8 @@ preprocessing (GIS etc.) to create the file and supply it with
 `f_rntype = 1` (the in-model conversion f_rntype=2 has been removed --
 developer.md Sec. 41). When ENCflow is driven through BMI, the roughness
 field can be overridden during the run (parameter searches, updates from
-cumulative discharge or terrain change; bmi/README.en.md "Overriding
-roughness").
+cumulative discharge or terrain change;
+[bmi/README.en.md "Overriding roughness"](../../../bmi/README.en.md#overriding-roughness-calibration-time-varying-roughness)).
 
 **Roughness guides** (Manning n by land use; customary values of the
 Japanese inundation-mapping manuals and Chow's tables[^chow59]; calibration
@@ -247,6 +247,16 @@ and blue cells show river-mouth openings; they do not depict physical wall width
 
 Channel cells (`rw > 0`) remain river-mouth openings even when a seawall
 crest is supplied. This also applies to uniform `seawall0`.
+
+Flows along the wall are treated the same as when there is no wall (the land
+is not computed). The advection term does not count the cells behind the wall
+as momentum donors even when they are wet ([advection schemes](advection.md)
+§4.4), and the diagonal openings blocked by the wall are handed back to the
+axis directions by the dynamic reassignment (`f_opening_dynamic`; default 3;
+[passage-width adjustment](passage_width.md) §4.3). With
+`f_opening_dynamic = 0` they are not handed back, and the conveyance of a
+narrow flow along the wall drops by nearly 10 % (developer.md §134.9;
+[test/wallpond](../../../test/wallpond/en/README.md)).
 
 Notes when giving the crest with a distribution file `fn_seawall`:
 

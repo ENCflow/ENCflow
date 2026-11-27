@@ -206,7 +206,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 ## Using it from BMI
 
-A nest system is one BMI model as it is (bmi/README.md). Passing the root's
+A nest system is one BMI model as it is ([bmi/README.en.md "Variables and grids of a nested system"](../../../bmi/README.en.md#variables-and-grids-of-a-nested-system)). Passing the root's
 parameter file to `initialize` initializes all grids; `update` is one root
 step (the children advance inside it) and the time is the root's. Grids are
 distinguished by grid id: 0 = root, k = line k+1 of the list. Variables of

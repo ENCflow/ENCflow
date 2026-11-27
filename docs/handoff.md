@@ -91,9 +91,9 @@
 - [00ag](handoff/00ag.md) 管路連続体層: 1 セル幅の幹線の通水能・1 セルに流量を集める吐口の頭打ち・機場の時刻の履歴(2026-11-25。例題 coastal_compound_flood の作成で見つかった。developer.md §125)
 - [00ah](handoff/00ah.md) 例題 examples/snow_avalanche(2026-11-25 作成。沢を下る流れ型雪崩の走路の雪の連行と誘導堤)の残り
 - [00ai](handoff/00ai.md) 田んぼダムの評価機能 fn_paddy(2026-11-24 合意。docs/paddy_plan.md、developer.md §127)の残り
-- [00aj](handoff/00aj.md) 塞がれた開口の動的振り替えの塞がり率の修正(2026-11-25。developer.md §130.8)で結果が変わる、土砂流動を使う例題 1 つ(debris_dam)の回し直し
 - [00ak](handoff/00ak.md) 例題 examples/confluence_backwater(2026-11-26 作成。合流点の背水による支川の氾濫と、粗い格子・合流の形の確かめ)の残り
-- [00al](handoff/00al.md) 移流項の側方面の扱いが河道の堤防の仮想壁面(fn_bank)を見ない: 壁の向こうの堤内地が水につかると河道が減速する(2026-11-26 発見。developer.md §131.12)
+- [00an](handoff/00an.md) 例題 examples/coarse_channel(2026-11-26 作成。粗い格子で川を表す表し方と通水の精度の系統的な確かめ)の残り
+- [00ao](handoff/00ao.md) 毎 push の CI と夜間の検査の分担の変更(2026-11-27。developer.md §10)の残り
 - [00w](handoff/00w.md) 移流項: 屈曲直後の辺の風上値(f_advection_bend)、濡れた谷壁の辺による側方面の減速と合流の損失(f_advection_lateral)、…
 - [00v](handoff/00v.md) 秩父の河道マスクを標高の落水線に載せ直した(2026-11-13。利用者の指摘と決定「河道マスクは、全ての解像度で 落水線ベースで。ただし、元のファイルは保存しておく」。developer.md §109)の残り
 - [00s](handoff/00s.md) 流木の集積(構造物での捕捉・集積と流れへの作用。2026-11-12 合意・第 1 段と第 2 段を実装。 developer.md §50.7・§50.8、docs/woodjam_plan.md)の残り

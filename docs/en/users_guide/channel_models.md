@@ -70,6 +70,20 @@ once the channel level exceeds the crest) and 2 forced drainage (for compatibili
 and experiments). Real pumping stations and sluices use the pumps and
 culverts of the [structures chapter](structure.md).
 
+**Advection.** The advection term does not count a cell behind a virtual wall
+as a momentum donor, a parallel link or an opening, even when it is wet (it is
+treated like a dry cell; [advection schemes](advection.md) §4.4,
+[test/wallpond](../../../test/wallpond/en/README.md)). Even when the landside
+behind the walls is flooded, the flow in the channel does not change. Because
+whether an edge is a wall does not depend on the water level, the cell behind
+the wall is not counted during overtopping or submergence either. For shallow
+overtopping this matches a resolved levee, whose thin overflow sheet on the
+crest cell hardly affects the momentum exchange at the lateral faces; when a
+levee is deeply submerged and both banks form one flow, it is an approximation
+that does not count the lateral momentum exchange across the wall (the shear
+between the channel flow and the landside flow; the exchange of water is
+counted by the weir formula. developer.md §134).
+
 ## 2. Subgrid channel width
 
 On a cell with width $`W`$ the plan-area fraction
@@ -90,7 +104,11 @@ cell size, so a single formulation solves from the thin uppermost streams
 to the large downstream river (developer.md §18). The inundation area is
 resolved at cell granularity; where flooding inside the channel cell
 itself must be resolved, make the cell size finer than the river width and
-move to a resolved channel.
+move to a resolved channel. How the missing landside inside channel cells
+affects the hydraulics of the floodplain (a narrower floodplain along the
+river, overflow going straight into the next cell, the ground elevation
+beside the river and the treatment of rain), with guides to its size, is
+summed up in [Channels](channel.md#subgrid-channel-width).
 
 - **Natural banks and dynamic opening correction.** Without a levee the
   exchange between the channel and the hillslopes stays the ordinary
@@ -108,6 +126,19 @@ move to a resolved channel.
   The former automatic zero-height levee was dropped: on natural banks
   whose hillslope is above the crest its weir overflow became a drop flow
   and diverged.
+- **Cells of extremely small width.** Giving the width from the covered
+  fraction of a channel polygon or a high-resolution mask produces cells that
+  the channel edge only grazes at a corner (slivers a few metres wide). The
+  dynamic opening correction and the conveyance ratio count a channel cell
+  whose width is below 5 % of the width of the cell it is compared with as
+  outside the domain ([passage width](passage_width.md) §4.3;
+  developer.md §137, Japanese; specific to ENCflow). The advection term still
+  counts such a cell as a wet neighbour, so the result differs slightly from
+  the configuration without the slivers (0.6 % of the depth when a row of
+  cells 0.01 m wide is added beside an axis-aligned two-cell channel). When
+  making the mask from the covered fraction, a cutoff in preprocessing that
+  leaves cells below 5 % out of the channel is still recommended
+  ([examples/coarse_channel](../../../examples/coarse_channel/en/README.md)).
 - **Edge boundaries.** Where the channel reaches the domain edge, the
   free-outflow and long-wave-radiation faces are scaled to the channel
   width (the boundary cannot drain the small storage of a narrow channel).
@@ -144,6 +175,15 @@ move to a resolved channel.
   locations. Applying the width to a small river that meanders within one
   cell underestimates the channel length and makes discharge and velocity
   too large.
+  The width cap is a treatment that assumes a channel one cell wide, like a
+  line; when a river wider than one cell is represented by width cells side
+  by side, the cells are also linked to the downstream cells by diagonal
+  edges and carry more than the river width (up to 20 % for rivers 2 cells
+  wide along a grid axis or at 45°; a consequence of this project's own simplification;
+  section 5 of [examples/coarse_channel](../../../examples/coarse_channel/en/README.md)).
+  How to make the channel mask and width on a coarse grid, with guides to
+  the errors, is in
+  [Channels](channel.md#making-the-channel-mask-and-width-coarse-grids).
 
 ## 3. Cross-section shape (sigma law)
 
@@ -294,6 +334,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 - [test/bendloss](../../../test/bendloss/en/README.md): straight, bent and diagonal channels, subgrid width and opening correction, assessed against Manning uniform flow or a straight-channel comparison.
 - [test/chichibu](../../../test/chichibu/en/README.md): real-terrain examples comparing channel masks, roughness, width and levee settings through flood-wave behaviour.
+- [test/wallpond](../../../test/wallpond/en/README.md): a test with a still pond behind the virtual walls of straight and 45° channels, judging that the channel level agrees with the runs whose landside behind the walls is dry and with a resolved levee (that the advection term does not count the cells behind the wall).
+- [test/sliver](../../../test/sliver/en/README.md): a test judging that the channel level of a 45° one-cell channel and an axis-aligned two-cell channel agrees with and without added channel cells 0.01 m wide (that a cell of extremely small width counts as outside the domain in the reassignment of openings and the conveyance ratio).
 - [test/gwsect](../../../test/gwsect/en/README.md): exchange of water between cells with a section shape and groundwater (seepage, infiltration), the conduit layer and snowmelt; checks that the total storage of a closed valley is conserved and that the concentration of a rain tracer stays at 1.
 
 ## References

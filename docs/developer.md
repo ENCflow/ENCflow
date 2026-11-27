@@ -58,12 +58,12 @@
 ### 通過幅(開口補正)と斜めの配分
 
 - 現行: [通過幅の調整](users_guide/passage_width.md)・[斜めの配分比 d の決め方](users_guide/diagratio.md)・[斜めエッジの流束による数値拡散](users_guide/diagonal_diffusion.md)。塞がれた開口の動的振り替えの既定 f_opening_dynamic = 3 は [§68.41](developer/068.md)。塞がり率の水柱は、土砂流動の計算では流動深 h + hs([§130](developer/130.md))。振り替えなし(0)を使うのは V 字の沢を進む流れに限り、平らな谷底の谷では既定のまま([§130.11](developer/130.md))
-- 記録: [§18](developer/018.md)(開口補正の導入)・[§52](developer/052.md)・[§68.10](developer/068.md)・[§68.11](developer/068.md)・[§68.13](developer/068.md)〜[§68.15](developer/068.md)・[§68.38](developer/068.md)(既定 2)・[§68.41](developer/068.md)・[§68.43](developer/068.md)〜[§68.45](developer/068.md)・[§96](developer/096.md)(拡散型プロセスの 9 点化)・[§98](developer/098.md)(地下水の層の通過幅)・[§99](developer/099.md)(氷河・溶岩流の 8 近傍化)・[§130](developer/130.md)(土砂流動の計算では塞がり率を流動深で測る。一様な V 字水路の厳密解との比較と検定 test/vchannel)
+- 記録: [§18](developer/018.md)(開口補正の導入)・[§52](developer/052.md)・[§68.10](developer/068.md)・[§68.11](developer/068.md)・[§68.13](developer/068.md)〜[§68.15](developer/068.md)・[§68.38](developer/068.md)(既定 2)・[§68.41](developer/068.md)・[§68.43](developer/068.md)〜[§68.45](developer/068.md)・[§96](developer/096.md)(拡散型プロセスの 9 点化)・[§98](developer/098.md)(地下水の層の通過幅)・[§99](developer/099.md)(氷河・溶岩流の 8 近傍化)・[§130](developer/130.md)(土砂流動の計算では塞がり率を流動深で測る。一様な V 字水路の厳密解との比較と検定 test/vchannel)・[§137](developer/137.md)(幅の極端に狭いサブグリッド河道のセルを、振り替えと通水率で計算の外と同じに数える。検定 test/sliver)
 
 ### 移流項
 
 - 現行: [移流項のスキーム](users_guide/advection.md)・[1 セル幅の河道と移流項の風上供給元](users_guide/advection_donor.md)・[高い地盤へ登るエッジ水深の頭打ち](users_guide/dry_head_cap.md)。既定のスキーム f_advection_scheme = 3 は [§68.19](developer/068.md) の既定昇格、f_advection_donor = 4・f_advection_bend = 2・f_advection_lateral = 2・f_dry_head_cap = 4 は [§114](developer/114.md)、それぞれの値の定義は [§113](developer/113.md)
-- 記録: [§21](developer/021.md)・[§68](developer/068.md)(2026-10-01〜11-03 の改良の全体)・[§78](developer/078.md)(スカラー輸送の MUSCL)・[§102](developer/102.md)(f_advection_donor = 2, 3)・[§110](developer/110.md)(屈曲直後の辺の慣性と側方面のブレーキ)・[§118](developer/118.md)(§110 の続き)・[§111](developer/111.md)(窪地処理の平坦区間の振動)・[§112](developer/112.md)(深くて遅い隣のセルの規則の試作)・[§113](developer/113.md)・[§114](developer/114.md)・[§131](developer/131.md)(解像した合流の損失の格子依存、側方面の扱いが仮想壁面を見ず濡れた堤内地が河道を減速させる件 §131.12。例題 confluence_backwater)
+- 記録: [§21](developer/021.md)・[§68](developer/068.md)(2026-10-01〜11-03 の改良の全体)・[§78](developer/078.md)(スカラー輸送の MUSCL)・[§102](developer/102.md)(f_advection_donor = 2, 3)・[§110](developer/110.md)(屈曲直後の辺の慣性と側方面のブレーキ)・[§118](developer/118.md)(§110 の続き)・[§111](developer/111.md)(窪地処理の平坦区間の振動)・[§112](developer/112.md)(深くて遅い隣のセルの規則の試作)・[§113](developer/113.md)・[§114](developer/114.md)・[§131](developer/131.md)(解像した合流の損失の格子依存、側方面の扱いが仮想壁面を見ず濡れた堤内地が河道を減速させる件 §131.12。例題 confluence_backwater)・[§134](developer/134.md)(近傍の判定で仮想壁面の向こうのセルを数えない。§131.12 の修正。側方面の合流の判定の漏れ = §134.10)
 
 ### 急勾配の重力補正と斜面の勾配
 
@@ -73,7 +73,7 @@
 ### 境界条件・潮位・海域
 
 - 現行: [境界条件](users_guide/boundary.md)・[潮位・海面](users_guide/tide.md)。[§15](developer/015.md)・[§23](developer/023.md)・[§67](developer/067.md)(潮位の最小入力)
-- 記録: [§15](developer/015.md)・[§23](developer/023.md)・[§67](developer/067.md)・[§68.30](developer/068.md)(自由流出面)・[§68.35](developer/068.md)(海セルに接するエッジ)・[§68.40](developer/068.md)(区間流入の外縁セル)
+- 記録: [§15](developer/015.md)・[§23](developer/023.md)・[§67](developer/067.md)・[§68.30](developer/068.md)(自由流出面)・[§68.35](developer/068.md)(海セルに接するエッジ)・[§68.40](developer/068.md)(区間流入の外縁セル)・[§134.9](developer/134.md)(海岸堤防の仮想壁を移流項と開口の振り替えで見る)
 
 ### 非静水圧
 
@@ -83,12 +83,12 @@
 ### 河道
 
 - 現行: [河道](users_guide/channel.md)・[河道の解説](users_guide/channel_models.md)。設計の文書は docs/channel_model.md
-- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)・[§128](developer/128.md)(堤防の越流の上限が読む af のハロ)・[§131](developer/131.md)(サブグリッド河道の支川の背水曲線、粗い格子の湾曲部の階段、セル幅の倍数でない川幅の表し方)
+- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)・[§128](developer/128.md)(堤防の越流の上限が読む af のハロ)・[§131](developer/131.md)(サブグリッド河道の支川の背水曲線、粗い格子の湾曲部の階段、セル幅の倍数でない川幅の表し方。§131.14 で粗い格子の河道マスクの作り方 3 通りと、利用者ガイドの作り方の節)・[§134](developer/134.md)(移流項が仮想壁面の向こうのセルを数えない)・[§135](developer/135.md)(粗い格子で川を表す表し方と通水の精度: 川幅・向き・屈曲・河道マスクの連結・占有率で作る河道マスクと下限。例題 coarse_channel)・[§137](developer/137.md)(占有率の細片を開口の振り替えと通水率で閉じた開口と数える)・[§138](developer/138.md)(河道のセルは堤内地を持たない: 氾濫原の水理への効き方と、占有率の下限と氾濫原の面積の兼ね合い)
 
 ### 内部水理構造物・堤防・家屋
 
 - 現行: [内部水理構造物](users_guide/structure.md)・[構造物と境界の水理則の解説](users_guide/hydraulics.md)・[家屋破壊・瓦礫](users_guide/bldgdebris.md)・[家屋破壊・瓦礫モデルの解説](users_guide/bldgdebris_models.md)
-- 記録: [§17](developer/017.md)(堤防)・[§22](developer/022.md)(構造物族)・[§63](developer/063.md)(家屋破壊・瓦礫)・[§68.25](developer/068.md)(堤防天端の下限)・[§103](developer/103.md)(fn_reservoir の廃止)・[§107](developer/107.md)(家屋の抗力項の次元の修正)・[§132](developer/132.md)(ダムの運転則の拡張: 実績の時系列・制限水位・洪水調節開始流量)・[§133](developer/133.md)(ダムの外部運転 = BMI の目標放流量)
+- 記録: [§17](developer/017.md)(堤防)・[§22](developer/022.md)(構造物族)・[§63](developer/063.md)(家屋破壊・瓦礫)・[§68.25](developer/068.md)(堤防天端の下限)・[§103](developer/103.md)(fn_reservoir の廃止)・[§107](developer/107.md)(家屋の抗力項の次元の修正)・[§132](developer/132.md)(ダムの運転則の拡張: 実績の時系列・制限水位・洪水調節開始流量)・[§133](developer/133.md)(ダムの外部運転 = BMI の目標放流量)・[§134](developer/134.md)(堤防の仮想壁面の向こうのセルを移流項が数えない。海岸堤防も同じ = §134.9)
 
 ### 降雨・気象・蒸発散・雪氷
 
@@ -118,7 +118,7 @@
 ### 土砂・地形変化
 
 - 現行: [土砂・地形変化](users_guide/geomorph.md)・[土砂輸送と斜面・長期地形過程の解説](users_guide/sediment.md)・[土石流・斜面崩壊・動く底層の解説](users_guide/massflow.md)・[土砂・地形変化の適用例](users_guide/geomorph_applications.md)。既定値は [§62](developer/062.md)。混合粒径(f_bedmix。2026-11-22 合意、段 1 の掃流砂は 2026-11-23、段 2a の浮遊砂の結合・プローブの Dm・組成からの D84 と段 2b の崩落・クリープ・沿岸漂砂の組成は 2026-11-24 に実装)の設計の正本は [docs/mixed_sediment_plan.md](mixed_sediment_plan.md)、採る範囲は policy.md 方針 6 の例外と [§84.19](developer/084.md)、実装の記録は [§119](developer/119.md)・[§122](developer/122.md)・[§123](developer/123.md)
-- 記録: [§19](developer/019.md)・[§28](developer/028.md)(土石流・地滑り)・[§32](developer/032.md)(長期地形変動)・[§48](developer/048.md)(乾式斜面侵食)・[§61](developer/061.md)(動く底層)・[§62](developer/062.md)・[§84](developer/084.md)(蛇行・河岸侵食)・[§84.19](developer/084.md)(混合粒径を範囲を限って採る)・[§119](developer/119.md)(混合粒径の段 1 の実装)・[§120](developer/120.md)(例題 joganji_flume)・[§121](developer/121.md)(芦田・道上の有効掃流力 f_taupart = 2)・[§122](developer/122.md)(混合粒径の段 2a: 浮遊砂の結合・組成からの D84)・[§123](developer/123.md)(混合粒径の段 2b: 崩落・クリープ・沿岸漂砂)・[§126](developer/126.md)(雪崩の例題と設定の型の見直し: キャリアの授受・限界水深・連行の与え方)・[§129](developer/129.md)(Hungr の連行則 f_dbed = 5・連行する流動深の下限・取り込んだ質量の運動量 f_dbmom)・[§130](developer/130.md)(沢の向きへの依存の原因と修正、横断方向の応力の試作)・[§85](developer/085.md)(河口デルタ)・[§86](developer/086.md)(石灰岩の溶食)・[§89](developer/089.md)(山地渓流)・[§92](developer/092.md)・[§96](developer/096.md)・[§101](developer/101.md)
+- 記録: [§19](developer/019.md)・[§28](developer/028.md)(土石流・地滑り)・[§32](developer/032.md)(長期地形変動)・[§48](developer/048.md)(乾式斜面侵食)・[§61](developer/061.md)(動く底層)・[§62](developer/062.md)・[§84](developer/084.md)(蛇行・河岸侵食)・[§84.19](developer/084.md)(混合粒径を範囲を限って採る)・[§119](developer/119.md)(混合粒径の段 1 の実装)・[§120](developer/120.md)(例題 joganji_flume)・[§121](developer/121.md)(芦田・道上の有効掃流力 f_taupart = 2)・[§122](developer/122.md)(混合粒径の段 2a: 浮遊砂の結合・組成からの D84)・[§123](developer/123.md)(混合粒径の段 2b: 崩落・クリープ・沿岸漂砂)・[§126](developer/126.md)(雪崩の例題と設定の型の見直し: キャリアの授受・限界水深・連行の与え方)・[§129](developer/129.md)(Hungr の連行則 f_dbed = 5・連行する流動深の下限・取り込んだ質量の運動量 f_dbmom)・[§130](developer/130.md)(沢の向きへの依存の原因と修正、横断方向の応力の試作)・[§136](developer/136.md)(f_slide_noflow の既定を 1 に、1 の判定をそれまでの 2 に)・[§85](developer/085.md)(河口デルタ)・[§86](developer/086.md)(石灰岩の溶食)・[§89](developer/089.md)(山地渓流)・[§92](developer/092.md)・[§96](developer/096.md)・[§101](developer/101.md)
 
 ### 流木
 
@@ -173,7 +173,7 @@
 ### 例題・教材・データ
 
 - 現行: examples/README.md・tutorials/
-- 記録: [§104](developer/104.md)(examples/benchmark の再構築)・[§109](developer/109.md)・[§111](developer/111.md)・[§115](developer/115.md)・[§117](developer/117.md)(例題 source_area の作成と検討)・[§120](developer/120.md)(例題 joganji_flume。公開の実験データとの比較)・[§124](developer/124.md)(例題 tsunami_meander。論文の図から読んだ計測値との比較)・[§125](developer/125.md)(例題 coastal_compound_flood。沿岸の町の複合浸水)・[§126](developer/126.md)(例題 snow_avalanche。雪崩の設定の型の見直し)・[§131](developer/131.md)(例題 confluence_backwater。合流点の背水による支川の氾濫)
+- 記録: [§104](developer/104.md)(examples/benchmark の再構築)・[§109](developer/109.md)・[§111](developer/111.md)・[§115](developer/115.md)・[§117](developer/117.md)(例題 source_area の作成と検討)・[§120](developer/120.md)(例題 joganji_flume。公開の実験データとの比較)・[§124](developer/124.md)(例題 tsunami_meander。論文の図から読んだ計測値との比較)・[§125](developer/125.md)(例題 coastal_compound_flood。沿岸の町の複合浸水)・[§126](developer/126.md)(例題 snow_avalanche。雪崩の設定の型の見直し)・[§131](developer/131.md)(例題 confluence_backwater。合流点の背水による支川の氾濫)・[§135](developer/135.md)(例題 coarse_channel。粗い格子で川を表す表し方の系統的な確かめ。§135.6 で占有率で作る河道マスクを中心に組み替え)・[§138](developer/138.md)(例題 coarse_channel の系列 fmin と、幅を使う例題の注記)
 ## 全節の一覧
 
 - [§1](developer/001.md) 実数精度の方針
@@ -305,7 +305,12 @@
 - [§127](developer/127.md) 田んぼダムの評価機能 m_paddy(fn_paddy): 落水口の装置則とサブグリッドの水田タンク・区画の解像(2026-11-24 設計合意・段 1 実装、2026-11-25 段 2 実装・段 3 例題・段 4 水質と土砂・集水面積率)
 - [§128](developer/128.md) 実効平面積率 af のハロの行の更新漏れ: 堤防の越流の追い越し上限が帯の境で古い値を読む(MPI の実バグ。2026-11-24 発見・修正)
 - [§129](developer/129.md) 連行則の改良: Hungr の則(f_dbed = 5)・連行する流動深の下限(db_hent)・取り込んだ質量の運動量(f_dbmom)(2026-11-25。利用者の決定。既定は変えず、無効時はビット一致)
-- [§130](developer/130.md) 沢の向きへの依存の原因と修正: 塞がれた開口の動的振り替えの塞がり率を、土砂流動の計算では流動深で測る(横断方向の応力の試作、一様な V 字水路の厳密解との比較、検定 test/vchannel、例題 snow_avalanche の再計算、例題 debris_fan での振り替えの有無の比較。2026-11-25〜26)
+- [§130](developer/130.md) 沢の向きへの依存の原因と修正: 塞がれた開口の動的振り替えの塞がり率を、土砂流動の計算では流動深で測る(横断方向の応力の試作、一様な V 字水路の厳密解との比較、検定 test/vchannel、例題 snow_avalanche の再計算、例題 debris_fan での振り替えの有無の比較、土砂流動を使う例題 5 つの回し直し(§130.12〜§130.16)。2026-11-25〜27)
 - [§131](developer/131.md) 例題 examples/confluence_backwater: 合流点の背水による支川の氾濫と、粗い格子・合流の形の確かめ(2026-11-26。利用者の依頼。計算本体は変えていない)
 - [§132](developer/132.md) ダムの運転則の拡張: 実績の再生(放流量・貯水位の時系列)と、履歴を持たない実務の操作規則(制限水位・洪水調節開始流量・放流量の上限)(2026-11-26 設計合意・実装。無効時はビット一致)
 - [§133](developer/133.md) ダムの量の BMI 公開と外部運転(f_dam_mode = 6): ダムの点の格子と目標放流量の set(2026-11-26 設計合意・実装。無効時はビット一致)
+- [§134](developer/134.md) 移流項の近傍の判定に河道の堤防の仮想壁面を見せる: 壁の向こうの湛水が河道を減速させない(handoff 00al。2026-11-26 設計合意・実装。仮想壁面を使わない計算と、壁の向こうが乾いている計算はビット一致)
+- [§135](developer/135.md) 例題 examples/coarse_channel: 粗い格子で川を表す表し方(川幅・向き・屈曲・河道マスクの連結・河道の脇の水)と通水の精度の系統的な確かめ(2026-11-26。利用者の依頼。計算本体は §134.10 の修正だけ)
+- [§136](developer/136.md) f_slide_noflow の既定を 1 にし、1 の判定をそれまでの 2 に置き換える(薄い膜は下の層の判定を止めない。2026-11-26。利用者の決定)
+- [§137](developer/137.md) 幅の極端に狭いサブグリッド河道のセルを、開口の動的振り替えと通水率で計算の外と同じに数える(占有率の細片。2026-11-27。利用者の依頼。挙動の変更)
+- [§138](developer/138.md) 河道のセルは堤内地を持たない: 利用者ガイドと例題の注記、河道にする占有率の下限と氾濫原の面積(例題 coarse_channel の系列 fmin。2026-11-27。利用者の依頼。計算本体は変えていない)

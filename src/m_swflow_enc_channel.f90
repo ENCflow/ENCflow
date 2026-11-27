@@ -367,7 +367,7 @@ module subroutine seawall_wall(p, g, s, i, j, in, jn, uve1, mne1)
   real :: wsr, wsl                ! 海側・陸側の水位
   real :: h, u
 
-  ! 対象エッジの判定(片側が海側マスク・他側が陸)
+  ! 対象エッジの判定(片側が海側マスク・他側が陸。swall_edge と同一に保つこと)
   if (g%ssw(i,j) > 0 .and. g%ssw(in,jn) <= 0) then
     ic = i;  jc = j;  il = in; jl = jn
     sgn = -1.0
@@ -426,7 +426,7 @@ end subroutine
 ! エッジ (i,j)-(in,jn) が堤防壁エッジか(bank_wall が流速・流量を上書き
 ! するエッジ。bank_wall の対象判定と同一に保つこと)
 !----------------------------------------------------------------------
-module function bank_edge(g, s, i, j, in, jn) result(res)
+pure module function bank_edge(g, s, i, j, in, jn) result(res)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j, in, jn
@@ -438,6 +438,69 @@ module function bank_edge(g, s, i, j, in, jn) result(res)
   else if (g%rw(in,jn) > 0 .and. g%rw(i,j) <= 0) then
     res = is_wall(g%zbank(in,jn), s%z(in,jn), s%z(i,j))
   end if
+end function
+
+
+!----------------------------------------------------------------------
+! エッジ (i,j)-(in,jn) が海岸堤防の壁エッジか(seawall_wall が流速・流量を上書きする
+! エッジ = 海側マスクのセルと、天端を持つ陸側セルの間。seawall_wall の対象判定と
+! 同一に保つこと)。移流項の近傍の判定(vwall_between)と、開口の動的な振り替えの
+! 塞がり率(sblk)が使う(§134.9)
+!----------------------------------------------------------------------
+pure module function swall_edge(g, i, j, in, jn) result(res)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j, in, jn
+  logical :: res
+  res = .false.
+  if (g%ssw(i,j) > 0 .and. g%ssw(in,jn) <= 0) then
+    res = g%zswall(in,jn) > zbank_min
+  else if (g%ssw(in,jn) > 0 .and. g%ssw(i,j) <= 0) then
+    res = g%zswall(i,j) > zbank_min
+  end if
+end function
+
+
+!----------------------------------------------------------------------
+! エッジ (ic,jc)-(il,jl) が破堤サイトなら実効天端を返す(それ以外は zc)。
+! bank_wall と、移流項の近傍の仮想壁面の判定(m_swflow_enc_adv。§134)が使う
+!----------------------------------------------------------------------
+pure module function breach_crest(ic, jc, il, jl, zc) result(z)
+  integer, intent(in) :: ic, jc, il, jl
+  real, intent(in) :: zc
+  real :: z
+  integer :: n, isite, jr
+  z = zc
+  if (jc < lbound(chn%ibr0,1) .or. jc > ubound(chn%ibr0,1)) return
+  do n = chn%ibr0(jc), chn%ibr1(jc)         ! この行のサイトだけ照合
+    isite = chn%ibrs(n)
+    if (chn%br(isite)%ic == ic .and. chn%br(isite)%il == il .and. chn%br(isite)%jl == jl) then
+      z = chn%br(isite)%zeff
+      if (chn%br_diag == 0) return
+      exit
+    end if
+  end do
+  if (chn%br_diag == 0) return
+
+  ! 斜めエッジの連動(f_br_diag = 1。§18): 斜めエッジ (ic,jc)-(il,jl) は、
+  ! 河道セルが同じで堤内地セルが (il,jl) の 4 近傍にあるサイト(同じ行)、
+  ! または堤内地セルが同じで河道セルが (ic,jc) の 4 近傍にあるサイト
+  ! (行 jc−1..jc+1)の実効天端のうち最小値まで下がる。法線サイトの
+  ! 両側の斜め(破堤口の両端の外側へ向かう斜めを含む)が対象で、明示した
+  ! 斜めサイトからは派生しない(その斜めに 4 近傍で接する斜めエッジはない)。
+  ! 参照する行は jc±1 まで = 帯+ハロ 2 の内側(bank_wall は js−1..je+1 の
+  ! セルのエッジまでしか触れない)。サイトの zeff は両セルを jsh..jeh に
+  ! 持つランクが評価済み(同じ理由で十分)
+  if (abs(ic - il) /= 1 .or. abs(jc - jl) /= 1) return
+  do jr = max(jc - 1, lbound(chn%ibr0,1)), min(jc + 1, ubound(chn%ibr0,1))
+    do n = chn%ibr0(jr), chn%ibr1(jr)
+      isite = chn%ibrs(n)
+      if (chn%br(isite)%ic == ic .and. chn%br(isite)%jc == jc) then
+        if (abs(chn%br(isite)%il - il) + abs(chn%br(isite)%jl - jl) == 1) z = min(z, chn%br(isite)%zeff)
+      else if (chn%br(isite)%il == il .and. chn%br(isite)%jl == jl) then
+        if (abs(chn%br(isite)%ic - ic) + abs(chn%br(isite)%jc - jc) == 1) z = min(z, chn%br(isite)%zeff)
+      end if
+    end do
+  end do
 end function
 
 
@@ -1002,48 +1065,6 @@ end subroutine
 !============= SUBMODULE 内の補助手続き(引数渡し。§13)==============
 !======================================================================
 
-!----------------------------------------------------------------------
-! エッジ (ic,jc)-(il,jl) が破堤サイトなら実効天端を返す(それ以外は zc)
-!----------------------------------------------------------------------
-function breach_crest(ic, jc, il, jl, zc) result(z)
-  integer, intent(in) :: ic, jc, il, jl
-  real, intent(in) :: zc
-  real :: z
-  integer :: n, isite, jr
-  z = zc
-  if (jc < lbound(chn%ibr0,1) .or. jc > ubound(chn%ibr0,1)) return
-  do n = chn%ibr0(jc), chn%ibr1(jc)         ! この行のサイトだけ照合
-    isite = chn%ibrs(n)
-    if (chn%br(isite)%ic == ic .and. chn%br(isite)%il == il .and. chn%br(isite)%jl == jl) then
-      z = chn%br(isite)%zeff
-      if (chn%br_diag == 0) return
-      exit
-    end if
-  end do
-  if (chn%br_diag == 0) return
-
-  ! 斜めエッジの連動(f_br_diag = 1。§18): 斜めエッジ (ic,jc)-(il,jl) は、
-  ! 河道セルが同じで堤内地セルが (il,jl) の 4 近傍にあるサイト(同じ行)、
-  ! または堤内地セルが同じで河道セルが (ic,jc) の 4 近傍にあるサイト
-  ! (行 jc−1..jc+1)の実効天端のうち最小値まで下がる。法線サイトの
-  ! 両側の斜め(破堤口の両端の外側へ向かう斜めを含む)が対象で、明示した
-  ! 斜めサイトからは派生しない(その斜めに 4 近傍で接する斜めエッジはない)。
-  ! 参照する行は jc±1 まで = 帯+ハロ 2 の内側(bank_wall は js−1..je+1 の
-  ! セルのエッジまでしか触れない)。サイトの zeff は両セルを jsh..jeh に
-  ! 持つランクが評価済み(同じ理由で十分)
-  if (abs(ic - il) /= 1 .or. abs(jc - jl) /= 1) return
-  do jr = max(jc - 1, lbound(chn%ibr0,1)), min(jc + 1, ubound(chn%ibr0,1))
-    do n = chn%ibr0(jr), chn%ibr1(jr)
-      isite = chn%ibrs(n)
-      if (chn%br(isite)%ic == ic .and. chn%br(isite)%jc == jc) then
-        if (abs(chn%br(isite)%il - il) + abs(chn%br(isite)%jl - jl) == 1) z = min(z, chn%br(isite)%zeff)
-      else if (chn%br(isite)%il == il .and. chn%br(isite)%jl == jl) then
-        if (abs(chn%br(isite)%ic - ic) + abs(chn%br(isite)%jc - jc) == 1) z = min(z, chn%br(isite)%zeff)
-      end if
-    end do
-  end do
-end function
-
 
 !----------------------------------------------------------------------
 ! 堤防天端の堰越流流束(本間公式。自由/潜りを自動切替)
@@ -1140,6 +1161,8 @@ subroutine build_cw(g, capd)
             if (g%sw(in,jn) == 0 .and. g%rw(in,jn) <= 0 .and. &
                 is_wall(g%zbank(ic,jc), g%z(ic,jc), g%z(in,jn))) cycle
           end if
+          ! 幅の極端に狭い河道の隣は、壁の辺と同じく開口和から外す(§137)
+          if (narrow_nb(g, ic, jc, in, jn, k)) cycle
           f0 = chn%frw(ke(k), ic+die(k), jc+dje(k))
           if (is_channel(g, in, jn) .or. g%sw(in,jn) > 0) then
             q = wcap(g, ic, jc, in, jn, cap8(k))   ! 河道—河道と河道—海(§18。frw と同じ q)
@@ -1207,6 +1230,7 @@ module subroutine build_cwd(g, s)
             if (g%sw(in,jn) == 0 .and. g%rw(in,jn) <= 0 .and. &
                 is_wall(g%zbank(ic,jc), g%z(ic,jc), g%z(in,jn))) cycle
           end if
+          if (narrow_nb(g, ic, jc, in, jn, k)) cycle   ! build_cw と同じ(§137)
           f0 = sct%frw0(ke(k), ic+die(k), jc+dje(k))   ! キャップ前(build_cw と同じ)
           if (is_channel(g, in, jn)) then
             q = wcap(g, ic, jc, in, jn, cap8(k))
@@ -1253,6 +1277,34 @@ function wcap(g, i1, j1, i2, j2, cap) result(q)
     return
   end if
   q = min(we / cap, 1.0)
+end function
+
+
+!----------------------------------------------------------------------
+! 通水率の開口和から外す、幅の極端に狭い隣か(developer.md §137)
+!   隣 (in,jn) が幅を持つ河道のセルで、その幅が自セル (ic,jc) の幅(辺の面長で頭打ち)の
+!   p_wclose 未満(width_closed)。その辺は隣の幅キャップでほぼ閉じているので、壁の辺と
+!   同じく開口和に入れない(幅 0 に近い隣が自セルの通水率を下げ、流速の正規化で流速を
+!   過大にして摩擦を増やさない)。build_cw・cw_cell・build_cwd が同じ判定を使う
+!   (3 つの開口和を同じ式に保つ条件)。一様な幅の河道の隣は閉じない
+!----------------------------------------------------------------------
+function narrow_nb(g, ic, jc, in, jn, k) result(res)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: ic, jc, in, jn, k
+  logical :: res
+  real :: face, wc
+  res = .false.
+  if (g%wrw(in,jn) <= 0.0) return             ! 幅を持つ河道のセルでない
+  if (din(k) /= 0 .and. djn(k) /= 0) then
+    face = g%dx * g%dy / sqrt(g%dx**2 + g%dy**2)
+  else if (din(k) /= 0) then
+    face = g%dy
+  else
+    face = g%dx
+  end if
+  wc = g%wrw(ic,jc)
+  if (wc <= 0.0) wc = huge(1.0)
+  res = width_closed(g%wrw(in,jn), wc, face)
 end function
 
 
@@ -1308,6 +1360,7 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
         if (g%sw(in,jn) == 0 .and. g%rw(in,jn) <= 0 .and. &
             is_wall(g%zbank(i,j), g%z(i,j), g%z(in,jn))) cycle
       end if
+      if (narrow_nb(g, i, j, in, jn, k)) cycle   ! build_cw と同じ(§137)
       f0 = sct%frw0(ke(k), i+die(k), j+dje(k))
       if (is_channel(g, in, jn) .or. g%sw(in,jn) > 0) then
         q = wcap(g, i, j, in, jn, cap8(k))   ! 河道—河道と河道—海(build_cw と同じ。§18)
