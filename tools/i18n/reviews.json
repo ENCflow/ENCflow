@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "369959ec39c2bc2534076dcfa99fb295c54c4393afc63b038c26e18d632c2698",
-      "target_sha256": "0c595a141be7d695223fb7c33f5330fecd7fb00b188e6555f69254f43a5af1cb",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
+      "source_sha256": "0b06ed727c85fe0c5e3466ceb5a9994afbd5497f113b1c276630cd847c80f41a",
+      "target_sha256": "cb5660b4edfd3c00ef051f8346e23e5716e42295de03c37bef1205b854a65d64",
+      "reviewer": "Claude (Claude Code session; new example debris_fan_flume: Japanese and English written in the same work and compared side by side; values checked against the runs and tables of plot_results.py)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -923,9 +923,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "c1d6ab25f8fe5380a37da6f14ac9175bde74a57da3eae85a02ca8ba3d25db40f",
-      "target_sha256": "cc40e20df857fd5500829e71e80e70a0917f7079e82cd51108d760b54771cdb0",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "3eeb28e5a9b2b6cca134aa32e41b3bd214c4d48ebbd83349295ed297c65f2539",
+      "target_sha256": "709244bc720c25188b97cca4f62e8066f755914a73d221d8ff1eb73f4bfda39f",
+      "reviewer": "Claude (Claude Code session; new example debris_fan_flume: Japanese and English written in the same work and compared side by side; values checked against the runs and tables of plot_results.py)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -2359,6 +2359,60 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/debris_fan_flume/README.md",
+      "target": "examples/debris_fan_flume/en/README.md",
+      "source_sha256": "ae2a3fad7874178bbc77f2c8005940d93c5424d2f09a3f8bf8e56278fa79fc32",
+      "target_sha256": "0a9e78629fcd5f072be9e0bdc63d89bd50a3b02344f32949be1a273b36780741",
+      "reviewer": "Claude (Claude Code session; new example debris_fan_flume: Japanese and English written in the same work and compared side by side; values checked against the runs and tables of plot_results.py)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
+    },
+    {
+      "source": "examples/debris_fan_flume/figs/armour.png",
+      "target": "examples/debris_fan_flume/en/figs/armour.png",
+      "source_sha256": "f666061f3704ed2da4bbc9422aa6466bf4c99c1d9a49c7042eea77fbc8146b14",
+      "target_sha256": "3aa656809a0c8374d011a5b6ae71771c1aa0fa001bbaa37d02ed35d3caa72136",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
+    },
+    {
+      "source": "examples/debris_fan_flume/figs/erosion.png",
+      "target": "examples/debris_fan_flume/en/figs/erosion.png",
+      "source_sha256": "a7f16f2844c0a02656735fe4f9ab43fa0583ba12fe5ab2cd49e83a9046cb596f",
+      "target_sha256": "f83aa9b004d0f73dceded8c2ef98a14a56b46c2ff5e84ae800b94d186b37f72b",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
+    },
+    {
+      "source": "examples/debris_fan_flume/figs/fan.png",
+      "target": "examples/debris_fan_flume/en/figs/fan.png",
+      "source_sha256": "e6bb6b0a0aa3b6751a5e0acf4b8119c3daf922f9b4fc9fa9fe0cc5c10e5967fe",
+      "target_sha256": "5c875842aed8a9054fb41e0e931325fb2216e25f6b86336b3bd8f5f1149c3b1f",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
+    },
+    {
+      "source": "examples/debris_fan_flume/figs/outlet.png",
+      "target": "examples/debris_fan_flume/en/figs/outlet.png",
+      "source_sha256": "92cf2dccf7cda0c053a350e0d8f545ea07cf0ce0cfdc76662e2bf775d911d8b8",
+      "target_sha256": "98ac88be6551c1af4c87ec3b6c36e768e410ab4d1a2716f06568532cb090ba97",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
+    },
+    {
+      "source": "examples/debris_fan_flume/figs/setup.png",
+      "target": "examples/debris_fan_flume/en/figs/setup.png",
+      "source_sha256": "08a32da699bd3110f86596f79d98b92cb2403f7ad19520f361472f86cd7ab17e",
+      "target_sha256": "8872afa55787c70fed80e20bc794e1a7b102ed35e60e386b1c230624ecd5c68b",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/delta/README.md",

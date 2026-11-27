@@ -582,7 +582,11 @@ properties as seen from the debris-flow side.
   slopes for the erosion towards the equilibrium concentration (the law of the bedload-like collective
   flow). To look at the coarsening by the flow of water after a debris flow, restore the state into a
   mixed-size configuration without debris flow (alternating runs; [Restart](restart.md)) and compute with
-  bed load alone.
+  bed load alone. In the example compared with a flume experiment,
+  [debris_fan_flume](../../../examples/debris_fan_flume/en/README.md), running clear water with the
+  debris-flow laws left on cuts the channel down to the base (the same for mixed sizes and for a single
+  size), while with bed load alone the erosion is weak and the surface coarsens. The erosion of the
+  experiment lies between the two.
 - **Usage**: sediment entering through a boundary needs its class composition (`inflow_csfrac`,
   `fn_inflow_csfrac`; [Boundary conditions](boundary.md)). When alternating with long-term flood runs
   (`morfac > 1`), set `f_bedmix = 1` in both configurations (restoring into a configuration without debris
@@ -881,6 +885,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/bedslide](../../../test/bedslide/en/README.md) | analytical speed of the layer, 45° slope, entry into a lake | $`V`$ of interior cells within 0.5% of the analytical value |
 | [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md) | rock avalanche, hand-over, submarine landslide | four patterns compared |
 | [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) | ash fall → rain → lahar, check dam | the lahar setting pattern (infiltration capacity, f_dbwet=2) |
+| [examples/debris_fan_flume](../../../examples/debris_fan_flume/en/README.md) | a flume experiment (Takahashi, Nakagawa and Yamashiki 1991) in which a debris flow of mixed-size sediment builds a fan that clear water then erodes; debris flow combined with mixed grain sizes, restore into a configuration without debris flow | discharge and concentration at the flume outlet and the length of the fan within the range of the experiment, width and apex thickness too large; the erosion is too deep with the debris-flow laws left on and weak with bed load alone (the surface coarsens with mixed sizes) |
 | [examples/debris_fan](../../../examples/debris_fan/en/README.md) | slope failure → valley → residential area on the fan (Takahashi–Nakagawa stony type); grid spacings 40-2.5 m, the valley at 0°, 22.5° and 45°, four-neighbour control | grid dependence: with eight neighbours the valley orientation changes the results by a few % at 5 m, and the sediment reaches the fan even at 40 m (coarser than the valley floor); with four neighbours sediment stays in oblique valleys at 20 m and above |
 | [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md) | a dense snow avalanche down a gully (Voellmy + velocity-proportional entrainment + momentum of the entrained snow); track snow of 0, 1 and 2 m, a deflecting dam, friction coefficients, grid spacing, gully direction and time step, with and without the dynamic reassignment of openings, threshold depth, snow everywhere (minimum flow depth db_hent, the Hungr law), comparison with runs that do not count the momentum | the avalanche setting pattern (exchange of the carrier f_dbwet=1, threshold depth 0.1 mm, f_dbmom=1; f_opening_dynamic=0 because the gully is resolved by the grid). With the entrainable snow given as a band, the amount taken up is set by the amount placed and does not depend on the time step; placed everywhere, it is set by the threshold depth (2.5 to 14.6 times the release), but with a minimum flow depth of 0.3 m (2.5 times) or the Hungr law (2.3 to 2.4 times) it does not depend on the threshold depth. The tip of the deposit stays within ±5 m for the gully direction and the time step and within −18 to +14 m for the grid spacing; the flow depth in the gully and the area and width of the deposit change by about 10 % with the gully direction |
 

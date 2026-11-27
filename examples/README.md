@@ -57,6 +57,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [debris_bedrock/](debris_bedrock/) | 渓流に流した土石流が岩盤をどこでどれだけ削るか、土石流の頻度が渓流の定常勾配をどう変えるかを見る | 土石流 f_debris(高橋・中川、クーロン + Manning)、土石流による岩盤侵食 f_rockinc の rock_kdb |
 | [debris_fan/](debris_fan/) | 斜面崩壊から始まる土石流が扇状地の住宅地に堆積する過程を、格子間隔・谷の向き・8 近傍と 4 近傍を変えて比べる | 土石流 f_debris(高橋・中川)、瞬時流動化 fn_dbinit、最大流動深・流体力の出力、4 近傍の対照 p_diagratio |
 | [debris_dam/](debris_dam/) | 豪雨の斜面崩壊から、土石流による天然ダムの形成、越流による決壊、下流の集落の洪水までをつなぎ、決壊が急になる条件を比べる | 斜面安定判定 f_slide、土石流 f_debris(高橋・中川)+ 掃流砂 f_fluvial、Green-Ampt、家屋破壊 fn_bldgdebris、カルバート |
+| [debris_fan_flume/](debris_fan_flume/) | 混合粒径の材料の土石流が扇状地をつくり、そのあと清水が侵食する水路実験(高橋・中川・山敷 1991)を計算し、流量・扇状地の形・侵食を図の読み取りと比べる | 土石流 f_debris(高橋・中川)と混合粒径 f_bedmix の併用、土石流のない構成への復元(交互計算)、区間流入、領域マスク |
 | [snow_avalanche/](snow_avalanche/) | 沢を下る流れ型雪崩が走路の雪を取り込んで大きくなり扇状地に堆積する過程と、誘導堤の効果・連行の与え方の限界を見る | 土石流 f_debris の雪への援用(Voellmy 則 f_dbres=4、連行 f_dbed=4・5、運動量 f_dbmom=1、瞬時流動化 fn_dbinit)、誘導堤(地形) |
 | [shield_volcano/](shield_volcano/) | 断続的な噴火の溶岩流が重なって楯状火山が育つ過程と、形を決めるのが降伏応力であることを見る(補足に溶岩ドーム) | 溶岩流 fn_lavaflow(複数噴火口 lv_cell・lv_val、Bingham 降伏応力 lv_tauy、固化 lv_wsol・lv_vsol) |
 | [stratovolcano/](stratovolcano/) | 溶岩流・降灰・豪雨の侵食を 10 回繰り返して成層火山を作り、噴火の仕方と侵食で形と内部の層がどう変わるかを見る | 溶岩流 fn_lavaflow(温度モード f_lvtemp)、降灰は前処理、Green-Ampt、掃流砂 f_fluvial + morfac、段をつなぐドライバ |
@@ -99,6 +100,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - 理論解のある降雨流出の基準問題と、格子に対する谷の向き・近傍の数の確認: [benchmark/](benchmark/)。
 - 斜面崩壊 → 土石流 → 扇状地の住宅地(格子の大きさ・谷の向きへの依存、粗い格子での 8 近傍と 4 近傍): [debris_fan/](debris_fan/)。
 - 豪雨 → 斜面崩壊 → 土石流 → 天然ダム → 湛水 → 越流 → 決壊 → 洪水 → 家屋の流失(仮排水路で防ぐ。決壊が急になる条件の比較): [debris_dam/](debris_dam/)。
+- 給水 → 混合粒径の材料の侵食 → 土石流 → 扇状地 → 清水による侵食と表層の粗粒化(水路実験の図の読み取りとの比較。土石流の式と掃流砂の式の受け持ち): [debris_fan_flume/](debris_fan_flume/)。
 - 雪崩の発生 → 沢を流下 → 走路の雪の連行 → 扇状地の堆積(誘導堤でそらす。大きい雪崩は堤を越える): [snow_avalanche/](snow_avalanche/)。
 - 格子の精緻化(ネスティング): [nest_reflect/](nest_reflect/)。
 
