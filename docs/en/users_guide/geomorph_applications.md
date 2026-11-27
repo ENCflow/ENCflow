@@ -421,8 +421,14 @@ that make the breach rapid).
   larger inflow gives a larger peak agree with reports of cases, experiments and computations of natural
   dams (the sources are in the README of the example).
 - **Limits**:
-  - A single grain size. Suspension of fines and hyperconcentration, and armouring by the coarse grains
-    left behind (which stops the erosion), are not represented.
+  - The debris-flow laws use a single grain size. Combined with mixed grain sizes, `f_bedmix`, the range of
+    grain sizes of bed load and armouring can be handled, but the breach discharge does not change with the
+    grading (in the example, within 2 % of the single size with the same mean grain size). The effect of coarse
+    grains left behind stopping the erosion appears at the bed-load stage after the breach, when the coarsest
+    class does not move ("A graded dam and the coarsening after the breach" in the example). While the
+    debris-flow model is active, armour does not limit the erosion, and suspension of fines and
+    hyperconcentration are not represented
+    ([explanation](massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
   - The choice of the transport law on gentle reaches (with or without bed load, the effective-shear ratio,
     `f_dbimm`) changes the peak discharge by more than a factor of 2 (2.5 in the example). The grain size is a
     calibration quantity too. For the dam of the example, an erosion coefficient `db_delte` seven times

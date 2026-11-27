@@ -320,9 +320,9 @@
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "8670550ad8024da52df2620f588573cd77e5a3aead0e08beeb42c5cafce5a659",
-      "target_sha256": "1be5924df207e20d7bfd022e4fe672f38a644a0d5557370b4e77d75ee490c9e8",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the recomputed debris_dam results)",
+      "source_sha256": "80a77f62ff94ddfae21a9db72822753f90eb84d904a9bba11771e02fabe8b9cc",
+      "target_sha256": "25de9774b7c0dae9691d0240c88665a36b8d3cf2ad3ae178c1a3aa63d279b45a",
+      "reviewer": "Claude (Claude Code session; natural-dam limits: the item on grain size rewritten in both languages in the same work and compared side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
