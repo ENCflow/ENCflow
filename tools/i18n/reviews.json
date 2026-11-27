@@ -1940,11 +1940,11 @@
     {
       "source": "examples/confluence_backwater/README.md",
       "target": "examples/confluence_backwater/en/README.md",
-      "source_sha256": "5bd438661561612336cb65aa41122906a9ca753f5575a58352eb7ebdefdd87e7",
-      "target_sha256": "17ba8d07d364d52b006ad5cd3f7a328ed54a3e1af8fbaec20c48dc2ac095aa3d",
-      "reviewer": "Claude (Claude Code session; supplement 1 table, overtopping-phase bullets and the limitations item rewritten in both files with the coarse results recomputed after developer.md §134; compared sentence by sentence, the rest unchanged)",
+      "source_sha256": "a723a8f23908614567e8a52eb3a52ca8a4242d892c55729bb7fa1888e70d52d2",
+      "target_sha256": "3b88dbc309b4a596e76d48b56f84b44c1f30b215626e635df5af1f774694fdcb",
+      "reviewer": "Claude (Claude Code session; the coarse-grid flood table and the ratio and timing sentences in supplement 1 and the limitations updated to the results after developer.md §134.10 in both files and compared; the rest unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/confluence_backwater/figs/backwater.png",
@@ -1958,11 +1958,11 @@
     {
       "source": "examples/confluence_backwater/figs/coarse.png",
       "target": "examples/confluence_backwater/en/figs/coarse.png",
-      "source_sha256": "0a92523f280dc6d0148f1436833fe00debd63b4d0f44a85ebc946bc59bd3909f",
-      "target_sha256": "2c6c31544273132e55a49ee46db3ff84590d35a9fdd4b30947aabd6e214e6019",
-      "reviewer": "Claude (Claude Code session; redrawn by plot_results.py fig_coarse from the coarse results recomputed after developer.md §134; viewed the Japanese and English images side by side: same maps, curves and layout, labels translated)",
+      "source_sha256": "ddb7ca1b7e4a07e189b62f11ccda20f5561a0794ff53cf7e5ae51a6de6bf9e33",
+      "target_sha256": "8326ec9ed280813dad50050c7e0e24affbb4b40b7fcb9b7bfc589bac9909a640",
+      "reviewer": "Claude (Claude Code session; both images redrawn by plot_results.py from the same results after §134.10 and viewed: English labels and legends match the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/confluence_backwater/figs/junction.png",
@@ -2786,11 +2786,11 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "5419ceb52306a750e2bf6531a1d61610611d134ca742e540d72e92e0d5198664",
-      "target_sha256": "0ecc22f0dd674d8ef3378e0e17c5ce4706fff3450a27c9aacfe8e82416ce2368",
-      "reviewer": "Claude (Claude Code session; supplement table row, the virtual-wall bullet, the breach-width table and its explanation rewritten in both files with the runs recomputed after developer.md §134; compared sentence by sentence, the rest unchanged)",
+      "source_sha256": "c455c95adfe9c32255b23492cf9380be21fb744e60b8b4b29430cd7702ba3cc0",
+      "target_sha256": "05d76e8154e6773561c023f5f1912972a624f0258da76601f6c538fb2bea01df",
+      "reviewer": "Claude (Claude Code session; the supplement table row of the virtual wall and the f_br_diag = 1 column of the breach-width table, with the 1.58-times sentence, updated after developer.md §134.10 in both files and compared; the rest unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/levee_breach/figs/laws.png",
@@ -2840,11 +2840,11 @@
     {
       "source": "examples/levee_breach/figs/supp_inundation.png",
       "target": "examples/levee_breach/en/figs/supp_inundation.png",
-      "source_sha256": "6b0a1d3c559524f0e8c27285808c8cc44fe0b7254bfe81e87d305b0ee6216ce9",
-      "target_sha256": "9e8d6435c179cc28a0452ee0a43a8a13ba037a672b52e71c101ccc8dd88e1b30",
-      "reviewer": "Claude (Claude Code session; redrawn by plot_supp.py from result_supp and result_supp_vwall recomputed after developer.md §134; viewed the Japanese and English images side by side: same curves, maps and layout, labels translated)",
+      "source_sha256": "3045b1ea29514ba91ec18a5027845e3bb7de155e2f7a19dcc8e2ac4d0eab9caa",
+      "target_sha256": "82d1ab8673f679f429c7c1806a086ce8b61f20addc39529fd42f3075ffe9c3da",
+      "reviewer": "Claude (Claude Code session; both images redrawn by plot_supp.py from the same results after §134.10 and viewed: English labels and legends match the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/levee_breach/figs/supp_setup.png",
@@ -2858,11 +2858,11 @@
     {
       "source": "examples/levee_breach/figs/supp_timeseries.png",
       "target": "examples/levee_breach/en/figs/supp_timeseries.png",
-      "source_sha256": "58d9088cdd659b281871b0c59d2453697b05395c3bb6532d92d18700136e7030",
-      "target_sha256": "f5372e3c3a89241abeed791bfb570b3ff6905891f6b6372c528a5e324b4841ef",
-      "reviewer": "Claude (Claude Code session; redrawn by plot_supp.py from result_supp and result_supp_vwall recomputed after developer.md §134; viewed the Japanese and English images side by side: same curves, maps and layout, labels translated)",
+      "source_sha256": "876def8f5e1c8e56471dbf177fa762f1849c973091107fb14e753775169916b5",
+      "target_sha256": "a5ae7f791de4b44fb5328ee31d3f74ab3cf1cdf5d62e60dbaf348bfde45dad8b",
+      "reviewer": "Claude (Claude Code session; both images redrawn by plot_supp.py from the same results after §134.10 and viewed: English labels and legends match the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/meander/README.md",

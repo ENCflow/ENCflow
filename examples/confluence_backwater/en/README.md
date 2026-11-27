@@ -240,13 +240,13 @@ the landside. (d) Profile of the maximum water level along the tributary.
 
 | Case | Highest main-river stage at the confluence (m)<br>20 m → 100 m | Max. water on the landside (million m³)<br>20 m → 100 m | Flooded area (km²)<br>20 m → 100 m |
 |---|---|---|---|
-| main | 24.14 → 24.23 | 2.49 → 2.18 | 3.08 → 2.90 |
-| same | 24.24 → 24.35 | 4.00 → 3.71 | 3.93 → 3.74 |
+| main | 24.14 → 24.22 | 2.49 → 2.12 | 3.08 → 2.90 |
+| same | 24.24 → 24.35 | 4.00 → 3.62 | 3.93 → 3.74 |
 
 - **On the coarse grid the main-river stage at the confluence comes out 0.1 m higher, and the water on the landside
-  about 0.9 times as much**: the difference arises after the overtopping begins.
+  0.85–0.9 times as much**: the difference arises after the overtopping begins.
   - Before the overtopping (3–5 h), the main-river stage at the confluence agrees with the fine grid within 0.02 m.
-  - From about 6 h, when the overtopping begins, the coarse grid comes out higher, by 0.09–0.12 m at 7–8 h.
+  - From about 6 h, when the overtopping begins, the coarse grid comes out higher, by 0.08–0.11 m at 7–8 h.
   - On the coarse grid the main river and the tributary border the landside directly across the virtual walls of the
     channel levees. The advection term does not count the cells behind the walls in the momentum exchange even when
     they are wet ([advection schemes](../../../docs/en/users_guide/advection.md) §4.4 of the user's guide), so the
@@ -465,7 +465,7 @@ the mouth. The downstream uniform-flow velocity is 2.59 m/s.
   represent, such as the size of the separation zone and secondary currents, is not included.
 - **On a coarse grid the representation of the main river governs the result**: as in supplement 1, without
   thickening the steps of the bend the stage at the confluence comes out 0.3–0.4 m higher. Even with them thickened, the
-  stage at the confluence is 0.1 m higher while the levees are overtopped, and the water on the landside is about 0.9
+  stage at the confluence is 0.1 m higher while the levees are overtopped, and the water on the landside is 0.85–0.9
   times as much (supplement 1; the breakdown has not been separated). For a
   width that is not a multiple of the cell size, the representation changes the stage by more than 1 m. A channel
   1–2 cells wide laid in a direction other than the axes and 45° conveys up to 60 % too little because of the waists
