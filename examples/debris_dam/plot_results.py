@@ -943,21 +943,23 @@ def fig_mixed(done, mets):
     ax.set_xlabel("x (m)")
     ax.set_ylabel(T("表層の平均粒径 (cm)", "surface mean grain size (cm)"))
     ax.set_title(T("(c) 流れのかかる堆積の表層の平均粒径(1・5・40 cm。点線は材料の平均)",
-                   "(c) Surface mean grain size of the deposit under the flow (1, 5, 40 cm; dots: mean of the material)"), fontsize=10, loc="left")
+                   "(c) Surface mean grain size under the flow (1, 5, 40 cm)"), fontsize=10, loc="left")
     ax.legend(fontsize=8)
     ax.grid(alpha=0.3)
     # (d) 決壊口の高さ
     ax = axes[1, 1]
-    for n, col, ls, lw in (("after_one_d3cm", COL3[0], "-", 2.6), ("after_mix_d3cm", COL3[1], "-", 1.2),
-                           ("after_one", COL1, "-", 1.9), ("after_mix", COLM, "-", 1.9),
-                           ("after_one_debris", COL1, ":", 1.6), ("after_mix_debris", COLM, ":", 1.6)):
+    on = T("、土石流の式を有効にしたまま", ", debris-flow laws kept on")
+    for n, col, ls, lw, lb in (("after_one_d3cm", COL3[0], "-", 2.6, "3 cm"), ("after_mix_d3cm", COL3[1], "-", 1.2, T("0.5・2・8 cm", "0.5, 2, 8 cm")),
+                               ("after_one", COL1, "-", 1.9, "10 cm"), ("after_mix", COLM, "-", 1.9, T("1・5・40 cm", "1, 5, 40 cm")),
+                               ("after_one_debris", COL1, ":", 1.6, "10 cm" + on), ("after_mix_debris", COLM, ":", 1.6, T("1・5・40 cm", "1, 5, 40 cm") + on)):
         if n in done:
             s = after_series(done[n])
-            ax.plot(s[:, 0], s[:, 1], color=col, ls=ls, lw=lw, label=lab(n))
+            ax.plot(s[:, 0], s[:, 1], color=col, ls=ls, lw=lw, label=lb)
+    ax.set_ylim(3.3, 7.7)
     ax.set_xlabel(T("決壊の計算の終わりからの時間 (h)", "time after the end of the breach run (h)"))
     ax.set_ylabel(T("決壊口の高さ (m)", "height of the breach channel (m)"))
-    ax.set_title(T("(d) 決壊のあとの決壊口の高さ(谷筋の最も高い所。流量 40 m³/s)", "(d) Height of the breach channel after the breach (highest point of the thalweg; 40 m³/s)"), fontsize=10, loc="left")
-    ax.legend(fontsize=8)
+    ax.set_title(T("(d) 決壊のあとの決壊口の高さ(谷筋の最も高い所。流量 40 m³/s)", "(d) Height of the breach channel after the breach (40 m³/s)"), fontsize=10, loc="left")
+    ax.legend(fontsize=8, ncol=2, loc="upper center")
     ax.grid(alpha=0.3)
     fig.savefig(f"{FIGDIR}/mixed.png", dpi=130, bbox_inches="tight")
     plt.close(fig)

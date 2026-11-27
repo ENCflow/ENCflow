@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "0b06ed727c85fe0c5e3466ceb5a9994afbd5497f113b1c276630cd847c80f41a",
-      "target_sha256": "cb5660b4edfd3c00ef051f8346e23e5716e42295de03c37bef1205b854a65d64",
-      "reviewer": "Claude (Claude Code session; new example debris_fan_flume: Japanese and English written in the same work and compared side by side; values checked against the runs and tables of plot_results.py)",
+      "source_sha256": "a82a1f8143471503cb769015def275dbaa59e21e94c6560bcb287108c240e0e2",
+      "target_sha256": "e463444d3c3fa403061f6c92d172c7de90a8c1f70c0e80082145dd4c9ca8c86c",
+      "reviewer": "Claude (Claude Code session; section on coupling with mixed grain sizes: additions on the example debris_dam (second material pair, runs after the breach, rough estimate of the effect of fines) written in both languages in the same work and compared side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -923,9 +923,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "3eeb28e5a9b2b6cca134aa32e41b3bd214c4d48ebbd83349295ed297c65f2539",
-      "target_sha256": "709244bc720c25188b97cca4f62e8066f755914a73d221d8ff1eb73f4bfda39f",
-      "reviewer": "Claude (Claude Code session; new example debris_fan_flume: Japanese and English written in the same work and compared side by side; values checked against the runs and tables of plot_results.py)",
+      "source_sha256": "e1568db9cf79d7fb5645061e16b2120d48c12c5a73fac3fd7a645ff47f9977bb",
+      "target_sha256": "9303cca7569296f9da20d2c08f2d6e029377209353e00f32c817bbf2ab5b14eb",
+      "reviewer": "Claude (Claude Code session; row of the example debris_dam updated in both languages and compared side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -2165,9 +2165,9 @@
     {
       "source": "examples/debris_dam/README.md",
       "target": "examples/debris_dam/en/README.md",
-      "source_sha256": "3f3bd891ad0543acb20b78a37cdd8468a6d49839813e738d951d2f5eecd308bc",
-      "target_sha256": "0c95b9cd61b973fbbeedaf44fdf2d108b514e32beb55a375c4750e2d255e0277",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
+      "source_sha256": "b1f968cc2b038d9c35b538ec8f19be0cb42213769611fab79f8cec77d248c23b",
+      "target_sha256": "aa969f5f6a6b1c1c84b702c3f5087bfc5dc0175fde68c3fb56942d51aa5d7208",
+      "reviewer": "Claude (Claude Code session; example debris_dam, graded-dam cases: Japanese and English written in the same work and compared side by side; numbers checked against the output of plot_results.py mixed)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -2204,6 +2204,15 @@
       "source_sha256": "2744788375d434b44791dcb2cbb30b6bbcc70e5e74aa6005f2d7e9e90fc7c523",
       "target_sha256": "36448f961413d889dd18f53a467d8d9198622a8932aa380cba26ced8164e6759",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same debris_dam results; compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
+    },
+    {
+      "source": "examples/debris_dam/figs/mixed.png",
+      "target": "examples/debris_dam/en/figs/mixed.png",
+      "source_sha256": "1367bdfc577a7f20d0308d6098e4161729f2f48f316294ccccaf3c0e5b5b533c",
+      "target_sha256": "ee517f24a0815eb878be00df1893239072dde08955fcacdc49f3a60c48253ead",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; both viewed, labels compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },

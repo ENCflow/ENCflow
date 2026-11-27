@@ -554,8 +554,8 @@ properties as seen from the debris-flow side.
   load that moves the same bed (hiding and armouring) and for where the sediment ends up (the composition
   of the deposit). The way the debris flow moves, the rate of erosion and the reach do not change when a
   width is given. For the dam body of the example
-  [debris_dam](../../../examples/debris_dam/en/README.md) (13 m high, grain size 3 cm, 10 m grid; trial
-  computations, developer.md §139):
+  [debris_dam](../../../examples/debris_dam/en/README.md) (13 m high, grain size 3 cm, 10 m grid; rows 2, 4
+  and 5 are trial computations, developer.md §139):
 
   | What was changed | Peak discharge of the breach (m³/s) | Ratio to the base |
   |---|---|---|
@@ -570,12 +570,25 @@ properties as seen from the debris-flow side.
   becomes independent of the grain size far above the threshold). The grain-size input that controls the
   speed of the breach is `db_d50`, not the width of the distribution. Mixed grain sizes matter at the stage
   where the flow weakens and the shear stress approaches the threshold: the coarsening, by the flow of water
-  that follows, of what remains of the dam body, of the deposit downstream and of the channels on a fan.
+  that follows, of what remains of the dam body, of the deposit downstream and of the channels on a fan. In
+  the same example, a dam body whose coarsest class is 40 cm (1, 5 and 40 cm, mean 10 cm) also has the same
+  breach peak as the single size of 10 cm (197 and 194 m³/s). In the computation that keeps the main-river
+  discharge running for 3 hours after the breach (bed load only), the 40 cm class does not move and covers
+  the surface, and the breach channel is preserved (height of the breach channel 6.52 → 6.46 m; 6.45 → 4.74 m
+  for the single size of 10 cm). The dam body of 0.5, 2 and 8 cm, whose coarsest class also moves, erodes
+  after the breach like the single size of 3 cm.
 - **Sediment rich in fines**: the effect of fines becoming part of the interstitial fluid and raising the
-  concentration is not represented. In a rough surrogate computation in which the submerged specific
-  gravity `fluv_sgrav` was set to 1.41 and 1.21, corresponding to an interstitial-fluid density of 1.1 and
-  1.2, the peak for the same dam body was 1.33 and 1.52 times the base. For the breach of a dam body rich in
-  fines this model errs on the low side.
+  concentration is not represented. For flows of sediment rich in fines this model errs on the low side. In
+  a rough surrogate computation in which the submerged specific gravity `fluv_sgrav` was set to 1.41 and
+  1.21, corresponding to an interstitial-fluid density of 1.1 and 1.2, the peak for the same dam body was
+  1.33 and 1.52 times the base. The density of the interstitial fluid, however, is set by the amount of fines
+  the flow has taken in. In the breach of this dam body (face slope 0.12) the eroded sediment (solids) makes
+  up 0.08 to 0.12 of the volume of water plus sediment that flowed before the peak, and 0.03 around the peak.
+  Even if all
+  the fines of the eroded sediment entered the interstitial fluid, a fines content of 20 % would keep the
+  density at 1.01 to 1.04 (a rough estimate; 1.08 to 1.25 before the peak for a dam body with a face slope
+  of 0.25). The effect is large for debris flows of high concentration (debris flows in a torrent bed, or the
+  start of the breach of a dam body with steep faces).
 - **Looking at the erosion after a debris flow**: while the debris-flow model is on, the erosion by the
   debris-flow laws is not restrained by a surface that has become coarse (it takes the top of the column
   without selecting grain sizes, and the grain size in the laws stays `db_d50`). The same holds on gentle
@@ -586,7 +599,9 @@ properties as seen from the debris-flow side.
   [debris_fan_flume](../../../examples/debris_fan_flume/en/README.md), running clear water with the
   debris-flow laws left on cuts the channel down to the base (the same for mixed sizes and for a single
   size), while with bed load alone the erosion is weak and the surface coarsens. The erosion of the
-  experiment lies between the two.
+  experiment lies between the two. In the computations after the breach of the example debris_dam, too, with
+  the debris-flow laws left on the breach channel of the dam body with a 40 cm class falls by 0.88 m in
+  3 hours (0.06 m with bed load alone).
 - **Usage**: sediment entering through a boundary needs its class composition (`inflow_csfrac`,
   `fn_inflow_csfrac`; [Boundary conditions](boundary.md)). When alternating with long-term flood runs
   (`morfac > 1`), set `f_bedmix = 1` in both configurations (restoring into a configuration without debris

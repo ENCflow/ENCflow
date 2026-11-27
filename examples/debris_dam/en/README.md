@@ -11,8 +11,11 @@ one computation, the onset of the failure by rain infiltration, the debris flow,
 overtopping, the breach and the damage to the houses of a village downstream. In addition, computations with a
 pre-built dam change the conditions that make a breach rapid (lake volume, dam shape, grain size, inflow,
 downstream slope) one at a time and compare them with what is known about real natural dams. Computations
-with slightly different inflows show how much the results vary (the spread of the results). The values are
-schematic, chosen to make the phenomena easy to see; this is not a reproduction of a particular disaster.
+with slightly different inflows show how much the results vary (the spread of the results). Computations in
+which the dam material has a range of grain sizes (mixed sizes combined with the debris-flow model) compare
+the breach discharge, and the coarsening of the remaining dam by the river flow after the breach, with the
+single-size computations. The values are schematic, chosen to make the phenomena easy to see; this is not a
+reproduction of a particular disaster.
 
 ## What happens at real natural dams
 
@@ -54,6 +57,7 @@ schematic, chosen to make the phenomena easy to see; this is not a reproduction 
 | The overflow erodes the dam and carries the sediment downstream | Erosion law for a saturated deposit, equilibrium concentration on gentle slopes (bedload-like collective flow), bed load, angle-of-repose avalanching of the breach walls | `f_dbimm = 1`, `db_immexp = 2`, `f_fluvial = 1`, `f_repose = 1` |
 | The flood sweeps houses away | Destruction of houses by the load (h + (1 + s) hs) V², and their debris | `fn_bldgdebris` (`f_bdcrit = 2`), `fn_gv` |
 | A drain lowers the lake level | A culvert connecting the upstream and downstream sides of the dam | `fn_structure` (`&list_struct_culvert`) |
+| The surface of the remaining dam and of the deposit downstream is coarsened by the river flow (armouring) | Mixed grain sizes (size classes × an exchange layer and a substrate); bed load is carried class by class, and the debris flow carries the composition by class | `f_bedmix = 1`, `bmix_d`, `bmix_frac0`, `bmix_la` (the graded-dam cases) |
 
 The failure, the debris flow and the erosion of the dam happen one after another inside the same sediment
 computation (`f_debris`); the computation is not switched on the way, and neither the shape of the dam nor the
@@ -117,7 +121,7 @@ breach conditions). Bottom right: long profile of the tributary and the failure 
   [house destruction and debris](../../../docs/en/users_guide/bldgdebris.md) of the users guide).
 - **Output**: maps every 2 minutes (bil); probes and discharge lines every 10 seconds.
 
-The cases fall into four groups. `param.txt` (the base case) is the annotated template, and
+The cases fall into five groups. `param.txt` (the base case) is the annotated template, and
 `make_init.py` writes `param_<case>.txt` of the other cases by replacing lines (replaced lines carry the
 note "基本ケースは …", i.e. the value of the base case).
 
@@ -138,6 +142,10 @@ note "基本ケースは …", i.e. the value of the base case).
 | | `dam_ref_p1`, `dam_face25_p1` | only the inflow of two cases of the pre-built-dam series (level crest) is changed to 40.4 m³/s (+1 %) | 60 min |
 | | `dam_tilt_m1`, `dam_tilt_eps`, `dam_tilt_p1`; `dam_tilt_dx5_m1`, `dam_tilt_dx5_eps`, `dam_tilt_dx5_p1` | only the inflow of the tilted-crest dam (10 m and 5 m grids) is changed to 39.6, 40.0001 and 40.4 m³/s | 60 min (120 min on the 5 m grid) |
 | Pre-built dam | `dam_ref` and 19 others | a 13 m high dam is placed at the junction and the lake starts filled to the crest (no rain, no colluvium). Lake volume, dam shape (face slope, crest length, tilt of the crest), grain size, inflow, downstream slope, grid spacing and the choice of laws are changed one at a time ([section below](#conditions-for-a-rapid-breach-computation-and-real-natural-dams)) | 60 min (90 min for the six cases that rise slowly, 120 min for the three cases on the 5 m grid) |
+| Graded dam | `mix_d3cm` | the same dam and conditions as `dam_ref`, with the sediment in three size classes of 0.5, 2 and 8 cm (fractions 0.35, 0.40 and 0.25; the same mean grain size of 3 cm) (`f_bedmix = 1`; [section below](#a-graded-dam-and-the-coarsening-after-the-breach-coupling-with-mixed-grain-sizes)) | 60 min |
+| | `mix_d10cm` | the same conditions as `dam_d10cm` (grain size 10 cm), with the sediment in classes of 1, 5 and 40 cm (fractions 0.50, 0.30 and 0.20; the same mean grain size of 10 cm) | 90 min |
+| | `after_one_d3cm`, `after_mix_d3cm`; `after_one`, `after_mix` | start from the final state of `dam_ref`, `mix_d3cm`; `dam_d10cm`, `mix_d10cm` (`f_state_restore = 2`) and keep the main-river discharge of 40 m³/s running, without the debris-flow model and the slope-stability test (bed load only) | 180 min |
+| | `after_one_debris`, `after_mix_debris` | continue from the final state of `dam_d10cm`, `mix_d10cm` with the same configuration as the breach computation (the debris-flow laws kept on) | 180 min |
 
 ## How to run
 
@@ -146,12 +154,16 @@ cd examples/debris_dam
 make                     # links, and the inputs and settings of all cases (make_init.py)
 make run                 # compute the 32 cases in turn
 make perturb             # compute the 14 cases that show the spread of the results (only the inflow is changed slightly)
+make mixed               # compute the 10 graded-dam cases (four breach runs and six runs of the 3 hours after them)
 python3 plot_results.py  # figs/*.png and tables (argument en writes the English version to en/figs/; setup.png can be drawn before the computation)
 ```
 
 `make quick` computes only the base case, the drain and the four main cases of the pre-built-dam series;
 `make dams` computes only the 20 cases of the pre-built-dam series. The 14 cases of `make perturb` are not
-part of `make run` (they are used in the figure and the table of "Spread of the results"). For a single
+part of `make run` (they are used in the figure and the table of "Spread of the results"). Of the 10 cases of
+`make mixed`, only the single-size cases compared, `dam_ref` and `dam_d10cm`, are part of `make run`. When only
+these 10 cases have been computed, `python3 plot_results.py mixed` writes just `figs/mixed.png` and its table.
+For a single
 case, run `./encflow param.txt` (the base case).
 
 ## Results
@@ -571,9 +583,12 @@ In summary, the conditions for a rapid breach that also hold for real natural da
   than by the law for the erosion rate (as with the erosion coefficient above).
 - **Grid spacing**: With the depth mobilized at one time, `slide_dmax`, kept at 0.3 times the grid spacing, the 5 m grid
   (`dam_dx5`, 1.5 m) peaks at 308 m³/s after 25 minutes, 0.78 times the 10 m grid (396 m³/s after 27 minutes).
-  The form of the breach also differs. On the 10 m grid the crest is lowered over the full width of the valley,
-  but on the 5 m grid the breach splits into two channels along the valley walls on both banks about
-  15 minutes after overtopping starts, leaving a ridge about 12 m high in the middle of the valley. After the
+  The course of the breach also differs. On the 10 m grid the overtopping starts over the full width of the
+  valley, and from before the peak grooves one cell wide deepen along the foot of the valley walls on both
+  banks (mainly on the north side; a rise 9 to 12 m high remains in the middle of the valley; "A graded dam
+  and the coarsening after the breach" below). On the 5 m grid the breach splits into two channels along the
+  valley walls on both banks about 15 minutes after overtopping starts, leaving a ridge about 12 m high in the
+  middle of the valley. After the
   peak at 25 minutes the discharge falls to about 70 m³/s at 28 minutes, stays at 200–270 m³/s from 40 to
   60 minutes, and is nearly back to the inflow by 80 minutes (at 120 minutes about 6 m of the dam remains on the north side of the
   valley, the tributary side). With `slide_dmax` left at 3 m on the 5 m grid (`dam_dx5d3`), the whole downstream face is
@@ -591,7 +606,8 @@ In summary, the conditions for a rapid breach that also hold for real natural da
   spacing and the steepness of the step left by the stability test changes with the grid spacing, the course of
   the breach depends on the grid spacing. The numbers of this example are those of the 10 m grid.
 - **Width of the breach and collapse of its walls**: The dams of the series have a crest that is level across
-  the valley; they are overtopped over the full width of the valley and the crest is lowered uniformly. The dam
+  the valley; the overtopping starts over the full width of the valley (after that, grooves deepen along the
+  foot of the valley walls on both banks; "Grid spacing" above). The dam
   built by the debris flow (the chain) is higher on the tributary side, but three cells (30 m wide) on the
   opposite side are nearly flat, so the overflow spreads over the full width of the crest in about 5 minutes
   ("Spread of the results" above). For the dam whose crest is tilted with its lowest part a notch 10 m wide
@@ -604,8 +620,11 @@ In summary, the conditions for a rapid breach that also hold for real natural da
   dams also have uneven crests and narrow breaches, but the breach of this computation cannot be narrower than
   the grid spacing, and the wall collapse is represented by an approximation that moves the part above the
   angle of repose to the neighbouring cell and by the cell-wise slope-stability test.
-- **Single grain size**: Without armouring the dam keeps eroding more than a real one would. A dam rich in
-  fines would in reality produce a flow of higher concentration.
+- **Single grain size**: The dams of the series have a single grain size; without armouring they keep eroding
+  more than a real one would. Giving a range of grain sizes does not change the breach discharge, but after the
+  breach a coarse class that does not move keeps the breach channel in place ("A graded dam and the coarsening
+  after the breach" below). A dam rich in fines would in reality produce a flow of higher concentration (this
+  effect is not represented).
 
 ### Comparison with empirical formulas
 
@@ -640,20 +659,123 @@ width).
   reasonable. The computation is better suited to reading the direction and the ratio of the change when a
   condition is varied.
 
+## A graded dam and the coarsening after the breach (coupling with mixed grain sizes)
+
+The material of a real natural dam ranges from fine soil to boulders. The computations so far represent it by
+a single grain size. Mixed grain sizes (`f_bedmix`; [mixed grain sizes](../../../docs/en/users_guide/geomorph.md#mixed-grain-sizes-f_bedmix))
+can be combined with the debris-flow model: the grain-size distribution of the bed is held as fractions of
+size classes (an exchange layer and a substrate), and bed load is carried class by class. The debris flow
+carries the composition by class, but the debris-flow laws (equilibrium concentration, rates of erosion and
+deposition, resistance) still use the single representative grain size `db_d50`, and the erosion by the
+debris-flow laws and the failures by the slope-stability test and the angle of repose do not select grain
+sizes ([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
+Here, for a dam of the same shape as the reference, two pairs of materials show what changes when the
+sediment is divided into three size classes with the same mean grain size.
+
+| Pair | Single-size case | Graded case (size classes and fractions) | In the flow after the breach (40 m³/s) |
+|---|---|---|---|
+| Mean 3 cm | `dam_ref` (3 cm) | `mix_d3cm` (0.5, 2, 8 cm; 0.35, 0.40, 0.25) | even the coarsest 8 cm moves |
+| Mean 10 cm | `dam_d10cm` (10 cm) | `mix_d10cm` (1, 5, 40 cm; 0.50, 0.30, 0.20; exchange-layer thickness 0.4 m, the coarsest grain size) | the 40 cm class does not move |
+
+The computations after the breach start from the state that the breach computations (60 minutes for the 3 cm
+pair, 90 minutes for the 10 cm pair) save at their end (`f_state_save = 1`, read with `f_state_restore = 2`),
+and keep the main-river discharge of 40 m³/s running for 3 hours. There are two configurations.
+`after_one_d3cm`, `after_mix_d3cm`, `after_one` and `after_mix` run without the debris-flow model and the
+slope-stability test (bed load and angle-of-repose avalanching only; the sediment still carried by the flow is
+laid on the bed in place when the state is restored). `after_one_debris` and `after_mix_debris` continue with
+the same configuration as the breach computation.
+
+![Graded dam](figs/mixed.png)
+
+(a) Discharge just below the dam (two pairs). (b) Long profile of the thalweg of the main valley (the lowest
+point at each x) for the 10 cm pair. Dashed: end of the breach computation (90 min); solid: 3 hours later (bed
+load only). Grey: bedrock elevation of the thalweg cells. (c) Surface mean grain size of the deposit under the
+flow (`mix_d10cm` and its continuations; the grey dotted line is the mean of the material). (d) Height of the breach channel after the breach (the highest point
+of the thalweg, above the original bed). Solid: bed load only; dotted: debris-flow laws kept on.
+
+| Breach | Peak discharge (m³/s) | Time of peak (min) | Rise (min) | Height of the breach channel at the end (m) | Lake level at the end (m) |
+|---|---|---|---|---|---|
+| `dam_ref` (3 cm) | 396 | 27 | 10.0 | 5.2 | 59.6 |
+| `mix_d3cm` (0.5, 2, 8 cm) | 393 | 27 | 10.0 | 4.9 | 59.6 |
+| `dam_d10cm` (10 cm) | 194 | 60 | 34.5 | 6.5 | 60.9 |
+| `mix_d10cm` (1, 5, 40 cm) | 197 | 57 | 31.0 | 6.5 | 61.2 |
+
+| The 3 hours after the breach | Height of the breach channel (m) | Lake level (m) | Loss of deposit at the dam site (x = 800–1,100 m) (%) | Surface mean grain size of the deposit under the flow at the dam site (cm) |
+|---|---|---|---|---|
+| `after_one_d3cm` (3 cm, bed load only) | 5.20 → 3.50 | 59.58 → 57.68 | 6.2 | 3 (uniform) |
+| `after_mix_d3cm` (0.5, 2, 8 cm, bed load only) | 4.91 → 3.50 | 59.56 → 57.91 | 5.5 | 3.3 → 3.9 (maximum 6.3) |
+| `after_one` (10 cm, bed load only) | 6.45 → 4.74 | 60.87 → 59.16 | 1.1 | 10 (uniform) |
+| `after_mix` (1, 5, 40 cm, bed load only) | 6.52 → 6.46 | 61.22 → 60.47 | 1.0 | 11.3 → 13.1 (maximum 33.5) |
+| `after_one_debris` (10 cm, debris-flow laws kept on) | 6.45 → 4.67 | 60.87 → 58.94 | 5.9 | 10 (uniform) |
+| `after_mix_debris` (1, 5, 40 cm, debris-flow laws kept on) | 6.52 → 5.64 | 61.22 → 60.04 | 5.3 | 11.3 → 11.1 (maximum 29.9) |
+
+- **The breach discharge does not change with the grading.** In both pairs the peak agrees with that of the
+  single size with the same mean grain size within 2 % (396 and 393, 194 and 197 m³/s). During the breach every
+  size class moves, and in addition the erosion by the debris-flow laws and the fluidisation and failure of the
+  bed and walls of the breach channel do not select grain sizes, so coarse grains have no time to stay on the
+  surface. The rate of erosion is set by the representative grain size (for single sizes of 1, 3 and 10 cm the
+  peak is 426, 396 and 194 m³/s; "Conditions compared in the computation" above). The inputs that affect the
+  breach discharge are the representative grain size `db_d50` and the mean of the size classes.
+- **After the breach, the outcome depends on whether the coarsest class moves.** In the flow through the
+  breach channel (40 m³/s in a channel one cell wide; depth 1.0 to 1.3 m, velocity 3 to 4 m/s) the dimensionless
+  shear stress is about 0.2 for 3 cm, 0.07 for 8 cm, 0.05 to 0.06 for 10 cm and 0.015 to 0.03 for 40 cm. Compared
+  with the critical value (0.05), 8 cm moves, 10 cm is slightly above the threshold and 40 cm does not move.
+  - In the 3 cm pair even the coarsest 8 cm moves, so the graded dam erodes like the single-size dam. In both
+    the breach channel falls to the bedrock bench (item below) in about 2 hours, and the loss of deposit at the
+    dam site is 5.5 % and 6.2 %. The surface mean grain size coarsens from 3.3 to 3.9 cm, but not enough to stop
+    the erosion.
+  - In the 10 cm pair the breach channel of the single-size dam falls by 1.7 m in 3 hours (6.45 → 4.74 m), and
+    the lake level also falls by 1.7 m. In the dam of 1, 5 and 40 cm the finer classes are carried away first
+    and the surface just downstream of the breach channel becomes covered by the 40 cm gravel (surface mean
+    grain size 20 to 33 cm, fraction of the 40 cm class 0.5 to 0.8). It almost stops after falling by 0.3 to
+    1.0 m, and the breach channel stays at 6.5 m. The lake level after 3 hours is 60.47 m, 1.3 m higher than
+    with the single size (59.16 m; the difference at the end of the breach computations is 0.35 m).
+- **With the debris-flow laws kept on, the armour is not preserved.** Even for the same dam of 1, 5 and 40 cm,
+  continuing with the same configuration as the breach computation lowers the breach channel by 0.88 m in
+  3 hours (0.06 m with bed load only; 1.77 m for the single size of 10 cm). The erosion by the debris-flow laws
+  removes the surface without selecting grain sizes and carries the coarse gravel with it (the fractions by
+  class of the sediment that left through the downstream end as debris flow are 0.51, 0.29, 0.20, the same as
+  the material). For the single size of 10 cm, too, the loss of deposit at the dam site is 5.9 % against 1.1 %
+  with bed load only. The flow after the breach is a dilute flow with a mean sediment concentration of 0.2 to
+  0.3 %. Whether it erodes by the debris-flow laws as well or by bed load only is a setting chosen by the
+  user. To look at the bed change after the breach, save the state when the breach flood has passed and
+  restore it into a configuration without the debris-flow model (there is no mechanism that switches the laws
+  off automatically when the flow is no longer a debris flow).
+- **The breach channel forms at the foot of the valley wall, and stops falling when its bed reaches the
+  bedrock.** The breach channel of this dam is a groove one cell (10 m) wide along the foot of the valley wall
+  (mainly on the north side; in the middle of the valley floor a deposit 4 to 13 m thick remains untouched by
+  the water). The cells of the groove lie on a bedrock bench 3.5 m above the valley floor (grey in panel (b)),
+  and the groove cannot fall below the bedrock. This is why the breach channel of the 3 cm pair stops at
+  3.50 m. The height of the dam that remains after the breach depends, besides the grading, on the cross-section
+  of the valley and on the grid spacing (the valley wall becomes steps as wide as the grid spacing).
+- **Where the sediment goes**: the fractions by class of the bed load that left through the downstream end in
+  the breach computations are 0.39, 0.43, 0.17 for `mix_d3cm` (material 0.35, 0.40, 0.25) and 0.67, 0.32, 0.01
+  for `mix_d10cm` (material 0.50, 0.30, 0.20), shifted to the fine side. The 40 cm class hardly leaves the
+  domain as bed load (its fraction in what left as debris flow is 0.06).
+- **Not represented**: grain-size sorting inside the flow (large stones gathering at the front of a debris
+  flow), the effect of fine particles being suspended and raising the concentration of the flow, and the
+  effect of coarse grains remaining and limiting the erosion by the debris-flow laws are not part of this
+  combination. The exchange-layer thickness `bmix_la` sets how much erosion is needed before the surface
+  coarsens (with this setting, about 1.2 m of erosion is needed for the fraction of the 40 cm class to grow
+  from 0.2 to 0.8). Choose it from the measured grading and the thickness of the surface gravel layer.
+
 ## What this model cannot represent (differences from the real phenomena)
 
-- **Range of grain sizes**: The sediment has a single grain size. The material of real natural dams is
-  widely graded: fine grains are suspended and carried at high concentrations, and coarse grains stay
-  behind and cover the bed (armouring), which slows the erosion. The mixed-size bed of ENCflow
+- **Range of grain sizes**: The sediment of the chain cases and of most cases of the series has a single
+  grain size. The material of real natural dams is widely graded: fine grains are suspended and carried at
+  high concentrations, and coarse grains stay behind and cover the bed (armouring), which slows the erosion.
+  The mixed-size bed of ENCflow
   (`f_bedmix`; [mixed grain sizes](../../../docs/en/users_guide/geomorph.md#mixed-grain-sizes-f_bedmix))
   can be combined with the debris flow model (`f_debris`) that carries the collapse, the debris flow and
   the erosion of the dam in this example; it handles the range of grain sizes of bed load, armouring and
-  the composition of where the sediment ends up. The debris-flow formulas, however, stay single-size with
-  the representative size `db_d50`, and giving a width of the grain-size distribution at the same mean
-  grain size leaves the peak discharge of the breach almost unchanged (396 → 393 m³/s). The width matters
-  at the stage where what remains of the dam body and the deposit downstream are coarsened by the flow of
-  water after the breach. The effect of fine grains being suspended and raising the concentration is not
-  represented ([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
+  the composition of where the sediment ends up ("A graded dam and the coarsening after the breach" above).
+  The debris-flow formulas, however, stay single-size with the representative size `db_d50`, and giving a
+  width of the grain-size distribution at the same mean grain size does not change the peak discharge of the
+  breach (396 and 393, 194 and 197 m³/s). The width matters at the bed-load stage after the breach, when the
+  coarsest class does not move. While the debris flow model is active, armour does not limit the erosion.
+  The effect of fine grains being suspended and raising the concentration, and grain-size sorting inside the
+  flow, are not represented
+  ([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
 - **Sediment transport on gentle reaches**: The Takahashi & Nakagawa law (bedload-like collective flow) and
   a bed-load formula are added together. There is no formula connecting the two regimes, and on slopes of
   0.03–0.14 some transport is counted twice. The choice of the laws changes the peak discharge by a factor
@@ -696,7 +818,9 @@ width).
   are values with four cases running side by side. The 32 cases of `make run` take about 17 hours in total and
   the 14 cases of `make perturb` (six base cases, and five 10 m and three 5 m cases of the pre-built-dam series)
   about 13 hours; run four at a time with one thread each, they take a little over 4 hours and a little over
-  3 hours respectively. The output of all cases is about 5 GB (remove it with `make clean`).
+  3 hours respectively. The 10 cases of `make mixed` take about 5.5 hours in total (10 to 25 minutes each
+  for the four breach runs and 28 to 58 minutes each for the six runs after the breach). The output of all cases
+  is about 5 GB (remove it with `make clean`).
 - **Reproducibility of the numbers**: The numbers of the chain cases from the overtopping onward (peak discharge,
   damage to houses) change even when only the sixth digit of the inflow is changed (40 → 40.0001 m³/s changes the
   peak from 470 to 464 m³/s; the 7 runs spread by 7 %; "Spread of the results"). A different machine or compiler
@@ -728,6 +852,10 @@ width).
   `SFP`, and the thresholds of house destruction `bd_fcrit`, `bd_fcrit2`.
 - **Countermeasure**: the section `CULV_B`, `CULV_D` and the invert height `CULV_RISE` of the drain (when it
   is made smaller, it only delays the overtopping instead of preventing it).
+- **Range of grain sizes**: `MIX3` and `MIX10` in `make_init.py` (grain sizes, fractions and exchange-layer
+  thickness of the size classes) and the length of the computation after the breach `T_AFTER`. Changing the
+  coarsest class between a size that moves and one that does not move in the flow after the breach shows
+  where the breach channel starts to be preserved.
 - **Dam shape and breach**: adding `dam = (height, crest length, upstream face slope, downstream face
   slope)` to `GEOMS` in `make_init.py` adds computations with a pre-built dam.
 
