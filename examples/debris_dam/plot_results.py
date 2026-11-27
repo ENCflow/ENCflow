@@ -12,8 +12,10 @@
   figs/formation.png  堤体のできかたの比較(間隙水の扱い・斜面安定判定の選択子・格子間隔・判定する深さ)
   figs/breach.png     堤体をはじめから置く系列の流量(湛水量・堤体の形・粒径・流入量・下流の勾配と格子・式)
   figs/breach_sum.png 同じ系列のピーク流量と立ち上がりの時間、経験式との比較
+  figs/mixed.png      粒度の幅を持つ堤体(混合粒径と土石流の併用)の決壊と、決壊のあとの 6 時間(掃流砂だけ)
 数表(標準出力): 各ケースの指標。README の表はここから写す。
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。計算結果のないケースは飛ばす。
+引数 mixed で、mixed.png とその数表だけを作る(make mixed の 4 ケースだけを計算したとき)。
 """
 import os
 import sys
@@ -27,6 +29,7 @@ from matplotlib.colors import LightSource, ListedColormap
 import make_init as M
 
 EN = "en" in sys.argv[1:]
+ONLY_MIXED = "mixed" in sys.argv[1:]
 
 
 def T(ja, en):
@@ -67,6 +70,11 @@ LAB = {   # ケースの呼び名
     "dam_dx5d3": ("5 m 格子、slide_dmax = 3 m のまま", "5 m grid, slide_dmax kept at 3 m"),
     "dam_tilt": ("天端が傾いた堤体(支流の側が高い)", "tilted crest (higher on the tributary side)"),
     "dam_tilt_dx5": ("天端が傾いた堤体、5 m 格子", "tilted crest, 5 m grid"),
+    "mix_breach": ("粒度の幅を持つ堤体(0.5・2・8 cm)", "graded dam (0.5, 2, 8 cm)"),
+    "mix_after": ("粒度の幅、掃流砂だけ", "graded, bed load only"),
+    "one_after": ("単一粒径、掃流砂だけ", "single size, bed load only"),
+    "mix_after_debris": ("粒度の幅、土石流の式を有効にしたまま", "graded, debris-flow laws kept on"),
+    "one_after_debris": ("単一粒径、土石流の式を有効にしたまま", "single size, debris-flow laws kept on"),
 }
 
 
@@ -820,6 +828,111 @@ def fig_breach_sum(dams, mets, base=None):
 
 
 # ---------------------------------------------------------------- 数表
+def thalweg_dm(c, k):
+    """本川の谷筋(各 x の最低点)の表層の平均粒径 (m)(混合粒径のケース)。土層のない所は NaN。"""
+    z = c.frame("Z", k)
+    band = (c.y > -(M.WG / 2 + 30.0)) & (c.y < M.WG / 2 + 30.0 + M.basin_north(c.x, c.g["wb"]))
+    j = np.where(band, z, 1.0e9).argmin(axis=0)
+    i = np.arange(c.nx)
+    dm = c.frame("Dm", k)[j, i]
+    sd = c.frame("Sd", k)[j, i]
+    return np.where(sd > 0.01, dm, np.nan)
+
+
+def after_series(c):
+    """決壊のあとの計算の時系列: 時刻 (時間)、残った堤体の高さ (m)、本川の堆積の体積 (m3。かさ。元の河床より上)。"""
+    area = c.dx * c.dx
+    main = c.y < M.WG / 2 + 30.0 + M.basin_north(c.x, c.g["wb"])
+    out = []
+    for k, t in c.frames:
+        z = c.frame("Z", k)
+        dz = z - c.z0
+        out.append((t / 3600.0, c.dam(z)[2], dz[main & (dz > 0)].sum() * area))
+    return np.array(out)
+
+
+def fig_mixed(done, mets):
+    """粒度の幅を持つ堤体: 決壊のハイドログラフ(単一粒径と同じ)と、決壊のあとの 6 時間(掃流砂だけ)。"""
+    one, mix = done["dam_ref"], done["mix_breach"]
+    fig, axes = plt.subplots(2, 2, figsize=(13.0, 8.6), gridspec_kw=dict(hspace=0.3, wspace=0.22))
+    ax = axes[0, 0]
+    for c, col, lw in ((one, "k", 2.4), (mix, "#c0392b", 1.3)):
+        t, q2, q4, lake = c.hydro()
+        ax.plot(t, q2, color=col, lw=lw, label=lab(c.name) + T("(ピーク %.0f m³/s)", " (peak %.0f m³/s)") % mets[c.name]["qpk"])
+    ax.set_xlim(0, 60)
+    ax.set_xlabel(T("時刻 (分)", "time (min)"))
+    ax.set_ylabel(T("堤体の直下の流量 (m³/s)", "discharge just below the dam (m³/s)"))
+    ax.set_title(T("(a) 決壊のハイドログラフ(土石流 + 掃流砂)", "(a) Breach hydrograph (debris flow + bed load)"), fontsize=10, loc="left")
+    ax.legend(fontsize=8)
+    ax.grid(alpha=0.3)
+    after = [(n, done[n]) for n in ("one_after", "mix_after") if n in done]
+    xs = one.xc
+    seg = (xs > 700.0) & (xs < 1700.0)
+    prof0 = one.thalweg(one.z0)
+    ax = axes[0, 1]
+    k60 = one.nearest(TDAM)[0]
+    ax.plot(xs[seg], (one.thalweg(one.frame("Z", k60)) - prof0)[seg], color="k", lw=1.2, ls="--", label=T("単一粒径、決壊の 60 分後", "single size, 60 min after the start"))
+    ax.plot(xs[seg], (mix.thalweg(mix.frame("Z", mix.nearest(TDAM)[0])) - prof0)[seg], color="#c0392b", lw=1.2, ls="--",
+            label=T("粒度の幅、決壊の 60 分後", "graded, 60 min after the start"))
+    for (n, c), col in zip(after, ("k", "#c0392b")):
+        ax.plot(xs[seg], (c.thalweg(c.frame("Z", c.frames[-1][0])) - prof0)[seg], color=col, lw=1.8,
+                label=T("同、そのあと %g 時間", "same, %g h later") % (c.frames[-1][1] / 3600.0))
+    ax.set_xlabel("x (m)")
+    ax.set_ylabel(T("元の河床からの高さ (m)", "height above the original bed (m)"))
+    ax.set_title(T("(b) 本川の谷筋の縦断(残った堤体と下流の堆積)", "(b) Long profile of the main valley (remaining dam and deposit downstream)"), fontsize=10, loc="left")
+    ax.legend(fontsize=8)
+    ax.grid(alpha=0.3)
+    ax = axes[1, 0]
+    ax.plot(xs[seg], thalweg_dm(mix, mix.nearest(TDAM)[0])[seg] * 100, color="#c0392b", lw=1.2, ls="--", label=T("決壊の 60 分後", "60 min after the start"))
+    if "mix_after" in done:
+        c = done["mix_after"]
+        for hh, lw in ((1.0, 1.0), (c.frames[-1][1] / 3600.0, 1.8)):
+            ax.plot(xs[seg], thalweg_dm(c, c.nearest(hh * 60.0)[0])[seg] * 100, color="#c0392b", lw=lw, label=T("そのあと %g 時間", "%g h later") % hh)
+    ax.axhline(100 * sum(d * f for d, f in zip(M.MIX_D, M.MIX_F)), color="#999999", lw=0.8, ls=":")
+    ax.set_xlabel("x (m)")
+    ax.set_ylabel(T("谷筋の表層の平均粒径 (cm)", "surface mean grain size along the valley (cm)"))
+    ax.set_title(T("(c) 表層の平均粒径(粒度の幅を持つ堤体。点線は材料の平均)", "(c) Surface mean grain size (graded dam; dots: mean of the material)"), fontsize=10, loc="left")
+    ax.legend(fontsize=8)
+    ax.grid(alpha=0.3)
+    ax = axes[1, 1]
+    for n, col, ls, lw in (("one_after", "k", "-", 1.8), ("mix_after", "#c0392b", "-", 1.8),
+                           ("one_after_debris", "k", ":", 1.4), ("mix_after_debris", "#c0392b", ":", 1.4)):
+        if n in done:
+            s = after_series(done[n])
+            ax.plot(s[:, 0], s[:, 1], color=col, ls=ls, lw=lw, label=lab(n))
+    ax.set_xlabel(T("決壊の計算の終わりからの時間 (h)", "time after the end of the breach run (h)"))
+    ax.set_ylabel(T("残った堤体の高さ (m)", "height of the remaining dam (m)"))
+    ax.set_title(T("(d) 決壊のあとの堤体の高さ(流量 40 m³/s、掃流砂だけ)", "(d) Dam height after the breach (40 m³/s, bed load only)"), fontsize=10, loc="left")
+    ax.legend(fontsize=8)
+    ax.grid(alpha=0.3)
+    fig.savefig(f"{FIGDIR}/mixed.png", dpi=130, bbox_inches="tight")
+    plt.close(fig)
+
+
+def table_mixed(done, mets):
+    print("\n粒度の幅を持つ堤体(mix_breach)と単一粒径(dam_ref)の決壊、決壊のあとの計算(掃流砂だけ)")
+    print("ケース, ピーク (m³/s), ピークの時刻 (分), 60 分後の堤体の高さ (m), 60 分後の湖の水位 (m)")
+    for n in ("dam_ref", "mix_breach"):
+        m = mets[n]
+        print(f"{n}, {m['qpk']:.1f}, {m['tpk']:.1f}, {m['hdam1']:.2f}, {m['lake_end']:.2f}")
+    print("ケース, 時刻 (h), 残った堤体の高さ (m), 本川の堆積 (m³。かさ)")
+    for n in M.AFTER:
+        if n not in done:
+            continue
+        s = after_series(done[n])
+        for hh in (0.0, 1.0, 2.0, 4.0, 6.0):
+            r = s[np.argmin(np.abs(s[:, 0] - hh))]
+            print(f"{n}, {r[0]:.1f}, {r[1]:.2f}, {r[2]:.0f}")
+    for n in ("mix_after", "mix_after_debris"):
+        if n not in done:
+            continue
+        c = done[n]
+        seg = (c.xc > 800.0) & (c.xc < 1000.0)
+        for hh in (0.0, 1.0, 6.0):
+            dm = thalweg_dm(c, c.nearest(hh * 60.0)[0])
+            print(f"{n} {hh:g} h: 堤体(x = 800〜1000 m)の谷筋の表層の平均粒径 {np.nanmean(dm[seg]) * 100:.2f} cm、最大 {np.nanmax(dm[seg]) * 100:.2f} cm")
+
+
 def table_chain(cases, mets, tfs):
     print("\n| ケース | 崩壊 (分) | 堤体の高さ (m) | 湛水量 (万 m³) | 越流の開始 (分) | ピーク流量 直下 / 集落 (m³/s) | 流入との比 | 立ち上がり (分) | 10 分間の水位低下の最大 (m) | 残った堤体 (m) | 家屋: 破壊率 ≥ 0.5 / ≥ 0.05 / 平均 | 列ごとの破壊率の平均(岸から) |")
     print("|---|---|---|---|---|---|---|---|---|---|---|---|")
@@ -869,6 +982,15 @@ def table_formation(cases, tmin=28.0):
 
 
 def main():
+    if ONLY_MIXED:
+        done = {n: c for n, c in ((n, Case(n)) for n in M.MIXED) if c.ok}
+        if "dam_ref" in done and "mix_breach" in done:
+            mets = {n: metrics(c) for n, c in done.items()}
+            fig_mixed(done, mets)
+            table_mixed(done, mets)
+        else:
+            print("dam_ref と mix_breach の計算結果がありません(make mixed)")
+        return
     fig_setup()
     cases = {n: Case(n) for n in M.CASES}
     done = {n: c for n, c in cases.items() if c.ok}
@@ -905,6 +1027,9 @@ def main():
     if len(form) > 1:
         fig_formation(form)
         table_formation(form)
+    if "dam_ref" in done and "mix_breach" in done:
+        fig_mixed(done, mets)
+        table_mixed(done, mets)
     dams = {n: done[n] for n in M.DAMS if n in done}
     if dams:
         fig_breach(dams)
