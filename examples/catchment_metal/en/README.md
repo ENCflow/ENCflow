@@ -458,7 +458,13 @@ day 180, 0.9–2.1 kg is in the surface water. The table is printed by
   ([parallel execution](../../../docs/en/users_guide/parallel.md)).
 - **Channels**: prepare the channel network (fn_rw) and the river widths
   (fn_width) together with the terrain. Rivers narrower than the grid are
-  represented by the subgrid channel width (8–15 m in this example).
+  represented by the subgrid channel width (8–15 m in this example). Channel
+  cells have no land surface for the land part of the cell
+  ([Channels](../../../docs/en/users_guide/channel.md#subgrid-channel-width)),
+  so with rivers 8–15 m wide on a 250 m grid, 94–97 % of the area of a
+  channel cell is not computed as land surface (12.6 km² in this example,
+  6 % of the land), and rain falling there goes straight into the channel.
+  To look at flooding beside the rivers, refine the grid in that reach.
 - **Tanks**: tanks large enough to be resolved by the grid are burned into
   the terrain with their bunds and spillways, as in this example. With a
   grid fine enough for the water area of each tank to cover at least one

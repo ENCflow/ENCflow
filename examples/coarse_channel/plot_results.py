@@ -733,6 +733,69 @@ def fig_occ_sens():
     save(fig, "occ_sens.png")
 
 
+# ------------------------------------------------------------------ 下限を上げる作り方(氾濫原の面積と河道の通水)
+OBL = ("a11", "a18", "a27", "a34")
+FMIN_RULES = [("all", 5), ("all_c15", 15), ("all_c30", 30), ("all_c50", 50)]
+FMIN_SHOW = (120.0, 200.0, 300.0, 600.0)
+FMIN_COL = {120.0: "#f47230", 200.0: "#257de0", 300.0: "#00b894", 600.0: "#6a4ce2"}
+
+
+def fmin_values():
+    """fmin 系列と、同じ名前の occ 系列のケース(下限 5 % の all、閾値だけの t50)の結果"""
+    val = A.results("occ")
+    val.update(A.results("fmin"))
+    return val
+
+
+def fmin_area(angs, b, rep):
+    """向き angs・ずれ 3 つの面積の勘定の平均(fp_bias はセル幅、ch_bias は割合)と、fp_bias の最小・最大"""
+    a = [A.occ_area(an, b, o, rep) for an in angs for o in mc.OCC_OFF]
+    fb = [x["fp_bias"] for x in a]
+    return float(np.mean(fb)), float(min(fb)), float(max(fb)), float(np.mean([x["ch_bias"] for x in a]))
+
+
+def fig_fmin():
+    val = fmin_values()
+    if not any(n.endswith("_c30") for n in val):
+        return
+    fig, axs = plt.subplots(1, 2, figsize=(10.5, 4.3))
+    xs = np.array([c for _, c in FMIN_RULES], dtype=float)
+    for k, b in enumerate(FMIN_SHOW):
+        col = FMIN_COL[b]
+        sh = 1.2 * (k - (len(FMIN_SHOW) - 1) / 2)
+        st = np.array([occ_stats(val, OBL, b, r) for r, _ in FMIN_RULES])
+        lab = T(f"川幅 {b / mc.DX:g} セル", f"{b / mc.DX:g} cells wide")
+        axs[0].plot(xs + sh, st[:, 0], "-", color=col, lw=1.4, zorder=2)
+        axs[0].errorbar(xs + sh, st[:, 0], yerr=[st[:, 0] - st[:, 1], st[:, 2] - st[:, 0]], fmt="o", color=col, ms=6,
+                        mec="white", mew=1.0, elinewidth=1.4, capsize=0, label=lab, zorder=3)
+        md, lo, hi = occ_stats(val, OBL, b, "t50")
+        axs[0].errorbar([58.0 + sh], [md], yerr=[[md - lo], [hi - md]], fmt="o", color=col, mfc="white", ms=6, mew=1.4,
+                        elinewidth=1.0, capsize=0, zorder=3)
+        ar = np.array([fmin_area(OBL, b, r)[:3] for r, _ in FMIN_RULES])
+        axs[1].plot(xs + sh, ar[:, 0], "-", color=col, lw=1.4, zorder=2)
+        axs[1].errorbar(xs + sh, ar[:, 0], yerr=[ar[:, 0] - ar[:, 1], ar[:, 2] - ar[:, 0]], fmt="o", color=col, ms=6,
+                        mec="white", mew=1.0, elinewidth=1.4, capsize=0, label=lab, zorder=3)
+    band(axs[0])
+    axs[0].set_xticks(list(xs) + [58.0])
+    axs[0].set_xticklabels([f"{c:g} %" for c in xs] + [T("閾値\n50 %", "threshold\n50 %")])
+    axs[0].set_xlim(0, 65)
+    axs[1].axhline(0.0, color=AXIS, lw=1.0, zorder=1)
+    axs[1].set_xticks(xs)
+    axs[1].set_xticklabels([f"{c:g} %" for c in xs])
+    axs[1].set_xlim(0, 57)
+    axs[0].set_ylim(0.35, 1.12)
+    style(axs[0], T("河道にする占有率の下限(幅は占有率 × セル幅)", "cutoff of the covered fraction (width = fraction × cell)"), YLAB)
+    style(axs[1], T("河道にする占有率の下限", "cutoff of the covered fraction"),
+          T("氾濫原の幅の偏り(セル幅。両岸の合計)", "error in floodplain width (cells, both banks)"))
+    title(axs[0], T("(a) 河道の通水(斜めの川 11.3〜33.7°)", "(a) Conveyance of the channel (oblique, 11.3–33.7°)"))
+    title(axs[1], T("(b) 氾濫原の面積(同じケース。閾値 50 % は下限 50 % と同じ)",
+                    "(b) Floodplain area (same cases; threshold 50 % = cutoff 50 %)"))
+    axs[0].legend(frameon=False, fontsize=7.8, loc="lower left")
+    axs[0].text(58.0, 1.085, T("白: 解像", "open: resolved"), fontsize=7.5, color=INK2, ha="center")
+    fig.subplots_adjust(left=0.07, right=0.99, top=0.9, bottom=0.17, wspace=0.22)
+    save(fig, "fmin.png")
+
+
 # ------------------------------------------------------------------ 数表
 def tables():
     vo, va, vw, vm, vb, vt = (A.results(s) for s in ("oblique", "axis", "wide", "mask", "bend", "wet"))
@@ -782,7 +845,9 @@ def tables():
         print()
     if vb:
         print(T("== 屈曲(上流の直線区間の背水 cm)", "== Bends (backwater upstream, cm)"))
-        reps = ("lo", "k1", "k2", "t50", "t50s", "all", "t50s_c0", "all_c0", "t50s_c15", "all_c15", "fine")
+        reps = ("lo", "k1", "k2", "t50", "t50s", "all", "t50s_c0", "all_c0", "t50s_c15", "all_c15", "all_c30",
+                "all_c50", "fine")
+        vb.update({k: v for k, v in A.results("fmin").items() if k.startswith("bend_")})
         print(T("| 半径 | ", "| Radius | ") + " | ".join(REPL.get(r, r) for r in reps) + " |")
         print("|---|" + "---:|" * len(reps))
         for r in mc.BEND_R:
@@ -822,6 +887,40 @@ def tables():
             names = open(skipped).read().split()
             print(T(f"  河道マスクが途切れて作らなかったケース: {len(names)}", f"  cases not made (mask broken): {len(names)}"))
         print()
+    vf = A.results("fmin")
+    if vf:
+        val = fmin_values()
+        reps = [r for r, _ in FMIN_RULES] + ["t50"]
+        labs = [f"{c} %" for _, c in FMIN_RULES] + [T("閾値 50 % を解像", "threshold 50 %, resolved")]
+        print(T("== 河道にする占有率の下限(通水の幅 ÷ 川幅。中央値 [最小〜最大]。ずれ 3 つ、斜めの川は向き 4 つも込み)",
+                "== Cutoff of the covered fraction (conveyance width ÷ width; median [min–max] over 3 offsets, and the 4 "
+                "angles for oblique rivers)"))
+        print(T("| 向き | B/Δx | ", "| Angle | B/Δx | ") + " | ".join(labs) + " |")
+        print("|---|---:|" + "---:|" * len(reps))
+        for angs, _ in OCC_CLASSES:
+            lab = {"a00": "0°", "a45": "45°"}.get(angs[0], "11.3〜33.7°" if not EN else "11.3–33.7°")
+            for b in mc.FMIN_W:
+                cells = []
+                for rep in reps:
+                    md, lo, hi = occ_stats(val, angs, b, rep)
+                    cells.append("—" if not np.isfinite(md) else (f"{md:.2f}" if abs(hi - lo) < 0.005 else
+                                                                   f"{md:.2f} [{lo:.2f}〜{hi:.2f}]" if not EN else
+                                                                   f"{md:.2f} [{lo:.2f}–{hi:.2f}]"))
+                print(f"| {lab} | {b / mc.DX:g} | " + " | ".join(cells) + " |")
+        print()
+        print(T("== 面積の勘定(斜めの川 11.3〜33.7°、ずれ 3 つの平均。氾濫原の幅の偏りはセル幅で両岸の合計、"
+                "河道の面積は表した ÷ 本当 − 1)",
+                "== Area accounting (oblique 11.3–33.7°, mean over 3 offsets; floodplain width error in cells, both "
+                "banks; channel area = represented ÷ true − 1)"))
+        print("| B/Δx | " + " | ".join(labs) + " |")
+        print("|---:|" + "---:|" * len(reps))
+        for b in mc.FMIN_W:
+            cells = []
+            for rep in reps:
+                fb, _, _, cb = fmin_area(OBL, b, rep)
+                cells.append(f"{fb:+.2f} / {100 * cb:+.0f} %")
+            print(f"| {b / mc.DX:g} | " + " | ".join(cells) + " |")
+        print()
     if vt:
         print(T("== 河道の脇の水", "== Water beside the channel"))
         for name, v in vt.items():
@@ -843,6 +942,7 @@ def main():
     fig_occ_reps()
     fig_occ()
     fig_occ_sens()
+    fig_fmin()
     print()
     tables()
 

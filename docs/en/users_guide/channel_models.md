@@ -104,7 +104,11 @@ cell size, so a single formulation solves from the thin uppermost streams
 to the large downstream river (developer.md §18). The inundation area is
 resolved at cell granularity; where flooding inside the channel cell
 itself must be resolved, make the cell size finer than the river width and
-move to a resolved channel.
+move to a resolved channel. How the missing landside inside channel cells
+affects the hydraulics of the floodplain (a narrower floodplain along the
+river, overflow going straight into the next cell, the ground elevation
+beside the river and the treatment of rain), with guides to its size, is
+summed up in [Channels](channel.md#subgrid-channel-width).
 
 - **Natural banks and dynamic opening correction.** Without a levee the
   exchange between the channel and the hillslopes stays the ordinary
