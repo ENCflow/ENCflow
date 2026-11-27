@@ -37,7 +37,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [tsunami_meander/](tsunami_meander/) | 蛇行水路を遡る段波の水理実験(小林ら 2019・2021)を静水圧と非静水圧で計算し、岸沿いの波高を計測と比べる | 領域マスク(格子の階段の側壁)、初期水位の分布 fn_hinit、非静水圧補正 f_nonhydrostatic、プローブ |
 | [levee_breach/](levee_breach/) | 洪水が堤防の低い所を越水して破堤し、堤内地の氾濫で家屋が押し流される過程と、二線堤の効果を見る | 規定底面運動 fn_bedmotion(破堤)、家屋破壊 fn_bldgdebris(流体力判定)、建物空隙率 fn_gv、河道の破堤(補足) |
 | [confluence_backwater/](confluence_backwater/) | 本川の背水で支川の低い堤防を越えて堤内地が浸水する過程を、出水の組み合わせと対策(かさ上げ・水門とポンプ)で比べる | 浅水流(解像した河道と堤防)、水門(カルバート)とポンプ、粗い格子の河道マスクの作り方 3 通り(河道マスク fn_rw・サブグリッド河道幅 fn_width・堤防の仮想壁面 fn_bank。補足) |
-| [coarse_channel/](coarse_channel/) | 粗い格子(Δx = 100 m)で川をセルのラスタで表すとき、河道のポリゴンや高解像度のマスクから占有率で河道マスクとサブグリッド河道の幅を作る作り方を中心に、川幅・格子に対する向き・屈曲・河道マスクの連結・河道の脇の水で通水がどれだけ変わるかを直線の等流で系統的に比べ、作り方の選び方をまとめる | 河道マスク fn_rw、サブグリッド河道幅 fn_width、堤防の仮想壁面 fn_bank、降雨 |
+| [coarse_channel/](coarse_channel/) | 粗い格子(Δx = 100 m)で川を表す河道マスクと河道幅の作り方を、川幅・向き・屈曲の通水で比べ、選び方をまとめる | 河道マスク fn_rw、サブグリッド河道幅 fn_width、堤防の仮想壁面 fn_bank、降雨 |
 | [estuary_barrage/](estuary_barrage/) | 感潮河川を遡上する塩水くさびと、河床から周辺の帯水層への塩水侵入に、河口堰の有無が与える影響を見る | 淡塩2層 fn_salt(地表の塩水層・地下の塩水 zone・交換の淡塩配分 f_salt_exch)、潮位、Green-Ampt、地下水の側方流、河床交換能 f_gwbed |
 | [nest_reflect/](nest_reflect/) | 比 3・5 の双方向ネスト格子の界面をガウス波が横切るときの誤差と反射率を、一様細格子と比べて確かめる | ネスティング fn_nest(docs/users_guide/nest.md) |
 | [tsunami_town/](tsunami_town/) | 津波で木造家屋が壊れ、瓦礫が内陸へ運ばれて積もり、引き波で海へ出る過程と、防潮堤かさ上げの効果を見る | 家屋破壊・瓦礫 fn_bldgdebris(浸水深判定・空隙率への帰還)、建物空隙率 fn_gv、潮位 fn_tide、流木 fn_driftwood(補足) |

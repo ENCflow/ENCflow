@@ -923,8 +923,8 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "e900d64116b741a02defd9cd1f59bcf20e0e9903e82ca4b3ea5eaedc050152b2",
-      "target_sha256": "9eaf08188bb051adff93bb54b567abc7ea002b994f376082f8b6c32bbf966228",
+      "source_sha256": "c1d6ab25f8fe5380a37da6f14ac9175bde74a57da3eae85a02ca8ba3d25db40f",
+      "target_sha256": "cc40e20df857fd5500829e71e80e70a0917f7079e82cd51108d760b54771cdb0",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
