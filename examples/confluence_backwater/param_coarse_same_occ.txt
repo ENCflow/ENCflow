@@ -1,10 +1,11 @@
 !======================================================================
-! confluence_backwater 補足: 同じ地区を Δx = 100 m の粗い格子で表す(ケース main: 本川だけの出水)
-!   本編の param_main.txt と同じ流量
-!   流域規模の計算での表し方: 本川(幅 200 m)は 2 セル前後の解像した河道、狭窄部は 1 セル、支川(幅 80 m)は
-!   1 セルのサブグリッド河道(fn_width = 80 m)。堤防は地形で表せないので、河道の堤防(仮想壁面)の天端を
-!   絶対標高で与える(fn_bank、f_bank_datum = 2)。地形の式と流量は本編と同じ。入力は make_coarse.py が
-!   data_coarse/ に作る
+! confluence_backwater 補足 1: 同じ地区を Δx = 100 m の粗い格子で表す(ケース same: 両方の出水(ピークが重なる)。河道マスクの作り方: 占有率のまま)
+!   本編の param.txt と同じ流量
+!   河道マスクは、本編の Δx = 20 m の河道マスクから 100 m のセルごとに本川が占める割合(占有率)を数えて作る
+!   (make_coarse.py)。占有率のまま: 占有率 5 % 以上のセルをすべて本川の河道にし、幅を占有率 × 100 m にする。
+!   支川(幅 80 m)は中心線の 1 列にし、幅 80 m を与える(fn_width)
+!   堤防は地形で表せないので、河道の堤防(仮想壁面)の天端を絶対標高で与える(fn_bank、f_bank_datum = 2)。
+!   地形の式と流量は本編と同じ。入力は make_coarse.py が data_coarse_occ/ に作る
 !======================================================================
 &list_sysparam
   f_gridsystem = 0
@@ -20,8 +21,8 @@
   fn_boundary = '-'
   fn_channel = '-'          ! 河道(サブグリッド河道幅・堤防の仮想壁面)
   fn_record = '-'
-  dir_data = 'data_coarse'
-  dir_result = 'result_coarse_main'
+  dir_data = 'data_coarse_occ'
+  dir_result = 'result_coarse_same_occ'
   f_out_h = 1
   f_out_hmax = 1
 /
@@ -52,19 +53,19 @@
 &list_channel
   fn_bank = 'bank.txt'      ! 堤防の天端(河道のセルに絶対標高。本川 = 河床 + 8.5 m、支川 = 河床 + 4.5 m)
   f_bank_datum = 2
-  fn_width = 'width.txt'    ! 河道幅(本川は 9999 = 解像扱い、支川は 80 m)
+  fn_width = 'width.txt'    ! 河道幅(9999 = 解像。それ以外はサブグリッド河道の幅)
 /
 
 &list_bound_stage
   fn_stage_cell(1) = 'cells_out.txt'
-  fn_stage_val(1) = 'stage_flood_base.txt'   ! 本編と同じ流量の等流水深(粗い格子の下流端の河床から)
+  fn_stage_val(1) = 'stage_flood_same.txt'   ! 本編と同じ流量の等流水深(粗い格子の下流端の河床から)
 /
 &list_bound_inflow
   fn_inflow_cell(1) = 'cells_main.txt'
   fn_inflow_val(1) = 'q_main_flood.txt'
   inflow_dist(1) = 2
   fn_inflow_cell(2) = 'cells_trib.txt'
-  fn_inflow_val(2) = 'q_trib_base.txt'
+  fn_inflow_val(2) = 'q_trib_same.txt'
   inflow_dist(2) = 2
 /
 

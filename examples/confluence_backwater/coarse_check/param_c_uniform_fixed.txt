@@ -1,7 +1,7 @@
 !======================================================================
-! confluence_backwater 補足 1 の切り分け: 直線の本川 + 狭窄部、粗い格子 Δx = 100 m。狭窄部は解像 1 セル + サブグリッド 1 セル。湾曲部の段 THICK = 0
+! confluence_backwater 補足 1 の切り分け: 直線の本川、粗い格子 Δx = 100 m。河道マスクは直したもの(格子の軸に沿う区間を解像 + 残り 1 セルに詰め直す)
 !   本川 2,800 m3/s の一定の流量を 4 h 流した定常。計算するのは河道だけ(あふれない)。
-!   入力は make_check.py が data_c_constr/ に作る。数表は python3 make_check.py table
+!   入力は make_check.py が data_c_uniform_fixed/ に作る。数表は python3 make_check.py table
 !======================================================================
 &list_sysparam
   f_gridsystem = 0
@@ -15,8 +15,8 @@
   fn_initial = '-'
   fn_boundary = '-'
   fn_channel = '-'
-  dir_data = 'data_c_constr'
-  dir_result = 'result_c_constr'
+  dir_data = 'data_c_uniform_fixed'
+  dir_result = 'result_c_uniform_fixed'
   f_out_h = 1
   f_out_e = 1
 /
