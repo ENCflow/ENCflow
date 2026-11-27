@@ -15,7 +15,7 @@
   figs/mixed.png      粒度の幅を持つ堤体(混合粒径と土石流の併用)の決壊と、決壊のあとの 3 時間
 数表(標準出力): 各ケースの指標。README の表はここから写す。
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。計算結果のないケースは飛ばす。
-引数 mixed で、mixed.png とその数表だけを作る(make mixed の 8 ケースだけを計算したとき)。
+引数 mixed で、mixed.png とその数表だけを作る(make mixed の 10 ケースだけを計算したとき)。
 """
 import os
 import sys
@@ -72,6 +72,8 @@ LAB = {   # ケースの呼び名
     "dam_tilt_dx5": ("天端が傾いた堤体、5 m 格子", "tilted crest, 5 m grid"),
     "mix_d3cm": ("粒度の幅(0.5・2・8 cm、平均 3 cm)", "graded (0.5, 2, 8 cm; mean 3 cm)"),
     "mix_d10cm": ("粒度の幅(1・5・40 cm、平均 10 cm)", "graded (1, 5, 40 cm; mean 10 cm)"),
+    "after_one_d3cm": ("単一粒径 3 cm、掃流砂だけ", "single size 3 cm, bed load only"),
+    "after_mix_d3cm": ("粒度の幅(0.5・2・8 cm)、掃流砂だけ", "graded (0.5, 2, 8 cm), bed load only"),
     "after_one": ("単一粒径 10 cm、掃流砂だけ", "single size 10 cm, bed load only"),
     "after_mix": ("粒度の幅(1・5・40 cm)、掃流砂だけ", "graded (1, 5, 40 cm), bed load only"),
     "after_one_debris": ("単一粒径 10 cm、土石流の式を有効にしたまま", "single size 10 cm, debris-flow laws kept on"),
@@ -946,7 +948,8 @@ def fig_mixed(done, mets):
     ax.grid(alpha=0.3)
     # (d) 決壊口の高さ
     ax = axes[1, 1]
-    for n, col, ls, lw in (("after_one", COL1, "-", 1.9), ("after_mix", COLM, "-", 1.9),
+    for n, col, ls, lw in (("after_one_d3cm", COL3[0], "-", 2.6), ("after_mix_d3cm", COL3[1], "-", 1.2),
+                           ("after_one", COL1, "-", 1.9), ("after_mix", COLM, "-", 1.9),
                            ("after_one_debris", COL1, ":", 1.6), ("after_mix_debris", COLM, ":", 1.6)):
         if n in done:
             s = after_series(done[n])
@@ -976,7 +979,7 @@ def table_mixed(done, mets):
                 seg = (c.xc >= x0) & (c.xc < x1)
                 print(f"{n} 計算の終わり: x = {x0:g}〜{x1:g} m の流れのかかる堆積の表層の平均粒径 {np.nanmean(dm[seg]):.2f} cm({np.nanmin(dm[seg]):.2f}〜{np.nanmax(dm[seg]):.2f})")
     print("決壊のあと。ケース, 時刻 (h), 決壊口の高さ (m), 堤体の跡の堆積 (m³。かさ), 下流の堆積 (m³), 堤体の跡の表層の平均粒径 (cm), 湖の水位 (m)")
-    for n in M.AFTER:
+    for n in M.AFTER3 + M.AFTER:
         if n not in done:
             continue
         c = done[n]
@@ -985,13 +988,13 @@ def table_mixed(done, mets):
         for hh in (0.0, 0.5, 1.0, 2.0, 3.0):
             r = s[np.argmin(np.abs(s[:, 0] - hh))]
             print(f"{n}, {r[0]:.1f}, {r[1]:.2f}, {r[2]:.0f}, {r[3]:.0f}, {r[4]:.1f}, {lake[np.argmin(np.abs(t - hh * 60.0))]:.2f}")
-        print(f"{n}: 決壊口の高さの低下 {s[0, 1] - s[-1, 1]:.2f} m、堤体の跡の堆積の減り {s[0, 2] - s[-1, 2]:.0f} m³")
+        print(f"{n}: 決壊口の高さの低下 {s[0, 1] - s[-1, 1]:.2f} m、堤体の跡の堆積の減り {s[0, 2] - s[-1, 2]:.0f} m³({(1.0 - s[-1, 2] / s[0, 2]) * 100:.1f} %)")
         if not np.isnan(s[-1, 4]):
             k = c.frames[-1][0]
             dm = c.frame("Dm", k)[wet_deposit(c, k) & (c.x >= MIX_FOOT[0]) & (c.x < MIX_FOOT[1]) & (np.abs(c.y) < M.WG / 2 + 30.0)] * 100.0
             print(f"{n}: 計算の終わりの、堤体の跡の流れのかかる堆積の表層の平均粒径 平均 {dm.mean():.1f} cm、最大 {dm.max():.1f} cm")
     print("系外へ出た固体 (m³)。ケース: 掃流砂 [粒径階ごと] / 土石流 [粒径階ごと]")
-    for n in ("mix_d3cm", "mix_d10cm") + M.AFTER:
+    for n in ("mix_d3cm", "mix_d10cm") + M.AFTER3 + M.AFTER:
         bed, deb = ledger_out(n)
         if bed or deb:
             tb, td = sum(bed), sum(deb)

@@ -3,8 +3,8 @@
 #   make quick    基本ケース・仮排水路と、堤体を置く系列の主な 4 ケースだけ計算する
 #   make dams     堤体をはじめから置く系列(決壊の条件の比較)の 20 ケースを計算する
 #   make run      32 ケースを計算する
-#   make mixed    粒度の幅を持つ堤体(混合粒径と土石流の併用)の決壊と、決壊のあとの 3 時間の 8 ケースを計算する
-#                 (比べる単一粒径の dam_ref・dam_d10cm と、make run に含まれない 6 ケース)
+#   make mixed    粒度の幅を持つ堤体(混合粒径と土石流の併用)の決壊と、決壊のあとの 3 時間の 10 ケースを計算する
+#                 (比べる単一粒径の dam_ref・dam_d10cm と、make run に含まれない 8 ケース)
 #   make perturb  結果の幅を見る 14 ケース(流入量だけを少し変える。基本ケース 6 本と、堤体を置く系列 8 本)を計算する
 #   make figs     図を描く(python3 plot_results.py と python3 plot_results.py en)
 #   make clean    リンクと生成物を削除する
@@ -42,7 +42,8 @@ dams: all
 perturb: all
 	@for c in $$(python3 make_init.py perturb); do $(MAKE) --no-print-directory result_$$c/Z9998.bil; done
 
-# 決壊のあとの 4 ケースは、決壊の 2 ケース(dam_d10cm・mix_d10cm)が終わりに書く保存(save_<ケース>/)を読む
+# 決壊のあとの 6 ケースは、決壊の 4 ケース(dam_ref・mix_d3cm・dam_d10cm・mix_d10cm)が終わりに書く保存
+# (save_<ケース>/)を読む
 mixed: all
 	@for c in $$(python3 make_init.py mixed); do $(MAKE) --no-print-directory result_$$c/Z9998.bil; done
 
