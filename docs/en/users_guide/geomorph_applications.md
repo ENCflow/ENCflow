@@ -396,9 +396,8 @@ that make the breach rapid).
     within about 0.3 times the grid spacing, since a larger value lets the fluidisation propagate to the
     neighbouring cells, but not shallower than the slip surface of the layer that is to fail; §4 of the
     [explanation](massflow.md)), `f_slide_wet = 1` stops the cascade at
-    steps, and `f_slide_noflow` skips the bed under flowing sediment (1 or 2; 2 judges the layer
-    under a thin film, and is the one to use when `slide_dmax` is shallower than the layer that is to
-    fail).
+    steps. `f_slide_noflow = 1`, which skips the bed under flowing sediment, is the default when the
+    stability test is used (the layer under a thin film is still judged).
   - Erosion by the overflow: a dam deposited by a debris flow is saturated, so the saturated-bed erosion
     formula (coefficient `db_delte`) acts. Use `f_dbimm = 1` for the equilibrium concentration on gentle
     slopes and bed load, `f_fluvial = 1`, for the transport on gentle reaches (effective-shear ratio
@@ -412,11 +411,11 @@ that make the breach rapid).
 - **What sets the speed of the breach**: the discharge in excess of the inflow is roughly "the rate at which
   the crest is lowered × the lake area" (the water balance of the lake). In the series of the example (a
   13 m high dam, inflow 40 m³/s),
-  raising the lake volume from 180,000 to 450,000 and 810,000 m³ gives peak discharges of 211, 397 and
-  641 m³/s (5 to 16 times the inflow); steepening the downstream face from 0.12 to 0.25 gives 1,078 m³/s
-  (27 times); coarsening the grains from 3 cm to 10 cm gives 197 m³/s with the peak after 60 instead of
-  27 minutes; and inflows of 20, 40 and 80 m³/s give peaks of 321, 397 and 505 m³/s. A dam deposited by a
-  debris flow that ran into the river (downstream face 0.10; peak 10 to 14 times the inflow) breaches
+  raising the lake volume from 180,000 to 450,000 and 810,000 m³ gives peak discharges of 210, 396 and
+  639 m³/s (5 to 16 times the inflow); steepening the downstream face from 0.12 to 0.25 gives 1,057 m³/s
+  (26 times); coarsening the grains from 3 cm to 10 cm gives 194 m³/s with the peak after 60 instead of
+  27 minutes; and inflows of 20, 40 and 80 m³/s give peaks of 329, 396 and 506 m³/s. A dam deposited by a
+  debris flow that ran into the river (downstream face 0.10; peak about 12 times the inflow) breaches
   more gently than a steep-faced dam.
   That the dam height and the stored volume matter, that coarse material makes the breach slow and that a
   larger inflow gives a larger peak agree with reports of cases, experiments and computations of natural
@@ -425,20 +424,22 @@ that make the breach rapid).
   - A single grain size. Suspension of fines and hyperconcentration, and armouring by the coarse grains
     left behind (which stops the erosion), are not represented.
   - The choice of the transport law on gentle reaches (with or without bed load, the effective-shear ratio,
-    `f_dbimm`) changes the peak discharge by more than a factor of 2 (2.4 in the example). The grain size is a
+    `f_dbimm`) changes the peak discharge by more than a factor of 2 (2.5 in the example). The grain size is a
     calibration quantity too. For the dam of the example, an erosion coefficient `db_delte` seven times
     smaller changes the peak by only a tenth (the breach is set by the amount of sediment the flow can
     carry). Use the results together with empirical formulas and records.
   - Only erosion by overtopping is represented. Progressive failure by seepage inside the dam (piping) is
     not, and sliding failure is limited to the cell-wise infinite-slope test.
-  - The breach cannot be narrower than the grid spacing. For a dam whose crest is uneven, so that the overflow
-    concentrates in a narrow breach one to a few cells wide, the timing and volume of the wall collapses that
-    block the breach change with slight differences in the conditions, and the peak discharge scatters (in the
-    base case of the chain of the example, seven runs with the inflow varied by ±2 % give 407–547 m³/s; a dam
-    with a level crest that is overtopped over its full width changes by less than 1 % for a 1 % difference).
-    Run several computations with slightly different conditions and check the spread of the results. Four runs
-    of a pre-built dam whose crest is tilted into the same shape give 347–435 m³/s on the 10 m grid and
-    299–309 m³/s on the 5 m grid (the mean on the 5 m grid is 0.80 times that on the 10 m grid). The spread becomes smaller when the grid is refined. The mean changes as well, however: the breach through a
-    narrow breach has not converged with respect to the grid spacing (check it with computations on different grids too).
+  - The breach cannot be narrower than the grid spacing. For a dam whose overflow concentrates in a narrow
+    breach, sediment from the collapsed floor and walls of the breach can block it; the duration of the
+    blockage changes with slight differences in the conditions, and the peak discharge scatters. In the
+    example, a pre-built dam whose crest is tilted with its lowest part a notch 10 m wide gives 312–325 m³/s in
+    four runs on the 10 m grid (the inflow changed by −1 to +1 %), but on the 5 m grid the breach of the four
+    runs is blocked for a total of 7–30 minutes and the peaks scatter over 340–455 m³/s (1.1–1.4 times the
+    10 m grid; no convergence with respect to the grid spacing). The dam built by the debris flow of the chain
+    is overtopped over its full width within about 5 minutes and gives 464–498 m³/s (a spread of 7 %) in seven
+    runs with the inflow varied by ±2 %. A dam with a level crest that is overtopped over its full width
+    changes by less than 1 % for a 1 % difference. Run several computations with slightly different
+    conditions and grid spacings and check the spread of the results.
   - Excavating the dam as a countermeasure cannot be combined with erosion, because
     [prescribed bed motion](bedmotion.md) does not change the soil thickness.
