@@ -48,7 +48,7 @@ def measure(name, kind, kw):
     k = last_out(kw)
     e1, e0 = load_e(name, k), load_e(name, k - 1)
     if kind == "straight":
-        g = mc.straight(kw["an"], kw["b"], kw["rep"], kw["dx"])
+        g = mc.straight(kw["an"], kw["b"], kw["rep"], kw["dx"], kw.get("off", 0.0))
         chan = g["width"] > 0
         b = kw["b"]
         beff, h, slope = beff_of(e1, g["z"], g["s"], chan, mc.QB * b)
@@ -100,9 +100,15 @@ def results(series):
     return out
 
 
+def skipped(series):
+    """河道マスクが途切れるため作らなかったケース(make_cases.py gen が runs/skipped_<系列>.txt に書く)"""
+    p = os.path.join(mc.RUNS, f"skipped_{series}.txt")
+    return set(open(p).read().split()) if os.path.exists(p) else set()
+
+
 def table(series):
     val = results(series)
-    missing = [c[0] for c in mc.cases(series) if c[0] not in val]
+    missing = [c[0] for c in mc.cases(series) if c[0] not in val and c[0] not in skipped(series)]
     if missing:
         print(T("計算していない: ", "not computed: ") + " ".join(missing))
     for name, v in val.items():

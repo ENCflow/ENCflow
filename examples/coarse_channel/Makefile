@@ -1,7 +1,7 @@
 # ENCflow/examples/coarse_channel/Makefile
 #   make           ../../bin/ の実行ファイルへのリンクと、全系列の入力(runs/)を作る
-#   make run       全系列を計算する(4 コアで 25 分前後。計算済みのケースは飛ばす)
-#   make axis | oblique | wide | mask | bend | wet   系列ごとに計算する
+#   make run       全系列を計算する(4 コアで 50 分前後。計算済みのケースは飛ばす)
+#   make occ | axis | oblique | wide | mask | bend | wet   系列ごとに計算する
 #   make figs      図(figs/ と en/figs/)を描き、数表を書く
 #   make clean     リンクと runs/ を削除する
 # 並列数は NP(既定 4): make run NP=2
@@ -9,7 +9,7 @@
 TOPDIR	= ../..
 BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
-SERIES	= axis oblique wide mask bend wet
+SERIES	= occ axis oblique wide mask bend wet
 NP	?= 4
 
 all: links inputs
@@ -20,9 +20,9 @@ links:
 	@ln -sf $(BINDIR)/encflow encflow
 	@ln -sf ../$(BINDIR)/encflow runs/encflow
 
-inputs: runs/cases_wet.txt
+inputs: runs/cases_occ.txt
 
-runs/cases_wet.txt: make_cases.py
+runs/cases_occ.txt: make_cases.py
 	python3 make_cases.py gen
 
 run: all

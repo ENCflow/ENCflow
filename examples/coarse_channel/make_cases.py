@@ -17,6 +17,10 @@
   mask    1 セル幅の川(川幅 0.3・0.6・0.8・1.0 セル)の河道マスク: 8 連結(1 列に 1 セル)と 4 連結(段で 2 セル)
   bend    屈曲(90° の円弧。半径 500・1,000・1,500 m、川幅 2 セル)× 段の太らせ方 + 細かい格子
   wet     河道の脇の水: 地形の河岸の乾いた・雨の水膜と、仮想壁面の向こうの乾いた・雨・湛水
+  occ     占有率(セルの面積のうち本当の河道が占める割合 f)で機械的に作る河道マスク。直線の河道の向き 6 つ × 川幅
+          0.3〜10 セル × 格子に対する中心線の位置のずれ 3 つ(0・0.25・0.5 セル)× 作り方(t50・t50s・all)と、閾値と
+          下限の感度(t30s・t70s と、t50s・all の下限 0・15 % = _c0・_c15。川幅 1.2〜6 セル、ずれ 0)。屈曲(bend)にも
+          t50・t50s・all と下限の感度を加える
 
 セルの中心は、勾配 p/q の向きでは、中心線からの距離が間隔 δ = Δ/√(p² + q²) の「列」に並ぶ(0°: 100 m、11.3°: 19.6 m、
 18.4°: 31.6 m、26.6°: 44.7 m、33.7°: 27.7 m、45°: 70.7 m)。直線の河道の表し方は、この列を選んで作る:
@@ -29,6 +33,10 @@
   d8     1 列に 1 セル(8 連結。D8 の落水線と同じ型)を幅 B のサブグリッド河道にする
   st4    幅 ω = Δ(cos θ + sin θ) の帯に入るセル(4 連結の階段)を幅 B のサブグリッド河道にする
   fine   細かい格子(Δx = 20 m)で round(B/δ) 列を解像(表した幅で割って比べる)
+占有率の作り方(f < FMIN = 5 % のセルは河道にしない。途切れる河道マスクのケースは作らない):
+  t50    f ≥ 50 % のセルを解像した河道にする(閾値だけ)
+  t50s   f ≥ 50 % のセルを解像し、それより小さいセルを幅 f·Δ のサブグリッド河道にする(t30s・t70s は閾値 30・70 %)
+  all    すべてのセルを幅 f·Δ のサブグリッド河道にする(f ≈ 1 は解像)
 """
 import math
 import os
@@ -51,6 +59,15 @@ WIDE_W = (600.0, 1000.0)
 MASK_W = (30.0, 60.0, 80.0, 100.0)
 BEND_R = (500.0, 1000.0, 1500.0)
 BEND_W = 200.0
+OCC_W = (30.0, 60.0, 80.0, 120.0, 160.0, 200.0, 300.0, 600.0, 1000.0)
+OCC_OFF = (0.0, 0.25, 0.5)            # 中心線の位置のずれ(x = 0 での縦のずれ。セル幅の割合)
+OCC_RULES = ("t50", "t50s", "all")
+OCC_SENS = ("t30s", "t70s")           # 閾値の感度(川幅 OCC_SENS_W、ずれ 0)
+OCC_SENS_W = (120.0, 200.0, 300.0, 600.0)
+OCC_THR = {"t50": 0.5, "t50s": 0.5, "t30s": 0.3, "t70s": 0.7, "all": 0.999}
+FMIN = 0.05                           # これより小さい占有率のセルは河道にしない(名前の _c0・_c15 で 0・15 % に変える)
+OCC_CUT = ("c0", "c15")               # 下限の感度(t50s・all。川幅 OCC_SENS_W、ずれ 0。屈曲も)
+OCC_M = 64                            # 占有率を数える標本点(直線は 1 セルに M × M、屈曲は 24 × 24)
 
 
 def hn(q):
@@ -99,23 +116,100 @@ def cases(series):
                 out += [(f"mask_{an}_b{int(b):04d}_{r}", "straight", dict(an=an, b=b, rep=r, dx=DX)) for r in reps]
     elif series == "bend":
         for r in BEND_R:
-            for rep in ("lo", "k1", "k2", "fine"):
+            for rep in ("lo", "k1", "k2", "fine") + OCC_RULES + tuple(f"{r}_{c}" for r in ("t50s", "all") for c in OCC_CUT):
                 out.append((f"bend_r{int(r):04d}_{rep}", "bend", dict(r=r, b=BEND_W, rep=rep, dx=DXF if rep == "fine" else DX)))
     elif series == "wet":
         for var in ("dry", "rain", "wall_dry", "wall_rain", "wall_pond"):
             out.append((f"wet_{var}", "wet", dict(var=var)))
+    elif series == "occ":
+        for an in ANGLES:
+            for b in OCC_W:
+                for off in OCC_OFF:
+                    for rep in OCC_RULES:
+                        out.append((occ_name(an, b, off, rep), "straight", dict(an=an, b=b, rep=rep, dx=DX, off=off)))
+                if b in OCC_SENS_W:
+                    for rep in OCC_SENS + tuple(f"{r}_{c}" for r in ("t50s", "all") for c in OCC_CUT):
+                        out.append((occ_name(an, b, 0.0, rep), "straight", dict(an=an, b=b, rep=rep, dx=DX, off=0.0)))
     else:
         raise ValueError(series)
     return out
 
 
-SERIES = ("axis", "oblique", "wide", "mask", "bend", "wet")
+SERIES = ("axis", "oblique", "wide", "mask", "bend", "wet", "occ")
+
+
+def occ_name(an, b, off, rep):
+    return f"occ_{an}_b{int(b):04d}_o{int(round(off * 100)):02d}_{rep}"
+
+
+# ------------------------------------------------------------------ 占有率
+_W_CACHE = {}
+
+
+def _sample_offsets(an, dx):
+    """セルの中の標本点の、中心線からの距離のセル中心からのずれ(m。昇順)。直線の帯の占有率はこれで数える"""
+    key = (an, dx)
+    if key not in _W_CACHE:
+        p, q = ANGLES[an]
+        r = math.hypot(p, q)
+        st, ct = p / r, q / r
+        u = (np.arange(OCC_M) + 0.5) / OCC_M - 0.5
+        w = (-st * u[:, None] * dx - ct * u[None, :] * dx).ravel()     # x の向きに +u、y の向きに −u(行は南へ増える)
+        _W_CACHE[key] = np.sort(w)
+    return _W_CACHE[key]
+
+
+def occupancy_straight(an, b, dn, dx):
+    """中心線からの距離 dn(セルの中心)のセルのうち、|dn| ≤ b/2 の帯が占める割合"""
+    w = _sample_offsets(an, dx)
+    lo = np.searchsorted(w, -b / 2 - dn, side="left")
+    hi = np.searchsorted(w, b / 2 - dn, side="right")
+    return (hi - lo) / w.size
+
+
+def is_occ(rep):
+    return rep.split("_")[0] in OCC_THR
+
+
+def occ_width(f, rep, dx):
+    """占有率から河道の幅(0 = 河道でない、RESOLVED = 解像、それ以外 = サブグリッドの幅)。rep は作り方の名前に、下限を
+    変えるときは _c<百分率> を付ける(all_c0 = 下限なし)"""
+    rule, _, cut = rep.partition("_")
+    fmin = float(cut[1:]) / 100.0 if cut else FMIN
+    f = np.where((f >= fmin) & (f > 0.0), f, 0.0)
+    rep = rule
+    t = OCC_THR[rep]
+    w = np.zeros_like(f)
+    w[f >= t] = RESOLVED
+    if rep != "t50":
+        part = (f > 0.0) & (f < t)
+        w[part] = f[part] * dx
+    return w
+
+
+def connected(chan, west, east):
+    """河道のセル(8 連結)が、west(流入)のセルから east(流出)のセルまでつながっているか"""
+    ny, nx = chan.shape
+    seen = np.zeros_like(chan)
+    stack = [tuple(ij) for ij in np.argwhere(chan & west)]
+    for ij in stack:
+        seen[ij] = True
+    while stack:
+        j, i = stack.pop()
+        for dj in (-1, 0, 1):
+            for di in (-1, 0, 1):
+                jj, ii = j + dj, i + di
+                if 0 <= jj < ny and 0 <= ii < nx and chan[jj, ii] and not seen[jj, ii]:
+                    seen[jj, ii] = True
+                    stack.append((jj, ii))
+    return bool((seen & east).any())
 
 
 # ------------------------------------------------------------------ 直線の河道
-def straight(an, b, rep, dx):
+def straight(an, b, rep, dx, off=0.0):
     """直線で一様な幅 b の河道。戻り値の辞書: width(0 = 河道でない、RESOLVED = 解像、それ以外 = サブグリッドの幅)、
-    z(河床)、s(中心線の距離)、dn(中心線からの距離)、nx・ny・lx、ct(cos θ)、brep(比べる幅)、area(表した面積の幅)"""
+    z(河床)、s(中心線の距離)、dn(中心線からの距離)、nx・ny・lx、ct(cos θ)、brep(比べる幅)、area(表した面積の幅)。
+    off は中心線の縦のずれ(セル幅の割合。占有率の作り方で使う)"""
     p, q = ANGLES[an]
     r = math.hypot(p, q)
     st, ct = p / r, q / r
@@ -126,6 +220,7 @@ def straight(an, b, rep, dx):
     y0 = (DX / q) * ((p + q - 1) / 2.0 + math.ceil(margin / (DX / q)))
     ly = math.ceil((y0 + lx * st / ct + margin) / DX) * DX
     ny = int(round(ly / dx))
+    y0 += off * DX
     d = dx / r
     X = (np.arange(1, nx + 1)[None, :] - 0.5) * dx
     Y = ly - (np.arange(1, ny + 1)[:, None] - 0.5) * dx
@@ -166,6 +261,8 @@ def straight(an, b, rep, dx):
     elif rep == "st4":                                  # 4 連結の階段: −ω/2 < dn ≤ ω/2
         om = dx * (ct + st)
         width[(dn > -om / 2 + 1e-6) & (dn <= om / 2 + 1e-6)] = b if b < dx else RESOLVED
+    elif is_occ(rep):                                   # 占有率: 中心線を挟んで川幅 b の帯
+        width = occ_width(occupancy_straight(an, b, dn, dx), rep, dx)
     else:
         raise ValueError(rep)
     if rep == "k2w":
@@ -180,7 +277,7 @@ def straight(an, b, rep, dx):
         * dx * dx / (S2 - S1)
     # 図に描く本当の河道の両岸(中心線からの距離): 帯の表し方は列 kmin の下の縁から川幅 b、
     # 1 列・1 行の表し方は中心線を挟んで川幅 b(sub1 は列 0 の中)
-    if rep in ("d8", "st4"):
+    if rep in ("d8", "st4") or is_occ(rep):
         out = (-b / 2, b / 2)
     elif rep == "sub1":
         out = (0.0, b)
@@ -229,7 +326,10 @@ def bend(r, b, rep, dx):
     Y = g["ly"] - (np.arange(1, ny + 1)[:, None] - 0.5) * dx + np.zeros((1, nx))
     s, dn = bend_coords(g, X, Y)
     width = np.zeros((ny, nx))
-    width[np.abs(dn) < b / 2] = RESOLVED                # 中心が帯に入るセル
+    if is_occ(rep):                                     # 占有率
+        width = occ_width(occupancy_bend(g, b, dx, X, Y, dn), rep, dx)
+    else:
+        width[np.abs(dn) < b / 2] = RESOLVED            # 中心が帯に入るセル
     if rep in ("k1", "k2"):
         kk = 1 if rep == "k1" else 2
         # 中心線が格子の線を横切る所で、線の両側のセルのうち横切る点に最も近い kk 組を解像セルにする。向きが x 寄りの
@@ -266,6 +366,19 @@ def bend(r, b, rep, dx):
     chan = width > 0
     z = np.where(chan, Z0 - S * s, -9999.0)
     return dict(width=width, z=z, s=s, dn=dn, nx=nx, ny=ny, g=g)
+
+
+def occupancy_bend(g, b, dx, X, Y, dn):
+    """屈曲の河道(中心線から ±b/2)がセルを占める割合(1 セルに 24 × 24 の標本点。帯の近くのセルだけ数える)"""
+    m = 24
+    u = (np.arange(m) + 0.5) / m - 0.5
+    du = np.repeat(u, m) * dx
+    dv = np.tile(u, m) * dx
+    f = np.zeros_like(dn)
+    cand = np.abs(dn) < b / 2 + 0.75 * dx
+    _, dns = bend_coords(g, X[cand][:, None] + du[None, :], Y[cand][:, None] + dv[None, :])
+    f[cand] = (np.abs(dns) <= b / 2).mean(axis=1)
+    return f
 
 
 def centerline_point(g, t):
@@ -376,18 +489,20 @@ RAIN_BLOCK = """
 
 
 def write_case(name, kind, kw):
+    """ケースの入力と設定を書く。河道マスクが流入口から流出口まで(8 連結で)つながらないときは書かずに False を返す"""
     dd = os.path.join(RUNS, f"data_{name}")
-    os.makedirs(dd, exist_ok=True)
     fine = kw.get("rep") == "fine"
     dx = kw.get("dx", DX)
     rain = 0.0
     walls = True
     if kind == "straight":
-        g = straight(kw["an"], kw["b"], kw["rep"], dx)
+        off = kw.get("off", 0.0)
+        g = straight(kw["an"], kw["b"], kw["rep"], dx, off)
         mask = g["width"] > 0
         h0 = np.where(mask, hn(QB), 0.0)
         q_in = QB * kw["b"]
-        title = f"直線 {ANGLE_DEG[kw['an']]:.1f}°・川幅 {kw['b']:.0f} m・{kw['rep']}"
+        title = f"直線 {ANGLE_DEG[kw['an']]:.1f}°・川幅 {kw['b']:.0f} m・{kw['rep']}" + \
+            (f"・中心線のずれ {off:.2f} セル" if off else "")
     elif kind == "bend":
         g = bend(kw["r"], kw["b"], kw["rep"], dx)
         mask = g["width"] > 0
@@ -405,6 +520,17 @@ def write_case(name, kind, kw):
         title = f"河道の脇の水: {var}"
     width, z, nx, ny = g["width"], g["z"], g["nx"], g["ny"]
     chan = width > 0
+    if kind != "wet":
+        west = np.zeros_like(chan)
+        west[:, 0] = True
+        east = np.zeros_like(chan)
+        if kind == "bend":
+            east[ny - 1, :] = True
+        else:
+            east[:, nx - 1] = True
+        if not connected(chan, west, east):
+            return False
+    os.makedirs(dd, exist_ok=True)
     use_chan = (not fine) and (kind != "wet" or walls)
     arrays = [("z", z, "%.3f"), ("rn", np.full(z.shape, RN), "%.3f"), ("mask", mask.astype(int), "%d"),
               ("h0", h0, "%.3f")]
@@ -441,17 +567,21 @@ def write_case(name, kind, kw):
                              rw="  fn_rw = 'rw.txt'\n" if use_chan else "",
                              channel=CHANNEL.format(bank=bank_lines) if use_chan else "",
                              rain=RAIN_BLOCK.format(rain=rain) if rain > 0 else ""))
+    return True
 
 
 def gen(series_list):
+    """系列のケースを書く。河道マスクが途切れるケースは runs/skipped_<系列>.txt に名前だけ書く"""
     os.makedirs(RUNS, exist_ok=True)
     for se in series_list:
-        cs = cases(se)
-        for name, kind, kw in cs:
-            write_case(name, kind, kw)
+        ok, skipped = [], []
+        for name, kind, kw in cases(se):
+            (ok if write_case(name, kind, kw) else skipped).append(name)
         with open(os.path.join(RUNS, f"cases_{se}.txt"), "w") as f:
-            f.write("\n".join(c[0] for c in cs) + "\n")
-        print(f"{se}: {len(cs)} ケース")
+            f.write("\n".join(ok) + "\n")
+        with open(os.path.join(RUNS, f"skipped_{se}.txt"), "w") as f:
+            f.write("".join(n + "\n" for n in skipped))
+        print(f"{se}: {len(ok)} ケース" + (f"(河道マスクが途切れる {len(skipped)} ケースは作らない)" if skipped else ""))
 
 
 if __name__ == "__main__":
