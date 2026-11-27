@@ -644,11 +644,16 @@ width).
 
 - **Range of grain sizes**: The sediment has a single grain size. The material of real natural dams is
   widely graded: fine grains are suspended and carried at high concentrations, and coarse grains stay
-  behind and cover the bed (armouring), which slows the erosion. Neither is represented. The
-  mixed-size bed of ENCflow (`f_bedmix`; [mixed grain sizes](../../../docs/en/users_guide/geomorph.md#mixed-grain-sizes-f_bedmix))
-  handles the range of grain sizes of bed load and armouring, but it cannot be combined with the debris
-  flow model (`f_debris`) that carries the collapse, the debris flow and the erosion of the dam in this
-  example; the run stops at initialisation.
+  behind and cover the bed (armouring), which slows the erosion. The mixed-size bed of ENCflow
+  (`f_bedmix`; [mixed grain sizes](../../../docs/en/users_guide/geomorph.md#mixed-grain-sizes-f_bedmix))
+  can be combined with the debris flow model (`f_debris`) that carries the collapse, the debris flow and
+  the erosion of the dam in this example; it handles the range of grain sizes of bed load, armouring and
+  the composition of where the sediment ends up. The debris-flow formulas, however, stay single-size with
+  the representative size `db_d50`, and giving a width of the grain-size distribution at the same mean
+  grain size leaves the peak discharge of the breach almost unchanged (396 → 393 m³/s). The width matters
+  at the stage where what remains of the dam body and the deposit downstream are coarsened by the flow of
+  water after the breach. The effect of fine grains being suspended and raising the concentration is not
+  represented ([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
 - **Sediment transport on gentle reaches**: The Takahashi & Nakagawa law (bedload-like collective flow) and
   a bed-load formula are added together. There is no formula connecting the two regimes, and on slopes of
   0.03–0.14 some transport is counted twice. The choice of the laws changes the peak discharge by a factor

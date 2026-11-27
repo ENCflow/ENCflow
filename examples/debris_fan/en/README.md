@@ -450,8 +450,10 @@ the valley is not resolved).
 - **Grain size**: there is a single grain size (0.3 m). Sorting, such as boulders gathering at the
   front or fines turning into a mudflow that runs ahead, is not represented. The mixed-size bed of
   ENCflow (`f_bedmix`; [mixed grain sizes](../../../docs/en/users_guide/geomorph.md#mixed-grain-sizes-f_bedmix))
-  cannot be combined with the debris flow model of this example (`f_debris`); the run stops at
-  initialisation.
+  can be combined with the debris flow model of this example (`f_debris`), but it only carries the class
+  composition of the solids of the flow passively, and the debris-flow formulas keep the representative
+  size `db_d50`. Sorting inside the flow is not represented, and the way the flow moves and its runout
+  do not change ([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
 - **Houses**: the houses neither obstruct the flow nor break. To include their occupation or
   destruction, add the building porosity `fn_gv` or the house destruction `fn_bldgdebris` (examples
   [levee_breach](../../levee_breach/en/README.md) and [tsunami_town](../../tsunami_town/en/README.md)).

@@ -25,7 +25,13 @@
 !   台帳: 粒径階ごとの在庫(初期・最終)、区間流入の給砂、開境界の正味の流出(容量給砂を負で含む)を
 !     行部分和で決定的に集計し、終了時に収支の残差を表示する。
 !   私有 save: geomorph_bedmix.dat(粒径階の数・粒径・L_a の見出しと、交換層 N 面・下層 N 面。
-!     restart_write_cell。developer.md §83 の契約 5)。
+!     restart_write_cell。developer.md §83 の契約 5)。土石流との併用では、末尾に粒径階の数の印と
+!     流れの土砂の粒径階ごとの柱 N 面を足す(併用しない計算の保存は以前と同じバイト列)。
+!   土石流との併用(f_debris。段 2c-1。developer.md §139): 流れの土砂 hs を粒径階ごとの柱 s%hsk(和が hs)で
+!     持ち、浅水流が柱を 1 本ずつ運ぶ(m_swflow_enc の advect_solid_classes)。土石流の侵食・堆積・流動化の
+!     合計(z・sd・hs)は単一粒径の calc_debris・slide_pass2・release_debris が動かし、本 submodule の
+!     debris_exchange_bmix・debris_slide_bmix・debris_release_bmix が同じ量を粒径階に分けて s%hsk と交換層・
+!     下層の組成を更新する(侵食と流動化は柱の上から取り去る組成、堆積は流れの組成。粒径を選ばない)。
 !======================================================================
 submodule(m_geomorph) m_geomorph_bedmix
   use m_parallel, only : par_info, par_warn, par_stop, dcp, is_root, par_halo_cell, par_sum_rows, &
@@ -204,8 +210,34 @@ module subroutine init_bedmix(gm, p, g, s, b, list)
     call par_info("geomorph: wave-driven longshore transport carries the composition of the supplying exchange layer")
   end if
 
+  ! --- 土石流との併用(f_debris。段 2c-1。§139): 流れの土砂を粒径階ごとの柱で運ぶ ---
+  if (gm%f_debris > 0) then
+    gm%bmx%debris = .true.
+    allocate(s%hsk(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:nc), source = 0.0)
+    allocate(s%hskx(dcp%js:dcp%je, 1:5, 1:nc), source = 0.0_real64)
+    allocate(gm%bmx%dbxrow(dcp%js:dcp%je, 1:nc), source = 0.0_real64)
+    allocate(gm%bmx%dbsrow(dcp%js:dcp%je, 1:nc), source = 0.0_real64)
+    ! 境界から入る土砂(inflow_cs・inflow_qs)の組成は与件(既定を置かない。給砂の組成と同じ)
+    do ifl = 1, b%ninflow
+      if ((b%inflow(ifl)%nsval > 0 .or. b%inflow(ifl)%nqsval > 0) &
+          .and. b%inflow(ifl)%ncsfrac == 0 .and. b%inflow(ifl)%ncsfval == 0) then
+        call par_stop("list_bound_inflow: with f_bedmix=1 and f_debris=1 the sediment inflow of segment " &
+                      // itoa(ifl) // " needs its composition (inflow_csfrac) or a composition series " &
+                      // "(fn_inflow_csfrac)")
+      end if
+    end do
+    if (b%ncsclass > 0 .and. b%ncsclass /= nc) then
+      call par_stop("list_bound_inflow: the sediment inflow composition has " // itoa(b%ncsclass) &
+                    // " grain-size classes, but bmix_d has " // itoa(nc))
+    end if
+    call par_info("geomorph: debris flow carries the class composition (per-class solid columns in the flow): " &
+                  // "entrainment and fluidization take the column from the top (exchange layer, substrate), " &
+                  // "deposition lays the composition of the flow; the debris-flow laws keep the single grain " &
+                  // "size db_d50")
+  end if
+
   ! --- 再開(私有 save) ---
-  if (p%f_state_restore > 0) call restore_bedmix(gm, p, s)
+  if (p%f_state_restore > 0) call restore_bedmix(gm, p, g, s)
   do kc = 1, nc
     call par_halo_cell(s%bmf(:,:,kc))
   end do
@@ -337,8 +369,10 @@ module subroutine dispose_bedmix(gm, p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   real(real64) :: v1(1:nbmixmax), vf, vo, res, vx, hs1, ves, vin, vin2, vo1, vo2, vo4, vrk, vsk
+  real(real64) :: vdb, hk1(1:nbmixmax)
   integer :: kc
   character(len=512) :: msg
+  character(len=96) :: tail
 
   if (p%f_state_save > 0) call save_bedmix(gm, p, s)
   ! 台帳の値は指数 3 桁の書式(esw.de3)。es16.9 は指数が 3 桁の値(1e-245 など)で E を落とし、表示が
@@ -377,9 +411,20 @@ module subroutine dispose_bedmix(gm, p, g, s)
             " m3 (final - initial - feed + out + to suspended load" // trim(merge(" - from bedrock + to sea)", &
             ")                        ", allocated(gm%bmx%rfrock)))
     else
+      tail = " m3 (final - initial - feed + out"
+      if (allocated(gm%bmx%rfrock)) tail = trim(tail) // " - from bedrock + to sea"
+      if (gm%bmx%debris) then
+        ! 土石流へ出た分(侵食・流動化 − 堆積。河床の側の重み)を収支に含める(§139)
+        call par_sum_rows(gm%bmx%dbxrow(:,kc), vdb)
+        vdb = vdb / real(gm%wrk%ainv, real64) / real(gm%poroi, real64)
+        res = res + vdb
+        write(msg, '(a,i0,a,es17.9e3,a)') "geomorph: bed mixture ledger class ", kc, &
+              " to debris flow (entrainment + fluidization - deposition) ", vdb, " m3 (solid, bed side)"
+        call par_info(trim(msg))
+        tail = trim(tail) // " + to debris flow"
+      end if
       write(msg, '(a,i0,a,es13.5e3,a)') "geomorph: bed mixture ledger class ", kc, " residual ", res, &
-            " m3 (final - initial - feed + out" // trim(merge(" - from bedrock + to sea)", &
-            ")                        ", allocated(gm%bmx%rfrock)))
+            trim(tail) // ")"
     end if
     call par_info(trim(msg))
   end do
@@ -402,6 +447,33 @@ module subroutine dispose_bedmix(gm, p, g, s)
     write(msg, '(a,es13.5e3,a)') "geomorph: suspended load (class 1) ledger residual ", res, &
           " m3 (final - initial - (pickup - deposition) - in + out)"
     call par_info(trim(msg))
+  end if
+  ! 土石流の流れの土砂の粒径階ごとの台帳(§139): 在庫 Σ hsk·gv·wfrac·A、流れの側で数えた河床との交換、
+  ! 系外との出入り(advect_scalar・水位規定セルの記録場 s%hskx)
+  if (gm%bmx%debris) then
+    call bmix_hsk_stock(gm, g, s, hk1)
+    do kc = 1, gm%bmx%nc
+      call par_sum_rows(gm%bmx%dbsrow(:,kc), ves)
+      call par_sum_rows(s%hskx(:,3,kc), vin)
+      call par_sum_rows(s%hskx(:,5,kc), vin2)
+      call par_sum_rows(s%hskx(:,1,kc), vo1)
+      call par_sum_rows(s%hskx(:,2,kc), vo2)
+      call par_sum_rows(s%hskx(:,4,kc), vo4)
+      vin = vin + vin2
+      vo = vo1 + vo2 + vo4
+      res = hk1(kc) - (gm%bmx%hk0(kc) + ves + vin - vo)
+      write(msg, '(a,i0,a,5(a,es17.9e3),a)') "geomorph: debris-flow solids ledger class ", kc, ":", &
+            " stock initial ", gm%bmx%hk0(kc), " final ", hk1(kc), " from bed ", ves, " in ", vin, " out ", vo, &
+            " m3 (solid)"
+      call par_info(trim(msg))
+      write(msg, '(a,i0,a,es13.5e3,a)') "geomorph: debris-flow solids ledger class ", kc, " residual ", res, &
+            " m3 (final - initial - from bed - in + out)"
+      call par_info(trim(msg))
+    end do
+    if (gm%bmx%nhneg > 0) then
+      call par_warn("geomorph: debris-flow deposition used the exchange-layer composition in " &
+                    // itoa(gm%bmx%nhneg) // " cell-updates (the class columns of the flow summed to <= 0)")
+    end if
   end if
   ! ランク局所の診断
   if (gm%bmx%nlimk > 0) then
@@ -436,6 +508,47 @@ subroutine bmix_first_step(gm, g, s)
     call bmix_hs_stock(gm, g, s, gm%bmx%hs0)
     s%hsx(:,:) = 0.0_real64
   end if
+  ! 土石流の流れの土砂の粒径階ごとの在庫(§139): 同じく、ここから系外との出入りを数え直す
+  if (gm%bmx%debris) then
+    call bmix_hsk_stock(gm, g, s, gm%bmx%hk0)
+    s%hskx(:,:,:) = 0.0_real64
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 土石流の流れの土砂の粒径階ごとの在庫 Σ hsk·gv·wfrac·A(固体 m3。全域。決定的な総和。bmix_hs_stock の
+! 粒径階版。§139)
+!----------------------------------------------------------------------
+subroutine bmix_hsk_stock(gm, g, s, v)
+  type(t_geomorph), intent(in) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  real(real64), intent(out) :: v(:)
+  real(real64), allocatable :: rows(:,:)
+  integer :: i, j, kc, nc
+  real :: w
+
+  nc = gm%bmx%nc
+  allocate(rows(dcp%js:dcp%je, 1:nc), source = 0.0_real64)
+  !$omp parallel do schedule(static) private(i, j, kc, w)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      w = 1.0
+      if (allocated(gm%bmx%wf)) w = gm%bmx%wf(i,j)
+      do kc = 1, nc
+        rows(j,kc) = rows(j,kc) + real(s%hsk(i,j,kc), real64) * real(s%gv(i,j), real64) * real(w, real64)
+      end do
+    end do
+  end do
+  !$omp end parallel do
+  v(:) = 0.0_real64
+  do kc = 1, nc
+    call par_sum_rows(rows(:,kc), v(kc))
+    v(kc) = v(kc) * real(g%dx, real64) * real(g%dy, real64)
+  end do
 end subroutine
 
 
@@ -527,18 +640,28 @@ subroutine save_bedmix(gm, p, s)
   do kc = 1, gm%bmx%nc
     call restart_write_cell(un, gm%bmx%fs(:,:,kc))
   end do
+  ! 土石流との併用(§139): 末尾に粒径階の数の印と、流れの土砂の粒径階ごとの柱 N 面を足す。併用しない計算の
+  ! 保存には書かない(以前と同じバイト列。読む側は印の有無で分ける)
+  if (gm%bmx%debris) then
+    if (is_root) write(un) gm%bmx%nc
+    do kc = 1, gm%bmx%nc
+      call restart_write_cell(un, s%hsk(:,:,kc))
+    end do
+  end if
   if (is_root) close(un)
 end subroutine
 
 
-subroutine restore_bedmix(gm, p, s)
+subroutine restore_bedmix(gm, p, g, s)
   type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   character(:), allocatable :: fname
   logical :: found
-  integer :: un, kc, ncr, bad
+  integer :: un, kc, ncr, bad, nhk, ios
   real :: dr(1:nbmixmax), lar
+  real, allocatable :: hk(:,:,:)
 
   fname = trim(p%dir_save)//'/geomorph_bedmix.dat'
   inquire(file=fname, exist=found)
@@ -570,7 +693,106 @@ subroutine restore_bedmix(gm, p, s)
   do kc = 1, gm%bmx%nc
     call restart_read_cell(un, gm%bmx%fs(:,:,kc))
   end do
+  ! 土石流との併用の保存(§139)は、末尾に粒径階の数の印と、流れの土砂の粒径階ごとの柱 N 面を持つ。
+  ! 印がなければ(併用しない計算の保存)柱はない
+  nhk = 0
+  if (is_root) then
+    read(un, iostat=ios) nhk
+    if (ios /= 0) nhk = 0
+  end if
+  call par_allreduce_maxi(nhk)
+  if (nhk > 0) then
+    if (gm%bmx%debris) then
+      do kc = 1, gm%bmx%nc
+        call restart_read_cell(un, s%hsk(:,:,kc))
+      end do
+    else
+      ! 土石流のない構成に復元した: 柱をその場の河床に、その組成で堆積させる(交互計算。§89.20)
+      allocate(hk(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:gm%bmx%nc), source = 0.0)
+      do kc = 1, gm%bmx%nc
+        call restart_read_cell(un, hk(:,:,kc))
+      end do
+      call deposit_restored_hsk(gm, g, s, hk)
+    end if
+  else if (gm%bmx%debris) then
+    ! 柱のない保存(流れの土砂のない計算か、混合粒径 + 浮遊砂の計算)を土石流との併用で復元した:
+    ! 復元した hs は粒径階 1(浮遊砂は粒径階 1。§122)
+    s%hsk(:,:,1) = s%hs(:,:)
+  end if
   if (is_root) close(un)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 復元した流れの土砂の粒径階ごとの柱の堆積(§139。土石流のない混合粒径の構成に、土石流との併用の保存を
+! 復元したときだけ呼ばれる。単一粒径の deposit_restored_hs(§89.20)の粒径階版)。
+!   柱 hk をその場の河床に、その組成で堆積させる(z・sd += Σ hk/(1 − λ)。交換層に入り、Hirano の界面の
+!   規則で下層へ)。浮遊砂(f_suspend)のある構成では、粒径階 1 は浮遊砂として流れに残し(hs = 粒径階 1 の
+!   柱)、粒径階 2 以上だけを堆積させる。固体の台帳 Σ hs + (1 − λ) Σ z は変えない。
+!   堆積した固体の体積は行部分和(real64 → par_sum_rows = 決定的)で表示する。組成のハロは呼び出し側
+!   (init_bedmix)が交換する
+!----------------------------------------------------------------------
+subroutine deposit_restored_hsk(gm, g, s, hk)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: hk(dcp%ish:, dcp%jsh:, 1:)
+  integer :: i, j, kc, nc, k1
+  real :: dz, dsum, sd0, le, vc
+  real :: a(1:nbmixmax), fa(1:nbmixmax), fb(1:nbmixmax), dk(1:nbmixmax)
+  real(real64) :: vtot
+  real(real64), allocatable :: vrow(:)
+  character(len=32) :: buf
+
+  nc = gm%bmx%nc
+  k1 = 1
+  if (gm%f_suspend > 0) k1 = 2
+  allocate(vrow(dcp%js:dcp%je), source = 0.0_real64)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      ! 柱は符号つきのまま積む(移流の MUSCL で丸めの水準の負の柱ができうる。正の分だけを積むと、その分だけ
+      ! 粒径階ごとの総量が合わなくなる)。負の内容は bmix_update が 0 に丸める
+      dk(1:nc) = 0.0
+      do kc = k1, nc
+        dk(kc) = hk(i,j,kc)
+      end do
+      dsum = sum(dk(1:nc))
+      if (k1 == 2) then
+        s%hs(i,j) = hk(i,j,1)
+      else
+        s%hs(i,j) = 0.0
+      end if
+      if (all(dk(1:nc) == 0.0)) cycle
+      dz = dsum * gm%poroi
+      sd0 = max(s%sd(i,j), 0.0)
+      if (sd0 + dz <= 0.0) cycle                 ! 土層のないセルの、丸めの水準の負の柱は捨てる
+      le = min(gm%bmx%la, sd0)
+      fa(1:nc) = s%bmf(i,j,1:nc)
+      fb(1:nc) = gm%bmx%fs(i,j,1:nc)
+      a(1:nc) = le * fa(1:nc) + dk(1:nc) * gm%poroi
+      call bmix_update(nc, gm%bmx%la, sd0, dz, a, fa, fb, vc)
+      s%bmf(i,j,1:nc) = fa(1:nc)
+      gm%bmx%fs(i,j,1:nc) = fb(1:nc)
+      s%z(i,j) = s%z(i,j) + dz
+      s%e(i,j) = s%z(i,j) + s%h(i,j)
+      s%sd(i,j) = s%sd(i,j) + dz
+      vrow(j) = vrow(j) + real(dsum, real64) * real(g%dx * g%dy, real64)
+    end do
+  end do
+  call par_sum_rows(vrow, vtot)
+  call par_halo_cell(s%z)
+  call par_halo_cell(s%e)
+  call par_halo_cell(s%sd)
+  call par_halo_cell(s%hs)
+  if (vtot > 0.0_real64) then
+    write(buf, '(es16.8)') vtot
+    call par_info("geomorph: the restored flow carried solids in class columns but no debris flow runs here; " &
+                  // "deposited " // trim(adjustl(buf)) // " m3 (solid) on the bed in place with their composition" &
+                  // trim(merge(" (class 1 stays in the flow as suspended load)", &
+                                "                                              ", k1 == 2)))
+  end if
 end subroutine
 
 
@@ -2054,7 +2276,7 @@ end subroutine
 !   厚さが倍精度の下限に近い膜(1e-307 m 級。流れの土砂が幾何級数で減った末の堆積でできる)では、内容と下層
 !   からの補充の積がすべて 0 に落ちて(-Ofast では正規化数より小さい値が 0 になる)割合の和が 0 になりうる。
 !   そのときは交換層を下層の組成にする(割合がすべて 0 のままだと、平均粒径 d_m が 0 になり、遮蔽係数の
-!   計算が 0 除算になる)
+!   計算が 0 除算になる。developer.md §139.7)
 !----------------------------------------------------------------------
 pure subroutine bmix_update(nc, la, sd0, dz, a, fa, fb, vc)
   integer, intent(in) :: nc
@@ -2223,5 +2445,241 @@ pure function wet4_bmix(p, g, s, i, j) result(ok)
     end if
   end do
 end function
+
+
+!----------------------------------------------------------------------
+! 土石流との併用(f_debris と f_bedmix。段 2c-1。developer.md §139)の、河床との交換の組成
+!   流れの土砂 hs は粒径階ごとの柱 s%hsk(和が hs)で運ばれる(m_swflow_enc の advect_solid_classes)。
+!   土石流の侵食・堆積は粒径を選ばない: 侵食は河床の組成のまま流れへ、堆積は流れの組成のまま河床へ
+!   (高橋・中川・原田 1990 の §1「ある深さにわたって全ての粒子を剥す」、高橋・中川・山敷 1991 の式 (6))。
+!   土石流の式(平衡濃度・抵抗・交換速度)は代表粒径 db_d50 の単一粒径のままで、合計の交換量 fx
+!   (固体の柱。calc_debris のパス 1 が gm%dbr%fx に書く)と z・sd・hs の更新は calc_debris のパス 2 が行う。
+!   本手続きはパス 1 の後・パス 2 の前(s%sd・s%hs が時刻 n のまま)に呼ばれ、同じ fx を粒径階に分ける:
+!     侵食(fx > 0): 柱の上から e = fx·morfac/(1 − λ) を取り去る。交換層から t1 = min(e, L_e)、残り t2 は
+!       下層から(掃流砂と違い交換層厚で頭打ちにしない。崩落と同じ。§123)。その組成で s%hsk へ
+!     堆積(fx < 0。乾いたセルへの全量の繰り入れと低速凝集を含む): そのセルの流れの組成 hsk_k / Σ hsk で
+!       河床へ(交換層に入り、Hirano の界面の規則で下層へ。bmix_update)。全量の堆積では柱をすべて移す
+!   ここに入るときは hs = Σ hsk(浅水流が毎ステップ hs を柱の和に置き換える)。柱の和が 0 以下で流れの
+!   組成が決まらないセル(丸めの水準の hs だけで起こる)は、交換層の組成で積んで数える(nhneg)。
+!   台帳: 河床から流れへ出た粒径階ごとの量を、河床の側(dbxrow。在庫と同じ重み)と流れの側(dbsrow)で数える。
+!   calc_debris の交換量の作り方(可動層クランプ・浮遊量クランプ)を変えるときは、ここの取り去り方・
+!   積み方がその fx と合うことを確かめること。組成のハロは debris_slide_bmix が同期する
+!----------------------------------------------------------------------
+module subroutine debris_exchange_bmix(gm, g, s)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j, kc, nc, nneg
+  real :: fx, e, dz, sd0, le, t1, t2, hsum, vc, vclip, w, wfh, dm, cvt
+  real :: a(1:nbmixmax), fa(1:nbmixmax), fb(1:nbmixmax), dk(1:nbmixmax), dh(1:nbmixmax)
+  real(real64) :: acell8
+
+  nc = gm%bmx%nc
+  if (.not. gm%bmx%stock0) call bmix_first_step(gm, g, s)
+  acell8 = real(g%dx, real64) * real(g%dy, real64)
+  cvt = gm%morfac * gm%poroi            ! 固体の柱 → 河床のかさの厚さ(calc_debris の dzb と同じ換算)
+  vclip = 0.0
+  nneg = 0
+  !$omp parallel do schedule(static) reduction(+: vclip, nneg) &
+  !$omp   private(i, j, kc, fx, e, dz, sd0, le, t1, t2, hsum, vc, w, wfh, dm, a, fa, fb, dk, dh)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      fx = gm%dbr%fx(i,j)
+      if (fx == 0.0) cycle
+      sd0 = max(s%sd(i,j), 0.0)
+      le = min(gm%bmx%la, sd0)
+      fa(1:nc) = s%bmf(i,j,1:nc)
+      fb(1:nc) = gm%bmx%fs(i,j,1:nc)
+      if (fx > 0.0) then
+        ! 侵食: 柱の上から e を取り去る(交換層 t1 → 下層 t2)
+        e = min(fx * cvt, sd0)
+        if (e <= 0.0) cycle
+        t1 = min(e, le)
+        t2 = e - t1
+        dk(1:nc) = t1 * fa(1:nc) + t2 * fb(1:nc)        ! 河床を出る粒径階ごとのかさの厚さ(和 e)
+        dh(1:nc) = dk(1:nc) * (fx / e)                  ! 流れに入る粒径階ごとの固体の柱(和 fx)
+        a(1:nc) = (le - t1) * fa(1:nc)                  ! 交換層に残る分(深い侵食なら 0 = 下層から作り直す)
+        call bmix_update(nc, gm%bmx%la, sd0, -e, a, fa, fb, vc)
+      else
+        ! 堆積: 流れの組成で河床へ
+        hsum = 0.0
+        do kc = 1, nc
+          dh(kc) = max(s%hsk(i,j,kc), 0.0)
+          hsum = hsum + dh(kc)
+        end do
+        dz = -fx * cvt
+        if (hsum <= 0.0) then
+          ! 流れの組成が決まらない: 交換層の組成で積み、柱は動かさない
+          nneg = nneg + 1
+          dh(1:nc) = 0.0
+          dk(1:nc) = dz * fa(1:nc)
+        else
+          if (-fx < hsum) dh(1:nc) = dh(1:nc) * (-fx / hsum)   ! 一部の堆積(全量なら柱の正の分をすべて)
+          dk(1:nc) = dh(1:nc) * cvt
+          dh(1:nc) = -dh(1:nc)
+        end if
+        a(1:nc) = le * fa(1:nc) + dk(1:nc)
+        dk(1:nc) = -dk(1:nc)                            ! 河床を出る量(負 = 河床に入る)
+        call bmix_update(nc, gm%bmx%la, sd0, dz, a, fa, fb, vc)
+      end if
+      s%hsk(i,j,1:nc) = s%hsk(i,j,1:nc) + dh(1:nc)
+      s%bmf(i,j,1:nc) = fa(1:nc)
+      gm%bmx%fs(i,j,1:nc) = fb(1:nc)
+      dm = 0.0
+      do kc = 1, nc
+        dm = dm + fa(kc) * gm%bmx%d(kc)
+      end do
+      s%bmdm(i,j) = dm
+      ! 台帳: 河床の側(在庫と同じ重み = 河道平面積率)と流れの側(gv·wfrac·A)
+      w = 1.0
+      if (allocated(gm%bmx%wf)) w = gm%bmx%wf(i,j)
+      wfh = 1.0
+      if (chn%have_width) wfh = chn%wfrac(i,j)
+      vclip = vclip + vc * w / gm%wrk%ainv
+      do kc = 1, nc
+        gm%bmx%dbxrow(j,kc) = gm%bmx%dbxrow(j,kc) + real(dk(kc) * w, real64)
+        gm%bmx%dbsrow(j,kc) = gm%bmx%dbsrow(j,kc) &
+                              + real(dh(kc), real64) * real(s%gv(i,j), real64) * real(wfh, real64) * acell8
+      end do
+    end do
+  end do
+  !$omp end parallel do
+  gm%bmx%vclip = gm%bmx%vclip + vclip
+  gm%bmx%nhneg = gm%bmx%nhneg + nneg
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 土石流との併用の、斜面安定判定による流動化の組成(f_slide = 1。§139)と、組成のハロの同期
+!   calc_debris の中、slide_pass2 の前(s%sd が流動化の前のまま。debris_exchange_bmix とパス 2 の後)に
+!   呼ばれる。流動化するセル(gm%dbr%sld)と厚さ dd の決め方は slide_pass2 と同じ(土層の全層、
+!   slide_dmax > 0 なら上から slide_dmax)。その厚さの柱の組成を s%hsk へ移す(fluidize_cell_bmix)。
+!   slide_pass2 の流動化の厚さの決め方を変えるときは、ここも同じく変えること。
+!   f_slide によらず呼ばれ、末尾で交換層の組成のハロを交換して d_m を揃える(このあとの掃流砂が近傍の
+!   組成を読む。collective。呼び出しの判定は namelist 由来で全ランク同一)
+!----------------------------------------------------------------------
+module subroutine debris_slide_bmix(gm, g, s)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: dd, vclip
+  real(real64) :: acell8
+
+  if (gm%f_slide == 1) then
+    acell8 = real(g%dx, real64) * real(g%dy, real64)
+    vclip = 0.0
+    !$omp parallel do schedule(static) reduction(+: vclip) private(i, j, dd)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (.not. gm%dbr%sld(i,j)) cycle
+        dd = s%sd(i,j)
+        if (dd <= 0.0) cycle
+        if (gm%sl_dmax > 0.0 .and. gm%sl_dmax < dd) dd = gm%sl_dmax
+        call fluidize_cell_bmix(gm, s, i, j, dd, acell8, vclip)
+      end do
+    end do
+    !$omp end parallel do
+    gm%bmx%vclip = gm%bmx%vclip + vclip
+  end if
+  call bmix_sync_halo(gm, s)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 土石流との併用の、瞬時流動化の組成(fn_dbinit。§139)
+!   release_debris の発火の中、適用の前(s%sd が流動化の前のまま)に呼ばれる。流動化するセルと厚さ dd の
+!   決め方は release_debris と同じ(崩壊深、土層厚で頭打ち)。release_debris のそれを変えるときは、
+!   ここも同じく変えること。末尾で組成のハロを同期する(発火の判定は全ランク同一 = collective 安全)
+!----------------------------------------------------------------------
+module subroutine debris_release_bmix(gm, g, s)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j
+  real :: dd, vclip
+  real(real64) :: acell8
+
+  if (.not. gm%bmx%stock0) call bmix_first_step(gm, g, s)
+  acell8 = real(g%dx, real64) * real(g%dy, real64)
+  vclip = 0.0
+  !$omp parallel do schedule(static) reduction(+: vclip) private(i, j, dd)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      dd = gm%dbr%rel(i,j)
+      if (dd <= 0.0) cycle
+      if (dd > s%sd(i,j)) dd = s%sd(i,j)
+      if (dd <= 0.0) cycle
+      call fluidize_cell_bmix(gm, s, i, j, dd, acell8, vclip)
+    end do
+  end do
+  !$omp end parallel do
+  gm%bmx%vclip = gm%bmx%vclip + vclip
+  call bmix_sync_halo(gm, s)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 1 セルの流動化の組成(§139): 柱の上から厚さ dd(かさ)を取り去り(交換層 → 下層)、その組成の固体
+! dd/(1 − λ)·… = dd (1 − λ) を粒径階ごとの土砂柱 s%hsk へ移す。z・sd・hs の合計は呼び出し側の後で
+! 単一粒径の手続き(slide_pass2・release_debris)が動かす。台帳は debris_exchange_bmix と同じ 2 つの側。
+! 並列ループの中から呼ばれる(書くのは自セルと自分の行の台帳だけ。vclip は呼び出し側の reduction の変数)
+!----------------------------------------------------------------------
+subroutine fluidize_cell_bmix(gm, s, i, j, dd, acell8, vclip)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: dd
+  real(real64), intent(in) :: acell8
+  real, intent(inout) :: vclip
+  integer :: kc, nc
+  real :: sd0, le, t1, t2, vc, w, wfh, dm
+  real :: a(1:nbmixmax), fa(1:nbmixmax), fb(1:nbmixmax), dk(1:nbmixmax)
+
+  nc = gm%bmx%nc
+  sd0 = max(s%sd(i,j), 0.0)
+  le = min(gm%bmx%la, sd0)
+  fa(1:nc) = s%bmf(i,j,1:nc)
+  fb(1:nc) = gm%bmx%fs(i,j,1:nc)
+  t1 = min(dd, le)
+  t2 = dd - t1
+  dk(1:nc) = t1 * fa(1:nc) + t2 * fb(1:nc)              ! 河床を出る粒径階ごとのかさの厚さ(和 dd)
+  a(1:nc) = (le - t1) * fa(1:nc)
+  call bmix_update(nc, gm%bmx%la, sd0, -dd, a, fa, fb, vc)
+  s%hsk(i,j,1:nc) = s%hsk(i,j,1:nc) + dk(1:nc) / gm%poroi   ! 固体分 (1 − λ)·dd を粒径階に分けて
+  s%bmf(i,j,1:nc) = fa(1:nc)
+  gm%bmx%fs(i,j,1:nc) = fb(1:nc)
+  dm = 0.0
+  do kc = 1, nc
+    dm = dm + fa(kc) * gm%bmx%d(kc)
+  end do
+  s%bmdm(i,j) = dm
+  w = 1.0
+  if (allocated(gm%bmx%wf)) w = gm%bmx%wf(i,j)
+  wfh = 1.0
+  if (chn%have_width) wfh = chn%wfrac(i,j)
+  vclip = vclip + vc * w / gm%wrk%ainv
+  do kc = 1, nc
+    gm%bmx%dbxrow(j,kc) = gm%bmx%dbxrow(j,kc) + real(dk(kc) * w, real64)
+    gm%bmx%dbsrow(j,kc) = gm%bmx%dbsrow(j,kc) &
+                          + real(dk(kc) / gm%poroi, real64) * real(s%gv(i,j), real64) * real(wfh, real64) * acell8
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 交換層の組成のハロを交換し、d_m を揃える(collective)
+!----------------------------------------------------------------------
+subroutine bmix_sync_halo(gm, s)
+  type(t_geomorph), intent(in) :: gm
+  type(t_state), intent(inout) :: s
+  integer :: kc
+  do kc = 1, gm%bmx%nc
+    call par_halo_cell(s%bmf(:,:,kc))
+  end do
+  call bmix_update_dm(gm, s)
+end subroutine
 
 end submodule

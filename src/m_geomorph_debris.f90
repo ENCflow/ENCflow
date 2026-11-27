@@ -754,6 +754,11 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   end do
   !$omp end parallel do
 
+  ! --- 混合粒径との併用(§139): 交換量 fx の組成を、適用の前(s%sd・s%hs が時刻 n のまま)に、粒径階ごとの
+  !     土砂柱 s%hsk と交換層・下層の間で出し入れする(パス 2 の命令列は変えない。判定は namelist 由来で
+  !     全ランク同一) ---
+  if (gm%f_bedmix > 0) call debris_exchange_bmix(gm, g, s)
+
   ! --- パス2: 適用(書き込みは自セルに閉じる) ---
   area = g%dx * g%dy
   bdm = 0.0
@@ -871,6 +876,10 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   end do
   !$omp end parallel do
   if (rkd) gm%rk%bdmax = max(gm%rk%bdmax, bdm)
+
+  ! --- 混合粒径との併用(§139): 流動化する土層の組成を粒径階ごとの土砂柱へ(slide_pass2 の前 = s%sd が
+  !     流動化の前のまま)。組成のハロの同期もここで行う(f_slide によらず呼ぶ。中で collective) ---
+  if (gm%f_bedmix > 0) call debris_slide_bmix(gm, g, s)
 
   ! --- 斜面安定のパス2: Fs < 1 のセルの土層を全層流動化 ---
   if (gm%f_slide == 1) call slide_pass2(gm, g, s)   ! 2(判定のみ)は流動化しない
@@ -1118,6 +1127,10 @@ module subroutine release_debris(gm, p, g, s)
     tprev = p%t0 + p%dt * (s%it - gm%idt_geomorph)
     if (gm%db_reltime <= tprev) return          ! 前回呼び出し以前に発火済み
   end if
+
+  ! --- 混合粒径との併用(§139): 流動化する崩壊深の組成を粒径階ごとの土砂柱へ(適用の前 = s%sd が
+  !     流動化の前のまま。発火の判定は全ランク同一なので、中のハロ交換は collective 安全) ---
+  if (gm%f_bedmix > 0) call debris_release_bmix(gm, g, s)
 
   ! --- 発火: 帯内の崩壊深 > 0 のセルを流動化する(セル局所) ---
   do j = dcp%js, dcp%je

@@ -337,12 +337,12 @@ and the thickness of the erodible soil layer (`sd0` or `fn_sd`). The grain sizes
   talus (next items), fixation, channel width and the roughness partitions. For the steep-gravel partition
   (`f_taupart = 1`) the D84 comes from the exchange-layer composition of each cell unless `fluv_d84` is given,
   in which case that constant is used. Linear creep and uplift move only the ground elevation and do not
-  touch the soil layer, so they can be used as they are. Suspended sediment is linked to class 1 (below).
-  With hillslope erosion, the fines ledger, the lateral spreading of the detachment depth (`wet_lw`), the
-  moving bed layer, debris flow, dry-slope erosion, weathering, dissolution, bedrock incision, the wave
-  stirring (`f_wfsed`) and the swash (`f_wfswash`), glaciers and lava flows, and with the bank mode of
-  rockfall (`rf_bank = 1`), the run stops at initialization (how to carry the class composition through them
-  is not decided yet).
+  touch the soil layer, so they can be used as they are. Suspended sediment is linked to class 1, and
+  debris flow carries the solids of the flow as one column per class (below). With hillslope erosion, the
+  fines ledger, the lateral spreading of the detachment depth (`wet_lw`), the moving bed layer, dry-slope
+  erosion, weathering, dissolution, bedrock incision, the wave stirring (`f_wfsed`) and the swash
+  (`f_wfswash`), glaciers and lava flows, and with the bank mode of rockfall (`rf_bank = 1`), the run stops
+  at initialization (how to carry the class composition through them is not decided yet).
 - **Rockfall and talus** (`f_rockfall`): what collapses is carried with the composition removed from the top
   of the supplying column, in the order exchange layer → substrate → bedrock, and the receiver deposits it
   with the incoming composition. A collapse does not select grain sizes, so unlike bed load and repose
@@ -357,11 +357,36 @@ and the thickness of the erodible soil layer (`sd0` or `fn_sd`). The grain sizes
   class 1 of the exchange layer. Leave `susp_d50` out or set it equal to the first `bmix_d` (if left out,
   d_1 is printed with "(default)"; a different value stops the run at initialization). The other parameters
   (equilibrium concentration, settling velocity and so on) are the same as for a single grain size.
+- **Debris flow** (`f_debris = 1`): the solids of the flow are carried as one column per class. The erosion,
+  deposition and fluidisation of debris flow do not select grain sizes. Erosion and fluidisation (the
+  slope-stability test `f_slide` and the instantaneous release `fn_dbinit`) enter the flow with the
+  composition removed from the top of the column, exchange layer first and then the substrate (not capped by
+  the exchange-layer thickness, as for rockfall), and deposition goes onto the bed with the composition of
+  the flow in that cell. The debris-flow formulas (equilibrium concentration, resistance, rates of erosion
+  and deposition) stay single-size with the representative size `db_d50`, and the ground elevation, the soil
+  thickness and the total solids of the flow agree with the single-size computation when all the classes
+  are given the same grain size.
+  - Sediment entering through a boundary (`inflow_cs`, `inflow_qs`) requires its class composition. Give
+    either a constant composition `inflow_csfrac` or a composition series `fn_inflow_csfrac`
+    ([Boundary conditions](boundary.md)). Without it the run stops at initialization.
+  - The difference between grain sizes matters for the bed load that moves the same bed (hiding and
+    armouring) and for where the sediment carried by the debris flow ends up. The way the debris flow
+    itself moves and its rate of erosion do not change when a width of the grain-size distribution is given
+    (what matters is `db_d50`). For the dam body of the example
+    [debris_dam](../../../examples/debris_dam/en/README.md), giving a width at the same mean grain size
+    leaves the peak discharge of the breach almost the same
+    ([supplement](massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
+  - The accumulation of boulders at the front (grain-size sorting inside the flow) and the effect of fines
+    becoming part of the interstitial fluid and raising the concentration are not represented. It cannot be
+    combined with nesting or bedrock incision (`f_rockinc`); the run stops at initialization.
 - **What it cannot do**: no vertical stratigraphy (the substrate is one uniform mixture), no suspension of
   classes 2 and above (only class 1 becomes suspended load), no fining by abrasion, no grain-size-dependent
   flow roughness. The toe shear stress of the bank-erosion law is evaluated with a representative size (the
-  domain-mean d_m of the initial exchange layer). The limits of accuracy (sensitivity to the exchange-layer
-  thickness, ill-posedness) are in the [supplement](sediment.md#mixed-grain-sizes-f_bedmix).
+  domain-mean d_m of the initial exchange layer). Sediment deposited thickly (a debris-flow deposit, for
+  example) is mixed uniformly with the existing substrate, leaving the thickness of the exchange layer
+  (what later erosion digs out is the mixed composition). On bedrock the deposit keeps its own composition.
+  The limits of accuracy (sensitivity to the exchange-layer thickness, ill-posedness) are in the
+  [supplement](sediment.md#mixed-grain-sizes-f_bedmix).
 
 **Outputs for this section**: mean grain size of the exchange layer `Dm0001...` (always), the
 exchange-layer fraction of each class `Fa1_0001...` (`f_out_bmix = 1`; [Input/output](io.md)) and the last
@@ -371,7 +396,13 @@ boundaries, residual) and how often the exchange-layer supply limiter acted. Wit
 linked, the class-1 balance includes what went to the suspended load (pickup − settling), and the balance
 of the suspended load (initial and final stock, pickup − settling, inflow and outflow through open
 boundaries, residual) is printed as well. With rockfall, the balance of each class includes what was added
-from bedrock and what fell into sea cells. Verification: [test/bedmix](../../../test/bedmix/en/README.md). A comparison
+from bedrock and what fell into sea cells. With debris flow, the balance of each class includes what went
+to the debris flow (erosion and fluidisation − deposition), and the balance of each class of the solids of
+the flow (initial and final stock, what came from the bed, inflow and outflow through open boundaries and
+the like, residual) is printed as well. The restart file `geomorph_bedmix.dat` then also holds the column
+of each class of the solids of the flow.
+Verification: [test/bedmix](../../../test/bedmix/en/README.md); the coupling with debris flow is in
+[test/dbmix](../../../test/dbmix/en/README.md). A comparison
 with a published model experiment is the example [examples/joganji_flume](../../../examples/joganji_flume/en/README.md) (the NILIM 1/100
 movable-bed model of the Joganji River; the magnitude of the change is close to the measurement, the locations of the
 change and the pattern of the surface composition do not match).
@@ -1229,9 +1260,13 @@ process that carries the solids of the flow h_s (`f_suspend`, `f_debris`), the
 initialization deposits them on the bed in place (z and sd rise by h_s/(1 − λ),
 h_s = 0; the solid ledger is unchanged; there are no fines, so they count as
 coarse). The deposited solid volume is printed as "the restored flow carried solids
-(hs) ... deposited ... m3 (solid)". A mixed-size configuration (`f_bedmix`) cannot
-decide the composition of what would be deposited, so it stops at initialization (with
-`f_suspend` enabled, h_s stays in the flow as class 1). Configurations without landform
+(hs) ... deposited ... m3 (solid)". In a mixed-size configuration (`f_bedmix`), a state
+saved with the debris-flow coupling (it holds the column of each class of the solids of the
+flow) has its columns deposited on the bed in place with their composition (with `f_suspend`
+enabled, class 1 stays in the flow as suspended load and only classes 2 and above are
+deposited). For a state without the per-class columns the composition of h_s cannot be
+decided, so the run stops at initialization (with `f_suspend` enabled, h_s stays in the flow
+as class 1). Configurations without landform
 change (no `fn_geomorph`) behave as before, and h_s stays in the flow. A worked example of the
 alternating runs is the supplement (long-term chain) of
 [examples/debris_bedrock](../../../examples/debris_bedrock/en/README.md) (`Run_chain.sh`
@@ -1478,6 +1513,8 @@ how eight and four neighbours differ on coarse grids) is in the example
 [examples/debris_fan](../../../examples/debris_fan/en/README.md). Mixed grain sizes are covered by
 [test/bedmix](../../../test/bedmix/en/README.md) (limits, theoretical values, balances) and by the example
 [examples/joganji_flume](../../../examples/joganji_flume/en/README.md), which compares with a published model experiment.
+Debris flow combined with mixed grain sizes is covered by [test/dbmix](../../../test/dbmix/en/README.md) (the
+equal-size limit, conservation per class, the composition of fluidised and inflowing sediment, alternating runs).
 
 ## References
 

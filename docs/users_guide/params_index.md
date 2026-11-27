@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 871 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 873 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -447,6 +447,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_icsmax | &list_intercept_initloss | [降雨・気象](forcing.md) |
 | fn_inflow_cell | &list_bound_inflow | [境界条件](boundary.md) |
 | fn_inflow_cs | &list_bound_inflow | [境界条件](boundary.md) |
+| fn_inflow_csfrac | &list_bound_inflow | [境界条件](boundary.md) |
 | fn_inflow_qb | &list_bound_inflow | [境界条件](boundary.md) |
 | fn_inflow_qbmix | &list_bound_inflow | [境界条件](boundary.md) |
 | fn_inflow_qs | &list_bound_inflow | [境界条件](boundary.md) |
@@ -579,6 +580,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | inflow_cs | &list_bound_inflow | [境界条件](boundary.md) |
 | inflow_cs_eq | &list_bound_inflow | [境界条件](boundary.md) |
 | inflow_cs_fac | &list_bound_inflow | [境界条件](boundary.md) |
+| inflow_csfrac | &list_bound_inflow | [境界条件](boundary.md) |
 | inflow_dist | &list_bound_inflow | [境界条件](boundary.md) |
 | inflow_qb | &list_bound_inflow | [境界条件](boundary.md) |
 | inflow_qbfrac | &list_bound_inflow | [境界条件](boundary.md) |

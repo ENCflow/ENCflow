@@ -573,6 +573,33 @@ load (the design document is docs/mixed_sediment_plan.md).
   the talus thickness is handled as for a single size. The balance of each class includes what bedrock added to
   the soil layer and what fell into sea cells. The swash transport (`f_wfswash`) stays stopped, because the wave
   stirring it requires (`f_wfsed`) is not available for mixed-size bed load yet.
+- **Coupling with debris flow** (`f_debris = 1`): the solids of the flow $`h_s`$ are held as one column per
+  class, $`h_{s,k}`$ ($`\sum_k h_{s,k} = h_s`$), and the shallow-water flow carries the columns one by one
+  with the same transport equation as $`h_s`$. The erosion, deposition and fluidisation of debris flow do
+  not select grain sizes. Erosion (exchange $`\Delta h_s > 0`$) removes the thickness
+  $`e = \Delta h_s/(1-\lambda)`$ from the top of the column, $`t_1 = \min(e, L_e)`$ from the exchange layer
+  and the rest, $`t_2 = e - t_1`$, from the substrate, and puts it into the flow with that composition,
+  $`(t_1 F_k + t_2 f_k)/e`$ (not capped by the exchange-layer thickness, as for rockfall). Deposition
+  ($`\Delta h_s < 0`$, including the return of everything on dry cells and the low-speed coagulation) goes
+  onto the bed with the composition of the flow in that cell, $`h_{s,k}/h_s`$ (into the exchange layer, and
+  on to the substrate by the Hirano interface rule). Fluidisation (the slope-stability test `f_slide` and
+  the instantaneous release `fn_dbinit`) enters the flow with the composition of the column over the
+  fluidised thickness. The basis is that the erosion of a steep sediment bed, of the kind that generates a
+  debris flow, takes place "not by picking up particles selectively by size but by stripping all the
+  particles over some depth"[^tnh90] (our translation), and that the source term of the continuity equation
+  of the coarse particles keeps the concentration of the bed in erosion and that of the flow in
+  deposition[^tny91] (eq. (6)). The debris-flow formulas (equilibrium concentration, resistance, rates of
+  erosion and deposition) stay single-size with the representative size `db_d50`, and the ground elevation,
+  the soil thickness and the total $`h_s`$ are moved by the single-size procedures (ENCflow's choice; the
+  original model[^tny91] uses the mean grain size of the flow in the resistance and the exchange rates,
+  includes the fines in the interstitial fluid to raise the equilibrium concentration, and divides the flow
+  depth into layers to resolve grain-size sorting; none of the three is included). The composition of
+  sediment entering through a boundary is given data (`inflow_csfrac`, `fn_inflow_csfrac`). The ledger
+  counts the amount of each class that went from the bed to the flow on both the bed side and the flow
+  side, and adds the stock of the flow (Σ h_{s,k} × gv × wfrac × A) and the exchange with the outside, to
+  confirm that the bed and the flow each close separately (where cells have a building porosity gv < 1 the
+  two sides do not agree, because only the flow side is multiplied by gv; the same counting as in the
+  suspended-load ledger).
 - **Default exchange-layer thickness**: twice the $`D_{90}`$ of the initial (domain-mean) exchange-layer
   composition. The guidance in the literature is 1 to 2 times the $`D_{90}`$ of the surface layer[^parker04]; the
   default is its upper end (Parker 2008[^parker08] treats the factor as an order-one calibration value, and
@@ -593,7 +620,21 @@ load (the design document is docs/mixed_sediment_plan.md).
   composition changes abruptly. (5) The toe shear stress of the bank-erosion law is evaluated with a
   representative size (the domain-mean $`d_m`$ of the initial exchange layer). (6) Grain-size-dependent flow
   roughness and abrasion are not treated. Only class 1 is suspended (classes 2 and above are not), and the
-  bed load and the suspended load of class 1 are added.
+  bed load and the suspended load of class 1 are added. (7) Coupled with debris flow, the way the debris
+  flow moves and its rate of erosion do not depend on the width of the grain-size distribution (what
+  matters is `db_d50`). The difference between grain sizes matters for the bed load that moves the same bed
+  and for where the sediment ends up. In a flow whose shear stress is far above the threshold of every
+  class (during the breach of a landslide dam, for example) the bed load too carries all the classes almost
+  in proportion to the composition, so giving a width hardly changes the results
+  ([the mass-flow page](massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)). The accumulation of boulders
+  at the front (grain-size sorting inside the flow) and the effect of fines becoming part of the
+  interstitial fluid and raising the concentration are not represented. (8) Sediment deposited thickly (a
+  debris-flow deposit, for example) is mixed uniformly with the existing substrate, leaving the thickness
+  of the exchange layer (there is no stratigraphy; on bedrock the deposit keeps its own composition).
+  (9) Coupled with debris flow the column of each class is carried separately, so where the composition of
+  the flow varies in space the MUSCL limiter acts differently from carrying $`h_s`$ as one field (0.3 % of
+  the landform change in a configuration of test/dbmix; with a uniform composition the two agree within
+  round-off, and with first-order upwind, `f_scalar_scheme = 1`, they agree whatever the composition).
 - **Verification**: [test/bedmix](../../../test/bedmix/en/README.md). With all classes set to the same size
   the bed agrees with the single-size bed to 5e-15 m and the composition does not change; the lowering of
   static armouring without feed agrees with $`L_a F_0/(1 - f_{\rm sub})`$ and the decay rate of the fine
@@ -618,7 +659,21 @@ load (the design document is docs/mixed_sediment_plan.md).
   (case 2-1; [examples/joganji_flume](../../../examples/joganji_flume/en/README.md)), the area changed by more than 5 mm and the
   eroded volume are close to the measurement (a single size changes too much), while the locations of the change
   (point-by-point correlation 0.1 to 0.25) and the pattern of the surface composition do not match, and the model's
-  surface loses fines and coarsens too much.
+  surface loses fines and coarsens too much. The coupling with debris flow is in
+  [test/dbmix](../../../test/dbmix/en/README.md). With all classes set to the same size and a uniform
+  composition the run agrees with single-size debris flow plus bed load to 2e-15 m, and with different
+  classes (of the same size) placed in the exchange layer and the substrate it agrees to 4e-16 m with
+  first-order upwind (with MUSCL the difference is 0.3 % of the landform change). The balance of each class
+  (bed and flow) closes to 2e-13 m³, and the total of each class counted from the save agrees with the
+  initial total to 1e-12 m³ (including a configuration with fluidisation by the slope-stability test and one
+  with the Takahashi–Nakagawa laws). The composition of a mass fluidised over the whole layer,
+  $`\{L_a A + (D - L_a) B\}/D`$, is kept everywhere in the flow and in the deposit (4e-15), and after
+  fluidising the upper half the exchange layer of the remaining soil has the composition of the substrate.
+  The class ratios of sediment entering through a boundary agree with the given composition in the inflow,
+  the outflow and the deposit, and the inflow with a composition series agrees with the sum over the steps
+  of the fractions to 1e-9 m³. A restart is bit-identical, a restore into a configuration without debris
+  flow (alternating runs) conserves the total of each class, and MPI np = 1, 2, 4 are byte-identical to the
+  serial run.
 
 ### Wave-driven longshore transport (fn_wave)
 
@@ -1221,6 +1276,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_bedmix / bmix_d / bmix_frac0 | 0 / required / required | size classes and initial exchange-layer fractions of mixed grain sizes (§3) | **given** grain-size distribution of the bed material (bed-material surveys and the like) |
 | bmix_la | twice the D90 of the initial composition | exchange-layer thickness $`L_a`$ (§3) | **literature** upper end of the guidance of 1 to 2 times the surface $`D_{90}`$[^parker04]. It also has a numerical role (robustness against ill-posedness) |
 | bmix_hiding | 1 | hiding function (§3) | **literature** modified Egiazaroff[^egiazaroff65] (Ashida and Michiue[^ashida72] eq. (31)) |
+| inflow_csfrac / fn_inflow_csfrac | none (required when sediment enters in the coupled run) | class composition of sediment entering through a boundary when mixed grain sizes and debris flow are combined (§3) | **given data** grain-size distribution of the inflowing sediment (constant or a series) |
 | wash_kr / wash_kf | 0.01 / 1e-5 m/s | raindrop / sheet erosion coefficients (§5) | **empirical** values of [test/wash](../../../test/wash/en/README.md); to be calibrated |
 | wet_lw | 0 m | correlation length $`\ell_w`$ of the lateral spreading of the detachment depth (§5) | **given** 0 = off. A guide is the width of the rills (flow paths); with Δx ≤ ℓ_w/2 the gully spacing no longer depends on the grid ([test/wetlw](../../../test/wetlw/en/README.md)) |
 | spl_kr / spl_kt / spl_h | 5e-4 / 0.05 / 1 | dry-erosion coefficients and slope exponent (§6) | **empirical** medians of the tests |
@@ -1275,6 +1331,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/suspend](../../../test/suspend/en/README.md) | two equilibrium formulas; equilibrium and adaptation in a uniform channel | total solid 2.2e-15; equilibrium concentration within 1.5e-6 of the formula; decay rate of adaptation within 1.4e-5 of the discrete prediction |
 | [test/sedinflow](../../../test/sedinflow/en/README.md) | sediment supplied through the boundary | ledger closure ~1e-16 |
 | [test/bedmix](../../../test/bedmix/en/README.md) | mixed grain sizes (f_bedmix) | single-size limit to 5e-15 m, lowering by static armouring and decay rate of the fines (0.3 %), outflow by eqs. (31) and (32) (0.02 %), balance of each class 1e-13 m³ |
+| [test/dbmix](../../../test/dbmix/en/README.md) | debris flow with mixed grain sizes (f_debris + f_bedmix) | single-size limit to 2e-15 m, balance of each class 2e-13 m³, composition of fluidised and inflowing sediment within 4e-15 of the formula and the given data, totals conserved in alternating runs |
 | [examples/joganji_flume](../../../examples/joganji_flume/en/README.md) | mixed grain sizes against a published model experiment (NILIM, Joganji River at 1/100, case 2-1) | area changed and eroded volume close to the measurement (a single size changes too much), correlation of the locations 0.1 to 0.25, the surface coarsens too much |
 | [test/wash](../../../test/wash/en/README.md) | rain + dam break hillslope erosion | total solid 1.7e-13 |
 | [test/splash](../../../test/splash/en/README.md) | dry erosion on a slope with a break | all digits agree with the analytical form, export ledger agrees |
@@ -1294,6 +1351,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^patra06]: Patra, M. and Karttunen, M. (2006): Stencils with isotropic discretization error for differential operators. *Numer. Methods Partial Differ. Equ.*, 22(4), 936–953. doi:10.1002/num.20129 (stencils whose lowest-order discretisation error is isotropic; checked against the bibliographic record and abstract. That the ENC partition rule gives d = 1/3 follows from the modified equation in developer.md §96)
 [^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1 (checked against the abstract: when transport scales with both slope and soil depth, rock type shows up in the form of soil-mantled hillslopes. The form of the equation and the doi follow the description of Landlab's DepthDependentDiffuser)
 [^ashida72]: Ashida, K. and Michiue, M. (1972): Study on hydraulic resistance and bed-load transport rate in alluvial streams. *Proc. JSCE*, 206, 59–69 (in Japanese). doi:10.2208/jscej1969.1972.206_59
+[^tnh90]: Takahashi, T., Nakagawa, H. and Harada, T. (1990): Prediction of debris flow generated by erosion of steep well-graded sediment mixture bed. *Annuals, Disaster Prevention Research Institute, Kyoto University*, 33 B-2, 443–456 (in Japanese). <https://repository.kulib.kyoto-u.ac.jp/dspace/handle/2433/72271> (the erosion of a steep sediment bed does not select grain sizes = §1; fine particles raise the density of the interstitial fluid and thereby the equilibrium concentration = eq. (11); the division into fine and coarse particles = eqs. (12) to (18). Checked against the published text.)
+[^tny91]: Takahashi, T., Nakagawa, H. and Yamashiki, Y. (1991): Formation and erosion of debris fan that is composed of sediment mixtures. *Annuals, Disaster Prevention Research Institute, Kyoto University*, 34 B-2, 355–372 (in Japanese). <https://repository.kulib.kyoto-u.ac.jp/dspace/handle/2433/72336> (continuity equation of the coarse particles = eq. (6); erosion and deposition velocities and resistance with the mean grain size over the whole flow depth d_L = eqs. (16) to (18) and (29); grain-size sorting with the flow depth divided into layers = eqs. (23) to (26); the erosion of the fan computed with a single mean grain size, with the armour coat named as the open issue = §2.3 and conclusion 6. Checked against the published text.)
 [^hirano71]: Hirano, M. (1971): River-bed degradation with armoring. *Proc. JSCE*, 195, 55–65 (in Japanese; the Japanese title begins with the word "Armoring"). doi:10.2208/jscej1969.1971.195_55 (the exchange-layer concept and the continuity equations per class; uses an exchange-layer thickness of 1 cm, about the largest grain size)
 [^egiazaroff65]: Egiazaroff, I. V. (1965): Calculation of nonuniform sediment concentrations. *J. Hydraul. Div. ASCE*, 91(HY4), 225–247. doi:10.1061/JYCEAJ.0001277 (the original hiding function; ENCflow uses the modified form of Ashida and Michiue 1972, eq. (31). The original text has not been seen; the bibliographic data follow the Crossref record)
 [^parker04]: Parker, G. (2004): *1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity Currents*. e-book, Chapter 17, Aggradation and degradation of rivers transporting gravel mixtures. https://hydrolab.illinois.edu/people/parkerg/morphodynamics_e-book.htm (exchange-layer thickness $`L_a = n_a D_{s90}`$ with $`n_a`$ in the range 1 to 2; $`D_{s90}`$ is the D90 of the surface layer. The page gives no year; it is usually cited as 2004)

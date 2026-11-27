@@ -349,7 +349,9 @@ make_init.py の格子から描いた図です。
   変えます(感度実験の入口)。
 - **粒径**: 粒径は 1 種類(0.3 m)です。巨礫が先頭に集まる、細粒分が泥流になって先へ流れる、といった
   分級は表しません。ENCflow の混合粒径(`f_bedmix`。[混合粒径](../../docs/users_guide/geomorph.md#混合粒径f_bedmix))
-  は、この例題の土石流モデル(`f_debris`)とは組めません(初期化で止まります)。
+  は、この例題の土石流モデル(`f_debris`)と併用できますが、流れの土砂の粒径階ごとの組成を受動的に運ぶだけで、
+  土石流の式は代表粒径 `db_d50` のままです。流れの中の分級は表さず、流れ方と到達範囲は変わりません
+  ([土石流の解説](../../docs/users_guide/massflow.md#混合粒径との併用f_bedmix))。
 - **家屋**: 家屋は流れを妨げず、壊れません。家屋の占有や破壊を入れるなら建物空隙率 `fn_gv` や
   家屋破壊 `fn_bldgdebris` を重ねます(例題 [levee_breach](../levee_breach/README.md)・
   [tsunami_town](../tsunami_town/README.md))。

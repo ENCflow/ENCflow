@@ -111,6 +111,16 @@ follows from all three of these purposes.
    (no branch is added to the existing bed-load loops; a separate path is used). The
    authoritative design is docs/mixed_sediment_plan.md and the record of the decision
    is §84.19.)
+   (Addition agreed 2026-11-27: the flowing mass of a debris flow (f_debris) may hold
+   fields only for carrying the class composition passively (a solid column per size
+   class). The exchange with the bed does not select grain sizes (erosion and
+   fluidisation keep the composition of the bed, deposition keeps the composition of
+   the flow), and the constitutive laws (equilibrium concentration, resistance,
+   exchange rates) keep a single representative grain size. Fines becoming part of
+   the interstitial fluid and grain-size sorting inside the flow are not included. Condition (3)
+   for the suspended load and condition (5) are unchanged (zero addition and
+   bit-identical results unless the two are combined). The record of the decision is
+   §139.)
 7. **Unneeded processes are "not enabled" by not creating or specifying their
    configuration file** (rather than being "disabled"). The presence or absence of
    fn_* is authoritative; a flag inside a file (f_*=0) is a convenience for temporary

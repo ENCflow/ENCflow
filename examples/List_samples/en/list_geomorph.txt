@@ -153,8 +153,11 @@
   ! ---- Mixed grain sizes (with f_fluvial. Size classes x one exchange layer and one substrate = Hirano type) ----
   ! For armouring, sand-gravel beds and cross-channel sorting. Adding f_suspend = 1 makes class 1 the
   ! suspended load. Also works with rockfall and talus, depth-dependent creep and longshore transport
-  ! (bedrock collapse requires rf_frac). Cannot be combined with hillslope erosion, the fines ledger,
-  ! debris flow, the wave stirring and others (users_guide/geomorph.md). fluv_d50 is not used
+  ! (bedrock collapse requires rf_frac). Also works with debris flow (f_debris): the solids in the flow are
+  ! carried as one column per class, the exchange does not select grain sizes, the debris-flow laws keep the
+  ! single size db_d50, and sediment entering through a boundary needs its composition inflow_csfrac.
+  ! Cannot be combined with hillslope erosion, the fines ledger, the wave stirring and others
+  ! (users_guide/geomorph.md). fluv_d50 is not used
   !f_bedmix = 1
   !bmix_d = 0.0005, 0.004, 0.02   ! grain size of each class (m), from fine to coarse, 2 to 8 (required)
   !bmix_frac0 = 0.3, 0.4, 0.3     ! initial fractions of the exchange layer (one per class, summing
