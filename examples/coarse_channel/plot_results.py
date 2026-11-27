@@ -36,8 +36,9 @@ matplotlib.rcParams["axes.unicode_minus"] = False
 # 色: 文字は 2 段の墨、目盛り・枠は薄い灰。表し方の色は全部の図で同じ(色は表し方に付く)
 INK, INK2, GRID, AXIS, BAND = "#191919", "#666666", "#e7e7e7", "#c2c2c2", "#efefef"
 C = {"lo": "#257de0", "hi": "#f47230", "mix": "#00b894", "split": "#f2a600", "k2": "#ee7fac", "sub1": "#008a17",
-     "k1": "#6a4ce2", "fine": "#666666"}
-MK = {"lo": "o", "hi": "s", "mix": "D", "split": "v", "k2": "^", "sub1": "P", "k1": "X", "fine": "h"}
+     "k1": "#6a4ce2", "fine": "#666666", "t50": "#6a4ce2", "t50s": "#ec4647", "all": "#008a17"}
+MK = {"lo": "o", "hi": "s", "mix": "D", "split": "v", "k2": "^", "sub1": "P", "k1": "X", "fine": "h",
+      "t50": "o", "t50s": "s", "all": "D"}
 REPL = {"lo": T("解像 n 列", "n resolved rows"), "hi": T("解像 n+1 列", "n+1 resolved rows"),
         "mix": T("解像 n 列 + 残りのサブグリッド 1 列", "n resolved + 1 remainder subgrid row"),
         "split": T("n+1 列のサブグリッドに等分", "n+1 subgrid rows, equal split"),
@@ -45,12 +46,18 @@ REPL = {"lo": T("解像 n 列", "n resolved rows"), "hi": T("解像 n+1 列", "n
         "k2w": T("段で 2 行を共有 + 幅を縮める", "2 rows shared + widths scaled"),
         "sub1": T("サブグリッド 1 列", "one subgrid row"),
         "d8": T("1 列に 1 セル(8 連結)", "one cell per column (8-connected)"),
-        "st4": T("4 連結の階段", "4-connected staircase"), "fine": T("Δx = 20 m", "Δx = 20 m")}
+        "st4": T("4 連結の階段", "4-connected staircase"), "fine": T("Δx = 20 m", "Δx = 20 m"),
+        "t50": T("占有率 50 % 以上を解像", "cells ≥ 50 % covered resolved"),
+        "t50s": T("50 % 以上を解像 + 残りを占有率の幅", "≥ 50 % resolved + rest at covered width"),
+        "all": T("全セルを占有率の幅", "all cells at covered width"),
+        "t30s": T("30 % 以上を解像 + 残りを占有率の幅", "≥ 30 % resolved + rest at covered width"),
+        "t70s": T("70 % 以上を解像 + 残りを占有率の幅", "≥ 70 % resolved + rest at covered width")}
 # 縮図の見出し(英語は短く)
 REPS = dict(REPL)
 if EN:
     REPS.update({"mix": "n resolved + remainder", "split": "equal-split subgrid", "k2w": "2 rows shared, widths scaled",
-                 "d8": "one cell per column", "k2": "2 rows shared at steps"})
+                 "d8": "one cell per column", "k2": "2 rows shared at steps", "t50": "≥ 50 % resolved",
+                 "t50s": "≥ 50 % resolved + rest", "all": "all at covered width"})
 # 縮図の色: 河道でない・サブグリッド河道・解像した河道・太らせて足したセル(段で行を共有する表し方の色)
 CMAP = ListedColormap(["#ffffff", "#9dc8f7", "#1757ac", "#ee7fac"])
 ANG = list(mc.ANGLES)
@@ -450,20 +457,21 @@ def fig_bend():
     # (e) 背水の高さと半径
     ax = fig.add_axes([0.07, 0.08, 0.38, 0.33])
     rs = list(mc.BEND_R)
-    for rep in ("lo", "k1", "k2", "fine"):
+    for rep in ("lo", "k2", "t50s", "all", "fine"):
         ys = [val[f"bend_r{int(r):04d}_{rep}"]["rise"] * 100 if f"bend_r{int(r):04d}_{rep}" in val else np.nan for r in rs]
-        lab = REPL[rep] + (T("(解像 n 列と同じ)", " (same as n rows)") if rep == "k1" else "")
+        lab = REPL[rep] + (T("(= 段で 1 行を共有・50 % 以上を解像)", " (= 1 row shared, ≥ 50 % resolved)")
+                           if rep == "lo" else "")
         ax.plot([r / mc.BEND_W for r in rs], ys, color=C[rep], marker=MK[rep], lw=1.6, ms=6.5, mec="white", mew=1.0,
-                label=lab, zorder=3 if rep != "k1" else 2, ls="-" if rep != "k1" else ":")
+                label=lab, zorder=3)
     ax.axhline(0.0, color=AXIS, lw=1.0)
-    ax.set_ylim(-2.0, 16.0)
+    ax.set_ylim(-2.0, 18.0)
     ax.set_xticks([r / mc.BEND_W for r in rs])
     style(ax, T("曲率半径 ÷ 川幅", "bend radius ÷ channel width"), T("上流の直線区間の背水 (cm)", "backwater upstream (cm)"))
     title(ax, T("(e) 屈曲の上流の水位の上がり(等流の水位から)", "(e) Rise of the level upstream of the bend"))
     ax.legend(frameon=False, fontsize=8, loc="upper right")
     # (f) 中心線に沿う水位(半径 500 m)
     ax = fig.add_axes([0.56, 0.08, 0.42, 0.33])
-    for rep in ("lo", "k2", "fine"):
+    for rep in ("lo", "k2", "t50s", "all", "fine"):
         name = f"bend_r0500_{rep}"
         if name not in val:
             continue
@@ -479,7 +487,7 @@ def fig_bend():
             if sel.any():
                 mid.append(0.5 * (a + b2) / 1000.0)
                 mean.append(100.0 * float(dev[sel].mean()))
-        ax.plot(mid, mean, color=C[rep], lw=1.6, label=REPL[rep])
+        ax.plot(mid, mean, color=C[rep], lw=1.6, label=REPS[rep])
     gg = mc.bend_geom(500.0)
     ax.axvspan(gg["l1"] / 1000.0, (gg["l1"] + gg["larc"]) / 1000.0, color=BAND, lw=0, zorder=0)
     ax.text((gg["l1"] + 0.5 * gg["larc"]) / 1000.0, 0.97, T("屈曲", "bend"), transform=ax.get_xaxis_transform(),
@@ -488,7 +496,7 @@ def fig_bend():
     style(ax, T("中心線の距離 (km)", "distance along the centreline (km)"),
           T("等流の水位からの差 (cm)", "level above uniform flow (cm)"))
     title(ax, T("(f) 中心線に沿う水位(半径 500 m)", "(f) Level along the centreline (radius 500 m)"))
-    ax.legend(frameon=False, fontsize=8, loc="upper right")
+    ax.legend(frameon=False, fontsize=8, loc="upper left")
     save(fig, "bend.png")
 
 
@@ -560,6 +568,171 @@ def fig_wet():
     save(fig, "wet.png")
 
 
+# ------------------------------------------------------------------ 占有率の作り方
+OCC_CLASSES = [(("a00",), T("(a) 格子に沿う川(0°)", "(a) Along a grid axis (0°)")),
+               (("a11", "a18", "a27", "a34"), T("(b) 斜めの川(11.3〜33.7°)", "(b) Oblique (11.3–33.7°)")),
+               (("a45",), T("(c) 45°", "(c) 45°"))]
+
+
+def occ_stats(val, angs, b, rep, offs=None):
+    """向き angs・ずれ offs の全ケースの 通水の幅 ÷ 川幅 の中央値・最小・最大(計算していない・途切れるケースは除く)"""
+    offs = mc.OCC_OFF if offs is None else offs
+    v = [val[n]["rel"] for an in angs for o in offs if (n := mc.occ_name(an, b, o, rep)) in val]
+    if not v:
+        return np.nan, np.nan, np.nan
+    return float(np.median(v)), float(min(v)), float(max(v))
+
+
+def fig_occ_reps():
+    vo, vb = A.results("occ"), A.results("bend")
+    fig, axs = plt.subplots(2, 4, figsize=(10.0, 5.2))
+    blues = matplotlib.colormaps["Blues"]
+    # 上の段: 26.6°・川幅 1.2 セル(ずれ 0)
+    an, b = "a27", 120.0
+    g = mc.straight(an, b, "lo", mc.DX)
+    f = mc.occupancy_straight(an, b, g["dn"], mc.DX)
+    xw, yw = straight_window(dict(g, out=(-b / 2, b / 2)), (900.0, 640.0))
+    gg = dict(g, out=(-b / 2, b / 2))
+    for k, rep in enumerate(("f",) + mc.OCC_RULES):
+        ax = axs[0, k]
+        if rep == "f":
+            ny, nx = f.shape
+            i0, i1 = max(0, int(xw[0] // mc.DX)), min(nx, int(math.ceil(xw[1] / mc.DX)))
+            j0, j1 = max(0, int((g["ly"] - yw[1]) // mc.DX)), min(ny, int(math.ceil((g["ly"] - yw[0]) / mc.DX)))
+            xe = np.arange(i0, i1 + 1) * mc.DX
+            ye = (g["ly"] - np.arange(j0, j1 + 1) * mc.DX)[::-1]
+            ax.pcolormesh(xe, ye, f[j0:j1, i0:i1][::-1, :], cmap=blues, vmin=0, vmax=1, edgecolors="#d0d0d0", linewidth=0.4)
+            for jj in range(j0, j1):
+                for ii in range(i0, i1):
+                    xc, yc = (ii + 0.5) * mc.DX, g["ly"] - (jj + 0.5) * mc.DX
+                    inside = xw[0] + 0.3 * mc.DX < xc < xw[1] - 0.3 * mc.DX and yw[0] + 0.3 * mc.DX < yc < yw[1] - 0.3 * mc.DX
+                    if f[jj, ii] > 0.004 and inside:   # 窓の端で切れるセルには書かない
+                        ax.text(xc, yc, f"{100 * f[jj, ii]:.0f}", ha="center", va="center", fontsize=6.5,
+                                color="white" if f[jj, ii] > 0.6 else INK, clip_on=True)
+            ax.set_xlim(*xw); ax.set_ylim(*yw); ax.set_aspect("equal"); ax.set_xticks([]); ax.set_yticks([])
+            for sp in ax.spines.values():
+                sp.set_color(AXIS)
+            straight_outline(ax, gg, xw)
+            ax.set_title(T("占有率 f (%)・26.6°・川幅 1.2 セル", "covered fraction f (%), 26.6°, 1.2 cells"),
+                         fontsize=8.3, color=INK, pad=3)
+            continue
+        g2 = mc.straight(an, b, rep, mc.DX)
+        raster(ax, g2["width"], mc.DX, g2["ly"], xw, yw)
+        straight_outline(ax, gg, xw)
+        v = vo.get(mc.occ_name(an, b, 0.0, rep))
+        if v:
+            ax.text(0.03, 0.04, f"{v['rel']:.2f}", transform=ax.transAxes, fontsize=8.5, color=INK,
+                    bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.9), zorder=6)
+        ax.set_title(REPS[rep], fontsize=8.3, color=INK, pad=3)
+    # 下の段: 屈曲(半径 500 m)
+    r = 500.0
+    gb = mc.bend(r, mc.BEND_W, "lo", mc.DX)
+    geo = gb["g"]
+    xw = (geo["xa"] - 600.0, geo["xc"] + r + 400.0)
+    yw = (geo["yc"] - 500.0, geo["ya"] + 400.0)
+    ny, nx = gb["width"].shape
+    X = (np.arange(nx)[None, :] + 0.5) * mc.DX + np.zeros((ny, 1))
+    Y = geo["ly"] - (np.arange(ny)[:, None] + 0.5) * mc.DX + np.zeros((1, nx))
+    fb = mc.occupancy_bend(geo, mc.BEND_W, mc.DX, X, Y, gb["dn"])
+    fine = vb.get(f"bend_r{int(r):04d}_fine")
+    for k, rep in enumerate(("f",) + mc.OCC_RULES):
+        ax = axs[1, k]
+        if rep == "f":
+            i0, i1 = max(0, int(xw[0] // mc.DX)), min(nx, int(math.ceil(xw[1] / mc.DX)))
+            j0, j1 = max(0, int((geo["ly"] - yw[1]) // mc.DX)), min(ny, int(math.ceil((geo["ly"] - yw[0]) / mc.DX)))
+            xe = np.arange(i0, i1 + 1) * mc.DX
+            ye = (geo["ly"] - np.arange(j0, j1 + 1) * mc.DX)[::-1]
+            ax.pcolormesh(xe, ye, fb[j0:j1, i0:i1][::-1, :], cmap=blues, vmin=0, vmax=1, edgecolors="#d0d0d0",
+                          linewidth=0.4)
+            ax.set_xlim(*xw); ax.set_ylim(*yw); ax.set_aspect("equal"); ax.set_xticks([]); ax.set_yticks([])
+            for sp in ax.spines.values():
+                sp.set_color(AXIS)
+            bend_outline(ax, geo, mc.BEND_W)
+            ax.set_title(T("占有率 f・屈曲(半径 500 m)", "covered fraction f, bend (radius 500 m)"), fontsize=8.3,
+                         color=INK, pad=3)
+            continue
+        g2 = mc.bend(r, mc.BEND_W, rep, mc.DX)
+        raster(ax, g2["width"], mc.DX, geo["ly"], xw, yw)
+        bend_outline(ax, geo, mc.BEND_W)
+        v = vb.get(f"bend_r{int(r):04d}_{rep}")
+        if v and fine:
+            ax.text(0.03, 0.04, T(f"背水の差 {100 * (v['rise'] - fine['rise']):+.1f} cm",
+                                  f"backwater diff. {100 * (v['rise'] - fine['rise']):+.1f} cm"),
+                    transform=ax.transAxes, fontsize=8.3, color=INK,
+                    bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.9), zorder=6)
+        ax.set_title(REPS[rep], fontsize=8.3, color=INK, pad=3)
+    fig.subplots_adjust(left=0.01, right=0.99, top=0.94, bottom=0.01, wspace=0.06, hspace=0.18)
+    save(fig, "occ_reps.png")
+
+
+def fig_occ():
+    val, vm = A.results("occ"), A.results("mask")
+    if not val:
+        return
+    xs = [b / mc.DX for b in mc.OCC_W]
+    fig, axs = plt.subplots(1, 3, figsize=(11.5, 4.6), sharey=True)
+    for ax, (angs, ttl) in zip(axs, OCC_CLASSES):
+        band(ax)
+        for rep in mc.OCC_RULES:
+            # 閾値だけの作り方は、川幅 1 セル未満では河道マスクが途切れるケースが多いので描かない
+            st = np.array([occ_stats(val, angs, b, rep) if (rep != "t50" or b > mc.DX) else (np.nan,) * 3
+                           for b in mc.OCC_W])
+            ax.fill_between(xs, st[:, 1], st[:, 2], color=C[rep], alpha=0.12, lw=0, zorder=1)
+            line(ax, xs, st[:, 0], rep, top=2.0)
+        d8 = [np.median([vm[n]["rel"] for an in angs if (n := f"mask_{an}_b{int(b):04d}_d8") in vm] or [np.nan])
+              for b in mc.MASK_W]
+        ax.plot([b / mc.DX for b in mc.MASK_W], d8, color=INK2, lw=1.4, ls="--", marker="o", ms=5, mec="white",
+                mew=1.0, zorder=3, label=T("中心線の 1 列(8 連結)+ 川幅", "one cell per column on the centreline + width"))
+        ax.set_xscale("log")
+        ax.set_xticks(xs)
+        ax.set_xticklabels([f"{x:g}" for x in xs])
+        ax.minorticks_off()
+        ax.set_ylim(0.3, 2.0)
+        style(ax, T("川幅 ÷ セル幅 B/Δx", "channel width ÷ cell size B/Δx"), YLAB if angs == ("a00",) else None)
+        title(ax, ttl)
+    legend(fig, axs[0], ncol=2 if EN else 4, y=1.0)
+    fig.subplots_adjust(left=0.06, right=0.99, top=0.80 if EN else 0.84, bottom=0.13, wspace=0.08)
+    save(fig, "occ.png")
+
+
+def fig_occ_sens():
+    val = A.results("occ")
+    if not val:
+        return
+    ws = mc.OCC_SENS_W
+    xs = np.array([b / mc.DX for b in ws])
+    angs = ("a11", "a18", "a27", "a34")
+    fig, axs = plt.subplots(1, 2, figsize=(10.5, 4.3), sharey=True)
+    groups = [
+        [("t30s", T("閾値 30 %", "threshold 30 %"), "#f5a3a3", "v"), ("t50s", T("閾値 50 %", "threshold 50 %"), C["t50s"], "s"),
+         ("t70s", T("閾値 70 %", "threshold 70 %"), "#8f1d1d", "^")],
+        [("t50s_c0", T("50 % + 残り・下限なし", "50 % + rest, no cutoff"), "#f5a3a3", "v"),
+         ("t50s", T("50 % + 残り・下限 5 %", "50 % + rest, cutoff 5 %"), C["t50s"], "s"),
+         ("t50s_c15", T("50 % + 残り・下限 15 %", "50 % + rest, cutoff 15 %"), "#8f1d1d", "^"),
+         ("all_c0", T("全セル・下限なし", "all cells, no cutoff"), "#7fcf8b", "v"),
+         ("all", T("全セル・下限 5 %", "all cells, cutoff 5 %"), C["all"], "D"),
+         ("all_c15", T("全セル・下限 15 %", "all cells, cutoff 15 %"), "#00500d", "^")]]
+    for ax, grp, ttl in zip(axs, groups, (T("(a) 解像にする閾値", "(a) Threshold for resolved cells"),
+                                          T("(b) 河道にする占有率の下限", "(b) Cutoff of the covered fraction"))):
+        band(ax)
+        n = len(grp)
+        for k, (rep, lab, col, m) in enumerate(grp):
+            st = np.array([occ_stats(val, angs, b, rep, offs=(0.0,)) for b in ws])
+            dx_ = xs * (1.0 + 0.035 * (k - (n - 1) / 2))
+            ax.errorbar(dx_, st[:, 0], yerr=[st[:, 0] - st[:, 1], st[:, 2] - st[:, 0]], fmt=m, color=col, ms=6.5,
+                        mec="white", mew=1.0, elinewidth=1.4, capsize=0, label=lab, zorder=3)
+        ax.set_xscale("log")
+        ax.set_xticks(xs)
+        ax.set_xticklabels([f"{x:g}" for x in xs])
+        ax.minorticks_off()
+        ax.set_ylim(0.7, 1.4)
+        style(ax, T("川幅 ÷ セル幅 B/Δx", "channel width ÷ cell size B/Δx"), YLAB if ax is axs[0] else None)
+        title(ax, ttl)
+        ax.legend(frameon=False, fontsize=7.8, loc="upper right", ncol=1 if ax is axs[0] else 2)
+    fig.subplots_adjust(left=0.07, right=0.99, top=0.9, bottom=0.13, wspace=0.06)
+    save(fig, "occ_sens.png")
+
+
 # ------------------------------------------------------------------ 数表
 def tables():
     vo, va, vw, vm, vb, vt = (A.results(s) for s in ("oblique", "axis", "wide", "mask", "bend", "wet"))
@@ -609,12 +782,45 @@ def tables():
         print()
     if vb:
         print(T("== 屈曲(上流の直線区間の背水 cm)", "== Bends (backwater upstream, cm)"))
-        reps = ("lo", "k1", "k2", "fine")
-        print(T("| 半径 | ", "| Radius | ") + " | ".join(REPL[r] for r in reps) + " |")
+        reps = ("lo", "k1", "k2", "t50", "t50s", "all", "t50s_c0", "all_c0", "t50s_c15", "all_c15", "fine")
+        print(T("| 半径 | ", "| Radius | ") + " | ".join(REPL.get(r, r) for r in reps) + " |")
         print("|---|" + "---:|" * len(reps))
         for r in mc.BEND_R:
             print(f"| {r:.0f} m | " + " | ".join(f(100 * vb[f'bend_r{int(r):04d}_{x}']['rise'], 1)
                                                  if f"bend_r{int(r):04d}_{x}" in vb else "—" for x in reps) + " |")
+        print()
+    vc = A.results("occ")
+    if vc:
+        print(T("== 占有率で作る河道マスク(通水の幅 ÷ 川幅。中央値 [最小〜最大]。ずれ 3 つ、斜めの川は向き 4 つも込み)",
+                "== Masks from the covered fraction (conveyance width ÷ width; median [min–max] over 3 offsets, and the 4 "
+                "angles for oblique rivers)"))
+        print(T("| 向き | 作り方 | ", "| Angle | Rule | ") + " | ".join(f"{b / mc.DX:g}" for b in mc.OCC_W) + " |")
+        print("|---|---|" + "---:|" * len(mc.OCC_W))
+        for angs, ttl in OCC_CLASSES:
+            lab = {"a00": "0°", "a45": "45°"}.get(angs[0], "11.3〜33.7°" if not EN else "11.3–33.7°")
+            for rep in mc.OCC_RULES:
+                cells = []
+                for b in mc.OCC_W:
+                    md, lo, hi = occ_stats(vc, angs, b, rep)
+                    cells.append("—" if not np.isfinite(md) else (f"{md:.2f}" if abs(hi - lo) < 0.005 else
+                                                                   f"{md:.2f} [{lo:.2f}〜{hi:.2f}]" if not EN else
+                                                                   f"{md:.2f} [{lo:.2f}–{hi:.2f}]"))
+                print(f"| {lab} | {REPL[rep]} | " + " | ".join(cells) + " |")
+        print()
+        print(T("== 閾値と下限の感度(ずれ 0、11.3〜33.7°。中央値 [最小〜最大])", "== Threshold and cutoff (offset 0, 11.3–33.7°)"))
+        reps = ("t30s", "t50s", "t70s", "t50s_c0", "t50s_c15", "all_c0", "all", "all_c15")
+        print("| B/Δx | " + " | ".join(reps) + " |")
+        print("|---:|" + "---:|" * len(reps))
+        for b in mc.OCC_SENS_W:
+            cells = []
+            for rep in reps:
+                md, lo, hi = occ_stats(vc, ("a11", "a18", "a27", "a34"), b, rep, offs=(0.0,))
+                cells.append("—" if not np.isfinite(md) else f"{md:.2f} [{lo:.2f}〜{hi:.2f}]")
+            print(f"| {b / mc.DX:g} | " + " | ".join(cells) + " |")
+        skipped = os.path.join(mc.RUNS, "skipped_occ.txt")
+        if os.path.exists(skipped):
+            names = open(skipped).read().split()
+            print(T(f"  河道マスクが途切れて作らなかったケース: {len(names)}", f"  cases not made (mask broken): {len(names)}"))
         print()
     if vt:
         print(T("== 河道の脇の水", "== Water beside the channel"))
@@ -634,6 +840,9 @@ def main():
     fig_wide()
     fig_bend()
     fig_wet()
+    fig_occ_reps()
+    fig_occ()
+    fig_occ_sens()
     print()
     tables()
 
