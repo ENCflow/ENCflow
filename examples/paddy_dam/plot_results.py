@@ -303,12 +303,18 @@ def fig_series():
 
 
 # ---------------------------------------------------------------- 結果 2: 同じ条件の表現 B と表現 A
-# 表現ごとに色を分け(表現 B = 青、表現 A = オレンジ)、表現 A の与え方は線種で(片方向 = 破線、双方向 = 実線、
-# 双方向で集水面積率 fn_pd_catch を与えたもの = 点線)
-REPS = [("B10_%s", REP_B, C1, "-"),
-        ("A30_%s", T("%s・片方向" % REP_A, "%s, one-way" % REP_A), C2, "--"),
-        ("A30_%s2", T("%s・双方向" % REP_A, "%s, two-way" % REP_A), C2, "-"),
-        ("A30_%s2c", T("%s・双方向・集水面積率" % REP_A, "%s, two-way, catchment fraction" % REP_A), C2, ":")]
+# 表現ごとに色を分け(表現 B = 青の実線、表現 A = オレンジ)、表現 A の与え方は線種で。表現 B と最も近く、最終的に
+# 比べたい双方向で集水面積率 fn_pd_catch を与えたものを太い実線で目立たせ、双方向を長い破線、片方向を短い点線にする。
+# 細い 2 本は濃いオレンジで太い実線の上に描く(値が重なっても隠れない)。表現 B は最前面。並びは数表の行の順(図の凡例は
+# REPS_PLOT の順)
+C2D = "#b4470f"                                # 表現 A の細い線(片方向・双方向)の濃いオレンジ: 太い実線の上でも見える
+REPS = [("B10_%s", REP_B, C1, {"ls": "-", "lw": 2.0, "zorder": 5}),
+        ("A30_%s", T("%s・片方向" % REP_A, "%s, one-way" % REP_A), C2D,
+         {"ls": (0, (0.1, 2.2)), "lw": 2.0, "dash_capstyle": "round", "zorder": 4}),
+        ("A30_%s2", T("%s・双方向" % REP_A, "%s, two-way" % REP_A), C2D, {"ls": (0, (5, 2.5)), "lw": 1.6, "zorder": 4}),
+        ("A30_%s2c", T("%s・双方向・集水面積率" % REP_A, "%s, two-way, catchment fraction" % REP_A), C2,
+         {"ls": "-", "lw": 3.4, "zorder": 3})]
+REPS_PLOT = [REPS[0], REPS[3], REPS[2], REPS[1]]   # 凡例は表現 B、双方向・集水面積率、双方向、片方向の順
 
 
 def oneway(c):
@@ -322,14 +328,14 @@ def fig_scale():
         return
     fig, axs = plt.subplots(2, 2, figsize=(9.8, 6.8), sharex=True, sharey="row")
     for col, g in enumerate(groups):
-        for fmt, rname, color, ls in REPS:
+        for fmt, rname, color, sty in REPS_PLOT:
             c = fmt % g
             if not have(c):
                 continue
             t, z, h = probe(c, 1)
-            axs[0, col].plot(t, h, color=color, ls=ls, lw=2, label=rname)
+            axs[0, col].plot(t, h, color=color, label=rname, **sty)
             tp, hm = mean_depth(paddy(c))
-            axs[1, col].plot(tp, hm, color=color, ls=ls, lw=2, label=rname)
+            axs[1, col].plot(tp, hm, color=color, label=rname, **sty)
         axs[0, col].set_title(T("(%d) 集落の浸水深 — %s" % (col + 1, SCEN[g]), "(%d) settlement depth — %s" % (col + 1, SCEN[g])),
                               fontsize=9, loc="left", color=INK)
         axs[1, col].set_title(T("(%d) 水田の平均水深 — %s" % (col + 3, SCEN[g]),
@@ -392,15 +398,15 @@ def fig_wq():
         return
     fig, axs = plt.subplots(3, 2, figsize=(9.8, 9.0), sharex=True, sharey="row")
     for col, g in enumerate(groups):
-        for fmt, rname, color, ls in REPS:
+        for fmt, rname, color, sty in REPS_PLOT:
             c = fmt % g
             if not have_wq(c):
                 continue
             th, out, inpd, perc, surf, m0 = fates(c)
-            axs[0, col].plot(th, out, color=color, ls=ls, lw=2, label=rname)
-            axs[1, col].plot(th, inpd, color=color, ls=ls, lw=2, label=rname)
+            axs[0, col].plot(th, out, color=color, label=rname, **sty)
+            axs[1, col].plot(th, inpd, color=color, label=rname, **sty)
             t, h, cc = probe_c(c, 2)
-            axs[2, col].plot(t, cc, color=color, ls=ls, lw=2, label=rname)
+            axs[2, col].plot(t, cc, color=color, label=rname, **sty)
         axs[0, col].set_title(T("(%d) 排水機場から地区の外へ出た割合 — %s" % (col + 1, SCEN[g]),
                                 "(%d) share pumped out of the district — %s" % (col + 1, SCEN[g])),
                               fontsize=9, loc="left", color=INK)
@@ -418,7 +424,7 @@ def fig_wq():
     axs[2, 0].set_ylabel(T("濃度 (mg/L)", "concentration (mg/L)"), fontsize=8, color=INK2)
     for ax in axs.flat:
         style(ax)
-    axs[1, 0].legend(fontsize=7, frameon=False, loc="lower left")   # N の水田に残った割合のパネルは左下が空いている
+    axs[1, 1].legend(fontsize=7, frameon=False, loc="lower left")   # D の水田に残った割合のパネルは下半分が空いている
     fig.tight_layout()
     fig.savefig(os.path.join(FIGDIR, "wq.png"), dpi=130)
     plt.close(fig)

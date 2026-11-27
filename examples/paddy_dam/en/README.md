@@ -211,8 +211,9 @@ district, the rain, the pumping station and the devices of the outlets are the s
 ![Representation B and representation A under the same conditions](figs/scale.png)
 
 (1)(2) Inundation depth in the settlement (probe 1; in representation A the 30 m cell containing the settlement), (3)(4)
-mean water depth of the paddy fields. Left: N; right: D. Blue is representation B, orange is representation A, and the
-line style shows how representation A is given.
+mean water depth of the paddy fields. Left: N; right: D. The blue solid line is representation B and orange is
+representation A, whose line shows how it is given (thick solid = two-way with the catchment fraction, long dashes =
+two-way, short dots = one-way).
 
 Table 2 (representation B and representation A under the same conditions)
 
@@ -293,9 +294,9 @@ takes out of the district during and after the heavy rain, and how much stays in
 ![Where the substance dissolved in the ponding before the rain goes](figs/wq.png)
 
 (1)(2) Share of the initial substance pumped out of the district. (3)(4) Share remaining in the paddy fields (the tanks
-for representation A, the plot water for representation B). (5)(6) Concentration at the pumping station (probe 2). Blue
-is representation B and orange representation A; the line style shows how representation A is given (dashed = one-way,
-solid = two-way, dotted = two-way with the catchment fraction).
+for representation A, the plot water for representation B). (5)(6) Concentration at the pumping station (probe 2). The
+lines are as in the figure of result 2 (blue solid = representation B, thick orange solid = representation A two-way
+with the catchment fraction, long dashes = representation A two-way, short dots = representation A one-way).
 
 Table 4 (where the substance dissolved in the ponding before the rain (10 mg/L) went, % of the initial mass)
 

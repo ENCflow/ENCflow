@@ -3326,9 +3326,9 @@
     {
       "source": "examples/paddy_dam/README.md",
       "target": "examples/paddy_dam/en/README.md",
-      "source_sha256": "010a37eb5cf587739b7693cb178e2f0ebca743df1427fb9bb242ba8faaadce29",
-      "target_sha256": "bb23d64324c934cc720cf8d1a378bb1875773a072b31bcde82a62208ff7c4e17",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "2e09be41fdb1016dc8fc6891efe84d7721a1e82f76224a9a06bdb5a03c8e6215",
+      "target_sha256": "a6f2995e97b423327809b04fc2ec960891300c231ecdfe8089e4dcf002c983e2",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
