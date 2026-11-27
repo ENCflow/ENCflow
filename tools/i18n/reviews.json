@@ -194,11 +194,11 @@
     {
       "source": "docs/users_guide/channel_models.md",
       "target": "docs/en/users_guide/channel_models.md",
-      "source_sha256": "ddaccdb8f771477a29acc86ba60cdfea659478c834f2a6f3344210fd2d8799a1",
-      "target_sha256": "b18b97d850d51e5afc09bb87580d269824e02e6f61cd949cfe34b16220adc51d",
-      "reviewer": "Claude (Claude Code session; §1 gained the paragraph on advection and virtual walls and §6 the test/wallpond entry in both files; compared paragraph by paragraph, the rest unchanged)",
+      "source_sha256": "5176fb03944f613db06dbdd40d738ea0e429e376ee2a7b3b1b2c3627ef5b1d70",
+      "target_sha256": "300eb13ccb07594985883823c2b90c9e7641541ee46f2a0e1c5a521e9d9a63fc",
+      "reviewer": "Claude (Claude Code session; the developer-record citation renumbered from §136 to §137 in both files (main's §136 is another section) and compared; the rest as reviewed earlier the same day)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/coordinates.md",
@@ -455,11 +455,11 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "3edf07cae9ccb0d668b7721a55191c76c0b98ca19a82a6be984f59ff971a5af9",
-      "target_sha256": "68581c1a7bf34e85c3b5f4aee21d96d92c69794c8c9610853e80c4ee818efc1e",
-      "reviewer": "Claude (Claude Code session; §4.2 table row and §4.3 paragraph on seawalls in the dynamic reassignment added in both files; compared sentence by sentence, the rest unchanged)",
+      "source_sha256": "febb8fce5d53b2a1e928fac584c214f2edee52236d2b68c6722bef5581932691",
+      "target_sha256": "14330319b27ffd062474cbaf3b5365285231e43237f1b5087abccd085c0d3ab5",
+      "reviewer": "Claude (Claude Code session; the developer-record citation renumbered from §136 to §137 in both files (main's §136 is another section) and compared; the rest as reviewed earlier the same day)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -1778,9 +1778,9 @@
     {
       "source": "examples/coarse_channel/README.md",
       "target": "examples/coarse_channel/en/README.md",
-      "source_sha256": "a253cc25a7aa9089deed35e62871d05ac68719ab74525bf9c82b39e12fe390cd",
-      "target_sha256": "db2fe1cf16b248f07f76a8d8d16704000ae4b998dbbfd01c6d2862199e867724",
-      "reviewer": "Claude (Claude Code session; English mirror rewritten together with the Japanese master for the covered-fraction restructuring and compared section by section, including the summary and choice tables, the tables of the details block (decimals and multi-digit numbers checked per section by script), the anchors and the relative links)",
+      "source_sha256": "a5131b1febb071d6967fb8b9d7c19251e8182adb7038e851599b6fb6d090cbe8",
+      "target_sha256": "b5e4e88f1db32a81e3411e33d6eb3ce5647e089490ac1f760f55a063a2ed5157",
+      "reviewer": "Claude (Claude Code session; the developer-record citation renumbered from §136 to §137 in both files (main's §136 is another section) and compared; the rest as reviewed earlier the same day)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -1814,11 +1814,11 @@
     {
       "source": "examples/coarse_channel/figs/oblique.png",
       "target": "examples/coarse_channel/en/figs/oblique.png",
-      "source_sha256": "c5cba5cae8dfc5482e7a128bc50dcab685a450f203fa885596285e3c46cf0f25",
-      "target_sha256": "fa5689a89f03c5700838febb7dbb48ab4fa69d1f67ac279ff0a21b337a33264a",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "source_sha256": "3c3f063f12faa9023c5dfc9a4b4df3f819e184378c43a41b08e328151eca1ece",
+      "target_sha256": "3a36dd590ad1884a5ea0f0d94c9e5975cdc16d77aae9f334dab1d0c5096dc0d7",
+      "reviewer": "Claude (Claude Code session; both images redrawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/coarse_channel/figs/occ.png",
@@ -1841,9 +1841,9 @@
     {
       "source": "examples/coarse_channel/figs/occ_sens.png",
       "target": "examples/coarse_channel/en/figs/occ_sens.png",
-      "source_sha256": "9099415f85510d0839e229eb92a4265c9c0b0fc9d042bfa0ac6f23cd8520cfae",
-      "target_sha256": "d93f17b2e00083648018e1e4da9bb0a4af9800297727cac596cc9a3651b61c1a",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "source_sha256": "72a7f31d6d9027aa3fa7a25b79e3a7b1d1cb57068b720de40cb7f89362b7a25b",
+      "target_sha256": "5fcd6d4174c9d5f4ce8e5b26dcb963726fac15f1f35403905a15a37015b0e8ba",
+      "reviewer": "Claude (Claude Code session; both images redrawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -1886,11 +1886,11 @@
     {
       "source": "examples/coarse_channel/figs/wide.png",
       "target": "examples/coarse_channel/en/figs/wide.png",
-      "source_sha256": "75ea17c65275a9fbbe08e8195555ffcc7614c98400bbbf3adb79dfd0834f1f9a",
-      "target_sha256": "f8ec93f2dd5d72af327d7c5405c34a832ba9e3012aa7db8dc05dd3b464233439",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "source_sha256": "258ee32c1af24f5e68a08857a1b1cb9d034fc7b70d35cedff5bbf39f08148bbe",
+      "target_sha256": "fc3ee1162ed5b5e6075619ab65fbdf10b6d82a9e2df125f69de469a21bc50bc3",
+      "reviewer": "Claude (Claude Code session; both images redrawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/coastal_compound_flood/README.md",
@@ -4262,11 +4262,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "11ebe7ee9e9e86070d812fb7c833208eff5e6feaf86f0e1741b47297081bd815",
-      "target_sha256": "bd2f2a2ddbf21ae06babe8af1a7c527f05ce26b42c62af76d66143bf156159e7",
-      "reviewer": "Claude (Claude Code session; the wallpond row gained the 26.6° thickened two-cell band and the §134.10 merge judgement in both files and was compared; the rest unchanged)",
+      "source_sha256": "067dec040649f99a53dbc66b955ceea8e7a4cb94a52d29a7a7eb4fc3e646037c",
+      "target_sha256": "562de9660d3c2579cab293c0c39b7cfb9b9448dedfd268b7f9212cdd09b6a564",
+      "reviewer": "Claude (Claude Code session; the developer-record citation renumbered from §136 to §137 in both files (main's §136 is another section) and compared; the rest as reviewed earlier the same day)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "test/avalanche/README.md",
@@ -5518,6 +5518,15 @@
       "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "test/sliver/README.md",
+      "target": "test/sliver/en/README.md",
+      "source_sha256": "f7c41dfb156001958376103a76235cc43a01792e34989b57772d1af0469fa13f",
+      "target_sha256": "b99527dc834d63dbd9e94b9fef9693d96ecaa2c6a445cc919e53669cdabc0c43",
+      "reviewer": "Claude (Claude Code session; the developer-record citation renumbered from §136 to §137 in both files (main's §136 is another section) and compared; the rest as reviewed earlier the same day)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "test/slopefric/README.md",

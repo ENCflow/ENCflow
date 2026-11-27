@@ -18,7 +18,7 @@ thickening at the steps) are compared as well and used to explain why the result
 | Question | Answer | Figure |
 |---|---|---|
 | How should a coarse channel mask be made from a channel polygon or a high-resolution mask? | Make every cell with a covered fraction f of 5 % or more a channel cell, with a subgrid channel width of f·Δ (cells with f close to 1 resolved). On oblique rivers 1.6–3 cells wide the conveyance width is 0.90–1.03 times the channel width, 0.98–1.00 times from 6 cells. Bends need no thickening: the backwater differs from the fine grid by 1 cm or less | [occ](#1-channel-masks-from-the-covered-fraction) |
-| May cells with a tiny covered fraction be included? | A cutoff is needed. Including cells covered by a few per cent lowers the conveyance of oblique rivers (1.2–3 cells wide) to 0.73–0.96 times (the dynamic reassignment of openings stops working). Cutoffs of 5 % and 15 % give nearly the same | [sens](#2-threshold-for-resolved-cells-and-cutoff-of-the-covered-fraction) |
+| May cells with a tiny covered fraction be included? | A cutoff is still advisable. The computational core counts a cell whose width is below 5 % of the width it is compared with as outside the computation in the reassignment of openings and the conveyance ratio, so including cells covered by a few per cent keeps oblique rivers (1.2–3 cells wide) at 0.92–1.03 times, but the result differs from that with a 5 % cutoff by up to 0.07. Cutoffs of 5 % and 15 % give nearly the same | [sens](#2-threshold-for-resolved-cells-and-cutoff-of-the-covered-fraction) |
 | Is a threshold (50 %) for channel / non-channel enough? | No. 0.40–1.03 times on oblique rivers (1.2–3 cells wide) and +7.5 cm of backwater in a bend. Resolving cells of 50 % or more and giving the rest their covered width is nearly the same as "all cells" on oblique rivers, but underestimates the backwater of bends by 2–4 cm | [occ](#1-channel-masks-from-the-covered-fraction), [bend](#3-bends) |
 | Rivers narrower than one cell? | Make the centreline one cell per column (8-connected) and give it the channel width (0.99–1.00 times up to 0.6 cell). From the covered fraction the river splits into neighbouring cells and gives 0.84–1.88 times. A 4-connected staircase also gives 1.4–2.7 times at 26.6–45° | [mask](#4-narrower-than-one-cell-one-line-of-cells-on-the-centreline-and-mask-connectivity) |
 | Rivers along a grid axis and at 45°? | The covered-fraction rules carry too much where partial cells lie side by side. At 2 cells wide, a river along a grid axis gives 1.00–1.20 times depending on where its banks fall, and a 45° river 1.02–1.22 times; up to +7 % and +6 % at 6 cells | [occ](#1-channel-masks-from-the-covered-fraction) |
@@ -137,15 +137,18 @@ Medians and minimum to maximum over the four oblique directions (11.3–33.7°) 
 
 - **Thresholds of 50–70 % give nearly the same**: a threshold of 30 % also resolves cells that are mostly not channel and
   carries too much (1.03–1.27 times at 1.2 cells).
-- **A cutoff is needed**: including cells covered by a few per cent lowers the conveyance (with all cells at their
-  covered width, 0.73–0.88 times at 1.2 cells and 0.90–0.96 times at 2 and 3 cells). Cutoffs of 5 % and 15 % differ by
-  0.01 or less. In bends too, without a cutoff the backwater comes out about 2 cm larger.
-- The cutoff is needed because of the dynamic reassignment of openings (`f_opening_dynamic` in `&list_enc`, default 3).
-  When the corner cell of a diagonal edge lies outside the computation, the opening is counted as blocked and its passage
-  width is reassigned to nearby open edges. When the corner cell is a subgrid cell with a small covered fraction, it
-  counts as "open", nothing is reassigned, and the flow through the diagonal edge is throttled by that cell's small
-  width. This was confirmed by switching the reassignment off (`f_opening_dynamic = 0`), which brings the difference
-  between with and without the cutoff within 0.02 (but with the reassignment off both drop to 0.65–0.87 times).
+- **A cutoff is still advisable**: including cells covered by a few per cent gives, with all cells at their covered
+  width, 0.92–1.01 times at 1.2 cells, 0.92–1.03 times at 2 cells and 0.97–1.00 times at 3 cells, up to 0.07 away from
+  the results with a 5 % cutoff (0.10 for resolving cells of 50 % or more and giving the rest their covered width).
+  Cutoffs of 5 % and 15 % differ by 0.01 or less. The backwater of bends, with all cells at their covered width, is
+  3.2 / 2.8 / 3.0 cm without a cutoff and 1.5 / 2.7 / 2.5 cm with a 5 % cutoff (fine grid 2.5 / 2.9 / 2.6 cm).
+- A cell covered by a few per cent is a sliver that the channel edge only grazes at a corner, and its width cap almost
+  stops the flow through it. The dynamic reassignment of openings (`f_opening_dynamic` in `&list_enc`, default 3) counts
+  an opening as blocked when the corner cell of a diagonal edge lies outside the computation and reassigns its passage
+  width to nearby open edges. The computational core counts a channel cell whose width is below 5 % of the width of the
+  cell it is compared with as outside the computation in this reassignment and in the normalisation of the in-channel
+  velocity (the conveyance ratio) (developer record §137). The advection term still counts such a cell as a wet
+  neighbour, so the result differs slightly from that with a 5 % cutoff.
 
 ### 3. Bends
 
@@ -274,8 +277,8 @@ measured reach.
 | Bends | The same (no thickening needed) | Backwater difference −1.0 to −0.1 cm (2 cells wide, radius 2.5–7.5 times the width) |
 
 - The covered fraction is obtained from the area of the channel polygon clipped by each coarse cell, or from the number
-  of cells of a high-resolution channel mask. Forgetting the cutoff (5 %) lowers the conveyance of
-  oblique rivers (1.2–3 cells wide) to 0.73–0.96 times.
+  of cells of a high-resolution channel mask. Forgetting the cutoff (5 %) still keeps oblique rivers
+  (1.2–3 cells wide) at 0.92–1.03 times, but the result differs from that with the cutoff by up to 0.07.
 - Rivers 1–2 cells wide, reaches along a grid axis and reaches close to 45° have larger errors. Where the level must be
   accurate, refine the grid or check against observed levels.
 
@@ -306,9 +309,9 @@ Threshold and cutoff (oblique rivers 11.3–33.7°, no shift; median [min–max]
 
 | B/Δx | Threshold 30 % | Threshold 50 % | Threshold 70 % | 50 %, no cutoff | 50 %, cutoff 15 % | All cells, no cutoff | All cells, cutoff 5 % | All cells, cutoff 15 % |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1.2 | 1.14 [1.03–1.27] | 1.06 [1.00–1.08] | 1.02 [0.96–1.08] | 0.83 [0.77–0.92] | 1.05 [1.00–1.07] | 0.80 [0.73–0.88] | 0.98 [0.95–1.04] | 0.98 [0.95–1.03] |
-| 2 | 1.08 [1.02–1.24] | 1.04 [0.95–1.10] | 1.03 [0.95–1.04] | 0.96 [0.91–1.01] | 1.04 [1.00–1.10] | 0.93 [0.90–0.95] | 1.01 [0.92–1.03] | 1.01 [0.97–1.03] |
-| 3 | 1.05 [1.01–1.13] | 1.01 [1.01–1.03] | 1.01 [0.99–1.01] | 0.97 [0.94–0.97] | 1.01 [1.01–1.02] | 0.93 [0.92–0.96] | 1.00 [0.98–1.00] | 0.99 [0.98–1.00] |
+| 1.2 | 1.14 [1.03–1.27] | 1.06 [1.00–1.08] | 1.02 [0.96–1.08] | 0.99 [0.95–1.02] | 1.05 [1.00–1.07] | 0.95 [0.92–1.01] | 0.98 [0.95–1.04] | 0.98 [0.95–1.03] |
+| 2 | 1.08 [1.02–1.24] | 1.04 [0.95–1.10] | 1.03 [0.95–1.04] | 1.01 [0.95–1.07] | 1.04 [1.00–1.10] | 0.96 [0.92–1.03] | 1.01 [0.92–1.03] | 1.01 [0.97–1.03] |
+| 3 | 1.05 [1.01–1.13] | 1.01 [1.01–1.03] | 1.01 [0.99–1.01] | 1.02 [0.98–1.04] | 1.01 [1.01–1.02] | 1.00 [0.97–1.00] | 1.00 [0.98–1.00] | 0.99 [0.98–1.00] |
 | 6 | 1.00 [1.00–1.01] | 1.00 [0.99–1.00] | 0.99 [0.98–0.99] | 1.00 [0.99–1.00] | 1.01 [0.99–1.02] | 0.99 [0.98–0.99] | 0.99 [0.98–0.99] | 0.99 [0.98–1.00] |
 
 Thresholds of 30, 50 and 70 % give the rest their covered width (cutoff 5 %).
@@ -317,9 +320,9 @@ Bends (backwater in the upstream straight reach, cm; the fine grid gives 2.5 / 2
 
 | Radius | n resolved rows | 1 row shared at steps | 2 rows shared at steps | ≥ 50 % resolved | 50 % + rest | All cells | 50 % + rest, no cutoff | All cells, no cutoff | 50 % + rest, cutoff 15 % | All cells, cutoff 15 % |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 500 m | 10.0 | 10.0 | 1.0 | 10.0 | 0.7 | 1.5 | 2.8 | 3.7 | −0.1 | 0.8 |
-| 1,000 m | 6.2 | 6.2 | −0.7 | 6.2 | −0.1 | 2.7 | 1.6 | 4.4 | −1.6 | 1.3 |
-| 1,500 m | 4.3 | 4.3 | −0.4 | 4.3 | −1.1 | 2.5 | 0.9 | 4.7 | −2.5 | 1.8 |
+| 500 m | 10.0 | 10.0 | 1.0 | 10.0 | 0.7 | 1.5 | 2.4 | 3.2 | −0.1 | 0.8 |
+| 1,000 m | 6.2 | 6.2 | −0.7 | 6.2 | −0.1 | 2.7 | −0.3 | 2.8 | −1.6 | 1.3 |
+| 1,500 m | 4.3 | 4.3 | −0.4 | 4.3 | −1.1 | 2.5 | −1.3 | 3.0 | −2.5 | 1.8 |
 
 Bands assembled from the centreline, along a grid axis (B/Δx):
 
@@ -343,7 +346,7 @@ Bands assembled from the centreline, oblique rivers (120 / 200 / 300 m wide):
 | Angle | n resolved rows | n+1 resolved rows | n resolved + remainder | Equal split | 1 row shared at steps | 2 rows shared at steps | 2 rows + widths scaled | Δx = 20 m |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | 0° | 0.83 / 1.00 / 1.00 | 1.67 / — / — | 0.97 / — / — | 1.37 / — / — | — | — | — | 1.00 / 1.00 / 1.00 |
-| 11.3° | 0.63 / 0.81 / 0.86 | 0.71 / 0.93 / 0.93 | 0.55 / 0.78 / 0.83 | 0.07 / 0.27 / 0.33 | 0.63 / 0.81 / 0.86 | 1.60 / 0.93 / 0.86 | 1.27 / 0.91 / 0.86 | 0.88 / 0.93 / 0.95 |
+| 11.3° | 0.63 / 0.81 / 0.86 | 0.71 / 0.93 / 0.93 | 0.63 / 0.81 / 0.83 | 0.07 / 0.27 / 0.33 | 0.63 / 0.81 / 0.86 | 1.60 / 0.93 / 0.86 | 1.27 / 0.91 / 0.86 | 0.88 / 0.93 / 0.95 |
 | 18.4° | 0.71 / 0.73 / 0.84 | 0.53 / 0.95 / 0.95 | 0.61 / 0.79 / 0.84 | 0.13 / 0.50 / 0.55 | 0.53 / 0.73 / 0.84 | 1.63 / 0.95 / 0.84 | 1.29 / 0.93 / 0.84 | 0.91 / 0.95 / 0.97 |
 | 26.6° | 0.68 / 0.73 / 0.81 | 0.96 / 1.01 / 0.98 | 1.05 / 0.89 / 0.90 | 0.62 / 0.73 / 0.71 | 0.96 / 0.73 / 0.81 | 1.70 / 1.01 / 0.81 | 1.41 / 1.00 / 0.81 | 0.95 / 0.98 / 0.99 |
 | 33.7° | 0.40 / 0.80 / 0.85 | 0.93 / 1.03 / 0.96 | 0.55 / 0.82 / 0.88 | 0.30 / 0.56 / 0.56 | 0.93 / 0.80 / 0.85 | 1.74 / 1.03 / 0.85 | 1.43 / 1.02 / 0.85 | 0.95 / 0.97 / 0.98 |
@@ -358,7 +361,7 @@ values as n resolved rows in every direction):
 | 11.3° | 0.92 / 0.94 | 0.95 / 0.96 | 0.91 / 0.95 |
 | 18.4° | 0.90 / 0.95 | 0.95 / 0.98 | 0.93 / 0.96 |
 | 26.6° | 0.94 / 0.97 | 1.01 / 1.01 | 0.95 / 0.97 |
-| 33.7° | 0.94 / 0.98 | 0.99 / 1.01 | 0.94 / 0.96 |
+| 33.7° | 0.94 / 0.98 | 0.99 / 1.01 | 0.94 / 0.98 |
 | 45° | 0.96 / 1.00 | 1.08 / 1.07 | 1.03 / 1.00 |
 
 One-cell channel masks (one cell per column / 4-connected staircase):
@@ -409,7 +412,7 @@ fine-grid cases (Δx = 20 m; 30 s to 2 min each with 4 threads) one at a time. C
 - **A single flow strength**: one condition with a depth of 3.50 m and a depth ÷ cell size of 0.035.
 - **Only the default configuration of the advection term and the reassignment of openings**: the conveyance of the same
   band changes by a few per cent with the advection configuration (developer record §134.10). With the dynamic
-  reassignment of openings switched off, the covered-fraction rules drop to 0.65–0.87 times (section 2).
+  reassignment of openings switched off, the covered-fraction rules drop to 0.65–0.87 times (developer record §135.6).
 - **The extra conveyance of rivers along a grid axis and at 45°** comes from how diagonal edges between subgrid cells
   side by side are treated (a rule of the computational core); the mask rules do not fix it.
 - **The fine grid is not converged either**: even at Δx = 20 m a 6-cell river at 11.3° gives 0.88 times.
