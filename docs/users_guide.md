@@ -38,6 +38,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
   - [ネスティングの解説](users_guide/nest_models.md) — 時間補間・境界帯の方式・Flather 条件・スポンジ・子→親の置換と保存修正の定式と既定値の根拠(ネスティングの補足)
   </details>
 - [並列実行](users_guide/parallel.md) — OpenMP・MPI・結果の再現性
+- [外部連携(BMI)](../bmi/README.md) — Python や他のモデルから計算を進め、状態を取り出し、降水・粗度などを外から与える(CSDMS BMI 2.0。bmi/ で別にビルドするオプション機能)。入門は [BMI チュートリアル](../tutorials/bmi/README.md)
 
 **第III部 機能別リファレンス**
 - [浅水流計算](users_guide/swflow.md)(&list_enc、数値パラメータ)— 方式選択・適応的ルンゲクッタ・数値定数 <details><summary>解説(11 件)</summary>
@@ -297,3 +298,4 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 | 長時間計算の分割・シナリオ分岐 | [中断と再開](users_guide/restart.md) |
 | GIS データ(GeoTIFF 等)の入出力 | [座標系](users_guide/coordinates.md)+[入出力](users_guide/io.md) |
 | 大規模計算・クラスタ実行 | [並列実行](users_guide/parallel.md) |
+| Python から計算を操作する・他のモデルと結合する | [外部連携(BMI)](../bmi/README.md)(入門は [BMI チュートリアル](../tutorials/bmi/README.md)) |

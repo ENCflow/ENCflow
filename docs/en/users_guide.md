@@ -44,6 +44,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
   - [Nesting explained](users_guide/nest_models.md) -- time interpolation, boundary-band methods, the Flather condition, the sponge, child-to-parent replacement and the conservation correction, with the basis of the defaults (supplement to nesting)
   </details>
 - [Parallel execution](users_guide/parallel.md) -- OpenMP, MPI, reproducibility of results
+- [Interoperability (BMI)](../../bmi/README.en.md) -- driving the run from Python or other models: advancing it, retrieving its state and giving it inputs such as precipitation and roughness (CSDMS BMI 2.0; an optional feature built separately in bmi/). Start with the [BMI tutorial](../../tutorials/bmi/en/README.md)
 
 **Part III: Feature reference**
 - [Shallow water computation](users_guide/swflow.md) (&list_enc, numerical parameters) -- scheme selection, adaptive Runge-Kutta, numerical constants <details><summary>Explanations (11)</summary>
@@ -314,3 +315,4 @@ settings, including unsupported phenomena), see
 | Splitting long runs / scenario branching | [Suspend and restart](users_guide/restart.md) |
 | GIS data (GeoTIFF etc.) input and output | [Coordinate systems](users_guide/coordinates.md) + [input and output](users_guide/io.md) |
 | Large-scale runs / cluster execution | [Parallel execution](users_guide/parallel.md) |
+| Driving the run from Python / coupling with other models | [Interoperability (BMI)](../../bmi/README.en.md) (start with the [BMI tutorial](../../tutorials/bmi/en/README.md)) |
