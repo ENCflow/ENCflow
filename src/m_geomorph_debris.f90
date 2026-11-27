@@ -77,7 +77,7 @@ submodule(m_geomorph) m_geomorph_debris
   ! 使う(developer.md §28.20)
   real, parameter :: gw_wfull = 1.0e-3
 
-  ! 斜面安定判定で、濃い混合体が載るセルを判定から外す下限(f_slide_noflow = 2。独自の定数。namelist に
+  ! 斜面安定判定で、濃い混合体が載るセルを判定から外す下限(f_slide_noflow = 1。独自の定数。namelist に
   ! しない)。載っている土砂を堆積に直した厚さ hs/C* が、判定する厚さ d = min(sd, slide_dmax) のこの比
   ! 以上のセルだけを外す。slide_dmax で流動化した直後は比 1 で、流れ去って比がこの値を切ると下の層を
   ! 判定する。0.25〜0.75 の範囲で、崩れる量はほとんど変わらない(developer.md §28.24)
@@ -449,9 +449,10 @@ module subroutine init_debris(gm, p, g, list)
     end if
   end if
 
-  ! --- 斜面安定判定の選択子(developer.md §28.19。どれも既定は従来の経路) ---
+  ! --- 斜面安定判定の選択子(developer.md §28.19。f_slide_noflow のほかは既定が従来の経路。
+  !     f_slide_noflow は未指定なら、f_slide を使うとき 1・使わないとき 0。§136) ---
   if (list%f_slide == 0 .and. (list%f_slide_seep /= 0 .or. list%f_slide_wet /= 0 &
-      .or. list%f_slide_noflow /= 0 .or. list%slide_dmax /= 0.0)) then
+      .or. (list%f_slide_noflow /= 0 .and. list%f_slide_noflow /= -9999) .or. list%slide_dmax /= 0.0)) then
     call par_stop("list_geomorph: f_slide_seep, f_slide_wet, f_slide_noflow and slide_dmax require " &
                   // "f_slide = 1 or 2")
   end if
@@ -473,14 +474,18 @@ module subroutine init_debris(gm, p, g, list)
   if (list%f_slide_wet /= 0 .and. list%f_slide_wet /= 1) then
     call par_stop("list_geomorph: f_slide_wet must be 0 or 1(fluidize only failures caused by pore pressure)")
   end if
-  if (list%f_slide_noflow < 0 .or. list%f_slide_noflow > 2) then
-    call par_stop("list_geomorph: f_slide_noflow must be 0, 1(do not judge cells under a dense mixture) or " &
-                  // "2(1 only while the mixture is not thin compared with the judged layer)")
+  if (list%f_slide_noflow /= -9999 .and. list%f_slide_noflow /= 0 .and. list%f_slide_noflow /= 1) then
+    call par_stop("list_geomorph: f_slide_noflow must be 0(judge every cell) or 1(do not judge cells under " &
+                  // "a dense mixture unless the mixture is thin compared with the judged layer)")
   end if
   if (list%slide_dmax < 0.0) call par_stop("list_geomorph: slide_dmax must be >= 0 (0 = whole soil layer)")
   gm%f_slide_seep = list%f_slide_seep
   gm%f_slide_wet = list%f_slide_wet
-  gm%f_slide_noflow = list%f_slide_noflow
+  if (list%f_slide_noflow == -9999) then
+    gm%f_slide_noflow = merge(1, 0, list%f_slide > 0)     ! 未指定: f_slide を使うとき 1(§136)
+  else
+    gm%f_slide_noflow = list%f_slide_noflow
+  end if
   gm%sl_dmax = list%slide_dmax
 end subroutine
 
@@ -896,12 +901,11 @@ end subroutine
 !                        標準的な無限長斜面の有効応力と浸透力のつり合いを独自に整理した形
 !     f_slide_wet = 1  : Fs < 1 でも、間隙水圧なし(hw = 0)で Fs < 1 のセルは流動化しない
 !                        (段差など幾何的に不安定な所は安息角崩落 f_repose の担当)
-!     f_slide_noflow = 1: 濃い混合体(hs/(h + hs) >= db_cmin)が載るセルは判定しない
-!                        (河床と流れの交換は侵食堆積式の担当)
-!     f_slide_noflow = 2: 1 のうち、載っている土砂が判定する層に比べて薄いセルは判定する。判定しないのは、
-!                        土砂を堆積に直した厚さ hs/C* が、判定する厚さ d の sl_film(= 0.5)倍以上の
-!                        セルだけ。1 は、厚さ数 cm の膜が残るだけでも、その下の不安定な層の判定を
-!                        止め続ける(§28.24。比で切るのは独自の整理)
+!     f_slide_noflow = 1: 濃い混合体(hs/(h + hs) >= db_cmin)が載り、載っている土砂を堆積に直した厚さ
+!                        hs/C* が判定する厚さ d の sl_film(= 0.5)倍以上のセルは判定しない(河床と流れの
+!                        交換は侵食堆積式の担当)。薄い膜が残るだけのセルは判定するので、膜が下の不安定な
+!                        層の判定を止め続けない(§28.24・§136。比で切るのは独自の整理)。f_slide を使う
+!                        計算の既定
 !----------------------------------------------------------------------
 subroutine slide_pass1(gm, p, g, s)
   type(t_geomorph), intent(inout) :: gm
@@ -935,15 +939,11 @@ subroutine slide_pass1(gm, p, g, s)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%sd(i,j) <= 0.0) cycle
-      if (gm%f_slide_noflow >= 1) then
+      if (gm%f_slide_noflow == 1) then
         ! 濃い混合体が載るセルは判定しない
         if (s%hs(i,j) > 0.0) then
           if (s%hs(i,j) >= gm%db_cmin * (max(s%h(i,j), 0.0) + s%hs(i,j))) then
-            if (gm%f_slide_noflow == 1) then
-              nflow = nflow + 1
-              cycle
-            end if
-            ! 2: 載っている土砂(堆積に直した厚さ hs/C*)が、判定する厚さの sl_film 倍以上のときに限る
+            ! 載っている土砂(堆積に直した厚さ hs/C*)が、判定する厚さの sl_film 倍以上のときに限る
             dj = s%sd(i,j)
             if (gm%sl_dmax > 0.0) dj = min(dj, gm%sl_dmax)
             if (s%hs(i,j) * gm%poroi >= sl_film * dj) then

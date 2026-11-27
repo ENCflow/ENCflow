@@ -87,7 +87,7 @@ CULV_RISE = 1.5                      # 呑口・吐口の敷高(河床からの�
 # ---------------------------------------------------------------- 地形とケース
 DAM_H = 13.0                         # はじめから置く堤体の高さ(基本ケースの土石流がつくる堤体と同じ程度)
 DAM_TILT = 0.11                      # 天端の傾いた堤体の、谷を横切る向きの天端の勾配(基本ケースの土石流がつくる堤体は、
-                                     # 最も低い所から支流の側の谷壁の脚まで 35 m で 3.8 m 高い)
+                                     # 最も低い所から支流の側の谷壁の脚まで 35 m で 3.6 m 高い)
 YLOW = -15.0                         # 傾いた天端の最も低い所の中心の y (m)(支流の対岸の側。基本ケースの堤体と同じ位置)
 DAM_NOTCH = 10.0                     # 最も低い所の幅 (m)(10 m 格子で 1 セル、5 m 格子で 2 セル。高さは格子によらない)
 GEOM_DEFAULT = dict(dx=10.0,         # 格子間隔 (m)
@@ -126,7 +126,8 @@ def geom(name):
 # ない namelist は末尾に新しく書く)。"culvert" は仮排水路の namelist(culvert_block)に置き換わる
 SHORT = {"tt": "1800"}                                   # 堤体ができるまで(30 分)
 DAMRUN = {"tt": "3600", "dt_file": "60", "dt_disp": "300", "gw_sat0": "1.0",
-          "prval(1:2,1)": "0, 0", "prval(1:2,2)": "60, 0"}   # 堤体を置く系列: 60 分(立ち上がりの遅いケースは 90 分)、
+          "prval(1:2,1)": "0, 0", "prval(1:2,2)": "60, 0"}   # 堤体を置く系列: 60 分(立ち上がりの遅いケースは 90 分、
+                                                             # 決壊口が塞がって放流が遅れる 5 m 格子は 120 分)、
                                                              # 雨なし、堤体は飽和
 
 
@@ -148,18 +149,12 @@ CASES = {
     "wet0": ("g10", dict(SHORT, f_dbwet="0", f_dbunsat="0"), {}),                      # 間隙水を連行しない
     "wet2": ("g10", dict(SHORT, f_dbwet="2"), {}),                                     # 保持水を授受しない
     "slide0": ("g10", dict(SHORT, f_slide_seep="0", f_slide_wet="0", f_slide_noflow="0", slide_dmax="0.0"), {}),
+    "noflow0": ("g10", dict(SHORT, f_slide_noflow="0"), {}),                          # 濃い混合体が載るセルも判定する
     "g5": ("g5", dict(SHORT), {}),                                                     # 5 m 格子
-    # 判定・流動化する深さの上限を土層の半分にする。はじめの飽和度は、崩壊の時刻が基本ケースと同じになる値
-    # (崩れる飽和度が 0.853 → 0.927 に上がる分。崩れるまでに要る水 14 mm を同じにする)
+    # 判定・流動化する深さの上限を土層の半分にする(10 m と 5 m 格子)。はじめの飽和度は、崩壊の時刻が基本ケースと
+    # 同じになる値(崩れる飽和度が 0.853 → 0.927 に上がる分。崩れるまでに要る水 14 mm を同じにする)
     "dmax15": ("g10", dict(SHORT, slide_dmax="1.5", gw_sat0="0.9035"), {}),
-    # 載っている土砂が薄いセルは判定する(f_slide_noflow = 2)。基本ケースの設定のままと、深さの上限を土層の半分に
-    # したもの(10 m と 5 m)
-    "noflow2": ("g10", dict(SHORT, f_slide_noflow="2"), {}),
-    "dmax15_n2": ("g10", dict(SHORT, slide_dmax="1.5", gw_sat0="0.9035", f_slide_noflow="2"), {}),
-    "dmax15_n2_dx5": ("g5", dict(SHORT, slide_dmax="1.5", gw_sat0="0.9035", f_slide_noflow="2"), {}),
-    # 同、堤体をはじめから置く系列の 2 ケース(天端が水平で結果の安定なもの)。決壊の段階での違いを見る
-    "noflow2_ref": dam_case("d12", f_slide_noflow="2"),
-    "noflow2_face25": dam_case("d25", f_slide_noflow="2"),
+    "dmax15_dx5": ("g5", dict(SHORT, slide_dmax="1.5", gw_sat0="0.9035"), {}),
     # ---- 堤体をはじめから置く系列(決壊の条件)
     "dam_ref": dam_case("d12"),
     "dam_face25": dam_case("d25"),
@@ -177,10 +172,10 @@ CASES = {
     "dam_imm0": dam_case("d12", f_dbimm="0"),
     "dam_unsat": dam_case("d12", gw_sat0="0.83"),
     "dam_unsat0": dam_case("d12", gw_sat0="0.83", f_dbunsat="0"),
-    "dam_dx5": dam_case("d12x5", slide_dmax="1.5"),          # 5 m 格子(slide_dmax は格子間隔の 0.3 倍の 1.5 m)
-    "dam_dx5d3": dam_case("d12x5"),                          # 5 m 格子で slide_dmax を 3 m のままにする
+    "dam_dx5": dam_case("d12x5", slide_dmax="1.5", tt="7200"),   # 5 m 格子(slide_dmax は格子間隔の 0.3 倍の 1.5 m)
+    "dam_dx5d3": dam_case("d12x5", tt="7200"),               # 5 m 格子で slide_dmax を 3 m のままにする
     "dam_tilt": dam_case("d12t"),                            # 天端が谷を横切る向きに傾いた堤体(細い決壊口ができる)
-    "dam_tilt_dx5": dam_case("d12tx5", slide_dmax="1.5"),    # 同、5 m 格子
+    "dam_tilt_dx5": dam_case("d12tx5", slide_dmax="1.5", tt="7200"),   # 同、5 m 格子
 }
 QUICK = ("base", "drain", "dam_ref", "dam_face25", "dam_small", "dam_large")
 DAMS = tuple(c for c in CASES if c.startswith("dam_"))
@@ -194,7 +189,8 @@ PERT = {name: ("g10", {"Qin": q}, {}) for name, q in PERT_BASE.items()}
 PERT.update({"dam_ref_p1": dam_case("d12", Qin="40.4"), "dam_face25_p1": dam_case("d25", Qin="40.4")})
 PERT_TILT = {"m1": "39.6", "eps": "40.0001", "p1": "40.4"}        # 傾いた堤体の流入量の摂動(10 m と 5 m)
 PERT.update({f"dam_tilt_{k}": dam_case("d12t", Qin=q) for k, q in PERT_TILT.items()})
-PERT.update({f"dam_tilt_dx5_{k}": dam_case("d12tx5", slide_dmax="1.5", Qin=q) for k, q in PERT_TILT.items()})
+PERT.update({f"dam_tilt_dx5_{k}": dam_case("d12tx5", slide_dmax="1.5", tt="7200", Qin=q)
+             for k, q in PERT_TILT.items()})
 PERT_OF = dict({name: "base" for name in PERT_BASE}, dam_ref_p1="dam_ref", dam_face25_p1="dam_face25")   # もとのケース
 PERT_OF.update({f"dam_tilt_{k}": "dam_tilt" for k in PERT_TILT})
 PERT_OF.update({f"dam_tilt_dx5_{k}": "dam_tilt_dx5" for k in PERT_TILT})

@@ -34,20 +34,19 @@ y の向きにも傾くので、MPI の帯の境界をまたいで近傍を読�
     fs_w2         : φs = 25°(乾いた Fs = 1.19)・飽和で f_slide_wet = 1。間隙水圧で Fs < 1 に
                     なるので、1 でも流動化する
 構成 8: 濃い混合体が載るセルを判定しない(f_slide_noflow)。構成 6 の fs_d1 を地形の更新 2 回
-    fs_n1 / fs_n0 : 1 は 2 回目の更新で流動化しない(土層 1.5 m)、0 はもう 0.5 m 流動化する(1.0 m)
-    fs_n2         : f_slide_noflow = 2。自分の流動化した土砂(判定する厚さと同じ量)が載っている間は、
-                    1 と同じく判定しない(状態が fs_n1 と一致する)
-  同 薄い膜の下の不安定な層(f_slide_noflow = 2 は判定を続ける。developer.md §28.24)。土層厚 2 m、
+    fs_n1 / fs_n0 : 1 は、自分の流動化した土砂(判定する厚さと同じ量)が載っている間は判定しないので、
+                    2 回目の更新で流動化しない(土層 1.5 m)。0 はもう 0.5 m 流動化する(1.0 m)
+  同 薄い膜の下の不安定な層(f_slide_noflow = 1 は判定を続ける。developer.md §28.24・§136)。土層厚 2 m、
   飽和度 0.8、slide_dmax = 0.5 m。はじめは、上から 0.5 m の中の飽和厚が 0.1 m で安定(Fs = 1.07)。
   1 回目の更新の終わりに全面を薄く流動化する(fn_dbinit、t = 1 s)。地下水面が地表に近づいて、2 回目の
   更新の判定では不安定になり(深さ 0.1 m なら飽和厚 0.2 m で Fs = 0.95、0.3 m なら 0.4 m で 0.70)、
   流動化した土砂が膜として載っている。膜は水を含まない土砂なので、2 回目の更新の侵食・堆積で斜面に
   戻る(判定はその前)。地形の更新 3 回
-    fs_f1 / fs_f2 / fs_f0 : 膜は堆積に直して 0.1 m(判定する厚さ 0.5 m の 0.2 倍)。1 は判定せず、
-                    流動化しない(土層 2 m)。2 は 2 回目に判定して 0.5 m を流動化し、3 回目は自分の
-                    土砂の下なので判定しない(1.5 m)。0 は 2 回目と 3 回目に流動化する(1.0 m)
-    fs_k2 / fs_k0 : 膜は 0.3 m(0.6 倍)。2 は判定せず、流動化しない(土層 2 m)。0 は流動化する
-                    (判定すれば不安定であることの確認)。fs_f2 と合わせて、判定を外す下限の比
+    fs_f1 / fs_f0 : 膜は堆積に直して 0.1 m(判定する厚さ 0.5 m の 0.2 倍)。1 は 2 回目に判定して
+                    0.5 m を流動化し、3 回目は自分の土砂の下なので判定しない(1.5 m)。0 は 2 回目と
+                    3 回目に流動化する(1.0 m)
+    fs_k1 / fs_k0 : 膜は 0.3 m(0.6 倍)。1 は判定せず、流動化しない(土層 2 m)。0 は流動化する
+                    (判定すれば不安定であることの確認)。fs_f1 と合わせて、判定を外す下限の比
                     (本体の sl_film = 0.5)が 0.2 と 0.6 の間にあることを見る
 
   python3 make_fs.py        d_fs/ の地形・土層厚・初期水深と p_fs_*.txt を書く
@@ -65,7 +64,7 @@ SY0, POROSITY = 0.3, 0.4
 GAMMA = 19000.0                      # 飽和単位体積重量 γt (N/m3)
 WFULL = 1.0e-3                       # 地表水の水頭を飽和帯へつなぐ幅(容量に対する比。本体の gw_wfull と同じ値)
 REL_D, REL_I, REL_J = 0.5, (31, 35), (16, 21)   # fs_m1 で流動化する深さ (m) とセルの範囲(湖の下。水深 2 m 以上)
-FILM_SAT = 0.8                       # 薄い膜のケース(fs_f*・fs_k2)の飽和度。はじめは安定で、薄く流動化すると不安定
+FILM_SAT = 0.8                       # 薄い膜のケース(fs_f*・fs_k*)の飽和度。はじめは安定で、薄く流動化すると不安定
 DT, DTG = 0.05, 1.0
 
 CASES = {
@@ -88,12 +87,10 @@ CASES = {
     "fs_w2":   dict(sd=1.0,   sat=1.0, lake=False, slide=1, seep=0, wet=1, noflow=0, dmax=0.0, c=0.0,    phi=25.0, nup=1),
     "fs_n1":   dict(sd=2.0,   sat=0.9, lake=False, slide=1, seep=0, wet=0, noflow=1, dmax=0.5, c=0.0,    phi=25.0, nup=2),
     "fs_n0":   dict(sd=2.0,   sat=0.9, lake=False, slide=1, seep=0, wet=0, noflow=0, dmax=0.5, c=0.0,    phi=25.0, nup=2),
-    "fs_n2":   dict(sd=2.0,   sat=0.9, lake=False, slide=1, seep=0, wet=0, noflow=2, dmax=0.5, c=0.0,    phi=25.0, nup=2),
     # 薄い膜(film = 1 回目の更新の終わりに全面を流動化する深さ m)
     "fs_f1":   dict(sd=2.0,   sat=FILM_SAT, lake=False, slide=1, seep=0, wet=0, noflow=1, dmax=0.5, c=0.0, phi=25.0, nup=3, film=0.1),
-    "fs_f2":   dict(sd=2.0,   sat=FILM_SAT, lake=False, slide=1, seep=0, wet=0, noflow=2, dmax=0.5, c=0.0, phi=25.0, nup=3, film=0.1),
     "fs_f0":   dict(sd=2.0,   sat=FILM_SAT, lake=False, slide=1, seep=0, wet=0, noflow=0, dmax=0.5, c=0.0, phi=25.0, nup=3, film=0.1),
-    "fs_k2":   dict(sd=2.0,   sat=FILM_SAT, lake=False, slide=1, seep=0, wet=0, noflow=2, dmax=0.5, c=0.0, phi=25.0, nup=3, film=0.3),
+    "fs_k1":   dict(sd=2.0,   sat=FILM_SAT, lake=False, slide=1, seep=0, wet=0, noflow=1, dmax=0.5, c=0.0, phi=25.0, nup=3, film=0.3),
     "fs_k0":   dict(sd=2.0,   sat=FILM_SAT, lake=False, slide=1, seep=0, wet=0, noflow=0, dmax=0.5, c=0.0, phi=25.0, nup=3, film=0.3),
 }
 
@@ -130,7 +127,7 @@ def dug(i, j):
 
 
 def film_file(d):
-    """全面を深さ d (m) だけ流動化する崩壊深のファイル名(fs_f*・fs_k2)。"""
+    """全面を深さ d (m) だけ流動化する崩壊深のファイル名(fs_f*・fs_k*)。"""
     return "rel_film%02d.txt" % round(100 * d)
 
 
@@ -244,7 +241,7 @@ def write_case(name, c):
   slide_gamma = {GAMMA:g}
   f_slide_seep = {c['seep']}          ! 1: 浸透力を全水頭の勾配で入れる
   f_slide_wet = {c['wet']}           ! 1: 間隙水圧で起きる崩壊に限る
-  f_slide_noflow = {c['noflow']}        ! 1: 濃い混合体が載るセルを判定しない / 2: 載っている土砂が薄いセルは判定する
+  f_slide_noflow = {c['noflow']}        ! 1: 濃い混合体が載るセルを判定しない(載っている土砂が薄いセルは判定する)
   slide_dmax = {c['dmax']:g}          ! 判定・流動化する深さの上限 (m。0 = 全層)
 {rel}  fluv_porosity = {POROSITY:g}
 /
