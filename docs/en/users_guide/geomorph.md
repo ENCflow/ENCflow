@@ -665,13 +665,14 @@ picks up fine DEM roughness. There is no effect on straight slopes
   **judge-only** diagnostic mode (no mobilization) for producing a
   hazard map without disturbance by collapse mobilization. Both modes require
   `f_debris = 1`; other enabled terrain processes can still change the state.
-  There are four options (all off by default; formulas and uses in the
+  There are four options (all off by default except `f_slide_noflow`; formulas and uses in the
   [explanation](massflow.md#4-triggering)): `f_slide_seep = 1` (the seepage force is taken from the
   total-head gradient, so the safety factor of slopes under a lake is not underestimated; requires
   the groundwater computation), `f_slide_wet = 1` (cells with Fs < 1 even without pore pressure are
-  not mobilized and are left to the angle-of-repose avalanching `f_repose`), `f_slide_noflow = 1`
-  (cells under a dense mixture are not judged; 2 judges those whose mixture is thin) and
-  `slide_dmax` (upper limit of the judged and mobilized depth, m; 0 = the whole layer).
+  not mobilized and are left to the angle-of-repose avalanching `f_repose`), `f_slide_noflow`
+  (default 1 = cells under a dense mixture are not judged unless the mixture is thin compared with
+  the judged layer; 0 judges every cell) and `slide_dmax` (upper limit of the judged and mobilized
+  depth, m; 0 = the whole layer).
 
 ![Behaviour of the debris-flow and slope-failure equations: Voellmy steady speed, infinite-slope safety factor](../../figs/geomorph_debris_en.png)
 

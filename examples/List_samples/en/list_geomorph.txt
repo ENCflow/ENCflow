@@ -455,11 +455,11 @@
   !f_slide_wet = 1          ! cells with Fs < 1 even without pore pressure are not
                             !   fluidized (default 0. Steps etc. are left to the
                             !   angle-of-repose avalanching f_repose)
-  !f_slide_noflow = 1       ! cells under a dense mixture (concentration >= db_cmin)
-                            !   are not judged (default 0). 2 judges the cells whose
-                            !   mixture is thin (its thickness as a deposit is less
-                            !   than half the judged depth), so that a thin film does
-                            !   not keep the layer under it from being judged
+  !f_slide_noflow = 0       ! cells under a dense mixture (concentration >= db_cmin)
+                            !   are judged too (default 1 = not judged, except the
+                            !   cells whose mixture is thin (its thickness as a deposit
+                            !   is less than half the judged depth), so that a thin
+                            !   film does not keep the layer under it from being judged)
   !slide_dmax = 2.0         ! upper limit of the judged and fluidized depth (m).
                             !   Default 0 = the whole layer
 
