@@ -138,32 +138,51 @@ def dam_case(gname, **rep):
     return (gname, r, {})
 
 
-# ---- 混合粒径の堤体(土石流と混合粒径の併用)と、決壊のあとの流水による侵食
-# 粒度の幅を持つ堤体: 0.5・2・8 cm(割合 0.35・0.40・0.25。平均 3 cm = 基本の単一粒径と同じ)
-MIX_D = (0.005, 0.02, 0.08)
-MIX_F = (0.35, 0.40, 0.25)
-MIX = ["f_bedmix = 1                ! 混合粒径(粒径階 × 交換層・下層)。土石流は粒径階ごとの組成を運ぶ",
-       "bmix_d = %s   ! 粒径階の粒径 (m)" % ", ".join("%g" % d for d in MIX_D),
-       "bmix_frac0 = %s   ! 割合(平均 %.1f cm)" % (", ".join("%g" % f for f in MIX_F), 100 * sum(d * f for d, f in zip(MIX_D, MIX_F)))]
-T_AFTER = 6 * 3600               # 決壊のあとの計算の長さ (s)
+# ---- 粒度の幅を持つ堤体(混合粒径と土石流の併用)と、決壊のあとの流水による侵食
+# 材料は 2 組。どちらも平均粒径は、比べる単一粒径のケースと同じにする
+#   mix_d3cm:  0.5・2・8 cm(平均 3 cm。dam_ref と比べる。最も粗い粒径階も、決壊のあとの流量 40 m³/s で動く)
+#   mix_d10cm: 1・5・40 cm(平均 10 cm。dam_d10cm と比べる。40 cm の粒径階は、決壊のあとの流れではほぼ動かない)
+MIX3 = ((0.005, 0.02, 0.08), (0.35, 0.40, 0.25), None)
+MIX10 = ((0.01, 0.05, 0.40), (0.50, 0.30, 0.20), 0.4)    # 交換層の厚さは最も粗い粒径(既定の「D90 の 2 倍」= 0.28 m はそれより薄い)
+BMIX_OUT = "f_out_bmix = 1            ! 交換層の粒径階ごとの割合と、表層の平均粒径 Dm"
+T_AFTER = 3 * 3600               # 決壊のあとの計算の長さ (s)
+
+
+def mix_mean(mix):
+    """粒度の平均粒径 (m)。"""
+    return sum(d * f for d, f in zip(mix[0], mix[1]))
+
+
+def mix_lines(mix):
+    """混合粒径の行(粒径階の粒径、割合、交換層の厚さ)。"""
+    d, f, la = mix
+    out = ["f_bedmix = 1                ! 混合粒径(粒径階 × 交換層・下層)。土石流は粒径階ごとの組成を運ぶ",
+           "bmix_d = %s   ! 粒径階の粒径 (m)" % ", ".join("%g" % v for v in d),
+           "bmix_frac0 = %s   ! 割合(平均 %.1f cm)" % (", ".join("%g" % v for v in f), 100 * mix_mean(mix))]
+    if la is not None:
+        out.append("bmix_la = %g                ! 交換層の厚さ (m)。最も粗い粒径階の粒径" % la)
+    return out
 
 
 def save_lines(name):
     return ["f_state_save = 1           ! 終わりの状態を保存する(決壊のあとの計算の初期条件)", f"dir_save = 'save_{name}'"]
 
 
-def after_case(src, mixed, debris=False):
-    """決壊のあとの計算: ケース src の 60 分後の保存を初期条件にして(f_state_restore = 2)、本川の流量を流し続ける。
-    debris = False は土石流と斜面安定判定のない構成(掃流砂だけ。流れに残っていた土砂は、復元のときその場の
-    河床に積もる)、True は決壊の計算と同じ構成(土石流の式を有効にしたまま)。"""
-    r = dict(DAMRUN)
+D10RUN = dict(DAMRUN, db_d50="0.1", fluv_d50="0.1", tt="5400")     # 代表粒径 10 cm の決壊(立ち上がりが遅いので 90 分)
+
+
+def after_case(src, mix, debris=False):
+    """決壊のあとの計算: ケース src(代表粒径 10 cm)の終わりの保存を初期条件にして(f_state_restore = 2)、本川の
+    流量を流し続ける。debris = False は土石流と斜面安定判定のない構成(掃流砂だけ。流れに残っていた土砂は、
+    復元のときその場の河床に積もる)、True は決壊の計算と同じ構成(土石流の式を有効にしたまま)。"""
+    r = dict(D10RUN)
     r.update({"tt": f"{T_AFTER}", "dt_file": "600", "dt_disp": "1800"})
     if not debris:
         r.update({"f_debris": "0", "f_slide": "0", "f_out_hs": "0", "f_out_fs": "0", "f_out_dmax": "0", "f_out_fmax": "0"})
     add = {"&list_sysparam": ["f_state_restore = 2        ! 保存を初期条件にして、時刻 0 から始める", f"dir_save = 'save_{src}'"]}
-    if mixed:
-        add["&list_geomorph"] = list(MIX)
-        add["&list_sysparam"].append("f_out_bmix = 1            ! 交換層の粒径階ごとの割合")
+    if mix is not None:
+        add["&list_geomorph"] = mix_lines(mix)
+        add["&list_sysparam"].append(BMIX_OUT)
     return ("d12", r, add)
 
 
@@ -185,13 +204,13 @@ CASES = {
     "dmax15": ("g10", dict(SHORT, slide_dmax="1.5", gw_sat0="0.9035"), {}),
     "dmax15_dx5": ("g5", dict(SHORT, slide_dmax="1.5", gw_sat0="0.9035"), {}),
     # ---- 堤体をはじめから置く系列(決壊の条件)
-    "dam_ref": ("d12", dict(DAMRUN), {"&list_sysparam": save_lines("dam_ref")}),
+    "dam_ref": dam_case("d12"),
     "dam_face25": dam_case("d25"),
     "dam_crest40": dam_case("d25c", tt="5400"),
     "dam_small": dam_case("d12s"),
     "dam_large": dam_case("d12l", tt="5400"),
     "dam_d1cm": dam_case("d12", db_d50="0.01", fluv_d50="0.01"),
-    "dam_d10cm": dam_case("d12", db_d50="0.1", fluv_d50="0.1", tt="5400"),
+    "dam_d10cm": ("d12", dict(D10RUN), {"&list_sysparam": save_lines("dam_d10cm")}),
     "dam_delte": dam_case("d12", db_delte="0.0001", tt="5400"),
     "dam_q20": dam_case("d12", Q="20", tt="5400"),
     "dam_q80": dam_case("d12", Q="80"),
@@ -205,19 +224,20 @@ CASES = {
     "dam_dx5d3": dam_case("d12x5", tt="7200"),               # 5 m 格子で slide_dmax を 3 m のままにする
     "dam_tilt": dam_case("d12t"),                            # 天端が谷を横切る向きに傾いた堤体(細い決壊口ができる)
     "dam_tilt_dx5": dam_case("d12tx5", slide_dmax="1.5", tt="7200"),   # 同、5 m 格子
-    # ---- 混合粒径の堤体(dam_ref と同じ堤体で、同じ平均粒径の粒度の幅を持つ)と、決壊のあとの 6 時間
-    "mix_breach": ("d12", dict(DAMRUN), {"&list_geomorph": list(MIX),
-                                         "&list_sysparam": save_lines("mix_breach") + ["f_out_bmix = 1            ! 交換層の粒径階ごとの割合"]}),
-    "mix_after": after_case("mix_breach", True),     # 混合粒径、掃流砂だけ
-    "one_after": after_case("dam_ref", False),       # 単一粒径、掃流砂だけ
-    "mix_after_debris": after_case("mix_breach", True, debris=True),    # 混合粒径、土石流の式を有効にしたまま
-    "one_after_debris": after_case("dam_ref", False, debris=True),      # 単一粒径、土石流の式を有効にしたまま
+    # ---- 粒度の幅を持つ堤体(同じ堤体・同じ平均粒径で、土砂を 3 つの粒径階にする)と、決壊のあとの 3 時間
+    "mix_d3cm": ("d12", dict(DAMRUN), {"&list_geomorph": mix_lines(MIX3), "&list_sysparam": [BMIX_OUT]}),
+    "mix_d10cm": ("d12", dict(D10RUN), {"&list_geomorph": mix_lines(MIX10), "&list_sysparam": save_lines("mix_d10cm") + [BMIX_OUT]}),
+    "after_one": after_case("dam_d10cm", None),                       # 単一粒径 10 cm、掃流砂だけ
+    "after_mix": after_case("mix_d10cm", MIX10),                      # 粒度の幅(1・5・40 cm)、掃流砂だけ
+    "after_one_debris": after_case("dam_d10cm", None, debris=True),   # 単一粒径 10 cm、土石流の式を有効にしたまま
+    "after_mix_debris": after_case("mix_d10cm", MIX10, debris=True),  # 粒度の幅、土石流の式を有効にしたまま
 }
-AFTER = ("one_after", "mix_after", "one_after_debris", "mix_after_debris")
-MIXED = ("dam_ref", "mix_breach") + AFTER             # make mixed で計算するケース(決壊 2 本と、そのあとの 4 本)
+AFTER = ("after_one", "after_mix", "after_one_debris", "after_mix_debris")
+MIXNEW = ("mix_d3cm", "mix_d10cm") + AFTER            # 粒度の幅を持つ堤体の系列で足すケース(make run には含めない)
+MIXED = ("dam_ref", "mix_d3cm", "dam_d10cm", "mix_d10cm") + AFTER   # make mixed で計算するケース(決壊 4 本と、そのあとの 4 本)
 QUICK = ("base", "drain", "dam_ref", "dam_face25", "dam_small", "dam_large")
 DAMS = tuple(c for c in CASES if c.startswith("dam_"))
-MAIN = tuple(c for c in CASES if c == "dam_ref" or c not in MIXED)   # make run で計算するケース(make mixed の 5 ケースは含めない)
+MAIN = tuple(c for c in CASES if c not in MIXNEW)        # make run で計算するケース
 
 # ---- 結果の幅を見る摂動(make perturb): 流入量だけを少し変える。名前の m・p は −・+、数字は %。eps は
 #      40.0001 m³/s(+0.00025 %)
