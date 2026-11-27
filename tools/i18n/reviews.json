@@ -320,11 +320,11 @@
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "f13f70deba082f59ba9ab8db9b7cfe290690f20e54893cf090c7ecea20e3c8a2",
-      "target_sha256": "46f9bb36ed72cd72be46bbe769e5fd337226624c1c5ca24fc219277c9aa95bc1",
-      "reviewer": "Claude (Claude Code session; f_slide_noflow default changed to 1 with the former test of 2, developer.md §135: Japanese and English compared)",
+      "source_sha256": "8670550ad8024da52df2620f588573cd77e5a3aead0e08beeb42c5cafce5a659",
+      "target_sha256": "1be5924df207e20d7bfd022e4fe672f38a644a0d5557370b4e77d75ee490c9e8",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the recomputed debris_dam results)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -392,11 +392,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "327302cee064535bc6d1222c4da67118262c7de66ef657a46972bfc57e86e276",
-      "target_sha256": "a76f6f5817c72f8406fbc2b439f56129d13d04fdbcbbc773bc21479a88fdcf0b",
-      "reviewer": "Claude (Claude Code session; f_slide_noflow default changed to 1 with the former test of 2, developer.md §135: Japanese and English compared)",
+      "source_sha256": "84932e80cf53f26fcbc4d0c37b3815a2b01d5a25021efc880fa28230741ddf60",
+      "target_sha256": "4d36d0fc3471af54d1b393b1ef8654a68d1ce26245fae5a9136cad8bfa6b4eb2",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the recomputed debris_dam results)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -2030,83 +2030,74 @@
     {
       "source": "examples/debris_dam/README.md",
       "target": "examples/debris_dam/en/README.md",
-      "source_sha256": "b0784253c4d063ff9ce1a285be7783cf7aaed54cfcd6628c2bf9cf938da25120",
-      "target_sha256": "1e14da94108f7d0f7dfda63e0eb7701eec653b01172b73d6e3193d10d299d0d6",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the trial runs)",
+      "source_sha256": "7c3dc501a1440abd197cfa60fb9c4c965b872874021fee56029fdc0437d2ce18",
+      "target_sha256": "e93b66f551fb39c34dc9152e083cb217ca61e6bae4d97744fb422e55f2a8cc95",
+      "reviewer": "Claude (Claude Code session; debris_dam recomputed with 5faa59e (new f_slide_noflow default, 5 m dam cases to 120 min): values, changed conclusions and figures from the new results, Japanese and English compared section by section with numbers cross-checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/debris_dam/figs/breach.png",
       "target": "examples/debris_dam/en/figs/breach.png",
-      "source_sha256": "a9e150ae36f1560a4c92c93b1ecb76896541345b7ac8d739f4e26f304acd4a0b",
-      "target_sha256": "172b032b9bd5234371cc9bfabb762d0a193709a631c57410b0aac44805b95c06",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "09dbbab35e3ac958b3acc72e456d6c92bfbf220b31941da251789d1aac25eae3",
+      "target_sha256": "8032c0b1ba6a7a88af0cd74e9c5f40dead12683aeed7dfc384177ee00ed47e3b",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same debris_dam results; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/debris_dam/figs/breach_sum.png",
       "target": "examples/debris_dam/en/figs/breach_sum.png",
-      "source_sha256": "fcf227c664a27070713f7e3adec90042391637d425c1983e3ce498755b5a2312",
-      "target_sha256": "4aaa4cd9c2736fd8974772cc6debc3430f185b2adc2b6c2b9f1cfc22e6ef1a81",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "818934e2d9598e61073c2e03461a9ac21fa7a9a25899a3292ebd4ad2a94f4327",
+      "target_sha256": "6f9b8d26252006d12208ee2537a4de2051923f182ed70a76a94d91c9d1cde492",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same debris_dam results; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/debris_dam/figs/chain.png",
       "target": "examples/debris_dam/en/figs/chain.png",
-      "source_sha256": "29147c18037648b603af02ee58e5033754694ded0d63ff216c2d98730c7f4b6d",
-      "target_sha256": "a0ac2b6de570893a7e8014c892c8ae38f7169bffbcb33a70ba45d7eeefd2012c",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "2061c95b11ca486733732b958a50e7424535e74746f09103d009a6c57124f88b",
+      "target_sha256": "2fb98676450e252d6e25e6ca56ac5e65410cef25e762a3fd38413630b39e38ee",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same debris_dam results; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
-    },
-    {
-      "source": "examples/debris_dam/figs/film.png",
-      "target": "examples/debris_dam/en/figs/film.png",
-      "source_sha256": "6d747aa0a25570429b579ec538e4c6978ddf64f1ce3343d6a04d84890dce4474",
-      "target_sha256": "fa3a68eceba71ae0c4a60100dce1bcddd6f7922a050ac79b42522fe2b66a71d6",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
-      "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/debris_dam/figs/formation.png",
       "target": "examples/debris_dam/en/figs/formation.png",
-      "source_sha256": "9c6582aba70a6c504ab6ce8cc4434c3dd05d32005bd961bbaa06dca6f0000a98",
-      "target_sha256": "8d054a5d37a3da596ff5f50b0d5064ddcb491ca9130ec921293d1637e19cc965",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "2744788375d434b44791dcb2cbb30b6bbcc70e5e74aa6005f2d7e9e90fc7c523",
+      "target_sha256": "36448f961413d889dd18f53a467d8d9198622a8932aa380cba26ced8164e6759",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same debris_dam results; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/debris_dam/figs/profile.png",
       "target": "examples/debris_dam/en/figs/profile.png",
-      "source_sha256": "8e993cd03ab1b64fc5893bc53b0fddcbfdcf830a3c02e455f4f2b3700a866620",
-      "target_sha256": "70157aa9ce08efd20884b2361bbec9d6381fd4cb28175350f250eeb5134a5d1e",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "2c53e3fa86eb28bdf484eb51a3f88839c9c20f4a4a916075dd76b0cb6cca67a1",
+      "target_sha256": "81d77a77235330c6da2dd4555604df1f4614b0c98541ccf29d3efc633a5ea247",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same debris_dam results; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/debris_dam/figs/sequence.png",
       "target": "examples/debris_dam/en/figs/sequence.png",
-      "source_sha256": "80779374433609f4959209e39a0f26451073753f601a12296658b595ed5e2dc0",
-      "target_sha256": "1ef73a72da2815d421b9c018ac39985df47a4e83a793244fc3f244d7e79d5f08",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "b1af451d2e165ba78bfbf41d13d060ef5638270e1e65b294f0df664b0f987089",
+      "target_sha256": "dd6dcf7d1992723615521115660f9c9be823ce72ea8ef6bc747c987ce1bbb922",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same debris_dam results; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/debris_dam/figs/series.png",
       "target": "examples/debris_dam/en/figs/series.png",
-      "source_sha256": "aa2f716486df2df729ecd0ba33ada51d13fe8bec08dbeb69acd5f5bfd0a691c7",
-      "target_sha256": "f00d872436c5828f5824834aa56562e53dfef93dcf8fba581040efbc3b77e81c",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "226bf9ebfcbe1ea9fb6f5189f160a5c80731d9839a4dd1c394ec1851f0b62c8c",
+      "target_sha256": "65de829101800d2deef54f6a7ca133dcdb3d2b254fb32d914f5be05b1a1b331d",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same debris_dam results; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/debris_dam/figs/setup.png",
@@ -2120,20 +2111,20 @@
     {
       "source": "examples/debris_dam/figs/spread.png",
       "target": "examples/debris_dam/en/figs/spread.png",
-      "source_sha256": "461134ee05a7cb05cb281c461f2117c0f8a653313ada8519068333a33be6116f",
-      "target_sha256": "085bc46316ec230fec8f5491b4ab06ba4202d0253e47a36fb1d402e90e7613e8",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "cfc51689073896918cac116e45a1993542bc38943677625d3e713da44fc15ebf",
+      "target_sha256": "8cbb9fdb60c5a1435ff59bb2fa0226e790480823774e22b29032319f87341f9f",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same debris_dam results; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/debris_dam/figs/village.png",
       "target": "examples/debris_dam/en/figs/village.png",
-      "source_sha256": "32dc411bcbaa59e8a24ab74a8d450006796d25b644dcc9f26cfbc3f1a1ffb898",
-      "target_sha256": "ee580eecda7ca3fcde11c397428662fc233822d2d4e14bcec4b3ce506d0b8e2f",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "864b9b2a33caceff8e4a159a479d1e27ca61329530aac253ca5496cbe7b424d3",
+      "target_sha256": "78478ba599a3f5fbc12bb94950153e8959fc69f966f034ccac9c878fe5db7b12",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same debris_dam results; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/debris_fan/README.md",

@@ -595,6 +595,7 @@ def fig_spread(done, mets):
         ax.legend(fontsize=7.5)
 
     # (d)(e) 天端が傾いた堤体(10 m 格子と 5 m 格子)
+    tend = {}
     for ax, base, ttl in ((axes[1, 1], "dam_tilt", T("(d) 天端が傾いた堤体、10 m 格子: 堤体の直下の流量",
                                                       "(d) Tilted crest, 10 m grid: discharge just below the dam")),
                           (axes[2, 0], "dam_tilt_dx5", T("(e) 天端が傾いた堤体、5 m 格子: 堤体の直下の流量",
@@ -603,16 +604,17 @@ def fig_spread(done, mets):
             for n in sorted(group(base) + [base], key=M.case_inflow):
                 t, q2, q4, lake = done[n].hydro()
                 ax.plot(t, q2, **kw_of(n, base, T("流入 40 m³/s", "inflow 40 m³/s")))
-            ax.legend(fontsize=7.5)
+                tend[ax] = max(tend.get(ax, TDAM), t[-1])
+            ax.legend(fontsize=7.5, loc="upper left")
         ax.set_title(ttl, fontsize=10, loc="left")
     for ax in (axes[1, 0], axes[1, 1], axes[2, 0]):
-        ax.set_xlim(0.0, 60.0)
+        ax.set_xlim(0.0, tend.get(ax, TDAM))          # 計算の終わりまで(5 m 格子は 120 分)
         ax.set_xlabel(T("時刻 (分)", "time (min)"), fontsize=9)
     ymax = max(a.get_ylim()[1] for a in (axes[1, 1], axes[2, 0]))
     for ax in (axes[1, 1], axes[2, 0]):
         ax.set_ylim(0.0, ymax)
     for ax in axes.flat[:5]:
-        ax.set_ylim(0.0, ax.get_ylim()[1] * (1.3 if ax is axes[0, 0] else 1.0))     # (a) は凡例の分を空ける
+        ax.set_ylim(0.0, ax.get_ylim()[1] * (1.3 if ax in (axes[0, 0], axes[1, 1], axes[2, 0]) else 1.0))   # (a)(d)(e) は凡例の分を空ける
         ax.set_ylabel(T("流量 (m³/s)", "discharge (m³/s)"))
         ax.grid(alpha=0.25)
 
@@ -685,7 +687,8 @@ def fig_formation(cases, tmin=28.0):
         ax.plot(c.xc[sel], c.thalweg(c.frame("Z", k))[sel], color=col, lw=1.6, label=lab(c.name))
     ax.set_xlabel("x (m)")
     ax.set_ylabel(T("標高 (m)", "elevation (m)"))
-    ax.legend(fontsize=8, ncol=3)
+    ax.set_ylim(ax.get_ylim()[0], ax.get_ylim()[1] + 5.0)       # 凡例を線の上に置く分を空ける
+    ax.legend(fontsize=8, ncol=3, loc="upper right")
     ax.grid(alpha=0.25)
     ax.set_title(T(f"(a) {tmin:.0f} 分の本川の縦断(谷を横切る最低点)", f"(a) Long profile of the main river at {tmin:.0f} min (lowest point across the valley)"), fontsize=10, loc="left")
     for n, c in enumerate(cases):
@@ -698,7 +701,17 @@ def fig_formation(cases, tmin=28.0):
         dz = z - c.z0[np.ix_(jj, ii)]
         ax.imshow(hillshade(z, c.dx), cmap="gray", extent=ext, vmin=0, vmax=1)
         im = ax.imshow(np.ma.masked_less(dz, 0.3), cmap="YlOrBr", extent=ext, vmin=0, vmax=14, alpha=0.9)
-        ax.set_title(lab(c.name), fontsize=9)
+        ttl = lab(c.name)                        # 長い呼び名は 2 行に(隣のパネルの題と重ならないように)
+        for sep in ("、", ", "):
+            if len(ttl) > 14 and sep in ttl:
+                head, tail = ttl.rsplit(sep, 1)
+                ttl = head + sep.strip() + "\n" + tail
+                break
+        else:
+            if len(ttl) > 20 and " " in ttl:       # 区切りのない英語の長い呼び名は、中ほどの空白で
+                k = min((i for i, ch in enumerate(ttl) if ch == " "), key=lambda i: abs(i - len(ttl) / 2))
+                ttl = ttl[:k] + "\n" + ttl[k + 1:]
+        ax.set_title(ttl, fontsize=9)
         ax.tick_params(labelsize=6)
         if n:
             ax.set_yticklabels([])
@@ -791,12 +804,12 @@ def fig_breach_sum(dams, mets, base=None):
                     color="#c0392b", xytext=(8, -12), textcoords="offset points")
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.set_xticks([4, 5, 7, 10, 15, 20, 30, 40])
-    ax.set_xticklabels(["4", "5", "7", "10", "15", "20", "30", "40"])
+    ax.set_xticks([3, 4, 5, 7, 10, 15, 20, 30, 50])
+    ax.set_xticklabels(["3", "4", "5", "7", "10", "15", "20", "30", "50"])
     ax.set_yticks([4, 5, 7, 10, 15, 20, 30])
     ax.set_yticklabels(["4", "5", "7", "10", "15", "20", "30"])
     ax.minorticks_off()
-    ax.set_xlim(3.8, 45)
+    ax.set_xlim(2.8, 60)          # 法面 0.25 は 3.5 分。5 m 格子の決壊口がふさがるケースは、ふさがっていた時間を含んで 50 分近く
     ax.set_ylim(3.6, 34)
     ax.set_xlabel(T("流出が流入を超えてからピークまでの時間 (分)", "time from outflow = inflow to the peak (min)"))
     ax.set_ylabel(T("ピーク流量 / 流入量", "peak discharge / inflow"))

@@ -87,7 +87,7 @@ CULV_RISE = 1.5                      # 呑口・吐口の敷高(河床からの�
 # ---------------------------------------------------------------- 地形とケース
 DAM_H = 13.0                         # はじめから置く堤体の高さ(基本ケースの土石流がつくる堤体と同じ程度)
 DAM_TILT = 0.11                      # 天端の傾いた堤体の、谷を横切る向きの天端の勾配(基本ケースの土石流がつくる堤体は、
-                                     # 最も低い所から支流の側の谷壁の脚まで 35 m で 3.8 m 高い)
+                                     # 最も低い所から支流の側の谷壁の脚まで 35 m で 3.6 m 高い)
 YLOW = -15.0                         # 傾いた天端の最も低い所の中心の y (m)(支流の対岸の側。基本ケースの堤体と同じ位置)
 DAM_NOTCH = 10.0                     # 最も低い所の幅 (m)(10 m 格子で 1 セル、5 m 格子で 2 セル。高さは格子によらない)
 GEOM_DEFAULT = dict(dx=10.0,         # 格子間隔 (m)
@@ -126,7 +126,8 @@ def geom(name):
 # ない namelist は末尾に新しく書く)。"culvert" は仮排水路の namelist(culvert_block)に置き換わる
 SHORT = {"tt": "1800"}                                   # 堤体ができるまで(30 分)
 DAMRUN = {"tt": "3600", "dt_file": "60", "dt_disp": "300", "gw_sat0": "1.0",
-          "prval(1:2,1)": "0, 0", "prval(1:2,2)": "60, 0"}   # 堤体を置く系列: 60 分(立ち上がりの遅いケースは 90 分)、
+          "prval(1:2,1)": "0, 0", "prval(1:2,2)": "60, 0"}   # 堤体を置く系列: 60 分(立ち上がりの遅いケースは 90 分、
+                                                             # 決壊口が塞がって放流が遅れる 5 m 格子は 120 分)、
                                                              # 雨なし、堤体は飽和
 
 
@@ -171,10 +172,10 @@ CASES = {
     "dam_imm0": dam_case("d12", f_dbimm="0"),
     "dam_unsat": dam_case("d12", gw_sat0="0.83"),
     "dam_unsat0": dam_case("d12", gw_sat0="0.83", f_dbunsat="0"),
-    "dam_dx5": dam_case("d12x5", slide_dmax="1.5"),          # 5 m 格子(slide_dmax は格子間隔の 0.3 倍の 1.5 m)
-    "dam_dx5d3": dam_case("d12x5"),                          # 5 m 格子で slide_dmax を 3 m のままにする
+    "dam_dx5": dam_case("d12x5", slide_dmax="1.5", tt="7200"),   # 5 m 格子(slide_dmax は格子間隔の 0.3 倍の 1.5 m)
+    "dam_dx5d3": dam_case("d12x5", tt="7200"),               # 5 m 格子で slide_dmax を 3 m のままにする
     "dam_tilt": dam_case("d12t"),                            # 天端が谷を横切る向きに傾いた堤体(細い決壊口ができる)
-    "dam_tilt_dx5": dam_case("d12tx5", slide_dmax="1.5"),    # 同、5 m 格子
+    "dam_tilt_dx5": dam_case("d12tx5", slide_dmax="1.5", tt="7200"),   # 同、5 m 格子
 }
 QUICK = ("base", "drain", "dam_ref", "dam_face25", "dam_small", "dam_large")
 DAMS = tuple(c for c in CASES if c.startswith("dam_"))
@@ -188,7 +189,8 @@ PERT = {name: ("g10", {"Qin": q}, {}) for name, q in PERT_BASE.items()}
 PERT.update({"dam_ref_p1": dam_case("d12", Qin="40.4"), "dam_face25_p1": dam_case("d25", Qin="40.4")})
 PERT_TILT = {"m1": "39.6", "eps": "40.0001", "p1": "40.4"}        # 傾いた堤体の流入量の摂動(10 m と 5 m)
 PERT.update({f"dam_tilt_{k}": dam_case("d12t", Qin=q) for k, q in PERT_TILT.items()})
-PERT.update({f"dam_tilt_dx5_{k}": dam_case("d12tx5", slide_dmax="1.5", Qin=q) for k, q in PERT_TILT.items()})
+PERT.update({f"dam_tilt_dx5_{k}": dam_case("d12tx5", slide_dmax="1.5", tt="7200", Qin=q)
+             for k, q in PERT_TILT.items()})
 PERT_OF = dict({name: "base" for name in PERT_BASE}, dam_ref_p1="dam_ref", dam_face25_p1="dam_face25")   # もとのケース
 PERT_OF.update({f"dam_tilt_{k}": "dam_tilt" for k in PERT_TILT})
 PERT_OF.update({f"dam_tilt_dx5_{k}": "dam_tilt_dx5" for k in PERT_TILT})

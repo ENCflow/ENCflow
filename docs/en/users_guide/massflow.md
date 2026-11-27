@@ -638,26 +638,36 @@ formula above; developer.md §28.19).
     ($`\gamma' = \gamma_t - \gamma_w`$), and the fluidisation then propagates as a chain. In a
     computation of a saturated dam 13 m high being cut by overtopping (the
     [natural-dam example](../../../examples/debris_dam/en/README.md); $`\phi_s = 35^\circ`$),
-    $`d_{\max}/\Delta x = 0.3`$ did not propagate, while 0.6 propagated across the lake-side face of
-    the dam and halved the peak of the breach. About 0.3 times the grid spacing is a practical upper
-    limit.
+    $`d_{\max}/\Delta x = 0.6`$ propagated across the whole downstream face about 10 minutes after
+    overtopping started; the fluidised sediment blocked the breach, the flow stopped for a little over
+    10 minutes and was then released at once (a peak 1.8 times that with 0.3). In a dam built by
+    deposited sediment, 0.6 also made the deposit fluidise again and again and lowered the dam. 0.3 did
+    not propagate. About 0.3 times the grid spacing is a practical upper limit. Even at 0.3, however, the
+    breach on the 5 m grid took a different form from the 10 m grid (the breach split into two channels
+    along the valley walls, and the peak was 0.78 times that of the 10 m grid). For a dam whose overflow
+    concentrates in a notch 10 m wide, the floor and walls of the breach on the 5 m grid were fluidised and
+    blocked the breach; the blockage lasted a total of 7–30 minutes depending on slight differences in the
+    inflow, and the peaks scattered over 1.1–1.4 times that of the 10 m grid. Read breach values against
+    computations with a different grid spacing and slightly different conditions.
   - **Do not make it shallower than the slip surface of the layer that is to fail.** A $`d_{\max}`$
     smaller than the soil depth reduces the saturated thickness that enters the test and delays the
     failure (a slope whose 3 m soil layer fails at a saturation of 0.85 does not fail until 0.93 with
     $`d_{\max}`$ = 1.5 m). The failure also takes place in two stages, the lower layer failing after
     the upper one has flowed away, and less sediment reaches the main river. With $`d_{\max}`$ = 1.5 m
-    on the failure slope of the natural-dam example, the dam is 9 m high instead of 13 m (more
+    on the failure slope of the natural-dam example, the dam is 7.8 m high instead of 13.4 m (more
     sediment stays at the foot of the slope and in the tributary valley). When a soil layer on a slope
     is to fail under heavy rain, make $`d_{\max}`$ at least the soil depth.
   - **When it has to be shallower than the layer, keep `f_slide_noflow` at its default 1.** For a
     thick layer that saturates from its base on a fine grid (where the condition above forces
     $`d_{\max}`$ below the soil depth), 1 judges the cells once the fluidised sediment has flowed away
-    and left only a thin film, so the lower layer fails as well (the nearly 20,000 m³ that stay on the
-    slope in the example are sediment redeposited at the foot of the slope). With `f_slide_noflow = 0`
-    the whole layer also fails, but the deposited sediment is fluidised again and again. On the 5 m
-    grid of the example, the lower layer fails and the dam is 7 m high (9 m with the same settings on
-    the 10 m grid; with $`d_{\max}`$ equal to the soil depth, 12 m on the 5 m grid and 13 m on the
-    10 m grid).
+    and left only a thin film, so the lower layer fails as well (the 18,000 m³ that stay on the slope
+    in the example are sediment redeposited at the foot of the slope). With `f_slide_noflow = 0` the
+    whole layer also fails, but the deposited sediment is fluidised again and again (in `noflow0` of the
+    example, with $`d_{\max}`$ equal to the soil depth, 116,000 m³ is still moving 17 minutes after the
+    failure and no dam forms). On the 5 m grid of the example, the lower layer fails and the dam is
+    6.5 m high (7.8 m with the same settings on the 10 m grid; with $`d_{\max}`$ equal to the soil depth
+    of 3 m, 13.4 m on the 10 m grid, while on the 5 m grid $`d_{\max}/\Delta x`$ becomes 0.6 and the
+    deposited sediment is fluidised again and again, giving 9.0 m).
 
 **Matching the failure condition and the flow condition.** A saturated soil layer ($`h_w = s_d`$,
 $`c' = 0`$) fails when $`\tan\theta > (\gamma'/\gamma_t)\tan\phi_s`$ ($`\gamma' = \gamma_t - \gamma_w`$).
