@@ -3200,11 +3200,11 @@
     {
       "source": "examples/paddy_dam/README.md",
       "target": "examples/paddy_dam/en/README.md",
-      "source_sha256": "9684badb88d6a0b6f1c518981bb1b5a685fd888dbd597e34b7e325efa34de6c1",
-      "target_sha256": "7c052a12bdd2bc97a68f9daa0fc5afcbadfe5e3e42b147224f1c47e8fa9ebebd",
+      "source_sha256": "6e93977397dfc380710a97bb98390fdab6338ea8f0dc7b66bfab5bb776306516",
+      "target_sha256": "eb81bece43525351f9de0fb2c57bf26585352978597ea45972ea13a35150dfe5",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/qanat/README.md",
