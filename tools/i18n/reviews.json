@@ -1778,9 +1778,9 @@
     {
       "source": "examples/coarse_channel/README.md",
       "target": "examples/coarse_channel/en/README.md",
-      "source_sha256": "a253cc25a7aa9089deed35e62871d05ac68719ab74525bf9c82b39e12fe390cd",
-      "target_sha256": "db2fe1cf16b248f07f76a8d8d16704000ae4b998dbbfd01c6d2862199e867724",
-      "reviewer": "Claude (Claude Code session; English mirror rewritten together with the Japanese master for the covered-fraction restructuring and compared section by section, including the summary and choice tables, the tables of the details block (decimals and multi-digit numbers checked per section by script), the anchors and the relative links)",
+      "source_sha256": "09c73dbb4c310972d528df47445610116ebe3703f5047d246158d5abdf4db058",
+      "target_sha256": "d888a29b617b527bb76a1f1c42e6c45590b5df55d73a2d4aeb038e7060246f61",
+      "reviewer": "Claude (Claude Code session; the cutoff passages (summary row, section 2, choosing section, unverified-items bullet) and the changed values of the details tables updated in both files and compared; table rows checked against the regenerated tables by script)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -1814,11 +1814,11 @@
     {
       "source": "examples/coarse_channel/figs/oblique.png",
       "target": "examples/coarse_channel/en/figs/oblique.png",
-      "source_sha256": "c5cba5cae8dfc5482e7a128bc50dcab685a450f203fa885596285e3c46cf0f25",
-      "target_sha256": "fa5689a89f03c5700838febb7dbb48ab4fa69d1f67ac279ff0a21b337a33264a",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "source_sha256": "3c3f063f12faa9023c5dfc9a4b4df3f819e184378c43a41b08e328151eca1ece",
+      "target_sha256": "3a36dd590ad1884a5ea0f0d94c9e5975cdc16d77aae9f334dab1d0c5096dc0d7",
+      "reviewer": "Claude (Claude Code session; both images redrawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/coarse_channel/figs/occ.png",
@@ -1841,9 +1841,9 @@
     {
       "source": "examples/coarse_channel/figs/occ_sens.png",
       "target": "examples/coarse_channel/en/figs/occ_sens.png",
-      "source_sha256": "9099415f85510d0839e229eb92a4265c9c0b0fc9d042bfa0ac6f23cd8520cfae",
-      "target_sha256": "d93f17b2e00083648018e1e4da9bb0a4af9800297727cac596cc9a3651b61c1a",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "source_sha256": "72a7f31d6d9027aa3fa7a25b79e3a7b1d1cb57068b720de40cb7f89362b7a25b",
+      "target_sha256": "5fcd6d4174c9d5f4ce8e5b26dcb963726fac15f1f35403905a15a37015b0e8ba",
+      "reviewer": "Claude (Claude Code session; both images redrawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -1886,11 +1886,11 @@
     {
       "source": "examples/coarse_channel/figs/wide.png",
       "target": "examples/coarse_channel/en/figs/wide.png",
-      "source_sha256": "75ea17c65275a9fbbe08e8195555ffcc7614c98400bbbf3adb79dfd0834f1f9a",
-      "target_sha256": "f8ec93f2dd5d72af327d7c5405c34a832ba9e3012aa7db8dc05dd3b464233439",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
+      "source_sha256": "258ee32c1af24f5e68a08857a1b1cb9d034fc7b70d35cedff5bbf39f08148bbe",
+      "target_sha256": "fc3ee1162ed5b5e6075619ab65fbdf10b6d82a9e2df125f69de469a21bc50bc3",
+      "reviewer": "Claude (Claude Code session; both images redrawn by plot_results.py from the same results and viewed: English labels, titles, legends and annotations match the Japanese figure, no overlapping or clipped text)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/coastal_compound_flood/README.md",
