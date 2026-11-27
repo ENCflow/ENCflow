@@ -2,6 +2,7 @@
 result_*/
 data/
 data_coarse/
+data_coarse_*/
 Screen_*.log
 encflow
 encflow_mpi

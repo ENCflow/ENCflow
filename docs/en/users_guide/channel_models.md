@@ -171,6 +171,15 @@ move to a resolved channel.
   locations. Applying the width to a small river that meanders within one
   cell underestimates the channel length and makes discharge and velocity
   too large.
+  The width cap is a treatment that assumes a channel one cell wide, like a
+  line; when a river wider than one cell is represented by width cells side
+  by side, the cells are also linked to the downstream cells by diagonal
+  edges and carry more than the river width (up to 20 % for rivers 2 cells
+  wide along a grid axis or at 45°; a consequence of this project's own simplification;
+  section 5 of [examples/coarse_channel](../../../examples/coarse_channel/en/README.md)).
+  How to make the channel mask and width on a coarse grid, with guides to
+  the errors, is in
+  [Channels](channel.md#making-the-channel-mask-and-width-coarse-grids).
 
 ## 3. Cross-section shape (sigma law)
 
