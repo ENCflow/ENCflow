@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "c5dc7106adc042569620c853fb0303ef60a8ab507e0f4b8832aa98c3a57cd7f5",
-      "target_sha256": "ed6cc5b68da5228e73e266626150f57dc538e47fee94afe0c1ab087d7a81cd10",
-      "reviewer": "Claude (Claude Code session; Part II entry and task-table row for interoperability (BMI) added, developer.md §35.5; both files compared)",
+      "source_sha256": "d240941aa1ea1e7142ce242be5cc9ec616c5ae2da4bd921c7304a699719a7d95",
+      "target_sha256": "46766754a65f88c44c3dfb923aa8a21a119735b2007a983f496c1294236a3ff3",
+      "reviewer": "Claude (Claude Code session; tutorial link removed from the interoperability (BMI) entry and its task-table row, developer.md §35.5; both changed lines compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
