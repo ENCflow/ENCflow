@@ -5378,11 +5378,11 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "d123c0d6d79812910bbdf7631757bd5e5b194224b44a3e2e0e49ba1185fb1c41",
-      "target_sha256": "6e4b72f30554338d1b523024d8e337d8d755d4d4e132efe2f85ad18fdb637ba4",
-      "reviewer": "Claude (Claude Code session; f_slide_noflow default changed to 1 with the former test of 2, developer.md §135: Japanese and English compared)",
+      "source_sha256": "ac8fec5dd087aee7b3a75f0952938ccf82f4a0d5ea6dfd113c7fa061e843e523",
+      "target_sha256": "6c0d1c57f549b6257f24ccef719267d72a7c4c3a4b8234c8995f7417c16dcd36",
+      "reviewer": "Claude (Claude Code session; only the developer.md section number changed from §135 to §136 in both languages; rest of the pair as previously reviewed)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "test/slide/figs/fslide.png",
@@ -5459,11 +5459,11 @@
     {
       "source": "test/splashslide/README.md",
       "target": "test/splashslide/en/README.md",
-      "source_sha256": "66da03c5792308e1cfb804afb2d4b8c535bd10931c8971cac30c8ae2d206c400",
-      "target_sha256": "9f13c642b92ef10401cdeea28c4bc0c6d867921cb07024babff6d8d5873bba2a",
-      "reviewer": "Claude (Claude Code session; f_slide_noflow default changed to 1 with the former test of 2, developer.md §135: Japanese and English compared)",
+      "source_sha256": "cba68f2091c0e3be2f611193136f7df2fb77e65959214f1b8f6d1974a9bc4059",
+      "target_sha256": "b328b7da6dc0fa01fe3fb0122f3fa84588c5e63cb9f6948b1bc61d646ba256bb",
+      "reviewer": "Claude (Claude Code session; only the developer.md section number changed from §135 to §136 in both languages; rest of the pair as previously reviewed)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "test/splashslide/figs/splashslide.png",

@@ -109,7 +109,7 @@ for the unconsolidated cliff it decays × 0.77.
   × 0.76 to × 0.78 and the sediment leaving the cliff is 33.6 m³ (developer.md §130). After
   f_slide_noflow = 1, which does not judge cells under a dense mixture, became the default of the stability
   test on 2026-11-26, the consolidated cliff stays at × 1.24, the unconsolidated cliff goes from × 0.78 to
-  × 0.77 and the sediment leaving the cliff is 35.7 m³ (developer.md §135). The table and the figures show
+  × 0.77 and the sediment leaving the cliff is 35.7 m³ (developer.md §136). The table and the figures show
   these values.
 
 ## Related documents

@@ -450,7 +450,7 @@ module subroutine init_debris(gm, p, g, list)
   end if
 
   ! --- 斜面安定判定の選択子(developer.md §28.19。f_slide_noflow のほかは既定が従来の経路。
-  !     f_slide_noflow は未指定なら、f_slide を使うとき 1・使わないとき 0。§135) ---
+  !     f_slide_noflow は未指定なら、f_slide を使うとき 1・使わないとき 0。§136) ---
   if (list%f_slide == 0 .and. (list%f_slide_seep /= 0 .or. list%f_slide_wet /= 0 &
       .or. (list%f_slide_noflow /= 0 .and. list%f_slide_noflow /= -9999) .or. list%slide_dmax /= 0.0)) then
     call par_stop("list_geomorph: f_slide_seep, f_slide_wet, f_slide_noflow and slide_dmax require " &
@@ -482,7 +482,7 @@ module subroutine init_debris(gm, p, g, list)
   gm%f_slide_seep = list%f_slide_seep
   gm%f_slide_wet = list%f_slide_wet
   if (list%f_slide_noflow == -9999) then
-    gm%f_slide_noflow = merge(1, 0, list%f_slide > 0)     ! 未指定: f_slide を使うとき 1(§135)
+    gm%f_slide_noflow = merge(1, 0, list%f_slide > 0)     ! 未指定: f_slide を使うとき 1(§136)
   else
     gm%f_slide_noflow = list%f_slide_noflow
   end if
@@ -904,7 +904,7 @@ end subroutine
 !     f_slide_noflow = 1: 濃い混合体(hs/(h + hs) >= db_cmin)が載り、載っている土砂を堆積に直した厚さ
 !                        hs/C* が判定する厚さ d の sl_film(= 0.5)倍以上のセルは判定しない(河床と流れの
 !                        交換は侵食堆積式の担当)。薄い膜が残るだけのセルは判定するので、膜が下の不安定な
-!                        層の判定を止め続けない(§28.24・§135。比で切るのは独自の整理)。f_slide を使う
+!                        層の判定を止め続けない(§28.24・§136。比で切るのは独自の整理)。f_slide を使う
 !                        計算の既定
 !----------------------------------------------------------------------
 subroutine slide_pass1(gm, p, g, s)

@@ -287,7 +287,7 @@ def check_noflow(case1, case0):
 
 
 def check_film(f1, f0, k1, k0):
-    """f_slide_noflow = 1: 載っている土砂が、判定する厚さに比べて薄いセルは判定する(§28.24・§135)。
+    """f_slide_noflow = 1: 載っている土砂が、判定する厚さに比べて薄いセルは判定する(§28.24・§136)。
     土層厚は、流動化 1 回ごとに slide_dmax だけ減る。膜を作る流動化(film)のぶんは、堆積に戻るか
     どうかで film だけ幅がある(n 回なら sd − film − n·dmax から sd − n·dmax)ので、回数の境は
     隣り合う範囲の中央に置く。"""

@@ -104,7 +104,7 @@ safety factor can be compared directly with the value of the formula.
   mixture (hs = 0.3 m) on the cell. With 1 the cell is not judged while its own mobilized mass (0.5 m
   as a deposit, the same amount as the judged depth) lies on it, so the soil depth stays 1.5 m in the
   second update; with 0 another 0.5 m is mobilized, leaving 1.0 m.
-  - An unstable layer under a thin film (`_f*`, `_k*`; developer.md §28.24, §135). With a soil depth of
+  - An unstable layer under a thin film (`_f*`, `_k*`; developer.md §28.24, §136). With a soil depth of
     2 m and a saturation of 0.8, the saturated thickness within the top 0.5 m is 0.1 m and the layer
     is stable at first (Fs = 1.07). Mobilizing a thin layer everywhere at the end of the first update
     (`fn_dbinit`) brings the water table closer to the surface and makes the layer unstable
@@ -271,7 +271,7 @@ judge-only mode).
   17.1 m³, and the dry case has the lowering of the collapse area from 0.84 to 0.83 m, the deposit outside
   from +0.65 to +0.54 m, the retained-water term from 17.9 to 18.3 m³ and the shortfall from 0.18 to 0.09 m³
   (developer.md §130). After `f_slide_noflow = 1`, which does not judge cells under a dense mixture, became
-  the default of the stability test on 2026-11-26 (the former test of 2 replaced 1; developer.md §135),
+  the default of the stability test on 2026-11-26 (the former test of 2 replaced 1; developer.md §136),
   configuration 2 goes from 474 to 40 cells, from 0.493 to 0.459 and from 0.43 to 0.34 m (the cells under
   the mixture flowing down from upslope are no longer judged; configuration 3 has no flow and does not
   change). In configuration 8 the former cases of 2 take the names of 1 (`_n2`, `_f2`, `_k2` → `_n1`,
