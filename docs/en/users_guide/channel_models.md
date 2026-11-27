@@ -122,6 +122,19 @@ move to a resolved channel.
   The former automatic zero-height levee was dropped: on natural banks
   whose hillslope is above the crest its weir overflow became a drop flow
   and diverged.
+- **Cells of extremely small width.** Giving the width from the covered
+  fraction of a channel polygon or a high-resolution mask produces cells that
+  the channel edge only grazes at a corner (slivers a few metres wide). The
+  dynamic opening correction and the conveyance ratio count a channel cell
+  whose width is below 5 % of the width of the cell it is compared with as
+  outside the domain ([passage width](passage_width.md) §4.3;
+  developer.md §136, Japanese; specific to ENCflow). The advection term still
+  counts such a cell as a wet neighbour, so the result differs slightly from
+  the configuration without the slivers (0.6 % of the depth when a row of
+  cells 0.01 m wide is added beside an axis-aligned two-cell channel). When
+  making the mask from the covered fraction, a cutoff in preprocessing that
+  leaves cells below 5 % out of the channel is still recommended
+  ([examples/coarse_channel](../../../examples/coarse_channel/en/README.md)).
 - **Edge boundaries.** Where the channel reaches the domain edge, the
   free-outflow and long-wave-radiation faces are scaled to the channel
   width (the boundary cannot drain the small storage of a narrow channel).
@@ -309,6 +322,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 - [test/bendloss](../../../test/bendloss/en/README.md): straight, bent and diagonal channels, subgrid width and opening correction, assessed against Manning uniform flow or a straight-channel comparison.
 - [test/chichibu](../../../test/chichibu/en/README.md): real-terrain examples comparing channel masks, roughness, width and levee settings through flood-wave behaviour.
 - [test/wallpond](../../../test/wallpond/en/README.md): a test with a still pond behind the virtual walls of straight and 45° channels, judging that the channel level agrees with the runs whose landside behind the walls is dry and with a resolved levee (that the advection term does not count the cells behind the wall).
+- [test/sliver](../../../test/sliver/en/README.md): a test judging that the channel level of a 45° one-cell channel and an axis-aligned two-cell channel agrees with and without added channel cells 0.01 m wide (that a cell of extremely small width counts as outside the domain in the reassignment of openings and the conveyance ratio).
 - [test/gwsect](../../../test/gwsect/en/README.md): exchange of water between cells with a section shape and groundwater (seepage, infiltration), the conduit layer and snowmelt; checks that the total storage of a closed valley is conserved and that the concentration of a rain tracer stays at 1.
 
 ## References

@@ -1161,6 +1161,8 @@ subroutine build_cw(g, capd)
             if (g%sw(in,jn) == 0 .and. g%rw(in,jn) <= 0 .and. &
                 is_wall(g%zbank(ic,jc), g%z(ic,jc), g%z(in,jn))) cycle
           end if
+          ! 幅の極端に狭い河道の隣は、壁の辺と同じく開口和から外す(§136)
+          if (narrow_nb(g, ic, jc, in, jn, k)) cycle
           f0 = chn%frw(ke(k), ic+die(k), jc+dje(k))
           if (is_channel(g, in, jn) .or. g%sw(in,jn) > 0) then
             q = wcap(g, ic, jc, in, jn, cap8(k))   ! 河道—河道と河道—海(§18。frw と同じ q)
@@ -1228,6 +1230,7 @@ module subroutine build_cwd(g, s)
             if (g%sw(in,jn) == 0 .and. g%rw(in,jn) <= 0 .and. &
                 is_wall(g%zbank(ic,jc), g%z(ic,jc), g%z(in,jn))) cycle
           end if
+          if (narrow_nb(g, ic, jc, in, jn, k)) cycle   ! build_cw と同じ(§136)
           f0 = sct%frw0(ke(k), ic+die(k), jc+dje(k))   ! キャップ前(build_cw と同じ)
           if (is_channel(g, in, jn)) then
             q = wcap(g, ic, jc, in, jn, cap8(k))
@@ -1274,6 +1277,34 @@ function wcap(g, i1, j1, i2, j2, cap) result(q)
     return
   end if
   q = min(we / cap, 1.0)
+end function
+
+
+!----------------------------------------------------------------------
+! 通水率の開口和から外す、幅の極端に狭い隣か(developer.md §136)
+!   隣 (in,jn) が幅を持つ河道のセルで、その幅が自セル (ic,jc) の幅(辺の面長で頭打ち)の
+!   p_wclose 未満(width_closed)。その辺は隣の幅キャップでほぼ閉じているので、壁の辺と
+!   同じく開口和に入れない(幅 0 に近い隣が自セルの通水率を下げ、流速の正規化で流速を
+!   過大にして摩擦を増やさない)。build_cw・cw_cell・build_cwd が同じ判定を使う
+!   (3 つの開口和を同じ式に保つ条件)。一様な幅の河道の隣は閉じない
+!----------------------------------------------------------------------
+function narrow_nb(g, ic, jc, in, jn, k) result(res)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: ic, jc, in, jn, k
+  logical :: res
+  real :: face, wc
+  res = .false.
+  if (g%wrw(in,jn) <= 0.0) return             ! 幅を持つ河道のセルでない
+  if (din(k) /= 0 .and. djn(k) /= 0) then
+    face = g%dx * g%dy / sqrt(g%dx**2 + g%dy**2)
+  else if (din(k) /= 0) then
+    face = g%dy
+  else
+    face = g%dx
+  end if
+  wc = g%wrw(ic,jc)
+  if (wc <= 0.0) wc = huge(1.0)
+  res = width_closed(g%wrw(in,jn), wc, face)
 end function
 
 
@@ -1329,6 +1360,7 @@ module subroutine cw_cell(g, i, j, sig, cx, cy)
         if (g%sw(in,jn) == 0 .and. g%rw(in,jn) <= 0 .and. &
             is_wall(g%zbank(i,j), g%z(i,j), g%z(in,jn))) cycle
       end if
+      if (narrow_nb(g, i, j, in, jn, k)) cycle   ! build_cw と同じ(§136)
       f0 = sct%frw0(ke(k), i+die(k), j+dje(k))
       if (is_channel(g, in, jn) .or. g%sw(in,jn) > 0) then
         q = wcap(g, i, j, in, jn, cap8(k))   ! 河道—河道と河道—海(build_cw と同じ。§18)

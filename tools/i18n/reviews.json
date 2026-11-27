@@ -194,11 +194,11 @@
     {
       "source": "docs/users_guide/channel_models.md",
       "target": "docs/en/users_guide/channel_models.md",
-      "source_sha256": "ddaccdb8f771477a29acc86ba60cdfea659478c834f2a6f3344210fd2d8799a1",
-      "target_sha256": "b18b97d850d51e5afc09bb87580d269824e02e6f61cd949cfe34b16220adc51d",
-      "reviewer": "Claude (Claude Code session; §1 gained the paragraph on advection and virtual walls and §6 the test/wallpond entry in both files; compared paragraph by paragraph, the rest unchanged)",
+      "source_sha256": "c4f47ea82fbe4b32d98006aa15d55f90b97cae887b1fa2dd9cd70cec6183b56d",
+      "target_sha256": "ce6c8bbad1df3bd367e8d2088611beb4726fe4b27f97ed575afe1f1702313e48",
+      "reviewer": "Claude (Claude Code session; the bullet on cells of extremely small width in §2 and the test/sliver entry in §6 added in both files and compared; the rest unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/coordinates.md",
@@ -455,11 +455,11 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "3edf07cae9ccb0d668b7721a55191c76c0b98ca19a82a6be984f59ff971a5af9",
-      "target_sha256": "68581c1a7bf34e85c3b5f4aee21d96d92c69794c8c9610853e80c4ee818efc1e",
-      "reviewer": "Claude (Claude Code session; §4.2 table row and §4.3 paragraph on seawalls in the dynamic reassignment added in both files; compared sentence by sentence, the rest unchanged)",
+      "source_sha256": "17450d054b719912081e5fedd7b262d58f0c81531cd5785ed87b08a48165be04",
+      "target_sha256": "6a4230718d3d94021e68692be551da823d7ec96ce551905d74a4cd1f16d96d6b",
+      "reviewer": "Claude (Claude Code session; the paragraph on channel cells of extremely small width in §4.3 and the table row in §4.2 added in both files and compared; the rest unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -4271,11 +4271,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "11ebe7ee9e9e86070d812fb7c833208eff5e6feaf86f0e1741b47297081bd815",
-      "target_sha256": "bd2f2a2ddbf21ae06babe8af1a7c527f05ce26b42c62af76d66143bf156159e7",
-      "reviewer": "Claude (Claude Code session; the wallpond row gained the 26.6° thickened two-cell band and the §134.10 merge judgement in both files and was compared; the rest unchanged)",
+      "source_sha256": "4d56c029084f516103ad42c93e893a4d8b7171c24358258952f956380d1281ba",
+      "target_sha256": "759cc722184a269efaa9c18332749f8b02409b14ff7d2375a57188bcc604b6c3",
+      "reviewer": "Claude (Claude Code session; the sliver row added to the table in both files and compared; the rest unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "test/avalanche/README.md",
@@ -5527,6 +5527,15 @@
       "reviewer": "Claude (Claude Code session; both figures redrawn by the same Fig.py from the results after the correction of the blockage ratio, differing only in the language of the labels)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "test/sliver/README.md",
+      "target": "test/sliver/en/README.md",
+      "source_sha256": "0f04cc6e55df020a29767a88cea22208f0dd6e8753865551a954ac175c4da286",
+      "target_sha256": "42a358b0a5dd143630fbb6daaeb7b8c6e90750ccb552c25d6ab7c1ee2b63149c",
+      "reviewer": "Claude (Claude Code session; new English mirror written from the Japanese master and compared section by section, including the tables, the numbers (checked per section by script) and the relative links)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "test/slopefric/README.md",

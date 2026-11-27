@@ -1,8 +1,8 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   高速な 32 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
+#   高速な 35 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
 #   ローカルで test/chichibu/Run.sh を実行すること。test/paddy も実行時間の都合で、夜間の nightly.yml だけで
 #   回す。developer.md §127.16)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
-#   bldgdrag・driftwood・bankcap・brink・bankspill・chutepool・cascade・tjunction・stairbank・stageside・vchannel・bankhalo・wallpond は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
+#   bldgdrag・driftwood・bankcap・brink・bankspill・chutepool・cascade・tjunction・stairbank・stageside・vchannel・bankhalo・wallpond・sliver は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
 #   終了コードで判定。stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。
 #   vshaped は V 字流域の降雨流出の運動学的波の理論解との比較。bldgdrag は家屋の抗力項を含む等流の
 #   理論値との比較で、逐次のジョブだけで回す(辺ごとの局所の式で、MPI のジョブは同じ式を通るだけなので
@@ -61,6 +61,9 @@
 #   開口の動的な振り替えで壁の向こうを塞がっていると数えることも見る。developer.md §134・§134.9)。
 #   逐次のジョブだけで回す(約 35 秒。MPI のジョブは制限の 30 分に余裕がないので足していない。手元の np = 2・4 は
 #   合格し、湛水の 6 ケースは 1 ランクとバイト一致する)
+#   sliver は、幅 0.01 m のサブグリッド河道のセル(占有率の細片)を河道に添えても、河道の水位が添えない計算と
+#   変わらないことの検定(開口の動的な振り替えと通水率で、幅の極端に狭いセルを計算の外と同じに数える。45° の
+#   1 列に 1 セルの河道と格子に沿う 2 行の河道。developer.md §136)。逐次のジョブだけで回す(wallpond と同じ理由)
 #   フル回帰・MPI np=1,2,4・-fcheck=all・BMI 適合性は夜間の nightly.yml で回す
 name: CI
 
@@ -86,7 +89,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink bankspill chutepool cascade tjunction stairbank stageside vchannel river_flowline bankhalo wallpond damops; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink bankspill chutepool cascade tjunction stairbank stageside vchannel river_flowline bankhalo wallpond sliver damops; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done
