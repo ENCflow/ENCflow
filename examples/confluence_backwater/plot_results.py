@@ -7,7 +7,8 @@
   figs/profiles.png   支川の最大水位の縦断(流量の組み合わせの 4 ケースと対策の 2 ケース)
   figs/series.png     合流点の本川の水位、支川の口の流量(逆流)、堤内地の水量、支川の水位観測所の水位と流量の関係
   figs/measures.png   対策の 2 ケース(堤内地の水量、合流点の本川の水位、水門の内外の水位とポンプ)
-  figs/coarse.png     粗い格子(Δx = 100 m・サブグリッド河道)との比較
+  figs/coarse_masks.png  粗い格子(Δx = 100 m)の河道マスクの作り方 3 通り(合流点と狭窄部のまわり)
+  figs/coarse.png     粗い格子の 3 通りと本編の比較(最大浸水深、合流点の本川の水位、堤内地の水量)
   figs/backwater.png  定常の支川の背水曲線と 1 次元の理論(漸変流の式)
   figs/junction.png   補足「合流の形と水位」(合流角・格子の大きさ・湾曲部の外岸と内岸)
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。計算していないケースの図と表は飛ばす。
@@ -444,72 +445,151 @@ def fig_measures():
 
 
 # ---------------------------------------------------------------- 図 6: 粗い格子
-KC = np.loadtxt("data_coarse/kind.txt", dtype=int)
-ZC = np.loadtxt("data_coarse/z.txt")
 EXTC = [0, mc.NXC * mc.DXC, 0, mc.NYC * mc.DXC]
+M_LABEL = {"simple": T("簡便", "simple"), "occ": T("占有率のまま", "covered fraction as is"),
+           "fixed": T("直したもの", "corrected")}
+M_STYLE = {"fine": ("k", "-", 1.8), "simple": ("#e08214", "--", 1.5), "occ": ("#7b3294", "-.", 1.5),
+           "fixed": ("#1f8b6e", "-", 1.5)}
 
 
-def coarse_trib_max(case):
-    hm = np.loadtxt(f"result_coarse_{case}/H9999.txt")
-    rows = [j for j in range(mc.NYC) if KC[j, 25] == 3]
-    y = np.array([mc.LYC - (j + 0.5) * mc.DXC - m.Y_MOUTH for j in rows])
-    return y, np.array([ZC[j, 25] + hm[j, 25] for j in rows])
+def coarse_data(method):
+    """粗い格子の入力(kind、河道幅)。簡便は幅を与えないので 0"""
+    d = f"data_coarse_{method}"
+    if not os.path.exists(os.path.join(d, "kind.txt")):
+        return None, None
+    kind = np.loadtxt(os.path.join(d, "kind.txt"), dtype=int)
+    fw = os.path.join(d, "width.txt")
+    width = np.loadtxt(fw) if os.path.exists(fw) else np.zeros(kind.shape)
+    return kind, width
+
+
+def fig_coarse_masks():
+    data = {r: coarse_data(r) for r in mc.METHODS}
+    if any(v[0] is None for v in data.values()):
+        return
+    title = {"simple": T("(a) 簡便: 占有率 50 % 以上のセルを河道にし、幅は与えない",
+                         "(a) Simple: cells covered 50 % or more are channel cells, no width given"),
+             "occ": T("(b) 占有率のまま: 占有率 5 % 以上のセルをすべて河道にし、幅 = 占有率 × 100 m",
+                      "(b) Covered fraction as is: every cell covered 5 % or more, width = fraction × 100 m"),
+             "fixed": T("(c) 直したもの: 格子の軸に沿う区間を、解像したセル + 残りの幅のセル 1 つに詰め直す",
+                        "(c) Corrected: along grid-axis reaches, packed into resolved cells + one remainder cell")}
+    x0, x1, y0, y1 = 1300.0, 5300.0, 400.0, 1500.0
+    fig, axs = plt.subplots(3, 1, figsize=(12, 9.6))
+    xs = np.arange(x0, x1 + 1.0, 5.0)
+    yc = np.array([m.yc(x) for x in xs])
+    bw = np.array([m.width(x) for x in xs])
+    for ax, r in zip(axs, mc.METHODS):
+        kind, width = data[r]
+        bg = np.full(kind.shape + (3,), 1.0)
+        bg[kind == 0] = (0.80, 0.86, 0.76)
+        bg[kind == 5] = (0.95, 0.93, 0.87)
+        chan = (kind == 1) | (kind == 3)
+        sub = chan & (width > 0.0) & (width < mc.RESOLVED)
+        bg[chan & ~sub] = (0.16, 0.42, 0.78)
+        bg[sub] = (0.62, 0.78, 0.95)
+        ax.imshow(bg, extent=EXTC, interpolation="nearest")
+        for j, i in zip(*np.nonzero(sub)):
+            x, y = (i + 0.5) * mc.DXC, mc.LYC - (j + 0.5) * mc.DXC
+            if x0 < x < x1 and y0 < y < y1:
+                ax.text(x, y, f"{width[j, i]:.0f}", ha="center", va="center", fontsize=6.5, color="#0b2e5c")
+        for g in np.arange(x0, x1 + 1.0, mc.DXC):
+            ax.axvline(g, color="w", lw=0.4, alpha=0.7)
+        for g in np.arange(y0, y1 + 1.0, mc.DXC):
+            ax.axhline(g, color="w", lw=0.4, alpha=0.7)
+        ax.plot(xs, yc + bw / 2, "k-", lw=0.9)
+        ax.plot(xs, yc - bw / 2, "k-", lw=0.9)
+        ytop = m.yc(m.XT) + m.BM / 2
+        for xt in (m.XT - m.BT / 2, m.XT + m.BT / 2):
+            ax.plot([xt, xt], [ytop, y1], "k-", lw=0.9)
+        ax.set_xlim(x0, x1)
+        ax.set_ylim(y0, y1)
+        ax.set_aspect("equal")
+        ax.set_xticks(np.arange(1500, 5300, 500))
+        ax.set_yticks([500, 1000, 1500])
+        ax.tick_params(labelsize=7)
+        ax.set_title(title[r], fontsize=9.5, loc="left")
+    axs[-1].set_xlabel(T("x (m)。本川は西から東へ、支川は北から合流する。狭窄部(幅 120 m)は x = 4,200〜4,800 m",
+                         "x (m). The main river flows west to east, the tributary joins from the north. "
+                         "Narrows (120 m wide) at x = 4,200–4,800 m"), fontsize=8)
+    handles = [plt.Rectangle((0, 0), 1, 1, color=(0.16, 0.42, 0.78)),
+               plt.Rectangle((0, 0), 1, 1, color=(0.62, 0.78, 0.95)),
+               plt.Rectangle((0, 0), 1, 1, color=(0.95, 0.93, 0.87)),
+               plt.Line2D([], [], color="k", lw=0.9)]
+    labels = [T("解像した河道のセル(セル幅いっぱい)", "resolved channel cell (full cell width)"),
+              T("サブグリッド河道のセル(数字は幅 m)", "subgrid channel cell (number = width in m)"),
+              T("堤内地", "landside"),
+              T("Δx = 20 m の河道の岸(元の河道マスク)", "banks of the Δx = 20 m channel (the source mask)")]
+    fig.legend(handles, labels, loc="lower center", ncol=4, fontsize=8, frameon=False)
+    fig.tight_layout(rect=(0, 0.035, 1, 1))
+    fig.savefig(os.path.join(FIGDIR, "coarse_masks.png"), dpi=110)
+    plt.close(fig)
 
 
 def fig_coarse():
-    pairs = [c for c in ("main", "same") if have(c) and have(f"coarse_{c}")]
-    if not pairs:
+    c = "same"
+    runs = [r for r in mc.METHODS if have(f"coarse_{c}_{r}")]
+    if not have(c) or not runs:
         return
-    fig = plt.figure(figsize=(13, 8.8))
+    fig = plt.figure(figsize=(13, 8.6))
     cmap = plt.get_cmap("Blues").copy()
-    for k, c in enumerate(pairs):
-        for kk, (lab, hm, kind, ext) in enumerate(((T("Δx = 20 m", "Δx = 20 m"), np.loadtxt(f"result_{c}/H9999.txt"), KIND, EXT),
-                                                  (T("Δx = 100 m", "Δx = 100 m"), np.loadtxt(f"result_coarse_{c}/H9999.txt"), KC, EXTC))):
-            ax = fig.add_axes([0.03 + 0.16 * (2 * k + kk), 0.50, 0.15, 0.44])
-            bg = np.full(kind.shape + (3,), 1.0)
-            bg[kind == 0] = (0.72, 0.80, 0.66)
-            bg[(kind == 1) | (kind == 3)] = (0.80, 0.86, 0.95)
-            bg[(kind == 2) | (kind == 4)] = (0.35, 0.35, 0.35)
-            bg[kind == 5] = (0.93, 0.90, 0.82)
-            ax.imshow(bg, extent=ext, interpolation="nearest")
-            land = np.where(kind == 5, hm, np.nan)
-            im = ax.imshow(np.where(land > 0.01, land, np.nan), extent=ext, cmap=cmap, vmin=0, vmax=2.5, interpolation="nearest")
-            ax.set_xlim(1300, 3900)
-            ax.set_ylim(500, 4300)
-            ax.set_xticks([])
-            ax.set_yticks([])
-            ax.set_title(f"{LABEL[c]}\n{lab}", fontsize=9)
-    cax = fig.add_axes([0.67, 0.55, 0.01, 0.34])
+    panels = [(T("Δx = 20 m", "Δx = 20 m"), np.loadtxt(f"result_{c}/H9999.txt"), KIND, EXT)]
+    for r in runs:
+        panels.append((f"Δx = 100 m{SEP}{M_LABEL[r]}", np.loadtxt(f"result_coarse_{c}_{r}/H9999.txt"),
+                       coarse_data(r)[0], EXTC))
+    for k, (lab, hm, kind, ext) in enumerate(panels):
+        ax = fig.add_axes([0.04 + 0.195 * k, 0.49, 0.18, 0.42])
+        bg = np.full(kind.shape + (3,), 1.0)
+        bg[kind == 0] = (0.72, 0.80, 0.66)
+        bg[(kind == 1) | (kind == 3)] = (0.80, 0.86, 0.95)
+        bg[(kind == 2) | (kind == 4)] = (0.35, 0.35, 0.35)
+        bg[kind == 5] = (0.93, 0.90, 0.82)
+        ax.imshow(bg, extent=ext, interpolation="nearest")
+        land = np.where(kind == 5, hm, np.nan)
+        im = ax.imshow(np.where(land > 0.01, land, np.nan), extent=ext, cmap=cmap, vmin=0, vmax=2.5, interpolation="nearest")
+        ax.set_xlim(1300, 3900)
+        ax.set_ylim(500, 4300)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"({'abcd'[k]}) {lab}", fontsize=9)
+    fig.text(0.04, 0.965, T("(a)〜(d) ケース same(両方の出水。ピークが重なる)の最大浸水深。流量は本編と同じ",
+                            "(a)–(d) Maximum flood depth, case same (both floods, peaks coincide); discharges as in the main cases"),
+             fontsize=10)
+    cax = fig.add_axes([0.83, 0.53, 0.01, 0.34])
     cb = fig.colorbar(im, cax=cax)
     cb.set_label(T("最大浸水深 (m)", "maximum flood depth (m)"))
-    ax = fig.add_axes([0.06, 0.07, 0.40, 0.34])
-    for c in pairs:
-        col = dict((cc, cl) for cc, _, cl, _ in CASES)[c]
-        t, v = fp_volume(c)
-        ax.plot(t, v / 1e6, "-", color=col, lw=1.6, label=f"{LABEL[c]}{SEP}Δx = 20 m")
-        t, v = fp_volume(f"coarse_{c}", kind=KC, area=mc.DXC * mc.DXC)
-        ax.plot(t, v / 1e6, "--", color=col, lw=1.6, label=f"{LABEL[c]}{SEP}Δx = 100 m")
-    ax.set_xlabel(T("時刻 (h)", "time (h)"))
-    ax.set_ylabel(T("堤内地の水量 (百万 m³)", "water on the landside (million m³)"))
-    ax.set_xlim(0, 14)
-    ax.grid(alpha=0.3)
-    ax.legend(fontsize=8, loc="upper left")
-    ax.set_title(T("(c) 堤内地にたまった水の量", "(c) Water ponded on the landside"), fontsize=10, loc="left")
-    ax = fig.add_axes([0.55, 0.07, 0.42, 0.34])
-    ax.plot(Y_T / 1000, ZB_T, "k-", lw=0.8)
-    ax.plot(Y_T / 1000, CREST_T, "--", color=C_LEVEE, lw=1.2, label=T("支川の堤防の天端", "tributary levee crest"))
-    for c in pairs:
-        col = dict((cc, cl) for cc, _, cl, _ in CASES)[c]
-        ax.plot(Y_T / 1000, trib_max_level(c), "-", color=col, lw=1.6, label=f"{LABEL[c]}{SEP}Δx = 20 m")
-        y, e = coarse_trib_max(c)
-        ax.plot(y / 1000, e, "o--", color=col, ms=3, lw=1.0, label=f"{LABEL[c]}{SEP}Δx = 100 m")
-    ax.set_xlim(0, 6.2)
-    ax.set_ylim(19, 27.5)
-    ax.set_xlabel(T("支川の口からの距離 (km)", "distance from the tributary mouth (km)"))
-    ax.set_ylabel(T("最大水位 (m)", "maximum water level (m)"))
-    ax.grid(alpha=0.3)
-    ax.legend(fontsize=7, loc="lower right")
-    ax.set_title(T("(d) 支川の最大水位の縦断", "(d) Maximum water level along the tributary"), fontsize=10, loc="left")
+    ax_e = fig.add_axes([0.06, 0.07, 0.40, 0.32])
+    ax_v = fig.add_axes([0.56, 0.07, 0.40, 0.32])
+    tf, ef, _ = probe(c, 1)
+    tv, vf = fp_volume(c)
+    on = tv[vf > 1.0e4]
+    if len(on):
+        ax_e.axvspan(on[0], tv[int(np.argmax(vf))], color="#e6e6e6", lw=0)
+        ax_e.text(on[0] + 0.1, 0.25, T("Δx = 20 m で\n越水している間", "overflow on\nthe Δx = 20 m grid"), fontsize=8,
+                  color="#555555", va="top")
+    ax_e.axhline(0.0, color="k", lw=0.8)
+    for r in ["fine"] + runs:
+        col, ls, lw = M_STYLE[r]
+        case = c if r == "fine" else f"coarse_{c}_{r}"
+        lab = T("Δx = 20 m", "Δx = 20 m") if r == "fine" else f"Δx = 100 m{SEP}{M_LABEL[r]}"
+        if r != "fine":
+            t, e, _ = probe(case, 1)
+            ax_e.plot(tf / 60, np.interp(tf, t, e) - ef, ls, color=col, lw=lw, label=lab)
+            t, v = fp_volume(case, kind=coarse_data(r)[0], area=mc.DXC * mc.DXC)
+        else:
+            t, v = tv, vf
+        ax_v.plot(t, v / 1e6, ls, color=col, lw=lw, label=lab)
+    ax_e.set_ylabel(T("Δx = 100 m − Δx = 20 m (m)", "Δx = 100 m − Δx = 20 m (m)"))
+    ax_e.set_ylim(-0.6, 0.3)
+    ax_e.set_title(T("(e) 合流点の本川の水位の差(北岸。本編の P1 の位置)",
+                     "(e) Difference of the main-river level at the confluence (north bank, P1)"), fontsize=10, loc="left")
+    ax_e.legend(fontsize=8, loc="lower left")
+    ax_v.set_ylabel(T("堤内地の水量 (百万 m³)", "water on the landside (million m³)"))
+    ax_v.set_title(T("(f) 堤内地にたまった水の量", "(f) Water ponded on the landside"), fontsize=10, loc="left")
+    ax_v.legend(fontsize=8, loc="upper left")
+    for ax in (ax_e, ax_v):
+        ax.set_xlabel(T("時刻 (h)", "time (h)"))
+        ax.set_xlim(0, 14)
+        ax.grid(alpha=0.3)
     fig.savefig(os.path.join(FIGDIR, "coarse.png"), dpi=110)
     plt.close(fig)
 
@@ -548,11 +628,13 @@ def steady_profiles():
         E = np.loadtxt("result_steady/E0006.txt")
         h = np.array([E[j, COLS_T].mean() for j in ROWS_T]) - ZB_T
         out.append(("Δx = 20 m", Y_T, h))
-    if os.path.exists("result_coarse_steady/E0006.txt"):
+    if os.path.exists("result_coarse_steady/E0006.txt"):          # 粗い格子は河道マスクの「直したもの」
         E = np.loadtxt("result_coarse_steady/E0006.txt")
-        rows = [j for j in range(mc.NYC) if KC[j, 25] == 3]
+        kc = np.loadtxt("data_coarse_fixed/kind.txt", dtype=int)
+        zc = np.loadtxt("data_coarse_fixed/z.txt")
+        rows = [j for j in range(mc.NYC) if kc[j, 25] == 3]
         y = np.array([mc.LYC - (j + 0.5) * mc.DXC - m.Y_MOUTH for j in rows])
-        h = np.array([E[j, 25] - ZC[j, 25] for j in rows])
+        h = np.array([E[j, 25] - zc[j, 25] for j in rows])
         out.append(("Δx = 100 m", y, h))
     return out
 
@@ -848,24 +930,31 @@ def tables():
         _, _, h8 = probe(c, 8)
         print(f"{c:6s} {e1.max():7.2f} / {e2.max():6.2f}      {e4.max():6.2f}   {e5.max():6.2f}    {q1.min():7.0f} / {q1.max():5.0f}"
               f"            {v.max() / 1e6:6.2f} 百万 m3   {area:5.2f} km2  {hm[FP].max():5.2f} m   {ext:6.0f} m    {h7.max():5.2f} / {h8.max():5.2f} m")
+    print("== 表 2 粗い格子(Δx = 100 m)の河道マスクの作り方 3 通り(合流点の本川の水位は北岸の P1。"
+          "時刻ごとの差は粗い − 細かい)")
     for c in ("main", "same"):
-        if have(c) and have(f"coarse_{c}"):
-            _, v = fp_volume(c)
-            _, vc = fp_volume(f"coarse_{c}", kind=KC, area=mc.DXC * mc.DXC)
-            hm = np.loadtxt(f"result_{c}/H9999.txt")
-            hc = np.loadtxt(f"result_coarse_{c}/H9999.txt")
-            a = float(((hm > 0.1) & FP).sum()) * m.DX * m.DX / 1e6
-            ac = float(((hc > 0.1) & (KC == 5)).sum()) * mc.DXC * mc.DXC / 1e6
-            _, e1, _ = probe(c, 1)
-            _, ec1, _ = probe(f"coarse_{c}", 1)
-            print(f"== 表 2 粗い格子 {c}: 合流点の本川の最高水位(北岸の P1){e1.max():.2f} → {ec1.max():.2f} m、"
-                  f"堤内地の最大水量 {v.max() / 1e6:.2f} → {vc.max() / 1e6:.2f} 百万 m3、浸水面積 {a:.2f} → {ac:.2f} km2、"
-                  f"最大水深 {hm[FP].max():.2f} → {hc[KC == 5].max():.2f} m")
-            t1, e1t, _ = probe(c, 1)
-            tc1, ec1t, _ = probe(f"coarse_{c}", 1)
+        if not have(c):
+            continue
+        _, v = fp_volume(c)
+        hm = np.loadtxt(f"result_{c}/H9999.txt")
+        a = float(((hm > 0.1) & FP).sum()) * m.DX * m.DX / 1e6
+        t1, e1, _ = probe(c, 1)
+        print(f"  {c} Δx = 20 m: 合流点の本川の最高水位 {e1.max():.2f} m、堤内地の最大水量 {v.max() / 1e6:.2f} 百万 m3、"
+              f"浸水面積 {a:.2f} km2、最大水深 {hm[FP].max():.2f} m")
+        for r in mc.METHODS:
+            if not have(f"coarse_{c}_{r}"):
+                continue
+            kc = coarse_data(r)[0]
+            _, vc = fp_volume(f"coarse_{c}_{r}", kind=kc, area=mc.DXC * mc.DXC)
+            hc = np.loadtxt(f"result_coarse_{c}_{r}/H9999.txt")
+            ac = float(((hc > 0.1) & (kc == 5)).sum()) * mc.DXC * mc.DXC / 1e6
+            tc1, ec1, _ = probe(f"coarse_{c}_{r}", 1)
+            print(f"  {c} {r:6s}: 合流点の本川の最高水位 {ec1.max():.2f} m({ec1.max() - e1.max():+.2f})、"
+                  f"堤内地の最大水量 {vc.max() / 1e6:.2f} 百万 m3({vc.max() / v.max():.2f} 倍)、"
+                  f"浸水面積 {ac:.2f} km2({ac / a:.2f} 倍)、最大水深 {hc[kc == 5].max():.2f} m")
             hh = (3.0, 4.0, 5.0, 6.0, 7.0, 8.0)
-            print("     合流点の本川の水位(P1)の時刻ごとの差(粗い − 細かい): " + "、".join(
-                f"{h:.0f} h {np.interp(h * 60, tc1, ec1t) - np.interp(h * 60, t1, e1t):+.2f} m" for h in hh))
+            print("      P1 の時刻ごとの差: " + "、".join(
+                f"{h:.0f} h {np.interp(h * 60, tc1, ec1) - np.interp(h * 60, t1, e1):+.2f} m" for h in hh))
     rows = backwater_table()
     if rows:
         print(f"== 表 3 定常の背水曲線(等流水深 {HN_ST:.3f} m。理論は口から 150 m 前後の計算の水深から上流へ積分)")
@@ -898,6 +987,7 @@ def main():
     fig_profiles()
     fig_series()
     fig_measures()
+    fig_coarse_masks()
     fig_coarse()
     fig_backwater()
     fig_junction()

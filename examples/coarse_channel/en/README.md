@@ -21,7 +21,7 @@ thickening at the steps) are compared as well and used to explain why the result
 | May cells with a tiny covered fraction be included? | A cutoff is still advisable. The computational core counts a cell whose width is below 5 % of the width it is compared with as outside the computation in the reassignment of openings and the conveyance ratio, so including cells covered by a few per cent keeps oblique rivers (1.2–3 cells wide) at 0.92–1.03 times, but the result differs from that with a 5 % cutoff by up to 0.07. Cutoffs of 5 % and 15 % give nearly the same | [sens](#2-threshold-for-resolved-cells-and-cutoff-of-the-covered-fraction) |
 | Is a threshold (50 %) for channel / non-channel enough? | No. 0.40–1.03 times on oblique rivers (1.2–3 cells wide) and +7.5 cm of backwater in a bend. Resolving cells of 50 % or more and giving the rest their covered width is nearly the same as "all cells" on oblique rivers, but underestimates the backwater of bends by 2–4 cm | [occ](#1-channel-masks-from-the-covered-fraction), [bend](#3-bends) |
 | Rivers narrower than one cell? | Make the centreline one cell per column (8-connected) and give it the channel width (0.99–1.00 times up to 0.6 cell). From the covered fraction the river splits into neighbouring cells and gives 0.84–1.88 times. A 4-connected staircase also gives 1.4–2.7 times at 26.6–45° | [mask](#4-narrower-than-one-cell-one-line-of-cells-on-the-centreline-and-mask-connectivity) |
-| Rivers along a grid axis and at 45°? | The covered-fraction rules carry too much where partial cells lie side by side. At 2 cells wide, a river along a grid axis gives 1.00–1.20 times depending on where its banks fall, and a 45° river 1.02–1.22 times; up to +7 % and +6 % at 6 cells | [occ](#1-channel-masks-from-the-covered-fraction) |
+| Rivers along a grid axis and at 45°? | The covered-fraction rules carry too much where partial cells lie side by side. At 2 cells wide, a river along a grid axis gives 1.00–1.20 times depending on where its banks fall, and a 45° river 1.02–1.22 times; up to +7 % and +6 % at 6 cells. Reaches along a grid axis packed column by column into resolved cells + one cell of the remaining width give 0.97–1.14 times | [occ](#1-channel-masks-from-the-covered-fraction), [side](#channel-cells-side-by-side) |
 | The staircase banks of rivers 6–10 cells wide? | With all cells at their covered width, 0.98–1.00 times (oblique rivers). With a threshold alone, a width of 0.14–0.40 cell is lost at the staircase banks: 0.90–1.01 times | [occ](#1-channel-masks-from-the-covered-fraction), [wide](#staircase-banks) |
 | Should bends be thickened? | Not with all cells at their covered width (backwater differs by −1.0 to −0.1 cm). A thresholded band gives +7.5 cm in a sharp bend. When assembling bands from the centreline, thicken them so that two rows are shared at the steps (−3.6 to −1.5 cm) | [bend](#3-bends) |
 | Is a thin film of water on the non-channel cells beside the channel harmless? | A channel bounded by virtual walls (`fn_bank`) is the same whether the land behind the walls is dry, holds 16 cm of rain or a 1.5 m pond. With banks represented by the terrain (no walls), a rain film (1–2 cm) on them lowers it from 1.013 to 0.956 times | [wet](#6-water-beside-the-channel) |
@@ -275,12 +275,20 @@ measured reach.
 | Below 1 cell | Make the centreline one cell per column (8-connected) and give the channel width as the subgrid channel width | 0.99–1.00 (up to 0.6 cell). An oblique line of cells carries at most 0.71–0.89 cell |
 | 1 cell or more | Make every cell with a covered fraction of 5 % or more a channel cell, with a width of f·Δ (resolved for f ≈ 1) | Oblique rivers: 0.84–1.04 (1.2 cells), 0.90–1.03 (1.6–3 cells), 0.98–1.00 (6 and 10 cells). Along a grid axis: 1.00–1.20 (2 cells), 1.00–1.04 (10 cells). 45°: 1.02–1.22 (2 cells), 1.02–1.04 (10 cells) |
 | Bends | The same (no thickening needed) | Backwater difference −1.0 to −0.1 cm (2 cells wide, radius 2.5–7.5 times the width) |
+| Reaches along a grid axis with banks inside cells | Add up the covered fraction column by column and pack it, from the cell nearest the centreline, into "resolved cells + one cell of the remaining width" | 0.97–1.14 (1.2–2.5 cells wide; "Channel cells side by side" in section 5) |
 
 - The covered fraction is obtained from the area of the channel polygon clipped by each coarse cell, or from the number
   of cells of a high-resolution channel mask. Forgetting the cutoff (5 %) still keeps oblique rivers
   (1.2–3 cells wide) at 0.92–1.03 times, but the result differs from that with the cutoff by up to 0.07.
 - Rivers 1–2 cells wide, reaches along a grid axis and reaches close to 45° have larger errors. Where the level must be
   accurate, refine the grid or check against observed levels.
+- Packing the reaches along a grid axis matters most where a reach that controls the level, such as a narrows, a bridge
+  or a weir, lies there. In supplement 1 of [confluence_backwater](../../confluence_backwater/en/README.md), a narrows
+  120 m wide centred on a cell boundary became 2 cells of 60 m by covered fraction, and the stage at the confluence came
+  out 0.53 m lower than on the fine grid; packed into 100 m + 20 m, the difference was 0.05 m.
+- The procedure and guides to the errors are summed up in
+  [Channels](../../../docs/en/users_guide/channel.md#making-the-channel-mask-and-width-coarse-grids) of the user's
+  guide.
 
 ## Tables
 
@@ -414,7 +422,8 @@ fine-grid cases (Δx = 20 m; 30 s to 2 min each with 4 threads) one at a time. C
   band changes by a few per cent with the advection configuration (developer record §134.10). With the dynamic
   reassignment of openings switched off, the covered-fraction rules drop to 0.65–0.87 times (developer record §135.6).
 - **The extra conveyance of rivers along a grid axis and at 45°** comes from how diagonal edges between subgrid cells
-  side by side are treated (a rule of the computational core); the mask rules do not fix it.
+  side by side are treated (a rule of the computational core). Packing fixes reaches along a grid axis, but no mask rule
+  fixes rivers at 45°.
 - **The fine grid is not converged either**: even at Δx = 20 m a 6-cell river at 11.3° gives 0.88 times.
 - **Not run with MPI.**
 

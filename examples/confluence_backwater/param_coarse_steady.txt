@@ -1,8 +1,8 @@
 !======================================================================
-! confluence_backwater 補足: 支川の背水曲線を 1 次元の理論と比べる定常計算(粗い格子 Δx = 100 m)
+! confluence_backwater 補足: 支川の背水曲線を 1 次元の理論と比べる定常計算(粗い格子 Δx = 100 m。河道マスクは補足 1 の「直したもの」)
 !   本川 1,500 m3/s・支川 100 m3/s の一定の流量を 6 h 流して定常にする(支川はあふれない)。
 !   支川の水面形を、広い矩形断面・Manning の漸変流の式(1 次元)の解と比べる(plot_results.py)。
-!   地形・境界の置き方は粗い格子の補足と同じ
+!   地形・境界の置き方は粗い格子の補足 1と同じ
 !======================================================================
 &list_sysparam
   f_gridsystem = 0
@@ -18,7 +18,7 @@
   fn_boundary = '-'
   fn_channel = '-'
   fn_record = '-'
-  dir_data = 'data_coarse'
+  dir_data = 'data_coarse_fixed'
   dir_result = 'result_coarse_steady'
   f_out_h = 1
   f_out_e = 1

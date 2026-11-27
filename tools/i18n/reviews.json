@@ -185,18 +185,18 @@
     {
       "source": "docs/users_guide/channel.md",
       "target": "docs/en/users_guide/channel.md",
-      "source_sha256": "3f7083b898ce02613764962cae38deeade78215347ae4c2d51aa35621bc1d368",
-      "target_sha256": "dfb959b807d84892b81d376bc2dacfcd6420595e8bd02d4cb2e85f3154a86754",
+      "source_sha256": "6769393e7099057ad5ec0cc909bbd89a0f14f8b72787ed4b5a5ea912a5ffcbf0",
+      "target_sha256": "ebf94873d350b18eab03c0427b2737fb95657897ec10180eaf7482f39352209e",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/channel_models.md",
       "target": "docs/en/users_guide/channel_models.md",
-      "source_sha256": "5176fb03944f613db06dbdd40d738ea0e429e376ee2a7b3b1b2c3627ef5b1d70",
-      "target_sha256": "300eb13ccb07594985883823c2b90c9e7641541ee46f2a0e1c5a521e9d9a63fc",
-      "reviewer": "Claude (Claude Code session; the developer-record citation renumbered from §136 to §137 in both files (main's §136 is another section) and compared; the rest as reviewed earlier the same day)",
+      "source_sha256": "ec3b1bd7fb8ff672e38156643fdce285b60b07c8dd155e5d36e41a4e6af1caff",
+      "target_sha256": "b77d0dcc28a40e54497c8d7d0b269c6207648a64c44e8db41b3871701a3e3d92",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -581,11 +581,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "06663258dc0fa45efef18ba39dc31a87de5b45540a81c0df737399f41ccab1f2",
-      "target_sha256": "c7e708c18f30170e62fa78e13532c773192ad5c6ff64c22143266ce3375222e7",
-      "reviewer": "Claude (Claude Code session; merge of main into the confluence_backwater branch: both languages carry the changes of both sides (the dam flood-control row from main; the caution on widths that are not a multiple of the cell size in the backwater row from this branch); both files compared)",
+      "source_sha256": "0b248a81ec81938c4a12f6439f290fdd4361de1bda13cba2e81aca1c92384d28",
+      "target_sha256": "32b6745541ba6d7e98d34b9d83762ef245325eee620143d87ce052ac805a580c",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -923,9 +923,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "c1acad70af1131c0e0b36d379e154198a0dcf531f0a2bf6d2f2f0a8506194eeb",
-      "target_sha256": "66a84f7e25be40bcc7e78647a769c94f9b5dc7ef85bca42c7944041ab6fa6655",
-      "reviewer": "Claude (Claude Code session; the coarse_channel row rewritten in both files for the covered-fraction restructuring and compared; the rest unchanged)",
+      "source_sha256": "e900d64116b741a02defd9cd1f59bcf20e0e9903e82ca4b3ea5eaedc050152b2",
+      "target_sha256": "9eaf08188bb051adff93bb54b567abc7ea002b994f376082f8b6c32bbf966228",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -1778,9 +1778,9 @@
     {
       "source": "examples/coarse_channel/README.md",
       "target": "examples/coarse_channel/en/README.md",
-      "source_sha256": "a5131b1febb071d6967fb8b9d7c19251e8182adb7038e851599b6fb6d090cbe8",
-      "target_sha256": "b5e4e88f1db32a81e3411e33d6eb3ce5647e089490ac1f760f55a063a2ed5157",
-      "reviewer": "Claude (Claude Code session; the developer-record citation renumbered from §136 to §137 in both files (main's §136 is another section) and compared; the rest as reviewed earlier the same day)",
+      "source_sha256": "d4368f914852a6b13349885334a2dec04f7c9ad5aac7e4b9a99447e3d6b447c6",
+      "target_sha256": "ac7d0f9463bc6c05b88e6d3877057cef92cd5bbdbde5657e463a94fb1f121199",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
@@ -1967,27 +1967,36 @@
     {
       "source": "examples/confluence_backwater/README.md",
       "target": "examples/confluence_backwater/en/README.md",
-      "source_sha256": "a723a8f23908614567e8a52eb3a52ca8a4242d892c55729bb7fa1888e70d52d2",
-      "target_sha256": "3b88dbc309b4a596e76d48b56f84b44c1f30b215626e635df5af1f774694fdcb",
-      "reviewer": "Claude (Claude Code session; the coarse-grid flood table and the ratio and timing sentences in supplement 1 and the limitations updated to the results after developer.md §134.10 in both files and compared; the rest unchanged)",
+      "source_sha256": "e538475e6f8dfd6b501fcca4b064e70f71db2466c1060c2638d3623d524e7678",
+      "target_sha256": "8b1e4b13b6b56a1e080956a8670fa59f9690a81504ab98dcc630461c972debf1",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/confluence_backwater/figs/backwater.png",
       "target": "examples/confluence_backwater/en/figs/backwater.png",
-      "source_sha256": "25bd0324ee5d03a9c0c1a5d8d6eb42fe67c0e77e44b3b57e5ad1c3e835b701a8",
-      "target_sha256": "d40a78ee26b417c4f02e5e5200663eab3a61864d56f1d6f206722086a5363d05",
-      "reviewer": "Claude (Claude Code session; figure redrawn by plot_results.py from the rerun results, same data as the Japanese figure, English labels checked)",
+      "source_sha256": "5d278f113f5c2dbdb74486f7a3b25ed7250cc4224093b88e1a7f0c66ed8aaf5a",
+      "target_sha256": "f626da9d150c03e58e328ad992773eb135389d236d890fee0a0122e8550e2243",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels and legends match the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/confluence_backwater/figs/coarse.png",
       "target": "examples/confluence_backwater/en/figs/coarse.png",
-      "source_sha256": "ddb7ca1b7e4a07e189b62f11ccda20f5561a0794ff53cf7e5ae51a6de6bf9e33",
-      "target_sha256": "8326ec9ed280813dad50050c7e0e24affbb4b40b7fcb9b7bfc589bac9909a640",
-      "reviewer": "Claude (Claude Code session; both images redrawn by plot_results.py from the same results after §134.10 and viewed: English labels and legends match the Japanese figure)",
+      "source_sha256": "20a163fdb7496ae5dcee658dc449b6e5d222dcacbbbbf4df712af293ba299524",
+      "target_sha256": "c5604c09c49477c060c7ba1570e368779cb084b7d6231b300020642aa5f02974",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels and legends match the Japanese figure)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
+    },
+    {
+      "source": "examples/confluence_backwater/figs/coarse_masks.png",
+      "target": "examples/confluence_backwater/en/figs/coarse_masks.png",
+      "source_sha256": "9154637ed2244bfce7feabe3751b1e8b74bddfd101f99a9ca22627ef6e3ed04f",
+      "target_sha256": "197ad877136628fd6137a73398a641672f1e2f2be9cc4b27fe2c7f03f53b8161",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py from the same results and viewed: English labels and legends match the Japanese figure)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
     },
