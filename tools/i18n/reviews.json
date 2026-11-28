@@ -428,8 +428,8 @@
     {
       "source": "docs/users_guide/paddy.md",
       "target": "docs/en/users_guide/paddy.md",
-      "source_sha256": "1d4af2a9176cc8f8ff1e425978a0b7042a599b3d8b386b5cd8f26eaa8ca48ef8",
-      "target_sha256": "2ab92a6eab0c61e5aa33a56bda51e8b3e31b2c1f170926603fb9822467bcb6f7",
+      "source_sha256": "09bee90b46f500b22a3311d839276cddb5dadc7daab6d69cf80a54dbc2ce08be",
+      "target_sha256": "ecb6bb9d56e24406c78e260ea66741e6c8d3d46142b30848c46b72f73b7887f2",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
@@ -581,8 +581,8 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "728dabca6150982f834ea68a3c26a8dce17c91642429012997a6f7e1cd6bb311",
-      "target_sha256": "97dfea10dde89fe5aae90d34efc27e8212a8c7fcc52978543c40469903acb429",
+      "source_sha256": "6a409544a7d3c2f17000d185d9b8d05ff8aaa3d554da2fbf68c5bef115cb4fff",
+      "target_sha256": "84f75e30f67255411eb622ae13feec46286288cd7817265aafe4f92261c95c6d",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
@@ -923,9 +923,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "40dd4f9f7dbb31418b21a75cf54f3c7d2231f70e70edf666c505ad34881a3090",
-      "target_sha256": "c4e071f5ee62aa3f5314bbde11d1101f0ea079e5da2e6eebe7d1ad65885391e9",
-      "reviewer": "Claude (Claude Code session; f_dbsel cases of the examples debris_dam and debris_fan_flume: the Japanese and English text were written in the same work and compared section by section, numbers cross-checked against the table output of plot_results.py)",
+      "source_sha256": "247833f9a57d2d212cb11a6b61dd61867d6d6f9c4effd07564e6036dcd2e6c4f",
+      "target_sha256": "9cbc62adcb95380eb067ac5f557e4314cf952eda99549be88901f42da165fd28",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -3403,6 +3403,15 @@
       "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/paddy_basin/README.md",
+      "target": "examples/paddy_basin/en/README.md",
+      "source_sha256": "d44af6f8a91a0b758f0247c5c37d3f6d54d7da84da0b78fb411cd2de18d71ff5",
+      "target_sha256": "cd8d904510b6e1c55150d710503dbde6c90d3e9d8d4dab962f86a5beea5abc0f",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "examples/paddy_dam/README.md",
