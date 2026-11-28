@@ -211,6 +211,21 @@ conditions.
   - (5) zero additional memory, CPU and communication when not enabled, and bit-identical results
     with the existing references when disabled (no branch is added to the existing bed-load loops;
     a separate path is used)
+  - Addition (agreed 2026-11-27; the record of the decision is §139): the flowing mass of a debris
+    flow (f_debris) may hold fields only for carrying the class composition passively (a solid
+    column per size class). The exchange with the bed does not select grain sizes (erosion and
+    fluidisation keep the composition of the bed, deposition keeps the composition of the flow), and
+    the constitutive laws (equilibrium concentration, resistance, exchange rates) keep a single
+    representative grain size. Fines becoming part of the interstitial fluid and grain-size sorting
+    inside the flow are not included. Condition (3) for the suspended load and condition (5) are
+    unchanged (zero addition and bit-identical results unless the two are combined).
+  - Addition (agreed 2026-11-28; the record of the decision is §143): erosion by the debris-flow
+    laws may select grain sizes only through the judgement of the movable size classes by formulas
+    from the literature (the flow depth, and the critical shear stress in the bed-load regime). The
+    default does not select. Deposition and fluidisation do not select grain sizes. This revises,
+    within this scope, the part of the addition of 2026-11-27 that erosion keeps the composition of
+    the bed. The single representative grain size of the constitutive laws, and the exclusion of
+    fines in the interstitial fluid and of sorting inside the flow, are unchanged.
 
 ## About this document
 
@@ -222,7 +237,8 @@ conditions.
 - Revision record: established 2026-08-10. 2026-08-15 policy 12 added. 2026-08-26 the purpose of
   development stated explicitly. 2026-08-28 the treatment of external coupling adapters added to
   policy 10. Exceptions to policy 5 agreed on 2026-10-05, 10-26 and 10-27, and to policy 6 on
-  2026-11-22. 2026-10-24 policy 13 added (stating the limits added on 2026-11-03). 2026-11-22
+  2026-11-22 (additions on the scope of the combination with debris flow on 2026-11-27 and 11-28).
+  2026-10-24 policy 13 added (stating the limits added on 2026-11-03). 2026-11-22
   separated from developer.md §0. 2026-11-28 structure reorganised (the main text narrowed to the
   purpose of development and the 13 policies; examples, the scope of application, development
   practice and exceptions moved to separate sections; the content of the policies unchanged).

@@ -483,6 +483,8 @@ module m_swflow_enc
                                      ! のときだけ確保。§94)
     real, allocatable :: hs1(:,:)    ! 浮遊砂柱状量の書き込み先(時刻n+1。completeでs%hsへ
                                      ! コミット。s%sed_active のときだけ確保)
+    real, allocatable :: hsk1(:,:,:) ! 粒径階ごとの土砂柱 s%hsk の書き込み先(同上の意味論。混合粒径と土石流の
+                                     ! 併用 = s%hsk が確保されているときだけ確保。hs1 はその和。§139)
     real, allocatable :: cq1(:,:)    ! 輸送物質柱状量の書き込み先(同上の意味論。
                                      ! s%wq_active のときだけ確保。§30)
     real, allocatable :: hss1(:,:)   ! 地表塩水層厚の書き込み先(同上の意味論。
@@ -1497,6 +1499,9 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 浮遊砂柱状量(移流の風上濃度がハロ行の hs/h を読む。E-D による帯の
   ! 更新は前ステップの geomorph なので、ここで交換すれば最新)
   if (s%sed_active) call par_halo_cell(s%hs)
+  ! 混合粒径と土石流の併用の粒径階ごとの土砂柱(hs と同じ理由でステップ頭交換。確保は namelist 由来で
+  ! 全ランク同一 = collective 安全。§139)
+  if (allocated(s%hsk)) call halo_solid_classes(s)
   ! 輸送物質柱状量(浮遊砂と同じ理由でステップ頭交換。§30)
   if (s%wq_active) call par_halo_cell(s%cq)
   if (s%dw_active) call par_halo_cell(s%hd)
@@ -1583,7 +1588,10 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 区間流入に濃度時系列があるときは境界流入濃度テーブルを渡す。波浪場が土砂に
   ! 作用するなら Euler 平均流速(GLM の wf_flow = 2)と岸向きの速度 u_a で運ぶ(§90)
   if (s%sed_active) then
-    if (allocated(s%hsx)) then
+    if (allocated(s%hsk)) then
+      ! 混合粒径と土石流の併用(§139): 粒径階ごとの土砂柱を同じカーネルで 1 本ずつ運び、hs1 をその和にする
+      call advect_solid_classes(p, g, s, b, sx_mod)
+    else if (allocated(s%hsx)) then
       ! 混合粒径の粒径階 1 の浮遊砂の台帳(§122): 系外との出入りを記録場に積む呼び出し(c1 の更新は不変)
       if (allocated(b%csin)) then
         call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1, cbin=b%csin, &
@@ -1655,7 +1663,10 @@ contains
     integer, intent(in) :: jlo, jhi
     if (h_is_vh) then
       if (s%sed_active) then
-        if (allocated(s%hsx)) then      ! 混合粒径の粒径階 1 の台帳(§122)
+        if (allocated(s%hsk)) then      ! 混合粒径と土石流の併用の粒径階ごとの土砂柱と台帳(§139)
+          call stage_scalar_reset(g, b, s%gv, sx_mod%hs1, hh, h_is_vh, jlo, jhi, .false.)
+          call stage_solid_classes(g, b, s, sx_mod%hsk1, hh, h_is_vh, jlo, jhi)
+        else if (allocated(s%hsx)) then ! 混合粒径の粒径階 1 の台帳(§122)
           call stage_scalar_reset(g, b, s%gv, sx_mod%hs1, hh, h_is_vh, jlo, jhi, .false., s%hsx)
         else
           call stage_scalar_reset(g, b, s%gv, sx_mod%hs1, hh, h_is_vh, jlo, jhi, .false.)
@@ -1668,7 +1679,10 @@ contains
       if (s%bd_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hbd1, hh, h_is_vh, jlo, jhi, .false.)
     else
       if (s%sed_active) then
-        if (allocated(s%hsx)) then      ! 混合粒径の粒径階 1 の台帳(§122)
+        if (allocated(s%hsk)) then      ! 混合粒径と土石流の併用の粒径階ごとの土砂柱と台帳(§139)
+          call stage_scalar_reset(g, b, s%gv, s%hs, hh, h_is_vh, jlo, jhi, .false.)
+          call stage_solid_classes(g, b, s, s%hsk, hh, h_is_vh, jlo, jhi)
+        else if (allocated(s%hsx)) then ! 混合粒径の粒径階 1 の台帳(§122)
           call stage_scalar_reset(g, b, s%gv, s%hs, hh, h_is_vh, jlo, jhi, .false., s%hsx)
         else
           call stage_scalar_reset(g, b, s%gv, s%hs, hh, h_is_vh, jlo, jhi, .false.)
@@ -1871,6 +1885,12 @@ subroutine init_enc_status(p, g, s, sx)
     allocate(sx%hs1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     sx%hs1(:,:) = s%hs(:,:)
   end if
+  ! 粒径階ごとの土砂柱の書き込みバッファ(混合粒径と土石流の併用。s%hsk は m_geomorph_init が確保済み。
+  ! hs1 と同じ理由で正準状態の複製で初期化。§139)
+  if (allocated(s%hsk)) then
+    allocate(sx%hsk1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:size(s%hsk, 3)), source = 0.0)
+    sx%hsk1(:,:,:) = s%hsk(:,:,:)
+  end if
   ! 輸送物質の書き込みバッファ(hs1 と同じ理由で正準状態の複製で初期化。§30)
   if (s%wq_active) then
     allocate(sx%cq1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -2033,6 +2053,7 @@ subroutine del_enc_status(sx)
   if (allocated(sx%h1)) deallocate(sx%h1)
   if (allocated(sx%rout)) deallocate(sx%rout)
   if (allocated(sx%hs1)) deallocate(sx%hs1)
+  if (allocated(sx%hsk1)) deallocate(sx%hsk1)
   if (allocated(sx%cq1)) deallocate(sx%cq1)
   if (allocated(sx%hd1)) deallocate(sx%hd1)
   if (allocated(sx%hbd1)) deallocate(sx%hbd1)
@@ -3981,6 +4002,8 @@ subroutine complete(p, g, s, sx, initial)
     end do
     !$omp end parallel do
   end if
+  ! 粒径階ごとの土砂柱のコミット(混合粒径と土石流の併用。hs と同じ意味論。§139)
+  if (allocated(s%hsk)) call commit_solid_classes(g, s, sx)
 
   ! 輸送物質柱状量のコミット(hs と同じ意味論。§30)
   if (s%wq_active) then
@@ -4388,6 +4411,99 @@ contains
     end if
   end function
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 混合粒径と土石流の併用(geomorph の f_bedmix と f_debris。developer.md §139)の、粒径階ごとの土砂柱 s%hsk の
+! 輸送。流れの土砂 hs を粒径階ごとの柱に分けて持ち、柱を 1 本ずつ既存のカーネル advect_scalar で運んで、
+! hs をその和に置き換える(カーネルは変えない)。カーネルは柱状量について 1 次の同次式(1 次風上は線形、
+! MUSCL の面値も c を定数倍すれば定数倍になる)なので、組成が空間に一様なら粒径階の和は hs を 1 本で運んだ
+! 結果に丸めの範囲で一致する。組成が場所で変わる所では、制限関数が粒径階ごとに働く分だけ違う
+! (粒径階ごとの保存は厳密)。s%hsk が確保されているときだけ呼ばれる(無効時は呼ばない)。
+!   halo_solid_classes  : ステップ頭のハロ交換(collective。確保の判定は全ランク同一)
+!   advect_solid_classes: 粒径階ごとの移流(系外との出入りは台帳 s%hskx へ。境界流入の濃度は
+!                         b%csink = 流入濃度 × 粒径階の割合)と、hs1 = 粒径階の和
+!   commit_solid_classes: hsk1 → hsk(complete から。範囲・スキップは hs と同じ)
+!   stage_solid_classes : 水位規定セルの置き直し(粒径階ごと。台帳の列 4・5)
+!----------------------------------------------------------------------
+subroutine halo_solid_classes(s)
+  type(t_state), intent(inout) :: s
+  integer :: kc
+  do kc = 1, size(s%hsk, 3)
+    call par_halo_cell(s%hsk(:,:,kc))
+  end do
+end subroutine
+
+
+subroutine advect_solid_classes(p, g, s, b, sx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  type(t_boundary), intent(in) :: b
+  type(t_enc_status), intent(inout) :: sx
+  integer :: i, j, kc, nc
+  real :: sm
+
+  nc = size(s%hsk, 3)
+  do kc = 1, nc
+    if (allocated(b%csink)) then
+      call advect_scalar(p, g, s, sx, s%hsk(:,:,kc), sx%hsk1(:,:,kc), cbin=b%csink(:,:,kc), &
+                         xrow=s%hskx(:,:,kc))
+    else
+      call advect_scalar(p, g, s, sx, s%hsk(:,:,kc), sx%hsk1(:,:,kc), xrow=s%hskx(:,:,kc))
+    end if
+  end do
+  ! hs1 = 粒径階の和(advect_scalar の書き込み集合と同じセル。和の順は粒径階の番号順で固定)
+  !$omp parallel do schedule(static) private(i, j, kc, sm)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%sw(i,j) > 0) cycle
+      if (g%x(i,j) <= 0) cycle
+      sm = 0.0
+      do kc = 1, nc
+        sm = sm + sx%hsk1(i,j,kc)
+      end do
+      sx%hs1(i,j) = sm
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+subroutine commit_solid_classes(g, s, sx)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  type(t_enc_status), intent(in) :: sx
+  integer :: i, j, kc
+
+  !$omp parallel do schedule(static) private(i, j, kc)
+  do j = dcp%js, dcp%je
+    do kc = 1, size(s%hsk, 3)
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        s%hsk(i,j,kc) = sx%hsk1(i,j,kc)
+      end do
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+subroutine stage_solid_classes(g, b, s, ck, hh, h_is_vh, jlo, jhi)
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  type(t_state), intent(inout) :: s
+  real, intent(inout) :: ck(dcp%ish:, dcp%jsh:, 1:)   ! s%hsk(ステップ頭)か書き込み先 hsk1(boundary_h の後)
+  real, intent(in) :: hh(dcp%ish:, dcp%jsh:)
+  logical, intent(in) :: h_is_vh
+  integer, intent(in) :: jlo, jhi
+  integer :: kc
+
+  do kc = 1, size(ck, 3)
+    call stage_scalar_reset(g, b, s%gv, ck(:,:,kc), hh, h_is_vh, jlo, jhi, .false., s%hskx(:,:,kc))
+  end do
 end subroutine
 
 

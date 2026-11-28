@@ -3,6 +3,9 @@
 #   make quick    基本ケース・仮排水路と、堤体を置く系列の主な 4 ケースだけ計算する
 #   make dams     堤体をはじめから置く系列(決壊の条件の比較)の 20 ケースを計算する
 #   make run      32 ケースを計算する
+#   make mixed    粒度の幅を持つ堤体(混合粒径と土石流の併用)の決壊と、決壊のあとの 3 時間、侵食を動ける粒径階に
+#                 限る f_dbsel の 15 ケースを計算する(比べる単一粒径の dam_ref・dam_d10cm と、make run に
+#                 含まれない 13 ケース)
 #   make perturb  結果の幅を見る 14 ケース(流入量だけを少し変える。基本ケース 6 本と、堤体を置く系列 8 本)を計算する
 #   make figs     図を描く(python3 plot_results.py と python3 plot_results.py en)
 #   make clean    リンクと生成物を削除する
@@ -40,6 +43,11 @@ dams: all
 perturb: all
 	@for c in $$(python3 make_init.py perturb); do $(MAKE) --no-print-directory result_$$c/Z9998.bil; done
 
+# 決壊のあとの 8 ケース(after_*)は、決壊の 4 ケース(dam_ref・mix_d3cm・dam_d10cm・mix_d10cm)が終わりに書く
+# 保存(save_<ケース>/)を読む
+mixed: all
+	@for c in $$(python3 make_init.py mixed); do $(MAKE) --no-print-directory result_$$c/Z9998.bil; done
+
 result_%/Z9998.bil:
 	@if [ "$*" = base ]; then p=param.txt; else p=param_$*.txt; fi; \
 	    ./encflow $$p | tee Screen_$*.log
@@ -51,7 +59,7 @@ figs:
 install: all
 
 clean:
-	rm -rf result_* data_*
+	rm -rf result_* data_* save_*
 	rm -f encflow encflow_mpi a.out Screen_*.log param_*.txt
 
-.PHONY: all links inputs run quick dams perturb figs install clean
+.PHONY: all links inputs run quick dams perturb mixed figs install clean

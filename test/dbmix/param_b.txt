@@ -1,0 +1,88 @@
+!======================================================================
+! dbmix: 土石流(f_debris)と混合粒径(f_bedmix)の併用の検定(developer.md §139)
+!   雛形 b(境界から入る土石流): 土層のない基盤の斜面の北辺(上流端)の 6 セルから、土砂を含む流れ
+!   (3 m3/s、体積濃度 0.3)を入れる。南辺は自由流出。地形は z_out.txt(y < 40 m で tanθ = 0.4、下流は
+!   勾配 0.1。遷緩点で一部が積もり、残りは南辺から流れ出る)。流入土砂の粒径階の組成は、構成 b3 が一定値
+!   (inflow_csfrac)、構成 bt3 が時系列(fn_inflow_csfrac)で与える(make_init.py がこの雛形に足す)。
+!   この雛形のままでは、混合粒径と土石流の併用で流入土砂の組成がないので初期化で止まる(構成 bstop1)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 30                   ! 計算終了時刻 (s)
+  dt_disp = 10
+  dt_file = 100
+  dt_recrd = 100
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_b'
+  dir_save = 'save_b'
+  f_state_save = 1
+  f_state_restore = 0
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_gravity_correction = 2
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 20.0
+  ly = 60.0
+  nx = 20
+  ny = 60
+  f_ztype = 1
+  fn_z = 'z_out.txt'        ! make_init.py が書く
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 1
+  fn_sd = 'sd_zero.txt'     ! 土層なし(全セル 0 = 基盤。積もった土砂だけが土層になる)
+  sy0 = 0.2
+/
+
+&list_bound_edge
+  f_bc_s = 1                ! 南辺(下流端)は自由流出
+/
+
+&list_bound_inflow          ! 北辺(上流端)の 6 セル。流量 3 m3/s、土砂の体積濃度 0.3
+  inflow_cell(:,1,1) = 8, 1
+  inflow_cell(:,2,1) = 9, 1
+  inflow_cell(:,3,1) = 10, 1
+  inflow_cell(:,4,1) = 11, 1
+  inflow_cell(:,5,1) = 12, 1
+  inflow_cell(:,6,1) = 13, 1
+  inflow_val(:,1,1) = 0, 3.0
+  inflow_val(:,2,1) = 9999, 3.0
+  inflow_cs(:,1,1) = 0, 0.3
+  inflow_cs(:,2,1) = 9999, 0.3
+/
+
+!======================================================================
+! 地形変化(土石流 + 掃流砂)
+!======================================================================
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_debris = 1
+  db_phi = 35.0
+  db_delte = 0.0007
+  db_deltd = 0.05
+  f_dbres = 1
+  f_dbstop = 1
+  db_vstop = 0.05
+  db_wstop = 0.05
+  fluv_porosity = 0.4
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.002
+/

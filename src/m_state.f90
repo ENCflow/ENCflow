@@ -312,6 +312,14 @@ module m_state
                                         !   geomorph が確保・更新し出力 Fa<k>_(f_out_bmix)。私有 save は
                                         !   geomorph_bedmix.dat。§84.19、docs/mixed_sediment_plan.md)
     real, allocatable :: bmdm(:,:)      ! 混合粒径の交換層の平均粒径 d_m = Σ F_k d_k (m。f_bedmix。出力 Dm)
+    real, allocatable :: hsk(:,:,:)     ! 混合粒径と土石流の併用の、流れの土砂の粒径階ごとの柱 (ish:ieh, jsh:jeh,
+                                        !   1:N) (m。固体の柱。粒径階の和が hs)。f_bedmix と f_debris のとき
+                                        !   geomorph が確保する。swflow_enc が粒径階ごとに advect_scalar で運んで
+                                        !   hs をその和に置き換え、geomorph が河床との交換の組成を出し入れする。
+                                        !   私有 save は geomorph_bedmix.dat の末尾(developer.md §139)
+    real(real64), allocatable :: hskx(:,:,:) ! 同上の粒径階ごとの系外との出入りの記録(行部分和 (js:je, 1:5, 1:N)。
+                                        !   列は cqx・hsx と同じ 1〜5。geomorph が確保し、swflow_enc が
+                                        !   advect_scalar・stage_scalar_reset の xrow に渡す。台帳だけに使う)
     real(real64), allocatable :: hsx(:,:) ! 混合粒径の粒径階 1 の浮遊砂 hs の系外との出入りの記録(行部分和
                                         !   (js:je, 1:5)。列は cqx と同じ 1〜5。f_bedmix と f_suspend のとき
                                         !   geomorph が確保し、swflow_enc が advect_scalar・stage_scalar_reset の
@@ -720,6 +728,7 @@ subroutine m_state_set_gv(p, s, i, j, gvnew)
     s%h(i,j) = s%h(i,j) * r
   end if
   s%hs(i,j) = s%hs(i,j) * r
+  if (allocated(s%hsk)) s%hsk(i,j,:) = s%hsk(i,j,:) * r   ! 粒径階ごとの土砂柱も同じ比で(§139)
   s%hrs(i,j) = s%hrs(i,j) * r
   if (allocated(s%hd)) s%hd(i,j) = s%hd(i,j) * r
   if (allocated(s%wd)) s%wd(i,j) = s%wd(i,j) * r
@@ -1204,6 +1213,8 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%bmf)) deallocate(s%bmf)
   if (allocated(s%bmdm)) deallocate(s%bmdm)
   if (allocated(s%hsx)) deallocate(s%hsx)
+  if (allocated(s%hsk)) deallocate(s%hsk)
+  if (allocated(s%hskx)) deallocate(s%hskx)
   if (allocated(s%rnv)) deallocate(s%rnv)
   if (allocated(s%vb)) deallocate(s%vb)
   if (allocated(s%hd)) deallocate(s%hd)

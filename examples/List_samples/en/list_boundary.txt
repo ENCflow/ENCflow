@@ -203,6 +203,13 @@
 !                                  total of inflow_qb / fn_inflow_qb). A feed
 !                                  with f_bedmix=1 needs this or
 !                                  fn_inflow_qbmix
+!     inflow_csfrac(:,n) = 0.3, 0.4, 0.3 : class composition of the sediment
+!                                  inflow (inflow_cs / inflow_qs) when mixed
+!                                  grain sizes and debris flow are combined
+!                                  (f_bedmix=1 and f_debris=1; one value per
+!                                  class, summing to 1). A sediment inflow in
+!                                  that combination needs this or
+!                                  fn_inflow_csfrac
 !     inflow_cs_eq(n) = 0/1      : 1 = the suspended-sediment inflow
 !                                  concentration is the equilibrium
 !                                  concentration of the inflow cells times
@@ -243,6 +250,12 @@
 !                                  class 2 ..." (m3/s solid volume; exclusive
 !                                  with inflow_qb, fn_inflow_qb and
 !                                  inflow_qbfrac)
+!     fn_inflow_csfrac(n) = "..." : time series of the class composition of the
+!                                  sediment inflow when mixed grain sizes and
+!                                  debris flow are combined. Each line
+!                                  "time(min) share of class 1  share of
+!                                  class 2 ..." (each line sums to 1; linear
+!                                  interpolation; exclusive with inflow_csfrac)
 !======================================================================
 !&list_bound_inflow
 !  ! Section 1: river inflow across the west edge, j=100..102

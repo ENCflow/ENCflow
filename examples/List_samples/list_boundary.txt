@@ -158,6 +158,11 @@
 !                                  inflow_qb / fn_inflow_qb の合計に掛ける)。
 !                                  f_bedmix=1 で給砂するときは、これか
 !                                  fn_inflow_qbmix が必須
+!     inflow_csfrac(:,n) = 0.3, 0.4, 0.3 : 混合粒径と土石流の併用(f_bedmix=1 と
+!                                  f_debris=1)の流入土砂(inflow_cs・inflow_qs)の
+!                                  粒径階の組成(粒径階の数だけ。和 1)。併用で
+!                                  土砂を流入させるときは、これか
+!                                  fn_inflow_csfrac が必須
 !     inflow_cs_eq(n) = 0/1      : 1 = 浮遊砂の流入濃度を流入セルの平衡濃度
 !                                  × inflow_cs_fac(n) にする(平衡濃度給砂。
 !                                  cs/qs と排他。f_suspend=1 が必要)
@@ -186,6 +191,10 @@
 !                                  粒径階 1 の流砂量 粒径階 2 の流砂量 …"
 !                                  (m3/s 固体体積。inflow_qb・fn_inflow_qb・
 !                                  inflow_qbfrac と排他)
+!     fn_inflow_csfrac(n) = "..." : 混合粒径と土石流の併用の流入土砂の粒径階の
+!                                  組成の時系列。各行 "時刻(min) 粒径階 1 の割合
+!                                  粒径階 2 の割合 …"(各行の和 1。区間で線形
+!                                  補間。inflow_csfrac と排他)
 !======================================================================
 !&list_bound_inflow
 !  ! 区間1: 西辺 j=100..102 から河川流入
