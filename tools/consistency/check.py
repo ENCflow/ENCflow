@@ -25,11 +25,19 @@ guide: docs/tutorial.md(英語版 docs/en/tutorial.md)の「分野(章ページ)
   docs/users_guide.md(英語版)の目次(最初の水平線まで)で章の下に字下げして並ぶ詳説ページと照合する。
   1. 目次の詳説ページが表に 1 回ずつあり、表の詳説ページが目次にある
   2. 表の行の左の列に、その詳説ページの目次での親の章がある
+imports: 毎 push の CI(.github/workflows/ci.yml の `for c in …` の一覧)と夜間(nightly.yml の REF_CASES・VERIFY_CASES・
+  VERIFY_MPI_CASES)で回すケースの Run.sh・Run_MPI.sh が実行する Python(呼ぶスクリプト、`python3 -c` の文字列、
+  `python3 - <<EOF` のヒアドキュメント)と、そこから読む同じディレクトリのモジュールの import を調べる。
+  1. 読むモジュールは Python の標準ライブラリ(sys.stdlib_module_names)か、同じディレクトリのモジュールに限る
+     (ランナーには numpy などがない。developer.md §10)。ImportError を捕まえる try の中の import は数えない
+  シェルのコメント行とヒアドキュメントの中に書かれたファイル名は、実行するスクリプトに数えない。
+  Python 3.10 より前の Python では調べない(参考として表示し、失敗にはしない)。
 不一致があれば行ごとに報告して終了コード 1。索引・文書を生成・変更はしない(developer.md §35.1)。
 """
 from __future__ import annotations
 
 import argparse
+import ast
 from collections import Counter
 from pathlib import Path
 import re
@@ -56,6 +64,17 @@ REF = re.compile(r"\bref\b")
 TOC_CHAPTER = re.compile(r"^- \[[^\]]*\]\((users_guide/[\w.-]+\.md)\)")
 TOC_SUB = re.compile(r"^ {2,4}- \[[^\]]*\]\((users_guide/[\w.-]+\.md)\)")
 GUIDE_LINK = re.compile(r"\]\((users_guide/[\w.-]+\.md)\)")
+CI_WORKFLOW = ".github/workflows/ci.yml"
+NIGHTLY_WORKFLOW = ".github/workflows/nightly.yml"
+NIGHTLY_LISTS = ("REF_CASES", "VERIFY_CASES", "VERIFY_MPI_CASES")
+RUN_SCRIPTS = ("Run.sh", "Run_MPI.sh")
+CASE_LOOP = re.compile(r"for c in ([^;$\n]+); do")
+ENV_LIST = re.compile(r"^[ \t]+(" + "|".join(NIGHTLY_LISTS) + r"):[ \t]*(.*?)[ \t]*$", re.M)
+PY_REF = re.compile(r"[\w./-]*\.py\b")
+PY_INLINE = re.compile(r"""\bpython3?\s+-c\s+(?:"([^"]*)"|'([^']*)')""")
+HEREDOC = re.compile(r"(?<!<)<<(-?)(?!<)\s*(['\"]?)([A-Za-z_]\w*)\2")
+PY_HEREDOC_CMD = re.compile(r"\bpython3?\s+-\s*(?:\|\||&&|;|$|<<)")
+IMPORT_ERRORS = {"ImportError", "ModuleNotFoundError", "Exception", "BaseException"}
 
 
 def text(path: Path) -> str:
@@ -284,14 +303,173 @@ def check_guide(root: Path) -> tuple[list[str], list[str]]:
     return errors, notes
 
 
+def ci_cases(root: Path) -> list[str]:
+    """毎 push の CI と夜間で Run.sh・Run_MPI.sh を回すケースの名前(重複なし、名前の順)"""
+    cases: set[str] = set()
+    ci, nightly = root / CI_WORKFLOW, root / NIGHTLY_WORKFLOW
+    if ci.exists():
+        for m in CASE_LOOP.finditer(text(ci)):
+            cases.update(m.group(1).split())
+    if nightly.exists():
+        for m in ENV_LIST.finditer(text(nightly)):
+            cases.update(m.group(2).split())
+    return sorted(cases)
+
+
+def strip_shell_comment(line: str) -> str:
+    """引用符の外の、行頭か空白の後の # から行末までを除く"""
+    quote = None
+    for i, ch in enumerate(line):
+        if quote:
+            if ch == quote:
+                quote = None
+        elif ch in "'\"":
+            quote = ch
+        elif ch == "#" and (i == 0 or line[i - 1].isspace()):
+            return line[:i]
+    return line
+
+
+def shell_python(path: Path):
+    """シェルスクリプトが実行する Python → (参照するファイル名の並び, [(行番号, 種類, ソース)])"""
+    refs, inline = [], []
+    lines = text(path).split("\n")
+    i = 0
+    while i < len(lines):
+        line = strip_shell_comment(lines[i])
+        m = HEREDOC.search(line)
+        if m:
+            dash, delim = m.group(1), m.group(3)
+            body, j = [], i + 1
+            while j < len(lines) and (lines[j].lstrip("\t") if dash else lines[j]) != delim:
+                body.append(lines[j])
+                j += 1
+            if PY_HEREDOC_CMD.search(line[:m.start()] + " <<"):
+                inline.append((i + 1, "heredoc", "\n".join(body)))
+            head = line[:m.start()]
+            refs += PY_REF.findall(head)
+            for mm in PY_INLINE.finditer(head):
+                inline.append((i + 1, "python3 -c", mm.group(1) if mm.group(1) is not None else mm.group(2)))
+            i = j + 1
+            continue
+        refs += PY_REF.findall(PY_INLINE.sub("", line))
+        for mm in PY_INLINE.finditer(line):
+            inline.append((i + 1, "python3 -c", mm.group(1) if mm.group(1) is not None else mm.group(2)))
+        i += 1
+    return refs, inline
+
+
+def catches_import_error(handler: ast.ExceptHandler) -> bool:
+    if handler.type is None:
+        return True
+    types = handler.type.elts if isinstance(handler.type, ast.Tuple) else [handler.type]
+    names = [t.id if isinstance(t, ast.Name) else t.attr if isinstance(t, ast.Attribute) else "" for t in types]
+    return any(n in IMPORT_ERRORS for n in names)
+
+
+def python_imports(tree: ast.AST) -> list[tuple[int, str]]:
+    """(行番号, 最上位のモジュール名)。相対 import と、ImportError を捕まえる try の中の import は除く"""
+    out: list[tuple[int, str]] = []
+
+    def walk(node, guarded):
+        if isinstance(node, ast.Import):
+            if not guarded:
+                out.extend((node.lineno, a.name.split(".")[0]) for a in node.names)
+            return
+        if isinstance(node, ast.ImportFrom):
+            if not guarded and node.level == 0 and node.module:
+                out.append((node.lineno, node.module.split(".")[0]))
+            return
+        if isinstance(node, ast.Try) or type(node).__name__ == "TryStar":
+            inner = guarded or any(catches_import_error(h) for h in node.handlers)
+            for child in node.body:
+                walk(child, inner)
+            for child in node.handlers + node.orelse + node.finalbody:
+                walk(child, guarded)
+            return
+        for child in ast.iter_child_nodes(node):
+            walk(child, guarded)
+
+    walk(tree, False)
+    return out
+
+
+def local_module(base: Path, name: str):
+    for cand in (base / f"{name}.py", base / name / "__init__.py"):
+        if cand.is_file():
+            return cand
+    return None
+
+
+def check_imports(root: Path) -> tuple[list[str], list[str]]:
+    errors, notes = [], []
+    stdlib = getattr(sys, "stdlib_module_names", None)
+    if stdlib is None:
+        notes.append("skipped: Python 3.10 or later is needed (sys.stdlib_module_names)")
+        return errors, notes
+    cases = ci_cases(root)
+    if not cases:
+        errors.append(f"no case lists found in {CI_WORKFLOW} / {NIGHTLY_WORKFLOW}")
+        return errors, notes
+    queue: list[tuple[str, str, Path]] = []    # (表示名, ソース, 同じディレクトリのモジュールを探す場所)
+    seen: set[Path] = set()
+
+    def add_file(path: Path):
+        path = path.resolve()
+        if path in seen or not path.is_file():
+            return
+        seen.add(path)
+        queue.append((str(path.relative_to(root.resolve())), text(path), path.parent))
+
+    for case in cases:
+        cdir = root / TEST_DIR / case
+        if not cdir.is_dir():
+            errors.append(f"test/{case}/: listed in the CI or nightly case lists but does not exist")
+            continue
+        for script in RUN_SCRIPTS:
+            sh = cdir / script
+            if not sh.is_file():
+                continue
+            refs, inline = shell_python(sh)
+            for ref in refs:
+                if "/" in ref and not ref.startswith(("sdir/", "/")):
+                    add_file(cdir / ref)
+                add_file(cdir / Path(ref).name)
+            for no, kind, source in inline:
+                queue.append((f"test/{case}/{script}:{no} ({kind})", source, cdir))
+    checked = 0
+    while queue:
+        label, source, base = queue.pop(0)
+        checked += 1
+        try:
+            tree = ast.parse(source)
+        except SyntaxError as e:
+            errors.append(f"{label}: cannot parse as Python ({e.msg}, line {e.lineno})")
+            continue
+        for no, name in python_imports(tree):
+            if name in stdlib:
+                continue
+            mod = local_module(base, name)
+            if mod is not None:
+                add_file(mod)
+                continue
+            where = f"{label}:{no}" if label.endswith(".py") else f"{label}, line {no}"
+            errors.append(f"{where}: imports {name}, which is not in the Python standard library "
+                          f"(the CI and nightly runners have no numpy etc.; developer.md §10)")
+    notes.append(f"info: {checked} Python source(s) run by {len(cases)} CI/nightly case(s) checked")
+    return errors, notes
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--root", default=Path(__file__).resolve().parents[2], type=Path)
-    ap.add_argument("what", nargs="*", choices=["samples", "tests", "guide"], help="checks to run (default: all)")
+    ap.add_argument("what", nargs="*", choices=["samples", "tests", "guide", "imports"],
+                    help="checks to run (default: all)")
     args = ap.parse_args(argv)
-    what = args.what or ["samples", "tests", "guide"]
+    what = args.what or ["samples", "tests", "guide", "imports"]
     errors_all = []
-    for name, fn in (("samples", check_samples), ("tests", check_tests), ("guide", check_guide)):
+    for name, fn in (("samples", check_samples), ("tests", check_tests), ("guide", check_guide),
+                     ("imports", check_imports)):
         if name not in what:
             continue
         errors, notes = fn(args.root)
