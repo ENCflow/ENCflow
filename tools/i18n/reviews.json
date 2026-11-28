@@ -923,9 +923,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "247833f9a57d2d212cb11a6b61dd61867d6d6f9c4effd07564e6036dcd2e6c4f",
-      "target_sha256": "9cbc62adcb95380eb067ac5f557e4314cf952eda99549be88901f42da165fd28",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "7d7adb02883d89822ebb118ff31909bb2963eedeb8a6aca6a80dc17e39c9dfbc",
+      "target_sha256": "9fedcdba913c656a4fc6c596253ad102625cc8a1cffcb5d2eb6341d53a2d70a3",
+      "reviewer": "Claude (Claude Code session; two long rows (debris_dam, debris_fan_flume) shortened and a note on where the details are, developer.md §35.7; both sides compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -4370,9 +4370,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "bf0f71a50385e4600182545b49509e44839cc45d0e069df92f2da9d1f571ac89",
-      "target_sha256": "9e9c0a6e0950bda72f0f084ea386bdd47baf441970958e1ebc0c65648b349e12",
-      "reviewer": "Claude (Claude Code session; the case table rewritten to one-sentence contents with key flags in the features column (82 rows) and a note on where the details are, developer.md §35.7; every changed row compared)",
+      "source_sha256": "0c74112ded997e2ad594f146b07e4c15bb911da15ebaec0b4819fff9f85f015e",
+      "target_sha256": "3b3e42f156975a3c63bbb5f37f40179cf21eed3483a172920e0f53b6d116acbb",
+      "reviewer": "Claude (Claude Code session; nine more rows (81-95 characters) shortened to fit the 80-character limit checked by tools/consistency lengths, developer.md §35.7; every changed row compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },

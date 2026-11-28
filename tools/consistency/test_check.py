@@ -346,5 +346,49 @@ class ImportsTest(unittest.TestCase):
         self.assertEqual(check.strip_shell_comment("# x.py"), "")
 
 
+def lengths_repo(cells=None):
+    """一覧の表 4 つ(INDEX_LIMITS)を持つ作業ディレクトリ。cells は {相対パス: 内容の列の文字列}"""
+    root = Path(tempfile.mkdtemp())
+    for rel in check.INDEX_LIMITS:
+        body = (cells or {}).get(rel, "short summary")
+        write(root, rel, f"| ディレクトリ | 内容 | 主な機能 |\n|---|---|---|\n| **見出し** | | |\n"
+                         f"| [a/](a/) | {body} | f_a |\n| [b/](b/en/README.md) | ok | f_b | ref |\n")
+    return root
+
+
+class LengthsTest(unittest.TestCase):
+    def test_clean(self):
+        errors, _ = check.check_lengths(lengths_repo())
+        self.assertEqual(errors, [])
+
+    def test_long_cell_is_reported_with_line(self):
+        limit = check.INDEX_LIMITS["test/README.md"]
+        errors, _ = check.check_lengths(lengths_repo({"test/README.md": "あ" * (limit + 1)}))
+        self.assertEqual(len(errors), 1)
+        self.assertTrue(errors[0].startswith("test/README.md:4: a/: the contents cell has "
+                                             f"{limit + 1} characters, over the limit of {limit}"))
+
+    def test_limit_itself_and_trailing_sections_pass(self):
+        limit = check.INDEX_LIMITS["examples/README.md"]
+        cells = {"examples/README.md": "あ" * limit + "(§110.22〜§110.24・§114)",
+                 "test/README.md": "い" * check.INDEX_LIMITS["test/README.md"] + "(developer.md §112・§113)"}
+        errors, _ = check.check_lengths(lengths_repo(cells))
+        self.assertEqual(errors, [])
+
+    def test_parenthesis_that_is_not_only_sections_is_counted(self):
+        limit = check.INDEX_LIMITS["examples/README.en.md"]
+        errors, _ = check.check_lengths(lengths_repo({"examples/README.en.md": "x" * limit + " (see §5)"}))
+        self.assertEqual(len(errors), 1)
+        self.assertIn("examples/README.en.md:4: a/", errors[0])
+
+    def test_missing_file_and_empty_table(self):
+        root = lengths_repo()
+        (root / "examples" / "README.en.md").unlink()
+        write(root, "test/README.md", "no table\n")
+        errors, _ = check.check_lengths(root)
+        self.assertIn("examples/README.en.md: not found", errors)
+        self.assertIn("test/README.md: no table rows found", errors)
+
+
 if __name__ == "__main__":
     unittest.main()
