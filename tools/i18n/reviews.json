@@ -581,11 +581,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "0b248a81ec81938c4a12f6439f290fdd4361de1bda13cba2e81aca1c92384d28",
-      "target_sha256": "32b6745541ba6d7e98d34b9d83762ef245325eee620143d87ce052ac805a580c",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "728dabca6150982f834ea68a3c26a8dce17c91642429012997a6f7e1cd6bb311",
+      "target_sha256": "97dfea10dde89fe5aae90d34efc27e8212a8c7fcc52978543c40469903acb429",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/user_routines.md",
