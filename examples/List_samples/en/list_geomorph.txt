@@ -416,6 +416,34 @@
                            !   (1: as printed in Shin-Sabo 44(3) eqs. (24)(25),
                            !   2: the form derived from the uniform-flow law,
                            !   eq. (3), of the same paper)
+  f_dbsel = 0              ! limit the erosion by the debris-flow law to the
+                           !   movable size classes (used with f_dbed=3 and the
+                           !   mixed-size bed f_bedmix=1. 0: no selection (erosion
+                           !   takes the composition of the bed),
+                           !   1: only the movable classes are eroded. The erosion
+                           !   rate of class k is i K3 F_k (i is the erosion rate
+                           !   of the size-blind law, F_k the fraction in the
+                           !   exchange layer, K3 the sum of F_k over the movable
+                           !   classes) and the bulk erosion rate is i K3^2. As
+                           !   printed in eq. (21) of Takahashi, Inoue, Nakagawa &
+                           !   Satofuka 2000 and eq. (26) of Takahashi, Nakagawa,
+                           !   Satofuka & Kawaike 2001,
+                           !   2: the same with the erosion rate of class k set
+                           !   to i F_k (the bulk erosion rate is i K3; the form
+                           !   that matches the statement in the text of the same
+                           !   papers that "i K3 is the bulk erosion velocity").
+                           !   A class is movable when its grain size is not
+                           !   larger than the flow depth h + h_s in cells whose
+                           !   flow-surface slope exceeds db_seltan, and when it
+                           !   exceeds the critical shear stress (the shear stress
+                           !   and hiding function of the bed load) in cells at or
+                           !   below db_seltan. Deposition and fluidisation do not
+                           !   select grain sizes)
+  !db_seltan = 0.03        ! flow-surface slope tan(theta) that separates the
+                           !   regimes of f_dbsel=1,2 (>= 0). Unspecified = default
+                           !   0.03 (the boundary between the bedload-like
+                           !   collective flow and bed load in the 2001 paper). 0
+                           !   applies the flow-depth criterion everywhere
   db_mu = 0.0              ! Voellmy friction coefficient mu (dimensionless).
                            !   Used by f_dbres=4. 0 = default 0.2 (avalanches
                            !   0.1-0.3. The reduced apparent friction (H/L) of

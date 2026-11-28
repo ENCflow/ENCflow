@@ -30,6 +30,18 @@
 #       流れの先端は、侵食できない基盤の上を、ごく小さい土砂の柱を先に立てて進む。非正規化数を残すビルド
 #       (-Og -fcheck=all)では、その柱の濃度が非正規化数になったセルで、堆積の式の C*/C がオーバーフローして
 #       止まった(developer.md §142 の不具合の再発防止。最適化のビルドは非正規化数を 0 に落とすので起きない)
+#   侵食を動ける粒径階に限る f_dbsel = 1・2(高橋ら 2000 の式 (21)・2001 の式 (26) と型の区分。developer.md §143):
+#   (12) 動けない粒径階(sel3 = f_dbsel 1、sel3b = f_dbsel 2。粒径 1 m > 流動深): 流れに入らない(台帳も柱も 0)。
+#       その粒径階の量はどのセルでも変わらない。侵食だけを受けたセルの表層の割合は F_3 = F_3(0) + F_sub,3 Δ / L_a
+#       (Δ は侵食深)で増え、F_3 = 1 で侵食が止まる(Δ <= (1 − F_3(0)) L_a / F_sub,3)。堆積にその粒径階は入らない
+#   (13) はじめの侵食速度(selp0・selp1・selp2。水深 2 cm から 1 ステップ): 動ける粒径階が流れに入る量は、粒径を
+#       選ばない計算の量に対して f_dbsel = 1 が K3 倍(式の印字どおり。斜面のかさの侵食量は K3² 倍)、f_dbsel = 2 が
+#       同じ(かさの侵食量は K3 倍)。K3 は動ける粒径階の交換層の割合の和。動けない粒径階は 0。平坦部(掃流の型)は、
+#       限界掃流力を超える粒径階がなく侵食しない
+#   (14) 全粒径階が動ける(sela1。粒径 <= 限界水深): 粒径を選ばない sela0 とビット一致
+#   (15) 全域を掃流の型に(db_seltan = 10)、限界掃流力をほぼ 0 に(selb1): 粒径を選ばない selb0 と丸めの範囲で
+#       一致(流速がほぼ 0 の流れの先端のセルだけで判定が働く)
+#   (16) 全域を掃流の型に、限界掃流力を非常に大きく(selc3): 土石流の式は何も侵食しない
 import re
 import struct
 import sys
@@ -174,8 +186,8 @@ def class_totals(st, la, fa, fs, hk, hs_class=None):
     return tot
 
 
-def conservation(tag, sd0, f0, fsub0, la, need_dep=False):
-    """粒径階ごとの保存(4)"""
+def conservation(tag, sd0, f0, fsub0, la, need_dep=False, no="(4)"):
+    """粒径階ごとの保存(4)。no は表示する判定の番号"""
     st = state(tag)
     d, lar, fa, fs, hk = bedmix(tag)
     bed, flow, txt = ledgers(tag)
@@ -183,22 +195,22 @@ def conservation(tag, sd0, f0, fsub0, la, need_dep=False):
     res = max(max(abs(bed[k][5]), abs(flow[k][5])) for k in range(1, nc + 1))
     side = max(abs(bed[k][4] - flow[k][2]) for k in range(1, nc + 1))
     act = sum(abs(bed[k][4]) for k in range(1, nc + 1))
-    check(res < TOL_LED, "(4) %s: ledger residuals (bed, flow) max %.1e m3" % (tag, res))
-    check(side < TOL_LED, "(4) %s: exchange counted on the bed side = on the flow side (max diff %.1e m3)" % (tag, side))
+    check(res < TOL_LED, "%s %s: ledger residuals (bed, flow) max %.1e m3" % (no, tag, res))
+    check(side < TOL_LED, "%s %s: exchange counted on the bed side = on the flow side (max diff %.1e m3)" % (no, tag, side))
     tot = class_totals(st, la, fa, fs, hk)
     tot0 = [CSTAR * (min(la, sd0) * f0[k] + (sd0 - min(la, sd0)) * fsub0[k]) * N * DX * DX for k in range(nc)]
     dtot = max(abs(a - b) for a, b in zip(tot, tot0))
-    check(dtot < TOL_LED, "(4) %s: class totals from the save (bed + flow) = initial totals (max diff %.1e of %.1f m3)"
-          % (tag, dtot, sum(tot0)))
+    check(dtot < TOL_LED, "%s %s: class totals from the save (bed + flow) = initial totals (max diff %.1e of %.1f m3)"
+          % (no, tag, dtot, sum(tot0)))
     dsum = max(abs(sum(hk[k][i] for k in range(nc)) - st["hs"][i]) for i in range(N))
     fsum = max(abs(sum(fa[k][i] for k in range(nc)) - 1.0) for i in range(N))
     fmin = min(min(fa[k]) for k in range(nc))
-    check(dsum < TOL_EQ, "(4) %s: sum of the class columns = hs (max diff %.1e m)" % (tag, dsum))
-    check(fsum < TOL_FRAC and fmin >= 0.0, "(4) %s: exchange-layer fractions sum to 1 (%.1e) and are >= 0" % (tag, fsum))
-    check(act > MIN_ACT, "(4) %s: exchange with the debris flow is active (%.3f m3 net per class sum)" % (tag, act))
+    check(dsum < TOL_EQ, "%s %s: sum of the class columns = hs (max diff %.1e m)" % (no, tag, dsum))
+    check(fsum < TOL_FRAC and fmin >= 0.0, "%s %s: exchange-layer fractions sum to 1 (%.1e) and are >= 0" % (no, tag, fsum))
+    check(act > MIN_ACT, "%s %s: exchange with the debris flow is active (%.3f m3 net per class sum)" % (no, tag, act))
     if need_dep:
         dep = max(z - z0_of(i) for i, z in enumerate(st["z"]))
-        check(dep > 1.0e-3, "(4) %s: deposition occurred (max rise %.4f m)" % (tag, dep))
+        check(dep > 1.0e-3, "%s %s: deposition occurred (max rise %.4f m)" % (no, tag, dep))
     return bed, flow, txt
 
 
@@ -371,6 +383,150 @@ check(dtot < TOL_LED, "(11) tkb3: class totals from the save (bed + flow) = init
 ndep = sum(1 for i in range(N) if i // NX + 1 > JSOIL and tb["sd"][i] > 1.0e-9)
 check(ndep > 0 and "program terminated normally" in txt, "(11) tkb3: the flow crossed the wet bedrock of the flat "
       "part and the run completed (%d bedrock cells with deposit)" % ndep)
+
+# ---- (12) 侵食を動ける粒径階に限る(f_dbsel = 1・2): 流動深より大きい粒径階は河床に残り、表層を覆って侵食を止める
+SD_E = 0.3                                                # 雛形 e の土層厚 (m)
+C30 = LA_W * F0[2] + (SD_E - LA_W) * FS0[2]               # セルごとの粒径階 3 のかさの厚さ(はじめ)
+DMAX = (1.0 - F0[2]) * LA_W / FS0[2]                      # 侵食深の上限 (m)
+
+
+def armour(tag, f3th):
+    """動けない粒径階 3(1 m)の検定。f3th は「表層を覆った」とみなす割合(侵食速度がかさで K3² に比例する
+    f_dbsel = 1 は 1 への近づき方が遅いので 0.9、K3 に比例する f_dbsel = 2 は 0.99)"""
+    bed, flow, txt = conservation(tag, SD_E, F0, FS0, LA_W, need_dep=True, no="(12)")
+    st = state(tag)
+    dd, la, fa, fs, hk = bedmix(tag)
+    check(bed[3][4] == 0.0 and flow[3][1] == 0.0 and max(abs(v) for v in hk[2]) == 0.0,
+          "(12) %s: the class larger than the flow depth (%.1f m) never enters the flow (ledger %.1e m3, columns "
+          "%.1e m)" % (tag, dd[2], bed[3][4], max(abs(v) for v in hk[2])))
+    check(bed[1][4] > MIN_ACT and bed[2][4] > MIN_ACT, "(12) %s: the classes smaller than the flow depth are eroded "
+          "(%.3f and %.3f m3)" % (tag, bed[1][4], bed[2][4]))
+    dc3 = 0.0
+    for i in range(N):
+        sd = max(st["sd"][i], 0.0)
+        le = min(la, sd)
+        dc3 = max(dc3, abs(le * fa[2][i] + (sd - le) * fs[2][i] - C30))
+    check(dc3 < TOL_EQ, "(12) %s: the content of the immobile class is unchanged in every cell (max diff %.1e m)"
+          % (tag, dc3))
+    # 侵食だけを受けたセル(下層の組成がはじめのまま)では、交換層は下がった分だけ下層を取り込み、動けない粒径階は
+    # 出ていかない: F_3 = F_3(0) + F_sub,3 Δ / L_a(Δ は侵食深)。F_3 = 1 で侵食が止まる: Δ <= (1 − F_3(0)) L_a / F_sub,3
+    dev = emax = 0.0
+    nero = narm = 0
+    for i in range(N):
+        ero = SD_E - st["sd"][i]
+        if ero > 1.0e-9 and all(abs(fs[k][i] - FS0[k]) < 1.0e-15 for k in range(3)):
+            nero += 1
+            emax = max(emax, ero)
+            dev = max(dev, abs(fa[2][i] - (F0[2] + FS0[2] * ero / LA_W)))
+            if fa[2][i] > f3th:
+                narm += 1
+    check(nero > 400 and dev < TOL_FRAC, "(12) %s: the surface fraction of the immobile class follows "
+          "F3 = F3(0) + Fsub3 * erosion / La (max diff %.1e over %d eroded cells)" % (tag, dev, nero))
+    check(emax <= DMAX * (1.0 + 1.0e-9) and narm > 400, "(12) %s: the erosion stops as the immobile class covers "
+          "the surface (max erosion %.6f m <= (1 - F3(0)) La / Fsub3 = %.6f m; F3 > %.2f in %d cells)"
+          % (tag, emax, DMAX, f3th, narm))
+    ithick = max(range(N), key=lambda i: st["sd"][i])
+    rise = st["sd"][ithick] - SD_E
+    check(rise > 10.0 * LA_W and fa[2][ithick] < 1.0e-3, "(12) %s: the deposit carries no immobile class "
+          "(thickest deposit %.3f m, F3 of its surface %.1e)" % (tag, rise, fa[2][ithick]))
+    m = re.search(r"debris-law erosion was reduced to the movable classes in (\d+) cell-updates", txt)
+    check(m is not None and int(m.group(1)) > 0, "(12) %s: the run reports the reduced erosion (%s cell-updates)"
+          % (tag, m.group(1) if m else "none"))
+
+
+armour("sel3", 0.9)
+armour("sel3b", 0.99)
+
+# ---- (13) はじめの侵食速度(1 ステップ): 動けない粒径階は 0。動ける粒径階 k が流れに入る量は、粒径を選ばない式の
+#      量 i F_k に対して、f_dbsel = 1 が K3 倍(粒径階ごとの侵食速度 i K3 F_k。式の印字どおり。かさでは K3² 倍)、
+#      f_dbsel = 2 が同じ(i F_k。かさでは K3 倍)。K3 は動ける粒径階の交換層の割合の和
+p0 = state("selp0")
+d0, la0, fa0, fs0, hk0 = bedmix("selp0")
+KMOV = F0[0] + F0[1]                                      # 動ける粒径階(1・2)の交換層の割合の和 K3
+JSTEEP = int(YB / DX)                                     # 勾配 0.4 の斜面の行(流動面の勾配 > db_seltan = 0.03)
+e0 = [SD_E - v for v in p0["sd"]]
+steep = [i for i in range(N) if i // NX + 1 <= JSTEEP]
+flat = [i for i in range(N) if i // NX + 1 > JSTEEP]
+e0min = min(e0[i] for i in steep if 2 <= i // NX + 1 <= JSTEEP - 2)
+f0max = max(e0[i] for i in flat)
+check(e0min > 1.0e-5 and max(hk0[2]) > 1.0e-6 and f0max > 0.0, "(13) selp0: the size-blind law erodes every class "
+      "in one step (erosion on the slope >= %.2e m, class 3 in the flow up to %.2e m, on the flat part up to %.1e m)"
+      % (e0min, max(hk0[2]), f0max))
+for tag, kbulk, kcls, form in (("selp1", KMOV * KMOV, KMOV, "K3^2 (class rate i K3 F_k)"),
+                               ("selp2", KMOV, 1.0, "K3 (class rate i F_k)")):
+    p1 = state(tag)
+    d1, la1, fa1, fs1, hk1 = bedmix(tag)
+    e1 = [SD_E - v for v in p1["sd"]]
+    dpr = max(abs(e1[i] - kbulk * e0[i]) for i in steep)
+    check(dpr < TOL_EQ, "(13) %s: the bulk erosion of one step = %s x that of the size-blind law on the slope "
+          "(max diff %.1e m)" % (tag, form.split(" (")[0], dpr))
+    dh12 = max(max(abs(hk1[k][i] - kcls * hk0[k][i]) for i in steep) for k in (0, 1))
+    check(dh12 < TOL_EQ and max(abs(v) for v in hk1[2]) == 0.0,
+          "(13) %s: the movable classes enter the flow at %.2f x the size-blind amount i F_k (max diff %.1e m), "
+          "the immobile class not at all" % (tag, kcls, dh12))
+    df3 = max(abs(fa1[2][i] - (LA_W * F0[2] + e1[i] * FS0[2]) / LA_W) for i in range(N))
+    df1 = max(abs(fa1[0][i] - (LA_W * F0[0] - e1[i] * F0[0] / KMOV + e1[i] * FS0[0]) / LA_W) for i in range(N))
+    check(df3 < TOL_FRAC and df1 < TOL_FRAC, "(13) %s: the exchange layer after the step = the movable classes "
+          "removed, the substrate taken in (F3 %.1e, F1 %.1e)" % (tag, df3, df1))
+    # 平坦部(流動面の勾配 <= db_seltan)は掃流の型: 粒径を選ばない式はわずかに侵食するが、限界掃流力を超える
+    # 粒径階がないので侵食しない
+    f1max = max(abs(e1[i]) for i in flat)
+    check(f1max == 0.0, "(13) %s: on the flat part (bed-load type) no class exceeds the critical shear stress and "
+          "nothing is eroded (0 vs up to %.1e m in selp0)" % (tag, f0max))
+
+
+def same_run(a, b):
+    """2 つの構成の保存(流れ・河床・組成・粒径階ごとの柱)がすべて同じ値か"""
+    return state(a) == state(b) and bedmix(a) == bedmix(b)
+
+
+def run_diff(a, b):
+    """2 つの構成の保存の差の最大: (流れと河床の h・z・sd・hs と粒径階ごとの柱 (m), 交換層と下層の組成)"""
+    sa, sb = state(a), state(b)
+    da, la_a, faa, fsa, hka = bedmix(a)
+    db, la_b, fab, fsb, hkb = bedmix(b)
+    dst = max(maxdiff(sa, sb), max(max(abs(x - y) for x, y in zip(p, q)) for p, q in zip(hka, hkb)))
+    dfr = max(max(max(abs(x - y) for x, y in zip(p, q)) for p, q in zip(u, v)) for u, v in ((faa, fab), (fsa, fsb)))
+    return dst, dfr
+
+
+def reduced_count(tag):
+    t = open("screen_%s.log" % tag, encoding="utf-8", errors="replace").read()
+    mm = re.search(r"debris-law erosion was reduced to the movable classes in (\d+) cell-updates", t)
+    return int(mm.group(1)) if mm else -1
+
+
+# ---- (14) 全粒径階が動ける(粒径 <= 限界水深 <= 流動深): 粒径を選ばない計算とビット一致
+bed, flow, txt = ledgers("sela1")
+act = sum(bed[k][4] for k in (1, 2, 3))
+check(same_run("sela0", "sela1") and reduced_count("sela1") == 0 and act > MIN_ACT,
+      "(14) sela1 (all classes not larger than the flow depth) = sela0 without the selection, bit for bit "
+      "(%d reduced cell-updates; %.3f m3 eroded)" % (reduced_count("sela1"), act))
+
+# ---- (15) 全域を掃流の型に(db_seltan = 10)、限界掃流力をほぼ 0 に(1e-30): 全粒径階が動けて、粒径を選ばない
+#      計算と丸めの範囲で一致。ビット一致にはならない: 動き始めの流れの先端には流速が 1e-15 m/s より小さいセルが
+#      あり(流速の裾)、そこでは無次元掃流力(流速の 2 乗に比例)が 1e-30 も下回って「動けない」になる。粒径を
+#      選ばない式はそのセルでも流速に比例するごく小さい量(1e-18 m 以下)を侵食するので、その分だけ違う。判定が
+#      働く数は、侵食するセル × 更新の数(何も動けない selc3 の数で代表させる)の 1 % 未満
+bed, flow, txt = ledgers("selb1")
+act = sum(bed[k][4] for k in (1, 2, 3))
+dst, dfr = run_diff("selb0", "selb1")
+nb, nc_all = reduced_count("selb1"), reduced_count("selc3")
+check(dst < TOL_EQ and dfr < TOL_FRAC and 0 <= nb < 0.01 * nc_all and act > MIN_ACT,
+      "(15) selb1 (bed-load type everywhere, critical shear stress ~ 0) = selb0 without the selection within "
+      "round-off (max diff %.1e m, fractions %.1e; %d reduced cell-updates at the front of the flow, %.2f %% of "
+      "those of selc3; %.3f m3 eroded)" % (dst, dfr, nb, 100.0 * nb / max(nc_all, 1), act))
+
+# ---- (16) 全域を掃流の型に、限界掃流力を非常に大きく: どの粒径階も動けず、土石流の式は何も侵食しない
+sc = state("selc3")
+dd, la, fa, fs, hk = bedmix("selc3")
+bed, flow, txt = ledgers("selc3")
+tof = max(abs(bed[k][4]) for k in (1, 2, 3))
+dsd = max(abs(v - SD_E) for v in sc["sd"])
+dfa = max(max(abs(fa[k][i] - F0[k]) for i in range(N)) for k in range(3))
+check(tof == 0.0 and max(abs(v) for v in sc["hs"]) == 0.0 and dsd == 0.0 and dfa < TOL_FRAC and reduced_count("selc3") > 0,
+      "(16) selc3 (bed-load type everywhere, no class above the critical shear stress): nothing is eroded "
+      "(to flow %.1e m3, bed change %.1e m, %d reduced cell-updates)" % (tof, dsd, reduced_count("selc3")))
 
 print("=== dbmix check %s ===" % ("PASS" if rc == 0 else "FAIL"))
 sys.exit(rc)

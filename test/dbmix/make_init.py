@@ -74,6 +74,11 @@ EQ = {"f_bedmix": "1", "bmix_d": "0.002, 0.002, 0.002"}                  # 全�
 WIDE = {"f_bedmix": "1", "bmix_d": "0.0005, 0.002, 0.008", "bmix_frac0": "0.2, 0.5, 0.3",
         "bmix_sub0": "0.5, 0.3, 0.2", "bmix_la": "0.004"}                # 粒度の幅のある河床(交換層と下層で違う組成)
 LABEL = dict(EQ, bmix_frac0="1.0, 0.0, 0.0", bmix_sub0="0.0, 1.0, 0.0", bmix_la="0.002")   # 交換層と下層に別の札
+# 侵食を動ける粒径階に限る構成(f_dbsel = 1・2。developer.md §143)の部品
+TK = {"f_dbed": "3", "f_dbres": "3", "db_d50": "0.01", "db_delte": "0.005", "db_deltd": "0.5"}   # 高橋・中川則(tk3 と同じ)
+BOULDER = dict(WIDE, bmix_d="0.0005, 0.002, 1.0")       # 粒径階 3 は 1 m(流動深より必ず大きい = 動けない)
+SAND = dict(WIDE, bmix_d="0.0002, 0.0005, 0.001")       # 全粒径階が限界水深 dd = 1 mm 以下(侵食するセルで必ず動ける)
+ONESTEP = {"h0": "0.02", "tt": "0.02", "dt_disp": "0.02"}   # 水深 2 cm の水を置いて 1 ステップ(はじめの侵食速度)
 CASES = {
     # --- 侵食起動型(雨で斜面の土層が侵食される。閉領域) ---
     "e1": ("e", {}),                                                     # 単一粒径(基準)
@@ -87,6 +92,18 @@ CASES = {
     # 上を進む(developer.md §142 の不具合の再発防止)
     "tkb3": ("e", dict(WIDE, f_dbed="3", f_dbres="3", db_d50="0.01", db_delte="0.005", db_deltd="0.5",
                        **{"list_geoinfo:f_sdtype": "1", "list_geoinfo:fn_sd": "'sd_slope.txt'"})),
+    # --- 侵食を動ける粒径階に限る(f_dbsel = 1・2。高橋ら 2000 の式 (21)・2001 の式 (26) と型の区分) ---
+    #     1 = 粒径階ごとの侵食速度 i K3 F_k(式の印字どおり。かさでは i K3²)、2 = i F_k(かさでは i K3)
+    "sel3": ("e", dict(BOULDER, f_dbsel="1", h0="0.02", **TK)),          # 粒径階 3 が動けない(河床に残り、表層を覆う)
+    "sel3b": ("e", dict(BOULDER, f_dbsel="2", h0="0.02", **TK)),         # 同、f_dbsel = 2(表層を覆うのが速い)
+    "selp0": ("e", dict(BOULDER, **TK, **ONESTEP)),                      # 1 ステップ・粒径を選ばない(比べる相手)
+    "selp1": ("e", dict(BOULDER, f_dbsel="1", **TK, **ONESTEP)),         # 1 ステップ・選ぶ(侵食量 = K3² × selp0)
+    "selp2": ("e", dict(BOULDER, f_dbsel="2", **TK, **ONESTEP)),         # 1 ステップ・選ぶ(侵食量 = K3 × selp0)
+    "sela0": ("e", dict(SAND, **TK)),                                    # 全粒径階が動ける粒径・選ばない
+    "sela1": ("e", dict(SAND, f_dbsel="1", db_seltan="0.0", **TK)),      # 同・選ぶ(流動深の判定だけ。sela0 とビット一致)
+    "selb0": ("e", dict(WIDE, fluv_tausc="1.0e-30", **TK)),              # 限界掃流力をほぼ 0 に・選ばない
+    "selb1": ("e", dict(WIDE, fluv_tausc="1.0e-30", f_dbsel="2", db_seltan="10.0", **TK)),   # 同・全域を掃流の型に(selb0 と一致)
+    "selc3": ("e", dict(WIDE, fluv_tausc="1.0e30", f_dbsel="2", db_seltan="10.0", **TK)),    # 全域を掃流の型に・何も動けない
     "rt1": ("e", dict(WIDE, tt="24", dt_disp="24")),                     # w3 の 24 s まで(保存。流れに土砂がある)
     "rt2": ("e", dict(WIDE, f_state_restore="1")),                       # rt1 の保存から再開(w3 と最終の保存がビット一致)
     # 交互計算: rt1 の保存(流れに土砂が残る)を、土石流のない混合粒径の構成に復元する
@@ -111,9 +128,12 @@ CASES = {
     "bstop1": ("b", dict(EQ, bmix_frac0="0.3, 0.4, 0.3")),               # 流入土砂の組成がない
     "bstop2": ("b", dict(EQ, bmix_frac0="0.3, 0.4, 0.3", f_debris="0",
                          **{"list_bound_inflow:inflow_csfrac(:,1)": "0.2, 0.3, 0.5"})),   # 土石流なしに組成だけ
+    "selstop1": ("e", dict(WIDE, f_dbsel="1")),                          # f_dbsel = 1 に高橋・中川則でない侵食の式
+    "selstop2": ("e", dict(TK, f_dbsel="2")),                            # f_dbsel = 2 に単一粒径
 }
-RUN = ["e1", "e3", "u1", "u3", "m3", "w3", "tk3", "tkb3", "r1", "r3", "rp3", "film3", "s3", "b3", "bt3"]   # 通しで回す構成
-STOP = ["bstop1", "bstop2"]
+RUN = ["e1", "e3", "u1", "u3", "m3", "w3", "tk3", "tkb3", "sel3", "sel3b", "selp0", "selp1", "selp2", "sela0", "sela1", "selb0",
+       "selb1", "selc3", "r1", "r3", "rp3", "film3", "s3", "b3", "bt3"]  # 通しで回す構成
+STOP = ["bstop1", "bstop2", "selstop1", "selstop2"]
 
 
 def render(name):

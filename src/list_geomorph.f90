@@ -334,6 +334,22 @@ module list_geomorph
                                      ! 2 = 同論文の等流の式(1)(3)(C = 0.7√g R^{5/6}/d_L)から導く形
                                      ! (年報 34 B-2 の x 方向の式(31) と同じ。式(24)(25) の 1 乗は
                                      ! 指数の脱落とみられる。developer.md §28.18)
+    integer :: f_dbsel = 0           ! 土石流の式の侵食を、動ける粒径階に限る(f_dbed=3 と混合粒径
+                                     ! f_bedmix=1 で使用。0:粒径を選ばない(従来。河床の組成のまま侵食する),
+                                     ! 1:動ける粒径階だけを侵食する。粒径階 k の侵食速度は i K3 F_k
+                                     !   (i は粒径を選ばない式の侵食速度、F_k は交換層の割合、K3 は動ける
+                                     !   粒径階の F_k の和)で、かさの侵食速度は i K3²。高橋・井上・中川・
+                                     !   里深 (2000) 水工学論文集 44 の式(21)、Takahashi, Nakagawa, Satofuka
+                                     !   & Kawaike (2001) J. Natural Disaster Science 23(2) の式(26) の印字どおり,
+                                     ! 2:同、粒径階 k の侵食速度を i F_k にする(かさの侵食速度は i K3。
+                                     !   同じ論文の本文「i K3 がバルクの侵食速度」に合わせた形)。
+                                     ! 動ける粒径階は、流動面の勾配が db_seltan を超えるセル(土石流・掃流状
+                                     ! 集合流動の型)では粒径が流動深 h + h_s 以下のもの、db_seltan 以下の
+                                     ! セル(掃流の型)では限界掃流力を超えるもの(掃流砂と同じ掃流力・
+                                     ! 遮蔽係数)。型の区分は 2001 年の論文。堆積と流動化は粒径を選ばない。
+                                     ! developer.md §143)
+    real :: db_seltan = -9999.0      ! f_dbsel=1・2 の型を分ける流動面の勾配 tanθ(>= 0)。未指定 = 既定 0.03
+                                     ! (同論文の掃流状集合流動の型と掃流の型の境)。0 なら全域で流動深の判定
     real :: db_mu = 0.0              ! Voellmy 摩擦係数 μ(無次元)。f_dbres=4 で使用。0 = 既定 0.2
                                      ! (雪崩 0.1〜0.3、岩屑なだれは体積とともに低下。
                                      ! 見かけ摩擦 H/L を直接与える — 体積依存式は
@@ -572,6 +588,8 @@ subroutine list_geomorph_read(p, list)
   real :: db_satbed
   integer :: f_dbunsat, f_dbimm, db_immexp
   real :: db_kunsat, db_deltdi
+  integer :: f_dbsel
+  real :: db_seltan
   real :: db_mu
   real :: db_xi
   real :: db_tauy
@@ -624,6 +642,7 @@ subroutine list_geomorph_read(p, list)
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
                            db_er, db_hent, f_dbmom, &
                            f_dbunsat, db_kunsat, f_dbimm, db_deltdi, db_immexp, &
+                           f_dbsel, db_seltan, &
                            db_mu, db_xi, db_tauy, f_dbcurv, &
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
@@ -759,6 +778,8 @@ subroutine list_geomorph_read(p, list)
   f_dbimm = list%f_dbimm
   db_deltdi = list%db_deltdi
   db_immexp = list%db_immexp
+  f_dbsel = list%f_dbsel
+  db_seltan = list%db_seltan
   db_mu = list%db_mu
   db_xi = list%db_xi
   db_tauy = list%db_tauy
@@ -948,6 +969,8 @@ subroutine list_geomorph_read(p, list)
   list%f_dbimm = f_dbimm
   list%db_deltdi = db_deltdi
   list%db_immexp = db_immexp
+  list%f_dbsel = f_dbsel
+  list%db_seltan = db_seltan
   list%db_mu = db_mu
   list%db_xi = db_xi
   list%db_tauy = db_tauy

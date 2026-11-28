@@ -35,7 +35,7 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_bedmix
   use m_parallel, only : par_info, par_warn, par_stop, dcp, is_root, par_halo_cell, par_sum_rows, &
-                         par_allreduce_maxi
+                         par_allreduce_maxi, par_allreduce_sumi
   use m_swflow_enc, only : chn, bcs, bc_open_face, bc_neumann_cell, bc_inflow_nooutflow, &
                           slope_shear_on, slope_shear_factor, slope_shear_factor_e
   use m_swflow_enc, only : sct, sect_v, sect_sigma          ! 浮遊砂の σ 断面の濃度解釈(§26。段 2 の結合)
@@ -234,6 +234,17 @@ module subroutine init_bedmix(gm, p, g, s, b, list)
                   // "entrainment and fluidization take the column from the top (exchange layer, substrate), " &
                   // "deposition lays the composition of the flow; the debris-flow laws keep the single grain " &
                   // "size db_d50")
+    if (gm%f_dbsel == 1) then
+      call par_info("geomorph: debris-law erosion takes only the movable classes (f_dbsel=1): classes not larger " &
+                    // "than the flow depth where the flow-surface slope exceeds db_seltan, classes above the " &
+                    // "critical shear stress of the bed load elsewhere; class rate = i*K3*F_k (K3 = sum of the " &
+                    // "movable fractions F_k of the exchange layer; bulk rate i*K3**2)")
+    else if (gm%f_dbsel == 2) then
+      call par_info("geomorph: debris-law erosion takes only the movable classes (f_dbsel=2): classes not larger " &
+                    // "than the flow depth where the flow-surface slope exceeds db_seltan, classes above the " &
+                    // "critical shear stress of the bed load elsewhere; class rate = i*F_k (bulk rate i*K3, K3 = " &
+                    // "sum of the movable fractions F_k of the exchange layer)")
+    end if
   end if
 
   ! --- 再開(私有 save) ---
@@ -371,6 +382,7 @@ module subroutine dispose_bedmix(gm, p, g, s)
   real(real64) :: v1(1:nbmixmax), vf, vo, res, vx, hs1, ves, vin, vin2, vo1, vo2, vo4, vrk, vsk
   real(real64) :: vdb, hk1(1:nbmixmax)
   integer :: kc
+  integer :: nsel(2)
   character(len=512) :: msg
   character(len=96) :: tail
 
@@ -473,6 +485,21 @@ module subroutine dispose_bedmix(gm, p, g, s)
     if (gm%bmx%nhneg > 0) then
       call par_warn("geomorph: debris-flow deposition used the exchange-layer composition in " &
                     // itoa(gm%bmx%nhneg) // " cell-updates (the class columns of the flow summed to <= 0)")
+    end if
+    if (gm%f_dbsel > 0) then
+      ! 侵食を動ける粒径階に限った数(§143): 動けない粒径階があって侵食を減らした数と、そのうち交換層にある
+      ! 動ける粒径階の量で頭打ちにした数。全ランクの合計(整数和は厳密。判定は namelist 由来で全ランク同一 =
+      ! collective 安全)
+      nsel(1) = gm%bmx%nselk
+      nsel(2) = gm%bmx%nsell
+      call par_allreduce_sumi(nsel)
+      call par_info("geomorph: debris-law erosion was reduced to the movable classes in " // itoa(nsel(1)) &
+                    // " cell-updates (f_dbsel=" // itoa(gm%f_dbsel) // ")")
+      if (nsel(2) > 0) then
+        call par_info("geomorph: debris-law erosion of the movable classes was capped by their content in the " &
+                      // "exchange layer in " // itoa(nsel(2)) &
+                      // " cell-updates (shorten dt_geomorph or thicken bmix_la if frequent)")
+      end if
     end if
   end if
   ! ランク局所の診断
@@ -2546,6 +2573,206 @@ module subroutine debris_exchange_bmix(gm, g, s)
   !$omp end parallel do
   gm%bmx%vclip = gm%bmx%vclip + vclip
   gm%bmx%nhneg = gm%bmx%nhneg + nneg
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 土石流との併用の、河床との交換の組成: 侵食を動ける粒径階に限る写し(f_dbsel = 1・2。段 2c-4。developer.md §143)
+!   debris_exchange_bmix の写しで、違うのは侵食(fx > 0)の枝だけ(堆積の枝と台帳は同じ。debris_exchange_bmix の
+!   それらを変えるときは、ここも同じく変えること)。calc_debris がパス 1 の後・パス 2 の前に呼び、本手続きは
+!   侵食量 gm%dbr%fx を書き換える(パス 2 はその値を適用する)。
+!   出典: 高橋・井上・中川・里深 (2000) 水工学論文集 44, 717–722(式 (19)〜(21))、Takahashi, Nakagawa, Satofuka &
+!     Kawaike (2001) J. Natural Disaster Science 23(2), 65–82(式 (26) と型の区分)。
+!     土石流・掃流状集合流動の型: 流れで動かせる最大の粒子の粒径は流動深と同じと仮定する。動ける粒径階
+!       k ≤ k2(d_k ≤ h)だけを侵食し、動ける粗粒子の割合を K3 = Σ_{動ける} f_bLk(f_bLk は河床表層の割合)として、
+!       粒径階ごとの(実質の)侵食速度を i_sbk = i_sb0 K3 f_bLk C*L(動けない粒径階は 0)とする(2000 年の式 (21)、
+!       2001 年の式 (26)。i_sb0 は粒径を選ばない侵食速度)。同じ箇所の本文は「i_sb0 K3 がバルクの侵食速度を表す」と
+!       述べるが、式 (21) の和を空隙込みに直すと Σ_k i_sbk / C*L = i_sb0 K3² で、本文と式が K3 の 1 乗分合わない
+!       (2001 年の式 (31) は i_sb = Σ_k i_sbk / C*L)。
+!     掃流の型(2001 年の論文は水面勾配 tanθ ≤ 0.03。式 (10)〜(12) の区分): 限界掃流力が、侵食される粒径を決める
+!       (修正 Egiazaroff。式 (16)・(17))。
+!     河床表層の組成は厚さ δm の層で追う(2001 年の式 (39)・(40))。本コードでは交換層(厚さ bmix_la)と Hirano の
+!       交換(bmix_update)がその役をする。
+!   ここでの扱い:
+!     - f_dbsel = 1 は式の印字どおり: 粒径階 k の侵食速度 i K3 F_k(かさの侵食速度 i K3²)。f_dbsel = 2 は本文の
+!       かさの侵食速度に合わせた形: 粒径階 k の侵食速度 i F_k(かさの侵食速度 i K3。動ける粒径階の侵食速度が
+!       粒径を選ばない式と同じになる)。i は、パス 1 が作った fx(代表粒径 db_d50 の単一粒径の式)。F_k は交換層の
+!       割合(細粒を別の相にしないので、全粒径階が原典の粗粒子に当たる)。河床の低下は、どちらも出ていった
+!       粒径階の和(粒径階ごとの保存が厳密)。
+!     - 型の区分は、パス 1 の高橋・中川の式が平衡濃度に使うのと同じ流動面の勾配(gm%dbr%tsel。calc_debris が
+!       侵食するセルだけ入れる)が db_seltan(既定 0.03)を超えるかどうか。
+!     - 流動深は h + h_s(パス 1 の混合流動深と同じ。時刻 n)。
+!     - 掃流の型の判定は、掃流砂の写し(calc_fluvial_bmix・_tp)と同じ掃流力と限界(τ*_k = base / d_k >
+!       τ*c ξ_k。base はマニング閉じ・有効掃流力の比・斜面に沿うせん断。d_m と D84 はそのセルの交換層)を、
+!       エッジの平均ではなくセルの値で求める(独自の当てはめ。出典の式 (13)〜(15) は水深 × 勾配の掃流力と
+!       勾配に依存する限界)。
+!     - 動けない粒径階が 1 つもないセル(全粒径階が動ける)は、debris_exchange_bmix と同じ取り去り方
+!       (柱の上から。交換層厚で頭打ちにしない)にする。f_dbsel = 0 の結果と丸めまで同じ。
+!     - 動けない粒径階があるセルは、交換層から動ける粒径階だけを、その割合の比で取り去る。1 回の更新で
+!       取り去れるのは、交換層にある動ける粒径階の量 L_e K3 まで(独自の上限。掃流砂の粒径階ごとの
+!       供給量制限と同じ考え方。下層から入る分は次の更新から数える)。取り去った分は Hirano の交換で下層から
+!       下層の組成で補われるので、動けない粒径階の割合が増えていく(F_k の増え方は dF_k/dΔ = 下層の割合 / L_a)。
+!   回数(ランク局所に数え、終了時に全ランクの合計を表示): 動けない粒径階があって侵食を減らした数 nselk、
+!     そのうち上限が働いた数 nsell
+!----------------------------------------------------------------------
+module subroutine debris_exchange_bmix_sel(gm, p, g, s)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j, kc, nc, nneg, nsel, nlim
+  real :: fx, e, dz, sd0, le, t1, t2, hsum, vc, vclip, w, wfh, dm, cvt
+  real :: hm, hh, base, dme, kmov, kfac
+  logical :: ssh, d84m, allmv, kprint
+  real :: a(1:nbmixmax), fa(1:nbmixmax), fb(1:nbmixmax), dk(1:nbmixmax), dh(1:nbmixmax)
+  logical :: mv(1:nbmixmax)
+  real(real64) :: acell8
+
+  nc = gm%bmx%nc
+  if (.not. gm%bmx%stock0) call bmix_first_step(gm, g, s)
+  acell8 = real(g%dx, real64) * real(g%dy, real64)
+  cvt = gm%morfac * gm%poroi            ! 固体の柱 → 河床のかさの厚さ(calc_debris の dzb と同じ換算)
+  ssh = slope_shear_on()
+  d84m = gm%flv%d84map                  ! 抵抗分割の D84 を組成から求める構成(calc_fluvial_bmix_tp と同じ)
+  kprint = (gm%f_dbsel == 1)            ! 粒径階ごとの侵食速度に K3 をもう 1 つ掛ける(式の印字どおり)
+  vclip = 0.0
+  nneg = 0
+  nsel = 0
+  nlim = 0
+  !$omp parallel do schedule(static) reduction(+: vclip, nneg, nsel, nlim) &
+  !$omp   private(i, j, kc, fx, e, dz, sd0, le, t1, t2, hsum, vc, w, wfh, dm, a, fa, fb, dk, dh, &
+  !$omp           hm, hh, base, dme, kmov, kfac, allmv, mv)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      fx = gm%dbr%fx(i,j)
+      if (fx == 0.0) cycle
+      sd0 = max(s%sd(i,j), 0.0)
+      le = min(gm%bmx%la, sd0)
+      fa(1:nc) = s%bmf(i,j,1:nc)
+      fb(1:nc) = gm%bmx%fs(i,j,1:nc)
+      if (fx > 0.0) then
+        ! --- 侵食: 動ける粒径階の判定 ---
+        if (gm%dbr%tsel(i,j) > gm%db_seltan) then
+          ! 土石流・掃流状集合流動の型: 粒径が流動深以下の粒径階が動ける
+          hm = s%h(i,j) + max(s%hs(i,j), 0.0)
+          do kc = 1, nc
+            mv(kc) = (gm%bmx%d(kc) <= hm)
+          end do
+        else
+          ! 掃流の型: 限界掃流力を超える粒径階が動ける(掃流砂の写しと同じ閉じを、セルの値で)
+          dme = 0.0
+          do kc = 1, nc
+            dme = dme + fa(kc) * gm%bmx%d(kc)
+          end do
+          hh = max(s%h(i,j), p%dv)
+          if (d84m) then
+            base = taupart_phi(gm%flv, hh, bmix_dpct(nc, gm%bmx%d, fa, 0.84))
+          else
+            base = taufac_h(gm%flv, hh)
+          end if
+          base = base * g%rn(i,j)**2 * s%vv(i,j)**2 / (gm%sgrav * hh**(1.0/3.0))
+          if (ssh) base = base * slope_shear_factor(g, s, i, j)
+          do kc = 1, nc
+            mv(kc) = .false.
+            if (dme > 0.0) then
+              mv(kc) = (base / gm%bmx%d(kc) > gm%tausc * bmix_xi(gm%bmx%hiding, gm%bmx%d(kc) / dme))
+            end if
+          end do
+        end if
+        allmv = .true.
+        kmov = 0.0
+        do kc = 1, nc
+          if (mv(kc)) then
+            kmov = kmov + fa(kc)
+          else
+            allmv = .false.
+          end if
+        end do
+        if (allmv) then
+          ! 全粒径階が動ける: debris_exchange_bmix と同じ(柱の上から e を取り去る。交換層 t1 → 下層 t2)
+          e = min(fx * cvt, sd0)
+          if (e <= 0.0) cycle
+          t1 = min(e, le)
+          t2 = e - t1
+          dk(1:nc) = t1 * fa(1:nc) + t2 * fb(1:nc)        ! 河床を出る粒径階ごとのかさの厚さ(和 e)
+          dh(1:nc) = dk(1:nc) * (fx / e)                  ! 流れに入る粒径階ごとの固体の柱(和 fx)
+          a(1:nc) = (le - t1) * fa(1:nc)                  ! 交換層に残る分(深い侵食なら 0 = 下層から作り直す)
+          call bmix_update(nc, gm%bmx%la, sd0, -e, a, fa, fb, vc)
+        else
+          ! 動けない粒径階がある: 交換層から動ける粒径階だけを取り去る。かさの侵食量は、粒径を選ばない式の
+          ! 侵食量に、f_dbsel = 1 では K3²(粒径階ごとに i K3 F_k。式の印字どおり)、2 では K3(粒径階ごとに
+          ! i F_k)を掛けた値。K3 = kmov は動ける粒径階の交換層の割合の和。交換層にある動ける粒径階の量までで
+          ! 頭打ち
+          nsel = nsel + 1
+          kfac = kmov
+          if (kprint) kfac = kmov * kmov
+          e = min(fx * kfac * cvt, sd0)
+          if (e > le * kmov) then
+            e = le * kmov
+            nlim = nlim + 1
+          end if
+          if (e <= 0.0) then
+            gm%dbr%fx(i,j) = 0.0                          ! 動ける粒径階が表層にない: 侵食しない
+            cycle
+          end if
+          fx = e / cvt
+          gm%dbr%fx(i,j) = fx                             ! パス 2 が適用する侵食量を書き換える
+          do kc = 1, nc
+            dk(kc) = 0.0
+            if (mv(kc)) dk(kc) = e * (fa(kc) / kmov)      ! 河床を出る粒径階ごとのかさの厚さ(和 e)
+          end do
+          dh(1:nc) = dk(1:nc) * (fx / e)                  ! 流れに入る粒径階ごとの固体の柱(和 fx)
+          a(1:nc) = le * fa(1:nc) - dk(1:nc)              ! 交換層に残る分(不足は bmix_update が下層から補う)
+          call bmix_update(nc, gm%bmx%la, sd0, -e, a, fa, fb, vc)
+        end if
+      else
+        ! 堆積: 流れの組成で河床へ(debris_exchange_bmix と同じ)
+        hsum = 0.0
+        do kc = 1, nc
+          dh(kc) = max(s%hsk(i,j,kc), 0.0)
+          hsum = hsum + dh(kc)
+        end do
+        dz = -fx * cvt
+        if (hsum <= 0.0) then
+          ! 流れの組成が決まらない: 交換層の組成で積み、柱は動かさない
+          nneg = nneg + 1
+          dh(1:nc) = 0.0
+          dk(1:nc) = dz * fa(1:nc)
+        else
+          if (-fx < hsum) dh(1:nc) = dh(1:nc) * (-fx / hsum)   ! 一部の堆積(全量なら柱の正の分をすべて)
+          dk(1:nc) = dh(1:nc) * cvt
+          dh(1:nc) = -dh(1:nc)
+        end if
+        a(1:nc) = le * fa(1:nc) + dk(1:nc)
+        dk(1:nc) = -dk(1:nc)                            ! 河床を出る量(負 = 河床に入る)
+        call bmix_update(nc, gm%bmx%la, sd0, dz, a, fa, fb, vc)
+      end if
+      s%hsk(i,j,1:nc) = s%hsk(i,j,1:nc) + dh(1:nc)
+      s%bmf(i,j,1:nc) = fa(1:nc)
+      gm%bmx%fs(i,j,1:nc) = fb(1:nc)
+      dm = 0.0
+      do kc = 1, nc
+        dm = dm + fa(kc) * gm%bmx%d(kc)
+      end do
+      s%bmdm(i,j) = dm
+      ! 台帳: 河床の側(在庫と同じ重み = 河道平面積率)と流れの側(gv·wfrac·A)
+      w = 1.0
+      if (allocated(gm%bmx%wf)) w = gm%bmx%wf(i,j)
+      wfh = 1.0
+      if (chn%have_width) wfh = chn%wfrac(i,j)
+      vclip = vclip + vc * w / gm%wrk%ainv
+      do kc = 1, nc
+        gm%bmx%dbxrow(j,kc) = gm%bmx%dbxrow(j,kc) + real(dk(kc) * w, real64)
+        gm%bmx%dbsrow(j,kc) = gm%bmx%dbsrow(j,kc) &
+                              + real(dh(kc), real64) * real(s%gv(i,j), real64) * real(wfh, real64) * acell8
+      end do
+    end do
+  end do
+  !$omp end parallel do
+  gm%bmx%vclip = gm%bmx%vclip + vclip
+  gm%bmx%nhneg = gm%bmx%nhneg + nneg
+  gm%bmx%nselk = gm%bmx%nselk + nsel
+  gm%bmx%nsell = gm%bmx%nsell + nlim
 end subroutine
 
 

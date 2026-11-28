@@ -303,6 +303,10 @@ module m_geomorph
                                      !   (Σ hsk·gv·wfrac·A。m3)
     integer :: nhneg = 0             ! 流れの組成が決まらず(粒径階の柱の和が 0 以下)、堆積を交換層の組成で
                                      !   積んだセルの数(ランク局所の累計。丸めの水準の柱だけで起こる)
+    ! 土石流の式の侵食を動ける粒径階に限る(f_dbsel = 1・2。段 2c-4。§143)
+    integer :: nselk = 0             ! 動けない粒径階があって侵食を減らしたセル × 更新の数(ランク局所の累計。
+                                     !   終了時に全ランクの合計を表示する)
+    integer :: nsell = 0             ! 交換層にある動ける粒径階の量で侵食を頭打ちにした数(同上)
   end type
 
   type t_wave
@@ -390,6 +394,9 @@ module m_geomorph
     integer :: nslgeo = 0            ! Fs < 1 だが間隙水圧なしでも不安定なので流動化しなかった回数
                                      !   (f_slide_wet = 1。セル × 評価。ランク局所の診断)
     integer :: nslflow = 0           ! 濃い混合体が載るので判定しなかった回数(f_slide_noflow = 1。同上)
+    real, allocatable :: tsel(:,:)   ! 侵食するセルの流動面の勾配 tanθ (ish:ieh, js:je)。f_dbsel > 0 のときだけ確保
+                                     !   (calc_debris がパス 1 の後に入れ、debris_exchange_bmix_sel が型の区分に
+                                     !   使う作業面。§143)
     real(real64), allocatable :: wdrow(:)  ! 保持水の不足(f_dbwet = 3。堆積のとき地表水・地下貯留から
                                      !   取れなかった保持水のかさ体積 m3)の行部分和 (js:je)。
                                      !   f_dbwet = 3 のときだけ確保し、dispose が決定的な総和で報告する(§28.17)
@@ -531,6 +538,11 @@ module m_geomorph
     integer :: f_dbimm = 0           ! 緩い勾配の掃流状集合流動(f_dbed = 3。0:石礫型の式を全勾配で,
                                      !   1:平衡濃度 6.7 c∞² と掃流状集合流動の堆積速度式。§28.18)
     real :: db_deltdi = 0.0          ! 掃流状集合流動の堆積速度係数 δ'd(f_dbimm = 1)
+    integer :: f_dbsel = 0           ! 土石流の式の侵食を動ける粒径階に限る(f_dbed = 3 と f_bedmix。0:粒径を選ばない,
+                                     !   1:動ける粒径階だけ(粒径階ごとの侵食速度 i K3 F_k。式の印字どおり),
+                                     !   2:同(i F_k。本文のかさの侵食速度 i K3 に合わせた形)。段 2c-4。§143)
+    real :: db_seltan = 0.03         ! 同、型を分ける流動面の勾配(これ以下のセルは掃流の型 = 限界掃流力の判定、
+                                     !   超えるセルは流動深の判定)
     integer :: f_release = 0         ! 瞬時流動化(0:無効, 1:有効 = fn_dbinit 指定)
     real :: db_reltime = 0.0         ! 流動化の発生時刻 (s)
     real :: db_relsat = 1.0          ! 崩壊土塊の飽和度(gwflow 無効時のみ使用)
@@ -935,6 +947,12 @@ module m_geomorph
     ! 呼び出しの鉤だけを置く(判定はループの外)。無効時は呼ばない
     module subroutine debris_exchange_bmix(gm, g, s)      ! 侵食・堆積(calc_debris のパス 1 の後・パス 2 の前)
       type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+    end subroutine
+    module subroutine debris_exchange_bmix_sel(gm, p, g, s)  ! 同、動ける粒径階だけを侵食する写し(f_dbsel = 1・2。§143)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
     end subroutine
@@ -2218,6 +2236,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%flv%rsec)) deallocate(gm%flv%rsec)
   if (allocated(gm%fix%zref)) deallocate(gm%fix%zref)
   if (allocated(gm%dbr%fx)) deallocate(gm%dbr%fx)
+  if (allocated(gm%dbr%tsel)) deallocate(gm%dbr%tsel)
   if (allocated(gm%dbr%rel)) deallocate(gm%dbr%rel)
   if (allocated(gm%dbr%sld)) deallocate(gm%dbr%sld)
   if (allocated(gm%dbr%hd)) deallocate(gm%dbr%hd)

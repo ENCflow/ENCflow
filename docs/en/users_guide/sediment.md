@@ -575,7 +575,7 @@ load (the design document is docs/mixed_sediment_plan.md).
   stirring it requires (`f_wfsed`) is not available for mixed-size bed load yet.
 - **Coupling with debris flow** (`f_debris = 1`): the solids of the flow $`h_s`$ are held as one column per
   class, $`h_{s,k}`$ ($`\sum_k h_{s,k} = h_s`$), and the shallow-water flow carries the columns one by one
-  with the same transport equation as $`h_s`$. The erosion, deposition and fluidisation of debris flow do
+  with the same transport equation as $`h_s`$. By default the erosion, deposition and fluidisation of debris flow do
   not select grain sizes. Erosion (exchange $`\Delta h_s > 0`$) removes the thickness
   $`e = \Delta h_s/(1-\lambda)`$ from the top of the column, $`t_1 = \min(e, L_e)`$ from the exchange layer
   and the rest, $`t_2 = e - t_1`$, from the substrate, and puts it into the flow with that composition,
@@ -594,7 +594,26 @@ load (the design document is docs/mixed_sediment_plan.md).
   original model[^tny91] uses the mean grain size of the flow in the resistance and the exchange rates,
   includes the fines in the interstitial fluid to raise the equilibrium concentration, and divides the flow
   depth into layers to resolve grain-size sorting; none of the three is included). The composition of
-  sediment entering through a boundary is given data (`inflow_csfrac`, `fn_inflow_csfrac`). The ledger
+  sediment entering through a boundary is given data (`inflow_csfrac`, `fn_inflow_csfrac`).
+  The erosion of the Takahashi–Nakagawa laws (`f_dbed = 3`) can be limited to the movable size classes
+  (`f_dbsel` = 1, 2; the default 0 is as above). A class is movable when $`d_k \le h + h_s`$ in cells whose
+  flow-surface slope along the flow exceeds `db_seltan` (default 0.03) (the assumption that the largest
+  particle the flow can move has the same diameter as the flow depth), and when it satisfies the criterion
+  of the bed load, $`\tau_{*k} > \tau_{*c}\,\xi_k`$, in cells at or below it. With
+  $`K_3 = \sum_{\rm movable} F_k`$ the sum of the fractions of the movable classes in the exchange layer
+  and $`\Delta h_s`$ the exchange of the size-blind law, the amount of class $`k`$ that enters the flow is
+  $`K_3 F_k \Delta h_s`$ for `f_dbsel = 1` (as printed in the equations of the sources[^tinis00][^tnsk01];
+  the total is $`K_3^2 \Delta h_s`$) and $`F_k \Delta h_s`$ for `f_dbsel = 2` (the total is
+  $`K_3 \Delta h_s`$; the form that matches the bulk erosion velocity stated in the text of the sources),
+  and 0 for the immobile classes. In a cell with immobile classes only the movable classes are removed from
+  the exchange layer, in proportion to their fractions, and one update removes at most the amount of the
+  movable classes present in the exchange layer, $`L_e K_3`$ (a limit of ENCflow). The lowered part is
+  filled by the Hirano rule with the composition of the substrate $`f_k`$, so the surface fraction of an
+  immobile class grows with the erosion depth $`\Delta`$ as $`F_k(0) + f_k \Delta/L_a`$, and the erosion
+  stops when the surface consists of immobile classes only. A cell in which all classes are movable is
+  treated as by default. Deposition and fluidisation do not select grain sizes (the sources of the
+  criterion and its limits are on
+  [the mass-flow page](massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)). The ledger
   counts the amount of each class that went from the bed to the flow on both the bed side and the flow
   side, and adds the stock of the flow (Σ h_{s,k} × gv × wfrac × A) and the exchange with the outside, to
   confirm that the bed and the flow each close separately (where cells have a building porosity gv < 1 the
@@ -620,9 +639,11 @@ load (the design document is docs/mixed_sediment_plan.md).
   composition changes abruptly. (5) The toe shear stress of the bank-erosion law is evaluated with a
   representative size (the domain-mean $`d_m`$ of the initial exchange layer). (6) Grain-size-dependent flow
   roughness and abrasion are not treated. Only class 1 is suspended (classes 2 and above are not), and the
-  bed load and the suspended load of class 1 are added. (7) Coupled with debris flow, the way the debris
+  bed load and the suspended load of class 1 are added. (7) Coupled with debris flow, by default the way the debris
   flow moves and its rate of erosion do not depend on the width of the grain-size distribution (what
-  matters is `db_d50`). The difference between grain sizes matters for the bed load that moves the same bed
+  matters is `db_d50`; with `f_dbsel`, which limits the erosion to the movable classes, the classes larger
+  than the flow depth and those below the critical shear stress restrain the erosion, but the erosion by
+  thin flows shallower than the grain size is underestimated). The difference between grain sizes matters for the bed load that moves the same bed
   and for where the sediment ends up. In a flow whose shear stress is far above the threshold of every
   class (during the breach of a landslide dam, for example) the bed load too carries all the classes almost
   in proportion to the composition, so giving a width hardly changes the results
@@ -671,7 +692,13 @@ load (the design document is docs/mixed_sediment_plan.md).
   fluidising the upper half the exchange layer of the remaining soil has the composition of the substrate.
   The class ratios of sediment entering through a boundary agree with the given composition in the inflow,
   the outflow and the deposit, and the inflow with a composition series agrees with the sum over the steps
-  of the fractions to 1e-9 m³. A restart is bit-identical, a restore into a configuration without debris
+  of the fractions to 1e-9 m³. With `f_dbsel`, which limits the erosion to the movable classes, a class
+  larger than the flow depth (1 m) never enters the flow, its content is unchanged in every cell (6e-16 m),
+  its surface fraction agrees with $`F(0) + f \Delta/L_a`$ to 1e-13, and the erosion depth stops at the
+  limit $`(1 - F(0)) L_a/f`$ = 14 mm. The erosion of one step equals $`K_3^2`$ (`f_dbsel = 1`) and
+  $`K_3`$ (`f_dbsel = 2`) times that of the size-blind law within round-off, and when all classes are
+  movable the result is bit-identical to the computation without the selection.
+  A restart is bit-identical, a restore into a configuration without debris
   flow (alternating runs) conserves the total of each class, and MPI np = 1, 2, 4 are byte-identical to the
   serial run.
 
@@ -1351,6 +1378,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^patra06]: Patra, M. and Karttunen, M. (2006): Stencils with isotropic discretization error for differential operators. *Numer. Methods Partial Differ. Equ.*, 22(4), 936–953. doi:10.1002/num.20129 (stencils whose lowest-order discretisation error is isotropic; checked against the bibliographic record and abstract. That the ENC partition rule gives d = 1/3 follows from the modified equation in developer.md §96)
 [^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1 (checked against the abstract: when transport scales with both slope and soil depth, rock type shows up in the form of soil-mantled hillslopes. The form of the equation and the doi follow the description of Landlab's DepthDependentDiffuser)
 [^ashida72]: Ashida, K. and Michiue, M. (1972): Study on hydraulic resistance and bed-load transport rate in alluvial streams. *Proc. JSCE*, 206, 59–69 (in Japanese). doi:10.2208/jscej1969.1972.206_59
+[^tinis00]: Takahashi, T., Inoue, M., Nakagawa, H. and Satofuka, Y. (2000): Prediction of sediment runoff from a mountain watershed. *Annual Journal of Hydraulic Engineering, JSCE*, 44, 717–722 (in Japanese). doi:10.2208/prohe.44.717 (The ratio of movable coarse particles K3, eq. (19); the erosion rate of each size class i_sbk = i_sb0 K3 f_bLk C*L, eq. (21); the text states that i_sb0 K3 is the bulk erosion velocity.)
+[^tnsk01]: Takahashi, T., Nakagawa, H., Satofuka, Y. and Kawaike, K. (2001): Flood and sediment disasters triggered by 1999 rainfall in Venezuela; A river restoration plan for an alluvial fan. *Journal of Natural Disaster Science*, 23(2), 65–82. <https://jsnds.sakura.ne.jp/jnds/23_2_2.pdf> (Flow regimes by the water-surface slope, eqs. (10) to (12); the critical shear stress of the bed-load regime, eqs. (13) to (17); the erosion rate of each size class, eq. (26); the bulk erosion rate, eq. (31).)
 [^tnh90]: Takahashi, T., Nakagawa, H. and Harada, T. (1990): Prediction of debris flow generated by erosion of steep well-graded sediment mixture bed. *Annuals, Disaster Prevention Research Institute, Kyoto University*, 33 B-2, 443–456 (in Japanese). <https://repository.kulib.kyoto-u.ac.jp/dspace/handle/2433/72271> (the erosion of a steep sediment bed does not select grain sizes = §1; fine particles raise the density of the interstitial fluid and thereby the equilibrium concentration = eq. (11); the division into fine and coarse particles = eqs. (12) to (18). Checked against the published text.)
 [^tny91]: Takahashi, T., Nakagawa, H. and Yamashiki, Y. (1991): Formation and erosion of debris fan that is composed of sediment mixtures. *Annuals, Disaster Prevention Research Institute, Kyoto University*, 34 B-2, 355–372 (in Japanese). <https://repository.kulib.kyoto-u.ac.jp/dspace/handle/2433/72336> (continuity equation of the coarse particles = eq. (6); erosion and deposition velocities and resistance with the mean grain size over the whole flow depth d_L = eqs. (16) to (18) and (29); grain-size sorting with the flow depth divided into layers = eqs. (23) to (26); the erosion of the fan computed with a single mean grain size, with the armour coat named as the open issue = §2.3 and conclusion 6. Checked against the published text.)
 [^hirano71]: Hirano, M. (1971): River-bed degradation with armoring. *Proc. JSCE*, 195, 55–65 (in Japanese; the Japanese title begins with the word "Armoring"). doi:10.2208/jscej1969.1971.195_55 (the exchange-layer concept and the continuity equations per class; uses an exchange-layer thickness of 1 cm, about the largest grain size)

@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 873 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 875 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -106,6 +106,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | db_relsat | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_reltime | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_satbed | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| db_seltan | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_tauy | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_vstop | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_wstop | &list_geomorph | [土砂・地形変化](geomorph.md) |
@@ -216,6 +217,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_dbimm | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbmom | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbres | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_dbsel | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbstop | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbunsat | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbwet | &list_geomorph | [土砂・地形変化](geomorph.md) |

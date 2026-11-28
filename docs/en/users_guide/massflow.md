@@ -536,7 +536,7 @@ formulas are under "Coupling with debris flow" in
 [the sediment-transport page](sediment.md#mixed-grain-sizes-f_bedmix)). This section summarises the
 properties as seen from the debris-flow side.
 
-- **The exchange does not select grain sizes**: erosion and fluidisation take the composition of the bed as
+- **By default the exchange does not select grain sizes**: erosion and fluidisation take the composition of the bed as
   it is (removed from the top of the column, exchange layer first and then the substrate), and deposition
   takes the composition of the flow as it is. This follows the view that the erosion of a steep sediment
   bed, of the kind that generates a debris flow, does not pick up particles selectively by size but strips
@@ -577,6 +577,47 @@ properties as seen from the debris-flow side.
   the surface, and the breach channel is preserved (height of the breach channel 6.52 → 6.46 m; 6.45 → 4.74 m
   for the single size of 10 cm). The dam body of 0.5, 2 and 8 cm, whose coarsest class also moves, erodes
   after the breach like the single size of 3 cm.
+- **Limiting the erosion to the movable size classes (`f_dbsel` = 1, 2)**: the erosion of the
+  Takahashi–Nakagawa laws (`f_dbed = 3`) is limited to the size classes the flow can move (the default 0
+  does not select grain sizes, as described above). This treatment was used for computing the sediment
+  runoff of mountain watersheds[^tinis00][^tnsk01]; it assumes that the largest particle the flow can move
+  has the same diameter as the flow depth.
+  - **Movable classes**: a cell whose flow-surface slope along the flow (the slope used for the equilibrium
+    concentration) exceeds `db_seltan` (default 0.03) is treated as the debris-flow or bedload-like
+    collective-flow regime, and the classes whose grain size is not larger than the flow depth
+    $`h + h_s`$ are movable. A cell at or below `db_seltan` is treated as the bed-load regime, and the
+    classes that exceed the critical shear stress are movable. 0.03 is the water-surface slope at which the
+    source[^tnsk01] separates the bedload-like collective flow from bed load (eqs. (11) and (12)), and the
+    source judges the grain sizes of the bed-load regime with the critical shear stress of the modified
+    Egiazaroff formula (eqs. (16) and (17)). ENCflow uses the same dimensionless shear stress and the same
+    threshold with the hiding function as its bed load ($`\tau_{*k} > \tau_{*c}\,\xi_k`$;
+    [the sediment-transport page](sediment.md#mixed-grain-sizes-f_bedmix)) with the values of that cell
+    (ENCflow's adaptation; the shear stress of the source is depth times water-surface slope and its
+    threshold depends on the slope, eq. (13)). `db_seltan = 0` applies the flow-depth criterion everywhere.
+  - **Erosion rate**: let $`K_3 = \sum_{\rm movable} F_k`$ be the sum of the fractions of the movable
+    classes in the exchange layer and $`i`$ the erosion rate of the size-blind law. `f_dbsel = 1` sets the
+    erosion rate of class $`k`$ to $`i K_3 F_k`$ (as printed in the equations of the sources: eq. (21) of
+    [^tinis00] and eq. (26) of [^tnsk01]). The rate at which the bed is lowered (the bulk erosion rate) is
+    $`i K_3^2`$. `f_dbsel = 2` uses $`i F_k`$: the erosion rate of the movable classes is the same as in
+    the size-blind law and the bulk erosion rate is $`i K_3`$. The text of the sources states that
+    "$`i K_3`$ is the bulk erosion velocity", which differs by one power of $`K_3`$ from the bulk rate
+    $`i K_3^2`$ obtained from the per-class equation; 2 is the form that matches the text. The erosion
+    rate of the immobile classes is 0 in both.
+  - **Coarsening of the surface and the end of the erosion**: the immobile classes stay on the bed and are
+    added from the substrate, with their fraction $`f_k`$ there, each time the exchange layer moves down,
+    so their surface fraction grows with the erosion depth $`\Delta`$ as
+    $`F_k = F_k(0) + f_k \Delta / L_a`$. The erosion stops when the surface consists of immobile classes
+    only (with a single immobile class the erosion depth is limited to $`(1 - F_k(0)) L_a / f_k`$). The
+    thinner the exchange layer $`L_a`$, the sooner it stops.
+  - **What is unchanged**: deposition and fluidisation (the slope-stability test and the instantaneous
+    release) do not select grain sizes. The grain size used in the laws stays `db_d50` (the sources use the
+    mean diameter of the movable coarse particles).
+  - **Limits**: (1) the flow-depth criterion treats a class as immobile in a flow shallower than its grain
+    size. The erosion by thin flows shallower than the gravel comes out small. (2) Computations in which the
+    coarsest class is about as large as the flow depth are sensitive to how the criterion is built (1 or 2,
+    `db_seltan`). (3) One update removes at most the amount of the movable classes present in the exchange
+    layer (a limit of ENCflow; the number of capped updates is reported at the end of the run). (4) The
+    results depend on the exchange-layer thickness $`L_a`$.
 - **Sediment rich in fines**: the effect of fines becoming part of the interstitial fluid and raising the
   concentration is not represented. For flows of sediment rich in fines this model errs on the low side. In
   a rough surrogate computation in which the submerged specific gravity `fluv_sgrav` was set to 1.41 and
@@ -589,7 +630,7 @@ properties as seen from the debris-flow side.
   density at 1.01 to 1.04 (a rough estimate; 1.08 to 1.25 before the peak for a dam body with a face slope
   of 0.25). The effect is large for debris flows of high concentration (debris flows in a torrent bed, or the
   start of the breach of a dam body with steep faces).
-- **Looking at the erosion after a debris flow**: while the debris-flow model is on, the erosion by the
+- **Looking at the erosion after a debris flow**: while the debris-flow model is on, by default the erosion by the
   debris-flow laws is not restrained by a surface that has become coarse (it takes the top of the column
   without selecting grain sizes, and the grain size in the laws stays `db_d50`). The same holds on gentle
   slopes for the erosion towards the equilibrium concentration (the law of the bedload-like collective
@@ -611,7 +652,9 @@ properties as seen from the debris-flow side.
   computation and the advection of one solid column per class).
 
 Verified in [test/dbmix](../../../test/dbmix/en/README.md) (the equal-size limit, conservation per class,
-the composition of fluidised and inflowing sediment, alternating runs).
+the composition of fluidised and inflowing sediment, alternating runs, and for the erosion limited to the
+movable classes with `f_dbsel` the formula for the surface fraction, the ratio of the erosion in one step and
+the two limits of the criterion).
 
 ## 4. Triggering
 
@@ -854,6 +897,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | db_immexp | 1 | exponent of (d_L/h) in the resistance of the bedload-like collective flow of the Takahashi–Nakagawa law (§2) | **method** 1: as printed in eqs. (24)(25) of the original paper[^tn91], 2: the form derived from the uniform-flow law, eq. (3), of the same paper (eq. (31) of [^tny91]) |
 | f_dbunsat / db_kunsat | 0 / 0.01 | erosion formula for an unsaturated bed / its constant K (§3; f_dbed = 3) | **method** eq. (10) of the original paper[^tn91]. **literature** K is the value applied to Horadani |
 | f_dbimm / db_deltdi | 0 / 0.1 | equilibrium concentration 6.7 c∞² and deposition formula of the bedload-like collective flow on gentle slopes / deposition coefficient δ'd (§3; f_dbed = 3) | **method** eq. (12) of [^tny91] and eq. (28) of [^tn91]. **literature** δ'd is the value applied to Horadani |
+| f_dbsel / db_seltan | 0 / 0.03 | limits the erosion by the debris-flow law to the movable size classes / flow-surface slope that separates the flow regimes ("Coupling with mixed grain sizes" in §3; f_dbed = 3 and f_bedmix = 1) | **method** 1: as printed in eq. (21) of [^tinis00] and eq. (26) of [^tnsk01], 2: the form that matches the bulk erosion velocity stated in the text of the same papers. **literature** 0.03 is the boundary between the bedload-like collective flow and bed load in [^tnsk01]. Using the shear stress and hiding function of the bed load for the bed-load regime is ENCflow's own choice |
 | f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation (1: entrainment, 2: with the groundwater computation, 3: 2 + retained water) | **method** total-volume continuity of Takahashi–Nakagawa[^tn91] (1). 2 exchanges pore water between the surface water and subsurface storage, and 3 adds the exchange of the retained water λ − sy0 (both own) |
 | db_reltime / db_relsat | 0 / 1.0 | release time / saturation of the failed mass (§4) | **given** |
 | slide_c / slide_phi / slide_gamma | 0 / 30° / 18 kN/m³ | strength constants of the stability test (§4) | **customary value** shallow-landslide values; c' = 0 is on the safe side |
@@ -896,7 +940,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/dbonset](../../../test/dbonset/en/README.md) | rest and onset of motion under the yield (uniform slope 0.9, 1.1 and 1.3 times the yield slope; slope direction 0°, 22.5° and 45°; eight and four neighbours; without and with the steep-slope gravity correction) and the safety factor of the slope-stability test (same slopes; c' = 0, no groundwater) | threshold, speed and direction independent of the direction and the stencil, within 0.4% of the analytical solution of a rigid sliding block (g cos²θ with the gravity correction); safety factor independent of the direction, within 0.1% of tanφs/tanθ |
 | [test/avalanche](../../../test/avalanche/en/README.md) | avalanche (Voellmy + velocity-proportional entrainment); a sheet released at once on a uniform slope (velocity-proportional law, Hungr's law, minimum flow depth, with and without the momentum switch) and a restart | entrained solids grow to 1.97 times the released solids and the flow stops; ledger to machine precision; velocity and flow depth on the uniform slope within 0.5 % of the solutions of the ordinary differential equations |
 | [test/vchannel](../../../test/vchannel/en/README.md) | cross-channel distribution of a Voellmy-law flow in a uniform V-channel (flow 8 cells wide; flow directions 0°, 22.5° and 45°) against the exact solution in which the velocity of each column is set by its own flow depth alone | the acceleration without friction is within 1 % of g S. The discharge is 0.90 to 0.98 times the exact solution with the default and 0.89 to 0.93 times with `f_opening_dynamic = 0` (spread of 3 % over the directions) |
-| [test/dbmix](../../../test/dbmix/en/README.md) | debris flow with mixed grain sizes (f_debris + f_bedmix): the equal-size limit, conservation per class, the composition of fluidised sediment and of sediment entering through a boundary, alternating runs | within 2e-15 m of the single-size run; balance of each class within 2e-13 m³; the fluidised composition agrees with the formula to 4e-15 |
+| [test/dbmix](../../../test/dbmix/en/README.md) | debris flow with mixed grain sizes (f_debris + f_bedmix): the equal-size limit, conservation per class, the composition of fluidised sediment and of sediment entering through a boundary, alternating runs, the erosion limited to the movable classes (f_dbsel) | within 2e-15 m of the single-size run; balance of each class within 2e-13 m³; the fluidised composition agrees with the formula to 4e-15. For f_dbsel the surface fraction of an immobile class agrees with F(0) + f Δ/L_a to 1e-13, and the erosion of one step equals K3² and K3 times that of the size-blind law within round-off |
 | [test/bedslide](../../../test/bedslide/en/README.md) | analytical speed of the layer, 45° slope, entry into a lake | $`V`$ of interior cells within 0.5% of the analytical value |
 | [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md) | rock avalanche, hand-over, submarine landslide | four patterns compared |
 | [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) | ash fall → rain → lahar, check dam | the lahar setting pattern (infiltration capacity, f_dbwet=2) |
@@ -911,6 +955,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^takahashi07]: Takahashi, T. (2007): *Debris Flow: Mechanics, Prediction and Countermeasures*. Taylor & Francis, Leiden. (equilibrium concentration, erosion-rate coefficient)
 [^tn91]: Takahashi, T. and Nakagawa, H. (1991): Prediction of stony debris flow induced by severe rainfall. *J. Jpn. Soc. Erosion Control Eng.*, 44(3), 12–19 (in Japanese). (Erosion formulas (10) and (12), deposition formulas (14), (27) and (28), resistance laws (22) to (25), and the values applied to Horadani: K = 0.01, δe = 0.0001, δd = 0.5, p = 1/3, δ'd = 0.1.)
 [^tny91]: Takahashi, T., Nakagawa, H. and Yamashiki, Y. (1991): Formation and erosion of debris fan that is composed of sediment mixtures. *Annuals, Disaster Prevention Research Institute, Kyoto University*, 34 B-2, 355–372 (in Japanese). <https://repository.kulib.kyoto-u.ac.jp/dspace/handle/2433/72336> (Derivation of the unsaturated-bed erosion formula, eqs. (8) to (11); equilibrium concentration of the bedload-like collective flow, eq. (12); the cap 0.9c*; δe = 0.0007; resistance of the bedload-like collective flow, eq. (31); continuity equation of the coarse particles, eq. (6); erosion and deposition velocities and resistance with the mean grain size over the whole flow depth d_L, eqs. (16) to (18) and (29); grain-size sorting with the flow depth divided into layers, eqs. (23) to (26).)
+[^tinis00]: Takahashi, T., Inoue, M., Nakagawa, H. and Satofuka, Y. (2000): Prediction of sediment runoff from a mountain watershed. *Annual Journal of Hydraulic Engineering, JSCE*, 44, 717–722 (in Japanese). doi:10.2208/prohe.44.717 (Erosion rate by size class: the coarse gravel of the bed is eroded only when the water depth exceeds its grain size; the ratio of movable coarse particles K3, eq. (19); "i_sb0 K3 is the bulk erosion velocity"; the erosion rate of each class i_sbk = i_sb0 K3 f_bLk C*L, eq. (21); the change of the grain-size distribution of the bed surface, eqs. (26) and (28).)
+[^tnsk01]: Takahashi, T., Nakagawa, H., Satofuka, Y. and Kawaike, K. (2001): Flood and sediment disasters triggered by 1999 rainfall in Venezuela; A river restoration plan for an alluvial fan. *Journal of Natural Disaster Science*, 23(2), 65–82. <https://jsnds.sakura.ne.jp/jnds/23_2_2.pdf> (Flow regimes by the water-surface slope, eqs. (10) to (12); critical shear stress of the modified Egiazaroff formula for the bed-load regime, eqs. (13) to (17); "in debris flow and immature debris flow types, the largest particle that can be moved has a diameter that is the same as the depth of flow" and the erosion rate of each class, eq. (26); the bulk erosion rate, eq. (31); the composition of the bed surface, eqs. (39) and (40).)
 [^tnh90]: Takahashi, T., Nakagawa, H. and Harada, T. (1990): Prediction of debris flow generated by erosion of steep well-graded sediment mixture bed. *Annuals, Disaster Prevention Research Institute, Kyoto University*, 33 B-2, 443–456 (in Japanese). <https://repository.kulib.kyoto-u.ac.jp/dspace/handle/2433/72271> (The erosion of a steep sediment bed does not select grain sizes, §1; fine particles raise the density of the interstitial fluid and thereby the equilibrium concentration, eq. (11); the division into fine and coarse particles, eqs. (12) to (18).)
 [^egashira93]: Egashira, S. (1993): Mechanism of stopping and deposition of debris flow (2). *J. Jpn. Soc. Erosion Control Eng.*, 46(2) (in Japanese). (original form of the constitutive law and yield stress of Egashira et al. 1989)
 [^voellmy55]: Voellmy, A. (1955): Über die Zerstörungskraft von Lawinen. *Schweizerische Bauzeitung*, 73, 159–165, 212–217, 246–249, 280–285.

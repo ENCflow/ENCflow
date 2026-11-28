@@ -121,6 +121,15 @@ follows from all three of these purposes.
    for the suspended load and condition (5) are unchanged (zero addition and
    bit-identical results unless the two are combined). The record of the decision is
    §139.)
+   (Addition agreed 2026-11-28: erosion by the debris-flow laws may select grain
+   sizes only through the judgement of the movable size classes by formulas from the
+   literature (the flow depth, and the critical shear stress in the bed-load regime).
+   The default does not select. Deposition and fluidisation do not select grain
+   sizes. This revises, within this scope, the part of the addition of 2026-11-27
+   that erosion keeps the composition of the bed. The single representative grain
+   size of the constitutive laws, and the exclusion of fines in the interstitial
+   fluid and of sorting inside the flow, are unchanged. The record of the decision
+   is §143.)
 7. **Unneeded processes are "not enabled" by not creating or specifying their
    configuration file** (rather than being "disabled"). The presence or absence of
    fn_* is authoritative; a flag inside a file (f_*=0) is a convenience for temporary

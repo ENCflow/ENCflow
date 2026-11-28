@@ -351,6 +351,36 @@ module subroutine init_debris(gm, p, g, list)
   end select
   gm%f_dbimm = list%f_dbimm
 
+  ! 侵食を動ける粒径階に限る(f_dbsel。混合粒径との併用の選択子。段 2c-4。developer.md §143)
+  !   高橋・井上・中川・里深 (2000) の式(19)〜(21)、高橋・中川・里深・川池 (2001) の式(26): 流れで動かせる最大の
+  !   粒子の粒径は流動深と同じとして、動ける粒径階だけを侵食する(土石流・掃流状集合流動の型)。掃流の型
+  !   (2001 年の論文は水面勾配 0.03 以下)では、限界掃流力が侵食される粒径を決める。
+  !   粒径階 k の侵食速度は、1 = 式の印字どおり i K3 F_k(K3 は動ける粒径階の表層の割合の和。かさでは i K3²)、
+  !   2 = i F_k(かさでは i K3。同じ論文の本文「i K3 がバルクの侵食速度」に合わせた形)。
+  !   型を分ける勾配 db_seltan(既定 0.03)は、パス 1 の式が平衡濃度に使うのと同じ流動面の勾配で判定する。
+  !   判定と侵食量の書き換えは m_geomorph_bedmix の debris_exchange_bmix_sel(calc_debris のパス 1 の後)
+  select case (list%f_dbsel)
+    case (0)
+      continue
+    case (1, 2)
+      if (list%f_dbed /= 3) then
+        call par_stop("list_geomorph: f_dbsel=1,2 requires f_dbed=3 (Takahashi-Nakagawa 1991)")
+      end if
+      if (list%f_bedmix /= 1) then
+        call par_stop("list_geomorph: f_dbsel=1,2 requires the mixed-size bed (f_bedmix=1)")
+      end if
+      gm%db_seltan = gm_param("db_seltan", list%db_seltan, 0.03, "", unset=-9999.0)
+      if (gm%db_seltan < 0.0) call par_stop("list_geomorph: db_seltan must be >= 0")
+      if (.not. allocated(gm%dbr%tsel)) then
+        allocate(gm%dbr%tsel(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
+      end if
+    case default
+      call par_stop("list_geomorph: f_dbsel must be 0(erosion takes the bed composition), " &
+                    // "1(only the movable grain-size classes; class rate i*K3*F_k as printed in the papers) or " &
+                    // "2(only the movable classes; class rate i*F_k)")
+  end select
+  gm%f_dbsel = list%f_dbsel
+
   ! 間隙水の連行(f_dbwet。高橋・中川1991 式(5)の源泉 i{c*+(1−c*)s_b} 形)
   select case (list%f_dbwet)
     case (0)
@@ -761,7 +791,24 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   ! --- 混合粒径との併用(§139): 交換量 fx の組成を、適用の前(s%sd・s%hs が時刻 n のまま)に、粒径階ごとの
   !     土砂柱 s%hsk と交換層・下層の間で出し入れする(パス 2 の命令列は変えない。判定は namelist 由来で
   !     全ランク同一) ---
-  if (gm%f_bedmix > 0) call debris_exchange_bmix(gm, g, s)
+  if (gm%f_bedmix > 0) then
+    if (gm%f_dbsel > 0) then
+      ! 侵食を動ける粒径階に限る(§143): 型の区分に使う流動面の勾配を、侵食するセルだけ作業面に入れてから
+      ! (パス 1 の高橋・中川の式と同じ slope_flow_surf。近傍の h・hs・z は時刻 n のまま)、写しの手続きを呼ぶ。
+      ! 侵食量 fx はそこで書き換わり、パス 2 はその値を適用する
+      !$omp parallel do schedule(static) private(i, j)
+      do j = dcp%js, dcp%je
+        do i = g%wx(1,j), g%wx(2,j)
+          gm%dbr%tsel(i,j) = 0.0
+          if (gm%dbr%fx(i,j) > 0.0) gm%dbr%tsel(i,j) = slope_flow_surf(g, s, i, j)
+        end do
+      end do
+      !$omp end parallel do
+      call debris_exchange_bmix_sel(gm, p, g, s)
+    else
+      call debris_exchange_bmix(gm, g, s)
+    end if
+  end if
 
   ! --- パス2: 適用(書き込みは自セルに閉じる) ---
   area = g%dx * g%dy

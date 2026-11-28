@@ -357,7 +357,7 @@ and the thickness of the erodible soil layer (`sd0` or `fn_sd`). The grain sizes
   class 1 of the exchange layer. Leave `susp_d50` out or set it equal to the first `bmix_d` (if left out,
   d_1 is printed with "(default)"; a different value stops the run at initialization). The other parameters
   (equilibrium concentration, settling velocity and so on) are the same as for a single grain size.
-- **Debris flow** (`f_debris = 1`): the solids of the flow are carried as one column per class. The erosion,
+- **Debris flow** (`f_debris = 1`): the solids of the flow are carried as one column per class. By default the erosion,
   deposition and fluidisation of debris flow do not select grain sizes. Erosion and fluidisation (the
   slope-stability test `f_slide` and the instantaneous release `fn_dbinit`) enter the flow with the
   composition removed from the top of the column, exchange layer first and then the substrate (not capped by
@@ -370,11 +370,16 @@ and the thickness of the erodible soil layer (`sd0` or `fn_sd`). The grain sizes
     either a constant composition `inflow_csfrac` or a composition series `fn_inflow_csfrac`
     ([Boundary conditions](boundary.md)). Without it the run stops at initialization.
   - The difference between grain sizes matters for the bed load that moves the same bed (hiding and
-    armouring) and for where the sediment carried by the debris flow ends up. The way the debris flow
+    armouring) and for where the sediment carried by the debris flow ends up. By default the way the debris flow
     itself moves and its rate of erosion do not change when a width of the grain-size distribution is given
     (what matters is `db_d50`). For the dam body of the example
     [debris_dam](../../../examples/debris_dam/en/README.md), giving a width at the same mean grain size
     leaves the peak discharge of the breach almost the same
+    ([supplement](massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
+  - The erosion of the Takahashi–Nakagawa laws (`f_dbed = 3`) can be limited to the movable size classes
+    (`f_dbsel` = 1, 2). The classes whose grain size is larger than the flow depth (on gentle slopes, the
+    classes below the critical shear stress) are not eroded; they stay on the bed, cover the surface and
+    restrain the erosion. In thin flows shallower than the grain size the erosion is underestimated
     ([supplement](massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
   - The accumulation of boulders at the front (grain-size sorting inside the flow) and the effect of fines
     becoming part of the interstitial fluid and raising the concentration are not represented. It cannot be
@@ -652,6 +657,7 @@ debris flows, where the effective gravity is what acts; developer.md §93).
 | f_dbunsat / db_kunsat | 0 / 0.01 | Erosion formula for an unsaturated bed (used with f_dbed=3). With 1, the erosion of cells whose bed is unsaturated uses the unsaturated-bed erosion formula of Takahashi and Nakagawa (1991) (constant K = db_kunsat). The bed is judged saturated by whether the subsurface storage has reached its capacity (with the groundwater computation) or by whether db_satbed is 1 (without it) ([explanation](massflow.md#3-erosion-and-deposition-laws-f_dbed)) |
 | f_dbimm / db_deltdi | 0 / 0.1 | Bedload-like collective flow on gentle slopes (used with f_dbed=3). With 1, the equilibrium concentration on gentle slopes (about 8° or less for φ = 35°) becomes 6.7 c∞², and the deposition of flows with concentrations of 0.4C* or less uses the formula of the bedload-like collective flow (coefficient δ'd = db_deltdi). The default 0 uses the stony-type formulas at all slopes and overestimates erosion on gentle slopes ([explanation](massflow.md#3-erosion-and-deposition-laws-f_dbed)) |
 | db_immexp | 1 | Exponent of (d_L/h) in the resistance of the bedload-like collective flow (concentration 0.4C* or less) of f_dbres=3. 1: as printed in the equations of the original paper, 2: the form derived from the uniform-flow law of the same paper (smaller resistance for flows much deeper than the grain size; [explanation](massflow.md#2-resistance-laws-f_dbres)) |
+| f_dbsel / db_seltan | 0 / 0.03 | Limits the erosion by the debris-flow law to the movable size classes (used with f_dbed=3 and the mixed-size bed f_bedmix=1). With 1 or 2, only the movable classes are eroded. With K3 the sum of the fractions of the movable classes in the exchange layer, 1 multiplies the erosion rate of each class by K3 (as printed in the equations of the original papers; the bulk erosion rate is multiplied by K3²), and 2 leaves the erosion rate of each class unchanged (the bulk erosion rate is multiplied by K3; the form that matches the statement in the text of the same papers). A class is movable when its grain size is not larger than the flow depth in cells whose flow-surface slope exceeds db_seltan, and when it exceeds the critical shear stress (the shear stress and hiding function of the bed load) in cells at or below db_seltan. The default 0 does not select grain sizes and erodes the bed with its composition. Deposition and fluidisation do not select grain sizes. In thin flows shallower than the grain size the erosion is underestimated ([explanation](massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)) |
 
 The minimal input to "just run a debris flow" is `f_debris = 1` + `sd0`
 (the movable layer = erodible soil) + a source. The source is one of:

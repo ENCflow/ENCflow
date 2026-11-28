@@ -2,8 +2,8 @@
 # dbmix: 土石流(f_debris)と混合粒径(f_bedmix)の併用の検定(逐次実行。developer.md §139)
 #   ./Run.sh
 # 合否は Check_dbmix.py + 初期化で止まる構成(流入土砂の組成のない bstop1、土石流なしに組成だけを与えた
-# bstop2)+ リスタート往復(rt1 → rt2 と w3 の最終の保存の cmp)。交互計算(alt2・alt3)は rt1 の保存
-# (流れに土砂が残る)の写しから、土石流のない構成で復元する。
+# bstop2、f_dbsel に前提の欠けた selstop1・selstop2)+ リスタート往復(rt1 → rt2 と w3 の最終の保存の cmp)。
+# 交互計算(alt2・alt3)は rt1 の保存(流れに土砂が残る)の写しから、土石流のない構成で復元する。
 # save_* は save_*_serial にも複製する(Run_MPI.sh のバイト比較用)
 
 sdir=$(dirname "$(readlink -f "$0")")
@@ -26,8 +26,10 @@ set +o pipefail
 echo ""
 
 rc=0
-# 境界から入る土砂の組成は与件(既定を置かない)。組成だけを土石流なしで与えても止まる
-for st in "bstop1:needs its composition (inflow_csfrac)" "bstop2:require the mixed-size bed with debris flow"; do
+# 境界から入る土砂の組成は与件(既定を置かない)。組成だけを土石流なしで与えても止まる。侵食を動ける粒径階に
+# 限る f_dbsel = 1・2 は、高橋・中川則(f_dbed = 3)と混合粒径(f_bedmix = 1)の両方が要る
+for st in "bstop1:needs its composition (inflow_csfrac)" "bstop2:require the mixed-size bed with debris flow" \
+          "selstop1:f_dbsel=1,2 requires f_dbed=3" "selstop2:f_dbsel=1,2 requires the mixed-size bed"; do
     c=${st%%:*}; msgp=${st#*:}
     if ./encflow p_$c.txt > screen_$c.log 2>&1; then
         echo "FAIL: $c did not stop" >&2

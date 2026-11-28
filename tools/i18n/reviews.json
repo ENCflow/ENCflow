@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "cfa73b2121a64bcd619157db58c591cc0708c31155030774a905f1a832f82c7f",
-      "target_sha256": "dc535b018e7c505603f70a73b423a2a31c32088e992044bac3fce58fa93ad2ac",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
+      "source_sha256": "b0721ae3b6e2ab935954d464a7f39bf4a9d88811cf6c3449f148b3a1c9bd8fdf",
+      "target_sha256": "b9b7e51fdfc8a0b14d60478e5366466b341a6f1d73f73af6ee590f1012af4006",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/developer.md",
@@ -95,11 +95,11 @@
     {
       "source": "docs/policy.md",
       "target": "docs/en/policy.md",
-      "source_sha256": "25692c68042f8a44166237e29444f5eed2c09d96a03c342a728a8c2509c5d458",
-      "target_sha256": "8db287e3e28a8a4c4a3f592c420db4307aef22bb8567ffe117a84026e540d4a0",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
+      "source_sha256": "2d768409c80d3027c2e208692eedf40e4715ddf691de4cc9e5fbe29a7d41116d",
+      "target_sha256": "6dd0888a3fddad413c17df9fa6c7d9cb8ba6f072776022127e2e100280c4156d",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/tutorial.md",
@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "77aa8f3301d40b9d83188ba28ccbe5b857bad80f790f1dd2cbbb14280309f719",
-      "target_sha256": "e35030c0edfb43d206dddad2d02fa10b949eacee987a2eec6d02282b0d3a2c41",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
+      "source_sha256": "fb4446d5393c755ab08877fa0158b7496244ac60afa78406e4edb6ed673827e7",
+      "target_sha256": "faa9bac799fe2b2f5524ec4790161401a737a1385059472456c27a836289d896",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -311,11 +311,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "aab0bcda8f0c11a47df8b562ac6e17570ff113a1b121fc8f8af662cccc67548d",
-      "target_sha256": "05703a56fede7d25a9c309243fd2bb5b0977617ed03f10a2c2e582e4769c64a4",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
+      "source_sha256": "5384ccefc2572173114bc8b0f12e4233d2e392dce73657e2607bfa58cb59dadc",
+      "target_sha256": "dd3103413041850ebc4fb5e9a7905eebc15e7a7576e6e28e4bcf62c881498532",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
@@ -392,11 +392,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "a82a1f8143471503cb769015def275dbaa59e21e94c6560bcb287108c240e0e2",
-      "target_sha256": "e463444d3c3fa403061f6c92d172c7de90a8c1f70c0e80082145dd4c9ca8c86c",
-      "reviewer": "Claude (Claude Code session; section on coupling with mixed grain sizes: additions on the example debris_dam (second material pair, runs after the breach, rough estimate of the effect of fines) written in both languages in the same work and compared side by side)",
+      "source_sha256": "737bcd7b6d9593fc660bfb6457c6ae0d3daabfe05ccd0e15b84c29f0b628b3e1",
+      "target_sha256": "8761f88b057a57d8a73cd97ec1c3ac43ea83ccf6139d8bd6c43818264a5f7059",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -446,11 +446,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "12681f4ff4c5ca11332e944969579a29c702ab88212cd9cf59bcce14bbed30ab",
-      "target_sha256": "aba3fb74c2fda38e22d89b25d0bae60430d6dbaa8b1f0bf7eef72190cfba64c2",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
+      "source_sha256": "620f4bcff137fd12c24161fd1476d3a87a01cc94de3fbaa096b1836e4f3a2b9d",
+      "target_sha256": "d2fc09bc1e79e5a2590cc5dfea8bf93f72966e325459669681e28f8fd9e8a2b4",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -491,11 +491,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "d0420905644b416036227d709cb77f446339e3884add76db9dbf76f225c29916",
-      "target_sha256": "9c86d551f980db6b858f0187137d1bdfa7c3e18aca51e4fb659fc25de673a115",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
+      "source_sha256": "f9bcace201f9443f64751819bed7cfc628a33da06d79f0f19140dd1200cf7e90",
+      "target_sha256": "4664782c50f4ba593bab84dd1d5e6992bf6d73d581f909ad8fcd58ea2729f9af",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/sfm.md",
@@ -725,11 +725,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "2b76e8108cb5164f27d0fc9ca73c432b9d763dc0e96c32d9a4bdea14e7a6e515",
-      "target_sha256": "3f0711e5fc27ee6647ab40547462dccc9bd163eafe0ae218669f4e506c367283",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
+      "source_sha256": "24c7d684264703c33eca7fcbc1e40315bbaf5afa9d339d004939fbfd28072a31",
+      "target_sha256": "9019a5d22836852d3ebdc1e9614ebf6321d8362073dbf309bc1c1f37ca929813",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -4343,9 +4343,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "72520f33599ee938611bb32b1afcb8b688697b6653e59ac91f75c7d73737fe58",
-      "target_sha256": "5aa27bcf8e61feb180c6d27b517c0f3f4daf9dab4a508980d9f46d854ce7ab0f",
-      "reviewer": "Claude (Claude Code session; fix of the overflow of the Takahashi-Nakagawa deposition formula at a subnormal concentration: the description of the regression configuration tkb3 was written in Japanese and English in the same session, and the two texts were compared)",
+      "source_sha256": "f1f2ccb1f2c6002e413ef41300e3535a9c369fa5cac5b6654e65c58fbf6488c7",
+      "target_sha256": "a7046ea5958c985e4160ab8cc0dbb36c4ba990abe7965d440401bb402fe48709",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -4811,9 +4811,9 @@
     {
       "source": "test/dbmix/README.md",
       "target": "test/dbmix/en/README.md",
-      "source_sha256": "f52854d60fae9738a8070d9b4cfd0d360d0197afd30816011f309a26bf19e754",
-      "target_sha256": "ef0f58d648fd8191678720e182397b0ddb1668d4fc6db3fdaffb1d47ff7260c7",
-      "reviewer": "Claude (Claude Code session; fix of the overflow of the Takahashi-Nakagawa deposition formula at a subnormal concentration: the description of the regression configuration tkb3 was written in Japanese and English in the same session, and the two texts were compared)",
+      "source_sha256": "49dcbe121370c5aa403f1f861a45ae4c9a10d754649fe0106b844d0a75779984",
+      "target_sha256": "1cf016c10f129670c5fc3ebd2d0060a12aa0f1ef46d009cb9d7ad1149c808483",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
