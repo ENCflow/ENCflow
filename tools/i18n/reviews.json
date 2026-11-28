@@ -923,9 +923,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "247833f9a57d2d212cb11a6b61dd61867d6d6f9c4effd07564e6036dcd2e6c4f",
-      "target_sha256": "9cbc62adcb95380eb067ac5f557e4314cf952eda99549be88901f42da165fd28",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "7d7adb02883d89822ebb118ff31909bb2963eedeb8a6aca6a80dc17e39c9dfbc",
+      "target_sha256": "9fedcdba913c656a4fc6c596253ad102625cc8a1cffcb5d2eb6341d53a2d70a3",
+      "reviewer": "Claude (Claude Code session; two long rows (debris_dam, debris_fan_flume) shortened and a note on where the details are, developer.md §35.7; both sides compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
