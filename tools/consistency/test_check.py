@@ -215,5 +215,136 @@ class TestsTest(unittest.TestCase):
         self.assertTrue(any("a/ says ref but has no reference/" in e for e in errors))
 
 
+CI_YML = """\
+jobs:
+  serial:
+    steps:
+      - run: |
+          for c in a b; do
+            (cd "test/$c" && ./Run.sh)
+          done
+  mpi:
+    steps:
+      - run: |
+          for c in a; do
+            (cd "test/$c" && ./Run_MPI.sh 2)
+          done
+"""
+
+NIGHTLY_YML = """\
+env:
+  REF_CASES: c
+  VERIFY_CASES: d
+  VERIFY_MPI_CASES: d
+jobs:
+  full:
+    steps:
+      - run: |
+          for c in $REF_CASES; do
+            (cd "test/$c" && ./Run.sh)
+          done
+"""
+
+RUN_A = """\
+#!/bin/bash
+# 合否は Check_a.py。図は Fig.py で描く(CI では回さない)
+sdir=$(dirname "$(readlink -f "$0")")
+python3 "$sdir/make_a.py" || exit 1
+cat > p.txt <<EOF
+  fn_plot = 'plot.py'
+EOF
+python3 "$sdir/Check_a.py" || rc=1   # 判定 (Fig.py は使わない)
+"""
+
+
+def imports_repo(files=None):
+    root = Path(tempfile.mkdtemp())
+    write(root, ".github/workflows/ci.yml", CI_YML)
+    write(root, ".github/workflows/nightly.yml", NIGHTLY_YML)
+    base = {
+        "test/a/Run.sh": RUN_A,
+        "test/a/Run_MPI.sh": 'python3 ../Scripts/common.py\n',
+        "test/a/make_a.py": "import math, os\nimport helper_a\n",
+        "test/a/helper_a.py": "import json\nfrom collections import Counter\n",
+        "test/a/Check_a.py": "import sys\nimport helper_a\n",
+        "test/a/Fig.py": "import matplotlib.pyplot as plt\n",
+        "test/a/plot.py": "import numpy\n",
+        "test/Scripts/common.py": "import subprocess\n",
+        "test/b/Run.sh": 'python3 Check_b.py\n',
+        "test/b/Check_b.py": "import re\n",
+        "test/c/Run.sh": 'python3 -c "import sys; sys.path.insert(0, \'.\'); import mod_c" || exit 1\n',
+        "test/c/mod_c.py": "import pathlib\n",
+        "test/d/Run.sh": "python3 - <<'PY' || rc=1\nimport sys\nPY\n",
+        "test/d/Run_MPI.sh": "echo d\n",
+    }
+    base.update(files or {})
+    for name, body in base.items():
+        if body is not None:
+            write(root, name, body)
+    return root
+
+
+class ImportsTest(unittest.TestCase):
+    def test_clean(self):
+        errors, notes = check.check_imports(imports_repo())
+        self.assertEqual(errors, [])
+        # make_a・helper_a・Check_a・common・Check_b・c の -c・mod_c・d のヒアドキュメント(Fig.py・plot.py は数えない)
+        self.assertTrue(any("8 Python source(s) run by 4 CI/nightly case(s)" in n for n in notes))
+
+    def test_case_lists(self):
+        self.assertEqual(check.ci_cases(imports_repo()), ["a", "b", "c", "d"])
+
+    def test_third_party_in_script_and_local_module(self):
+        errors, _ = check.check_imports(imports_repo({
+            "test/b/Check_b.py": "import re\nimport numpy as np\n",
+            "test/a/helper_a.py": "import json\nfrom matplotlib import pyplot\n",
+        }))
+        self.assertEqual(len(errors), 2)
+        self.assertTrue(any(e.startswith("test/b/Check_b.py:2: imports numpy") for e in errors))
+        self.assertTrue(any(e.startswith("test/a/helper_a.py:2: imports matplotlib") for e in errors))
+
+    def test_inline_and_heredoc_code(self):
+        errors, _ = check.check_imports(imports_repo({
+            "test/c/Run.sh": 'python3 -c "import scipy.stats"\n',
+            "test/d/Run.sh": "python3 - <<'PY' || rc=1\nimport sys\nimport pandas\nPY\n",
+        }))
+        self.assertEqual(len(errors), 2)
+        self.assertTrue(any("test/c/Run.sh:1 (python3 -c), line 1: imports scipy" in e for e in errors))
+        self.assertTrue(any("test/d/Run.sh:1 (heredoc), line 2: imports pandas" in e for e in errors))
+
+    def test_guarded_and_relative_imports(self):
+        body = ("try:\n    import numpy\nexcept ImportError:\n    numpy = None\n"
+                "try:\n    import yaml\nexcept (ValueError, ModuleNotFoundError):\n    yaml = None\n"
+                "from . import sibling\n"
+                "try:\n    import toml\nexcept ValueError:\n    pass\n")
+        errors, _ = check.check_imports(imports_repo({"test/b/Check_b.py": body}))
+        self.assertEqual(errors, ["test/b/Check_b.py:11: imports toml, which is not in the Python standard library "
+                                  "(the CI and nightly runners have no numpy etc.; developer.md §10)"])
+
+    def test_missing_case_and_syntax_error(self):
+        root = imports_repo({"test/d/Run.sh": None, "test/d/Run_MPI.sh": None})
+        (root / "test" / "d").mkdir(parents=True, exist_ok=True)
+        errors, _ = check.check_imports(root)
+        self.assertEqual(errors, [])    # 実行するスクリプトがないケースは調べるものがない
+        root = imports_repo({"test/b/Check_b.py": "def f(:\n"})
+        (root / "test" / "c" / "Run.sh").unlink()
+        (root / "test" / "c" / "mod_c.py").unlink()
+        (root / "test" / "c").rmdir()
+        errors, _ = check.check_imports(root)
+        self.assertTrue(any("test/c/: listed in the CI or nightly case lists but does not exist" in e for e in errors))
+        self.assertTrue(any(e.startswith("test/b/Check_b.py: cannot parse as Python") for e in errors))
+
+    def test_old_python_is_skipped(self):
+        with mock.patch.object(check.sys, "stdlib_module_names", None, create=True):
+            errors, notes = check.check_imports(imports_repo({"test/b/Check_b.py": "import numpy\n"}))
+        self.assertEqual(errors, [])
+        self.assertTrue(any("skipped" in n for n in notes))
+
+    def test_shell_comment(self):
+        self.assertEqual(check.strip_shell_comment('echo "a # b" # c'), 'echo "a # b" ')
+        self.assertEqual(check.strip_shell_comment("echo $# x"), "echo $# x")
+        self.assertEqual(check.strip_shell_comment("# x.py"), "")
+
+
 if __name__ == "__main__":
     unittest.main()

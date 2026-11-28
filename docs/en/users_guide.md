@@ -2,24 +2,26 @@
 
 # ENCflow User's Guide
 
-This is the reference for configuring and running ENCflow. If you are
-new to ENCflow, we recommend running it once through the
-[tutorial](tutorial.md) before coming back here (its "Learning path"
-says what to read in which order). This page (Part I) explains the
-overall structure of ENCflow and the conventions of its input;
-individual topics are split into per-chapter pages. The chapter pages
-give priority to "getting a run going casually": read them in the order
-"overview → just try it (minimal input) → recommended values by pattern
-→ the sections you need". Theory, equations, the basis of the defaults
-and detailed settings are in the explanation pages that hang under each
-chapter (the "... explained" entries and others listed when you open
-"Explanations" under each chapter in the table of contents).
-There is no need to read every field; the chapters of the fields you
-are interested in are enough.
+This is the reference for looking up how to configure and run ENCflow.
 
-See the [test catalogue](../../test/README.en.md) for checks and execution
-procedures, and the [examples catalogue](../../examples/README.en.md) for
-phenomenon-specific setups. Individual chapters also link to relevant cases.
+**If you are new to ENCflow, run it once through the [tutorial](tutorial.md) first, and then come back here.**
+The tutorial's "Learning path" says what to read in which order.
+
+You do not need to read everything. The chapters of the fields you are interested in are enough.
+
+This guide has three kinds of pages.
+
+- **This page** (Part I): the overall structure of ENCflow and the rules for writing input.
+  **We ask everyone to read this page.**
+- **Chapter pages**: one page per topic, written so that you can get a run going casually first.
+  Read them in the order "overview" → "just try it" → "recommended values by pattern" → the sections
+  you need, and you can run it. "Just try it" gives the minimal input.
+- **Explanation pages**: theory, equations, the basis of the defaults and detailed settings.
+  Open "▸ Explanations" under a chapter in the table of contents to see pages such as "... explained".
+
+The checks and how to run them are in the [test catalogue](../../test/README.en.md), and setups by
+phenomenon are in the [examples catalogue](../../examples/README.en.md). Each chapter also links to the
+related checks and examples.
 
 ## Table of contents
 
@@ -37,7 +39,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
   - [Time-step design policy](users_guide/timestep_policy.md) -- why mainly explicit with a fixed step, relation to variable steps and sub-cycling, solving the equations accurately vs reproducing the phenomenon (supplement to time management; intermediate to advanced)
   </details>
 - [Coordinate systems](users_guide/coordinates.md) -- absolute vs. local coordinates, EPSG, geographic (lat-lon) grids
-- [Input and output formats](users_guide/io.md) -- text / bil / GeoTIFF, output file organization
+- [Input and output formats](users_guide/io.md) -- output locations and file names, text / bil / GeoTIFF, output file organization
 - [Writing user routines](users_guide/user_routines.md) — giving topography and initial conditions in code (procedure, index contract, pitfalls)
 - [Suspend and restart](users_guide/restart.md) -- state files, time continuation, use as initial conditions
 - [Nesting (multi-level grids)](users_guide/nest.md) (fn_nest, &list_nest) -- child grids solved inside a parent grid in the same run (multi-level, two-way, Flather radiation, non-hydrostatic band) <details><summary>Explanations (1)</summary>

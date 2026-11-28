@@ -1,5 +1,5 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   毎 push で、reference を持つ 14 ケースと、実行時間の短い検定型の 16 ケースを回す(逐次 30 ケース、うち 27 ケースは
+#   毎 push で、reference を持つ 14 ケースと、実行時間の短い検定型の 16 ケースを回す(逐次 30 ケース、うち 29 ケースは
 #   MPI np=2 でも)。chichibu は実行時間の都合で対象外(ローカルで test/chichibu/Run.sh を実行すること)。test/paddy も
 #   実行時間の都合で、夜間の nightly.yml だけで回す(developer.md §127.16)。実行時間の長い検定型の 5 ケース
 #   (tjunction・stairbank・vchannel・bldgdrag・driftwood。ランナーで 1 本 2〜6 分)は、夜間の nightly.yml の
@@ -40,13 +40,14 @@
 #   いる計算・解像した堤防の計算と変わらないことの検定(移流項が壁の向こうのセルを、濡れていても供給元・平行リンク・
 #   開口に数えない。軸に沿う直線の河道と 45° の階段の河道、移流項の規則の組み合わせ 3 つとスキーム 1。海岸堤防は
 #   開口の動的な振り替えで壁の向こうを塞がっていると数えることも見る。developer.md §134・§134.9)。
-#   逐次のジョブだけで回す(ランナーで約 30 秒。MPI のジョブに足すかは handoff 00ao。手元の np = 2・4 は合格し、
-#   湛水の 7 ケースは 1 ランクとバイト一致する)
+#   逐次と MPI の両方で回す(逐次はランナーで約 30 秒、MPI は約 1 分。MPI のジョブは湛水の 7 ケースを 2 ランクと
+#   1 ランクで回して Log・水位・水深をバイト比較する。帯の境が河道と堤防を横切る。MPI は 2026-11-28 に足した。
+#   developer.md §10)
 #   sliver は、幅 0.01 m のサブグリッド河道のセル(占有率の細片)を河道に添えても、河道の水位が添えない計算と
 #   変わらないことの検定(開口の動的な振り替えと通水率で、幅の極端に狭いセルを計算の外と同じに数える。45° の
-#   1 列に 1 セルの河道と格子に沿う 2 行の河道。developer.md §137)。逐次のジョブだけで回す(ランナーで数秒。
-#   MPI のジョブに足すかは wallpond と同じく handoff 00ao。手元の np = 2・4 は合格し、細片を添えた 2 ケースは
-#   1 ランクとバイト一致する)
+#   1 列に 1 セルの河道と格子に沿う 2 行の河道。developer.md §137)。逐次と MPI の両方で回す(ランナーで数秒。
+#   MPI のジョブは細片を添えた 2 ケースを 2 ランクと 1 ランクで回して Log・水位・水深をバイト比較する。帯の境が
+#   河道と細片を横切る。MPI は 2026-11-28 に足した。developer.md §10)
 #   フル回帰・MPI np=1,2,4・-fcheck=all・BMI 適合性と、上の実行時間の長い検定型の 5 ケースは、夜間の nightly.yml で回す
 name: CI
 
@@ -93,7 +94,7 @@ jobs:
         run: |
           set -e
           export OMP_NUM_THREADS=1
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade stageside bankhalo damops; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade stageside bankhalo wallpond sliver damops; do
             echo "===== test/$c (np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done

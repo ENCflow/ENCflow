@@ -13,11 +13,11 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "b1d27971c2cf3db33d7c98e72ff6382f3b49276ae58f06eeaa8a29f472a4265d",
-      "target_sha256": "cabb20ec0e561b48b9b424b0c3445c5ee428e1983e856d0883e1d3886776c47a",
-      "reviewer": "Claude (Claude Code session; links to the project policy changed from developer.md §0 and its partial mirror to docs/policy.md / docs/en/policy.md, and developer.md described as the index of the records; both files compared)",
+      "source_sha256": "70bef17d0bce12d1fe3b941924cd03cac7b41de1c02d725b6b88efb78a467a7b",
+      "target_sha256": "a9e8b595e4e11cf4f779c788d68ed976901d8510b1196cbb077d30c623d97245",
+      "reviewer": "Claude (Claude Code session; \"Sustainability as a project\": the documents reordered to the overall map, then the reasons for each design decision; both bullets compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "TRADEMARKS.md",
@@ -95,9 +95,9 @@
     {
       "source": "docs/policy.md",
       "target": "docs/en/policy.md",
-      "source_sha256": "2d768409c80d3027c2e208692eedf40e4715ddf691de4cc9e5fbe29a7d41116d",
-      "target_sha256": "6dd0888a3fddad413c17df9fa6c7d9cb8ba6f072776022127e2e100280c4156d",
-      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
+      "source_sha256": "426f95e03092e9024d514b982b14be9dc8c1b14fbbde9198e4b2a3a58c31f81f",
+      "target_sha256": "dc3e675e1dcdbf4a59ec3e9a4844faa0fa82f1ddbed729053843bf1a885c5e13",
+      "reviewer": "Claude (Claude Code session; merge of main: the two agreed additions to the exception to policy 6 (2026-11-27, 11-28) moved into the reorganised structure in both languages and compared; the rest is main's reviewed text)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "fb4446d5393c755ab08877fa0158b7496244ac60afa78406e4edb6ed673827e7",
-      "target_sha256": "faa9bac799fe2b2f5524ec4790161401a737a1385059472456c27a836289d896",
-      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
+      "source_sha256": "7239d86467ce07ae322ca0c632eaf37f1cb470d8c0872edaf89150a576107ca9",
+      "target_sha256": "b9739432e4df5cc3c680266291324c52fc6387be1ab5c88f4d09b87d1d7e3f50",
+      "reviewer": "Claude (Claude Code session; merge of main: main's reviewed text with the parameter count 871 -> 875 in both languages)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -374,11 +374,11 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "66d4624e88cbd9a467d6bb8d3611268b7977608b430874c756713a7446dc574f",
-      "target_sha256": "2881f6dfb9f2bcd835c6f0b4c805aea5c4c0473e0af2fa1500eb50ec88288d96",
-      "reviewer": "Claude (Claude Code session; merge of main and the paddy-dam branch: both sides changes present in both files, parameter count 862 checked, no model execution)",
+      "source_sha256": "04bd81975b1c13b30dd95fc7fb39a6e9c08cc17ad40ae12c63c2b140ac41671a",
+      "target_sha256": "3dca2e951c0583102ef637071f74150c0aaa689e9ff0d3f6b991a8bb0c94a56e",
+      "reviewer": "Claude (Claude Code session; the section \"Adjusting directories and file names\" moved to the top, one sentence added to the introduction; both sides compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/lavaflow.md",
@@ -581,11 +581,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "0b248a81ec81938c4a12f6439f290fdd4361de1bda13cba2e81aca1c92384d28",
-      "target_sha256": "32b6745541ba6d7e98d34b9d83762ef245325eee620143d87ce052ac805a580c",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "728dabca6150982f834ea68a3c26a8dce17c91642429012997a6f7e1cd6bb311",
+      "target_sha256": "97dfea10dde89fe5aae90d34efc27e8212a8c7fcc52978543c40469903acb429",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/user_routines.md",
