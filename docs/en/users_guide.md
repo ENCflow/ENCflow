@@ -12,6 +12,7 @@ You do not need to read everything. The chapters of the fields you are intereste
 This guide has three kinds of pages.
 
 - **This page** (Part I): the overall structure of ENCflow and the rules for writing input.
+  **We ask everyone to read this page.**
 - **Chapter pages**: one page per topic, written so that you can get a run going casually first.
   Read them in the order "overview" → "just try it" → "recommended values by pattern" → the sections
   you need, and you can run it. "Just try it" gives the minimal input.
