@@ -673,8 +673,12 @@ module subroutine calc_debris(gm, p, g, s, dtw)
               ! 堆積(式(27): δd・(1−V/(p・vc))⁴・(C∞−C)/C*・q_T/d_L。
               ! vc は限界速度(式(15))、tanθc は限界勾配(式(16))。
               ! 慣性係数が負(V ≥ p・vc)の間は堆積しない(慣性走行)
+              ! 濃度が非正規化数(< tiny)のときは 0 と同じに扱う(堆積しない)。下の C*/C が C < C*/huge
+              ! (3.3e-309)でオーバーフローするため。-Ofast のビルドは非正規化数を 0 に落とすので起きないが、
+              ! 非正規化数を残すビルド(-Og -fcheck=all)では、侵食されない河床(濡れた基盤など)の上を進む
+              ! 流れの先端の、ごく小さい土砂の柱の濃度で止まった(developer.md §142)
               fx = 0.0
-              if (cc > 0.0) then
+              if (cc >= tiny(cc)) then
                 tanthc = gm%sgrav * cc / (gm%sgrav * cc + 1.0) * gm%db_tanphi
                 sinthc = tanthc / sqrt(1.0 + tanthc**2)
                 vcr = 0.4 / gm%db_d50v &

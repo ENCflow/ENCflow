@@ -3,7 +3,7 @@
 #   地形: 転置した遷緩点つき斜面 20 × 60 セル(Δx = 1 m)。流れは j 方向(南向き)で、MPI の帯の界面を
 #   横切る。y < YB で tanθ = ST、それより下流は平坦(z = 0)。雛形 b(境界から入る土石流)だけは、下流を
 #   勾配 SB の緩い斜面にして南辺の自由流出まで流す(z_out.txt。遷緩点で一部が積もり、残りは流れ出る)。
-#   python3 make_init.py        入力(z_slope.txt・z_out.txt・sd_rel.txt・sd_zero.txt・sd_film.txt・dbinit.txt・
+#   python3 make_init.py        入力(z_slope.txt・z_out.txt・sd_rel.txt・sd_zero.txt・sd_slope.txt・sd_film.txt・dbinit.txt・
 #                               dbinit_half.txt・dbinit_film.txt・csfrac.txt)と、
 #                               雛形 param_e.txt・param_r.txt・param_s.txt・param_b.txt から作る構成の設定
 #                               p_<構成>.txt を書く(雛形の行を差し替える。差し替えた行には注釈を付ける)
@@ -18,6 +18,7 @@ SB = 0.1                         # 雛形 b の下流の勾配(z_out.txt)
 RI1, RI2, RJ1, RJ2 = 5, 16, 5, 16
 SD_REL = 1.0                     # 崩壊域の土層厚 (m)
 D_HALF = 0.5                     # 構成 rp3 の崩壊深 (m。土層の上半分)
+SD_SLOPE = 0.3                   # 構成 tkb3 の斜面の土層厚 (m。雛形 e の一様な土層厚と同じ)
 # 構成 film3 の、倍精度の下限に近い厚さの膜(正規化数の下限は 2.225e-308)。膜の半分を流動化すると、もとの厚さ・
 # 残る厚さ(2.3e-308 m。正規化数)と割合(0.6 以下)の積が、どれも正規化数より小さくなる
 SD_FILM, D_FILM = 4.6e-308, 2.3e-308
@@ -59,6 +60,9 @@ def write_inputs():
     with open("sd_zero.txt", "w") as f:                 # 雛形 b: 土層なし(基盤)
         for j in range(1, NY + 1):
             f.write(" ".join("0.0" for i in range(NX)) + "\n")
+    with open("sd_slope.txt", "w") as f:                # 構成 tkb3: 土層は斜面(y < YB)だけ、平坦部は基盤
+        for j in range(1, NY + 1):
+            f.write(" ".join("%.3f" % (SD_SLOPE if (j - 0.5) * DX < YB else 0.0) for i in range(NX)) + "\n")
     with open("csfrac.txt", "w") as f:
         for row in CSFRAC:
             f.write(" ".join("%.10g" % v for v in row) + "\n")
@@ -79,6 +83,10 @@ CASES = {
     "m3": ("e", dict(LABEL)),                                            # 等粒径・札つき・MUSCL(e1 との差は制限関数の水準)
     "w3": ("e", dict(WIDE)),                                             # 粒度の幅(粒径階ごとの保存)
     "tk3": ("e", dict(WIDE, f_dbed="3", f_dbres="3", db_d50="0.01", db_delte="0.005", db_deltd="0.5")),  # 高橋・中川則
+    # tk3 の土層を斜面だけにする(平坦部は基盤)。雨で全域が濡れているので、流れの先端が、侵食できない濡れた基盤の
+    # 上を進む(developer.md §142 の不具合の再発防止)
+    "tkb3": ("e", dict(WIDE, f_dbed="3", f_dbres="3", db_d50="0.01", db_delte="0.005", db_deltd="0.5",
+                       **{"list_geoinfo:f_sdtype": "1", "list_geoinfo:fn_sd": "'sd_slope.txt'"})),
     "rt1": ("e", dict(WIDE, tt="24", dt_disp="24")),                     # w3 の 24 s まで(保存。流れに土砂がある)
     "rt2": ("e", dict(WIDE, f_state_restore="1")),                       # rt1 の保存から再開(w3 と最終の保存がビット一致)
     # 交互計算: rt1 の保存(流れに土砂が残る)を、土石流のない混合粒径の構成に復元する
@@ -104,7 +112,7 @@ CASES = {
     "bstop2": ("b", dict(EQ, bmix_frac0="0.3, 0.4, 0.3", f_debris="0",
                          **{"list_bound_inflow:inflow_csfrac(:,1)": "0.2, 0.3, 0.5"})),   # 土石流なしに組成だけ
 }
-RUN = ["e1", "e3", "u1", "u3", "m3", "w3", "tk3", "r1", "r3", "rp3", "film3", "s3", "b3", "bt3"]   # 通しで回す構成
+RUN = ["e1", "e3", "u1", "u3", "m3", "w3", "tk3", "tkb3", "r1", "r3", "rp3", "film3", "s3", "b3", "bt3"]   # 通しで回す構成
 STOP = ["bstop1", "bstop2"]
 
 

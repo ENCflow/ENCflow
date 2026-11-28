@@ -4343,11 +4343,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "f25900cdb2e3f987fafc26bfe463448e6b4b2ce2af662574c17c564b898adaca",
-      "target_sha256": "d534b94fca1f17733876f41700d2d249ba13f11db7167697a49f80c2f4d7e6f9",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
+      "source_sha256": "72520f33599ee938611bb32b1afcb8b688697b6653e59ac91f75c7d73737fe58",
+      "target_sha256": "5aa27bcf8e61feb180c6d27b517c0f3f4daf9dab4a508980d9f46d854ce7ab0f",
+      "reviewer": "Claude (Claude Code session; fix of the overflow of the Takahashi-Nakagawa deposition formula at a subnormal concentration: the description of the regression configuration tkb3 was written in Japanese and English in the same session, and the two texts were compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "test/avalanche/README.md",
@@ -4811,11 +4811,11 @@
     {
       "source": "test/dbmix/README.md",
       "target": "test/dbmix/en/README.md",
-      "source_sha256": "0dd7ad18ef18f6cc861984fe22a871f8a6f737723b37f84fdc04916b6ae33e83",
-      "target_sha256": "badf172b34f70792a2e58a9c872190418ec9913b6b58195b6e1c58b8e55b807f",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
+      "source_sha256": "f52854d60fae9738a8070d9b4cfd0d360d0197afd30816011f309a26bf19e754",
+      "target_sha256": "ef0f58d648fd8191678720e182397b0ddb1668d4fc6db3fdaffb1d47ff7260c7",
+      "reviewer": "Claude (Claude Code session; fix of the overflow of the Takahashi-Nakagawa deposition formula at a subnormal concentration: the description of the regression configuration tkb3 was written in Japanese and English in the same session, and the two texts were compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "test/dbonset/README.md",

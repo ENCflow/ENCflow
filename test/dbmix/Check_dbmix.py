@@ -25,6 +25,11 @@
 #       交換層の組成が有効なまま(0 以上で和が 1)。最適化のビルド(-Ofast)は正規化数より小さい積を 0 に
 #       するので、組成の更新の積がすべて 0 に落ちる。割合がすべて 0 になると平均粒径が 0 になり、掃流砂の
 #       遮蔽係数が 0 除算になる(developer.md §139.7 の不具合の再発防止)
+#   (11) 濡れた基盤の上を進む流れ(tkb3。高橋・中川則。土層は斜面だけで、平坦部は基盤): 粒径階ごとの収支が閉じ、
+#       保存から数えた総量が初期の総量に一致し、平坦部の基盤に土砂が届いて計算が終わる。雨で全域が濡れているので、
+#       流れの先端は、侵食できない基盤の上を、ごく小さい土砂の柱を先に立てて進む。非正規化数を残すビルド
+#       (-Og -fcheck=all)では、その柱の濃度が非正規化数になったセルで、堆積の式の C*/C がオーバーフローして
+#       止まった(developer.md §142 の不具合の再発防止。最適化のビルドは非正規化数を 0 に落とすので起きない)
 import re
 import struct
 import sys
@@ -349,6 +354,23 @@ check(nfilm == npatch, "(10) film3: a film of %.1e m lies in the release area an
       "(%d cells with 0 < sd <= %.1e m)" % (SD_FILM, nfilm, SD_FILM))
 check(dsum < TOL_FRAC and fmin >= 0.0, "(10) film3: the fractions stay valid in every cell "
       "(max |sum - 1| %.1e, min %.1e)" % (dsum, fmin))
+
+# ---- (11) 濡れた基盤の上を進む流れ(高橋・中川則。土層は斜面だけ)
+tb = state("tkb3")
+dd, la, fa, fs, hk = bedmix("tkb3")
+bed, flow, txt = ledgers("tkb3")
+res = max(max(abs(bed[k][5]), abs(flow[k][5])) for k in (1, 2, 3))
+check(res < TOL_LED, "(11) tkb3: class ledgers close (max residual %.1e m3)" % res)
+JSOIL = int(YB / DX)                                      # 土層のある行(斜面)
+SD_SLOPE = 0.3
+tot = class_totals(tb, la, fa, fs, hk)
+tot0 = [CSTAR * (LA_W * F0[k] + (SD_SLOPE - LA_W) * FS0[k]) * NX * JSOIL * DX * DX for k in range(3)]
+dtot = max(abs(a - b) for a, b in zip(tot, tot0))
+check(dtot < TOL_LED, "(11) tkb3: class totals from the save (bed + flow) = initial totals (max diff %.1e of %.1f m3)"
+      % (dtot, sum(tot0)))
+ndep = sum(1 for i in range(N) if i // NX + 1 > JSOIL and tb["sd"][i] > 1.0e-9)
+check(ndep > 0 and "program terminated normally" in txt, "(11) tkb3: the flow crossed the wet bedrock of the flat "
+      "part and the run completed (%d bedrock cells with deposit)" % ndep)
 
 print("=== dbmix check %s ===" % ("PASS" if rc == 0 else "FAIL"))
 sys.exit(rc)
