@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "d240941aa1ea1e7142ce242be5cc9ec616c5ae2da4bd921c7304a699719a7d95",
-      "target_sha256": "46766754a65f88c44c3dfb923aa8a21a119735b2007a983f496c1294236a3ff3",
-      "reviewer": "Claude (Claude Code session; tutorial link removed from the interoperability (BMI) entry and its task-table row, developer.md §35.5; both changed lines compared)",
+      "source_sha256": "243d2e04b0f313e7f483bf55093dce1062309b7b9eed80a1dafa83e530ae3157",
+      "target_sha256": "d53ff1feef49ad453a1141e5f2ff67399a3efd8affa2fc7b7ec616862d7ae5b4",
+      "reviewer": "Claude (Claude Code session; the opening paragraph split into short blocks for beginners: what it is, tutorial first, no need to read all, the three kinds of pages, other catalogues; content kept; both sides compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/advection.md",
