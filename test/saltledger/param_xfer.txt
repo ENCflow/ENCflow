@@ -1,0 +1,51 @@
+!======================================================================
+! saltledger / xfer: 域内のポンプが塩水層を吐口のセルへ運ぶ(f_salt_struct = 1)
+!   乾いた尾根で仕切った 2 つの池(各 4 × 8 セル、dx = 10 m)。西の池は水深 1 m(底の 0.3 m が塩水)、
+!   東の池は水深 0.2 m の淡水。西の全セルから東の全セルへ、500 秒で水深 0.5 m 分を送る。
+!   底層から先に運ぶので、西の塩水 0.3 m がすべて東へ移る(東: 水深 0.7 m、塩水層 0.3 m)。
+!   域内の転送なので、塩水の体積の合計は変わらない(out_struct_m3 = 0)。
+!======================================================================
+&list_sysparam
+  dt = 1.0
+  tt = 500.0
+  dt_disp = 100.0
+  dt_file = 500.0
+  dt_recrd = 100.0
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_structure = '-'
+  fn_salt = '-'
+  dir_data = 'data_saltledger'
+  dir_result = 'result_xfer'
+  f_output_mode = 2
+  f_disp_debug = 1
+  f_check_cfl = 0
+/
+
+&list_geoinfo
+  nx = 9
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z_two.txt'        ! 列 5 が高さ 5 m の尾根
+  rn0 = 0.03
+/
+
+&list_initial
+  f_htype = 1               ! 初期水深の分布
+  fn_hinit = 'h_two.txt'    ! 西 1.0 m、東 0.2 m
+/
+
+&list_struct_pump
+  fn_pump_in_cell(1) = 'cells_west.txt'    ! 取水セル = 西の池の全 32 セル
+  fn_pump_out_cell(1) = 'cells_east.txt'   ! 吐口セル = 東の池の全 32 セル
+  pump_q0(1) = 3.2                         ! 流量 (m3/s) = 水深 0.5 m × 3200 m2 ÷ 500 s
+/
+
+&list_salt
+  f_salt_surf = 1
+  f_salt_gw = 0
+  fn_salt_hss0 = 'hss_two.txt'   ! 初期の塩水層(西 0.3 m、東 0)
+  f_salt_struct = 1
+/

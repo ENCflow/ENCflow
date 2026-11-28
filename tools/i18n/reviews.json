@@ -113,8 +113,8 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "3447b6d55c15ca8f3c60aeccd26ea6d6a57c7bf6d5d800b99325959304adfb75",
-      "target_sha256": "a9ed84e2acefeef30ef72f1bf460c585764497e05972acbb8b3bd8c2e6e4bfb7",
+      "source_sha256": "99d49d0dca829dff812ca7664bfce2140f2984bdb82461292b128f773fd9a883",
+      "target_sha256": "37fc7e87917c4d98d0f265b7e23ac5391ffc5949433c32367a0241d492e2c58d",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
@@ -446,8 +446,8 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "478cf2c991b839a99205bc6ed8eec48bf9854a3ca157c22f56301c517095e0c7",
-      "target_sha256": "27b660edacf49744627ec5f37192857558ebbffd6fdb2e6b9f921a97ed9b4f52",
+      "source_sha256": "cbee63e6bf54246345a8d493634ff4532b9f19355ea72abab79364aef496d37c",
+      "target_sha256": "4ae826ca187328e9acde97736c75fb5e7b044aea6c7893ce72a0728d7de78ccd",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
@@ -482,11 +482,11 @@
     {
       "source": "docs/users_guide/salt.md",
       "target": "docs/en/users_guide/salt.md",
-      "source_sha256": "30f7da81ee8c3f1b91e739754e6d473bad2953d68dc56d464bfc71c7a022a795",
-      "target_sha256": "552f6c24ef63b9b44b57c9f34e5fda57cee877c223c34404b930d425e25e62ad",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "a952ea5ea2ecc953ea872e7cc9684f2ac39431e65646416317a463bc567a5832",
+      "target_sha256": "d8dcb00a1e055c55e24e9f0d5473fdc5dd180a2e4cf142b3dd9d7c9d6a198d1f",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/sediment.md",
@@ -527,11 +527,11 @@
     {
       "source": "docs/users_guide/structure.md",
       "target": "docs/en/users_guide/structure.md",
-      "source_sha256": "6042a8e117f026a41f7f013f764187b41aa4f80c6af5d6749143c7eb0b4225d3",
-      "target_sha256": "0bd42075f33fc2736e9b44df6c80b27d9fecff964c9447bfbb0f5286830f5818",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "e7a00bd6fcb5b60b1b87fd1442bad1b46d9ab2f333b9b8265f1f9ebaa3f341d7",
+      "target_sha256": "3521bb2d963a319cc13e9979fe098f1c1fb00cdfb40d6d3e106cda4ff752c2f7",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/swflow.md",
@@ -626,8 +626,8 @@
     {
       "source": "docs/users_guide/wq.md",
       "target": "docs/en/users_guide/wq.md",
-      "source_sha256": "fbf1308060ef9fbe2707d86ef77bfd18a0527b0da25dc52cbf2ff199499ca0b0",
-      "target_sha256": "14126e939ce8784ada40cfabf274c2450aab2d7e5eec355902f43b633d8834e0",
+      "source_sha256": "9f1abc16efc08dc027c88dbba703a9e004162faa1c3a9c4e0c47e80c63a1381d",
+      "target_sha256": "0f369739ef2a28f1e1030364e8153a2b552531a687781948b237f29c86b13d6e",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
@@ -815,11 +815,11 @@
     {
       "source": "examples/List_samples/list_salt.txt",
       "target": "examples/List_samples/en/list_salt.txt",
-      "source_sha256": "b7e8857a72e01088b5b1774ad3010a32831dab59d3c9172423de7fcd739f0282",
-      "target_sha256": "d0ed80e185293ae7dc3c88fd07cf0c9777425fb5bda1822c1bfaf1f436cf11de",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "f205f78801c6ee6ab911d6f8bd8fce09a9d81322b0e43be47ff9a30da6b87233",
+      "target_sha256": "65a5e0077ec26ad5d4412bfa6228ff4ea68d5015de538b66aeae62bc9f98787e",
+      "reviewer": "Claude (Claude Code session; added comment lines compared with the Japanese source; values, identifiers and commented-out state unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "examples/List_samples/list_seawall.txt",
@@ -4361,8 +4361,8 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "6873dc8061b58d9ca03804e321e9c4114bae61f13d28fe6061a28b02bedc3ab1",
-      "target_sha256": "5b25a612ca846b4c297cc1faddedc12ed39af09ef5b9531cab36709bf99cbdb0",
+      "source_sha256": "e4173a79a52c6b4e02820c020b8a4a483d04bfea96805da60c0f270f7273e2c0",
+      "target_sha256": "4a67513180af2074abb2dc881f2089f779659531cbfc308426e3b36459513f20",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
@@ -5536,6 +5536,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-17"
+    },
+    {
+      "source": "test/saltledger/README.md",
+      "target": "test/saltledger/en/README.md",
+      "source_sha256": "aa74dfd23172acef367dd2143c9508cbc55f7bf29f45d2be73edb9aa3a9d06b4",
+      "target_sha256": "3ac2374a98d53a38ae46a0cca329077f7622ecd44a05f40fb4a092104d381929",
+      "reviewer": "Claude (Claude Code session; full text compared side by side with the Japanese source; numbers checked against the test and example runs)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "test/sedfeed/README.md",

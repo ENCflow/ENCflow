@@ -72,6 +72,32 @@ module m_saltwater
   !
   ! 【リスタート】hss・hgs はモデル私有ファイル saltwater.dat(RLE 2 面)。
   !  restore 時に自ファイルが無ければ par_stop(契約5)
+  !
+  ! 【台帳 salt.csv(§140)】塩水の体積 (m3) の現在量(地表 = Σ hss·gv·wfrac·A、地下 = Σ hgs·A。
+  !  海セルを除く)と、出入りの累積を記録間隔 dt_recrd ごとに書く。
+  !    地表: 海からの流入・海への流出・開いた辺の出入り・水位規定セルへの流出(輸送
+  !          カーネルと水位規定セルの置き直しが記録場 s%hssx に積む)、構造物・吸い込みが
+  !          系外へ運んだ量(f_salt_struct >= 1 のとき boundary_h が積む)、(1) の整合クランプで消えた量
+  !          (蒸発散・取水・ため池やダムの吸収で水深が塩水層を下回った分 = lost_surf)
+  !    地下: 海側境界 (4) の出入り、井戸が汲んだ量(汲んだ時点で淡水が足りなかった分は
+  !          m_gwflow_pump が s%hssx に積む。汲んだ時点で淡水と数えた水 s%gwpf を、後から側方流で
+  !          入った塩水が埋めた分は、(3) の整合クランプが揚水に数える。井戸は側方流の後・
+  !          塩水の輸送の前に汲むので、帯水層が塩水だけのときは後者になる)、(3) の整合
+  !          クランプで消えた量(蒸発散・層2 への浸透・管路層との交換で hg が hgs を下回った
+  !          分 = lost_gw。負値の切り上げは負の損失として数える)
+  !    受け渡し: 浸透 (0)・湧出 (3) の配分(地表の側の体積で数える)。地下の貯留は、水と同じ
+  !          換算(浸透は af/gv、湧出は 1/wfrac)で増減するので、家屋の空隙率 gv < 1 のセルでは
+  !          地下の側の増減が地表の側と gv の分だけずれる。その差を gvadj に積む(gv = 1 なら 0)
+  !  地表の体積 = 初期 + 流入 − 流出 − 水位規定 − 浸透 + 湧出 − 構造物 − lost_surf、
+  !  地下の体積 = 初期 + 浸透 − 湧出 + gvadj + 海から − 海へ − 揚水 − lost_gw が、丸めの
+  !  範囲で成り立つ
+  !  (底層重力流と地下の塩水 zone 流束は陸のセルの間の交換で、合計を変えない)。累積は保存
+  !  しない(再開すると 0 から。wq.csv と同じ)。ネスティングの帯の置換は数えない
+  !
+  ! 【構造物による転送 f_salt_struct(§140)】0(既定)= ポンプ・カルバート・分水・内部ソースの
+  !  吸い込みは地表の塩水層を運ばない(取水側に残り、水深が下回れば (1) で消える)。
+  !  1 = 底層の塩水から先に運ぶ(取水口が底にある)。2 = 混合比 hss/h で運ぶ(感度ケース)。
+  !  実体は m_swflow_enc の boundary_h(s%salt_struct を読む)
   ! =====================================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, zbank_min
@@ -83,12 +109,15 @@ module m_saltwater
   use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_halo_cell, &
-                         par_gather_to, par_scatter_cell, par_allreduce_max
+                         par_gather_to, par_scatter_cell, par_allreduce_max, par_sum_rows
+  use m_util, only : es_out
+  use, intrinsic :: iso_fortran_env, only : real64
   implicit none
   private
   public :: t_saltwater
   public :: m_saltwater_init
   public :: m_saltwater_calc
+  public :: m_saltwater_record
   public :: m_saltwater_dispose
 
   type t_salt
@@ -112,6 +141,13 @@ module m_saltwater
                                      !   側方流と同じ幅を使う。§16.6)
     real, allocatable :: qs(:,:,:)   ! エッジ流量4成分。一時作業領域(共用)
     real, allocatable :: qb(:,:,:)   ! 同(バロクリニック成分。gw のみ)
+    ! 台帳 salt.csv(§140)。行部分和(real64。体積 m3 の累積)
+    !   1 = 海から地表へ、2 = 地表から海へ、3 = 開いた辺から内へ、4 = 開いた辺から外へ、
+    !   5 = 水位規定セルへ(正味)、6 = 浸透の配分(地表 → 地下)、7 = 湧出の配分(地下 → 地表)、
+    !   8 = 海から地下へ、9 = 地下から海へ、10 = 井戸の揚水、11 = 構造物・吸い込みで系外へ、
+    !   12 = 地表の整合クランプ、13 = 地下の整合クランプ、14 = 受け渡しの換算の差(gvadj)
+    real(real64), allocatable :: vrow(:,:)
+    integer :: un = 0                ! salt.csv の装置番号(rank0。open(newunit=) は負値)
     logical :: initialized = .false.
   end type
 
@@ -121,6 +157,8 @@ module m_saltwater
     logical :: initialized = .false.
     type(t_salt) :: sw               ! 設定・係数・作業領域(モジュール変数から成分へ。nesting_plan.md §3.2 A 群)
   end type
+
+  integer, parameter :: nled = 14    ! 台帳の累積の列数(t_salt の vrow)
 
   ! 8近傍の規約(m_swflow_enc / m_gwflow_lateral と同一)
   integer, parameter :: din(1:8) = [ -1,  0,  1, -1,  1, -1,  0,  1]
@@ -149,13 +187,13 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   logical :: lat_active
   real :: sdmax(1), sum_ldr, dt_lim
   character(len=256) :: msg
-  integer :: f_salt_surf, f_salt_gw, salt_nsubmax, f_salt_exch
+  integer :: f_salt_surf, f_salt_gw, salt_nsubmax, f_salt_exch, f_salt_struct
   real :: salt_rhof, salt_rhos, salt_alpha, salt_ni
   real :: salt_hss0, salt_hgs0, salt_eps, salt_eps_h, salt_diagratio
   character(len=1024) :: fn_salt_hss0, fn_salt_hgs0
   namelist /list_salt/ f_salt_surf, f_salt_gw, salt_rhof, salt_rhos, &
     salt_alpha, salt_ni, salt_hss0, fn_salt_hss0, salt_hgs0, fn_salt_hgs0, &
-    salt_eps, salt_eps_h, salt_diagratio, salt_nsubmax, f_salt_exch
+    salt_eps, salt_eps_h, salt_diagratio, salt_nsubmax, f_salt_exch, f_salt_struct
 
   if (len_trim(p%fn_salt) == 0) return
 
@@ -175,6 +213,8 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   salt_nsubmax = 200
   f_salt_exch = -1          ! 負 = 未指定(地表・地下の両方が有効なら 1、それ以外は 0)。
                             ! 2 = 湧出を混合比で配分する下限側の感度ケース(§47.9)
+  f_salt_struct = 0         ! 構造物・吸い込みによる地表の塩水層の転送(0 = 運ばない、
+                            ! 1 = 底層から先に、2 = 混合比で。§140)
 
   call par_info("reading list_salt in " // trim(p%fn_salt))
   open(newunit=un, file=trim(p%fn_salt), status='old', action='read', iostat=ios)
@@ -216,6 +256,12 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   end if
   if (f_salt_exch >= 1 .and. (f_salt_surf == 0 .or. f_salt_gw == 0)) then
     call par_stop("list_salt: f_salt_exch=1,2 requires f_salt_surf=1 and f_salt_gw=1")
+  end if
+  if (f_salt_struct < 0 .or. f_salt_struct > 2) then
+    call par_stop("list_salt: f_salt_struct must be 0, 1 or 2")
+  end if
+  if (f_salt_struct >= 1 .and. f_salt_surf == 0) then
+    call par_stop("list_salt: f_salt_struct=1,2 requires f_salt_surf=1 (the surface salt layer)")
   end if
 
   sl%sw%surf = (f_salt_surf == 1)
@@ -260,6 +306,9 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   if (sl%sw%gw) then
     allocate(s%hgsnap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(s%hsnap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    ! 井戸が汲んだ水のうち、汲んだ時点で淡水と数えた分(m_gwflow_pump が積み、地下の
+    ! 整合クランプが読む。§140.1)
+    allocate(s%gwpf(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
   ! 地表—層1 の交換量の記録場(gwflow が書き (0) が読んでゼロ戻し。§47.5)
   if (sl%sw%exch) then
@@ -330,10 +379,28 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   ! --- 地表移流フックの有効化(swflow init より前に立てる契約) ---
   s%salt_active = sl%sw%surf
   s%salt_alpha = salt_alpha
+  s%salt_struct = f_salt_struct
+
+  ! --- 台帳(§140): 系外との出入りの記録場(swflow_enc・boundary_h・m_gwflow_pump が書く)と
+  !     累積の行部分和、salt.csv。累積は保存しない(再開すると 0 から) ---
+  allocate(s%hssx(dcp%js:dcp%je, 1:8), source = 0.0_real64)
+  allocate(sl%sw%vrow(dcp%js:dcp%je, 1:nled), source = 0.0_real64)
+  if (is_root) then
+    call sysdep_mkdir(p%dir_result)
+    open(newunit=sl%sw%un, file=trim(p%dir_result)//"/salt.csv", status='replace')
+    write(sl%sw%un, '(a)') "time_s,vol_surf_m3,vol_gw_m3,in_sea_m3,out_sea_m3,in_edge_m3,out_edge_m3," &
+      //"out_stage_m3,infil_m3,seep_m3,in_sea_gw_m3,out_sea_gw_m3,out_pump_m3,out_struct_m3," &
+      //"lost_surf_m3,lost_gw_m3,gvadj_m3"
+  end if
 
   sl%sw%initialized = .true.
   sl%enabled = .true.
   sl%initialized = .true.
+  if (f_salt_struct == 1) then
+    call par_info("saltwater: structures and sinks carry the surface salt layer (f_salt_struct=1: bottom layer first)")
+  else if (f_salt_struct == 2) then
+    call par_info("saltwater: structures and sinks carry the surface salt layer (f_salt_struct=2: by mixing ratio)")
+  end if
   if (sl%sw%exch_mix) then
     call par_info("saltwater: surface-aquifer salt partition enabled (f_salt_exch=2: seepage by mixing ratio)")
   else if (sl%sw%exch) then
@@ -390,20 +457,40 @@ subroutine m_saltwater_calc(sl, p, g, s, it)
   type(t_state), intent(inout) :: s
   integer, intent(in) :: it
   integer :: i, j
+  real(real64) :: acell
 
   if (.not. sl%enabled) return
   if (it < 0) continue  ! 引数未使用の警告を抑制
+  acell = real(g%dx, real64) * real(g%dy, real64)
+
+  ! 台帳(§140): このステップの系外との出入りの記録場(浅水流の輸送・水位規定セル・構造物・
+  ! 井戸が書いた行部分和)を累積へ移してゼロに戻す
+  do j = dcp%js, dcp%je
+    sl%sw%vrow(j,1) = sl%sw%vrow(j,1) + s%hssx(j,7)
+    sl%sw%vrow(j,2) = sl%sw%vrow(j,2) + s%hssx(j,1)
+    sl%sw%vrow(j,3) = sl%sw%vrow(j,3) + s%hssx(j,3)
+    sl%sw%vrow(j,4) = sl%sw%vrow(j,4) + s%hssx(j,2)
+    sl%sw%vrow(j,5) = sl%sw%vrow(j,5) + (s%hssx(j,4) - s%hssx(j,5))
+    sl%sw%vrow(j,10) = sl%sw%vrow(j,10) + s%hssx(j,8)
+    sl%sw%vrow(j,11) = sl%sw%vrow(j,11) + s%hssx(j,6)
+  end do
+  s%hssx(:,:) = 0.0_real64
 
   ! (0) 地表→層1 の浸透の淡塩配分(セル局所。ハロ不要)
-  if (sl%sw%exch) call infiltration_partition(g, s)
+  if (sl%sw%exch) call infiltration_partition(sl, g, s)
 
-  ! (1) 整合クランプ(乾燥・蒸発等が h を hss より下げた場合の解消)
+  ! (1) 整合クランプ(乾燥・蒸発等が h を hss より下げた場合の解消)。消えた体積は台帳の
+  !     lost_surf に数える(§140)
   !$omp parallel do schedule(static) private(i, j)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
-      if (s%hss(i,j) > s%h(i,j)) s%hss(i,j) = max(s%h(i,j), 0.0)
+      if (s%hss(i,j) > s%h(i,j)) then
+        sl%sw%vrow(j,12) = sl%sw%vrow(j,12) + real(s%hss(i,j) - max(s%h(i,j), 0.0), real64) &
+                           * real(s%gv(i,j), real64) * real(wfr_of(s, i, j), real64) * acell
+        s%hss(i,j) = max(s%h(i,j), 0.0)
+      end if
     end do
   end do
   !$omp end parallel do
@@ -608,13 +695,16 @@ end subroutine
 !   鉛直モデルの hg 加算と同じ換算)。地下では即時入替規則で最下部に置く。
 !   合計(h・hg)は gwflow が移し済みで、ここは内数の付け替えだけ
 !----------------------------------------------------------------------
-subroutine infiltration_partition(g, s)
+subroutine infiltration_partition(sl, g, s)
+  type(t_saltwater), intent(inout) :: sl
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
   real :: fs
+  real(real64) :: acell, vs, vg
 
-  !$omp parallel do schedule(static) private(i, j, fs)
+  acell = real(g%dx, real64) * real(g%dy, real64)
+  !$omp parallel do schedule(static) private(i, j, fs, vs, vg)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -627,9 +717,15 @@ subroutine infiltration_partition(g, s)
           ! 係数だけを掛ける(§26.2。鉛直モデルの hg 加算と同じ換算)
           if (sect_cell(s, i, j)) then
             s%hgs(i,j) = s%hgs(i,j) + fs * wfr_of(s, i, j)
+            vg = real(fs, real64) * real(wfr_of(s, i, j), real64) * acell
           else
             s%hgs(i,j) = s%hgs(i,j) + fs * (s%af(i,j) / s%gv(i,j))
+            vg = real(fs, real64) * real(s%af(i,j) / s%gv(i,j), real64) * acell
           end if
+          ! 台帳(§140): 地表の塩水層から出た体積と、換算の差(地下の側の増分 − 地表の側の減少)
+          vs = real(fs, real64) * real(s%gv(i,j), real64) * real(wfr_of(s, i, j), real64) * acell
+          sl%sw%vrow(j,6) = sl%sw%vrow(j,6) + vs
+          sl%sw%vrow(j,14) = sl%sw%vrow(j,14) + (vg - vs)
         end if
         s%fxsli(i,j) = 0.0
       end if
@@ -653,7 +749,8 @@ subroutine gw_salt_zone(sl, g, s, dts)
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt
   real :: bc, bn, etac, etan, zetac, zetan, psc, psn, bup, bse, btc, btn, btup
-  real :: gqs, gqb, dh_up, r, dhs, dhb, capc, fx, fs, qcap, wle
+  real :: gqs, gqb, dh_up, r, dhs, dhb, capc, fx, fs, qcap, wle, ex, mv
+  real(real64) :: acell, vs
   logical :: do_bed, do_open
 
   ! 河床交換能(f_gwbed。§16.5・§47.5): 河道・非河道間のエッジの塩水 zone 流束にも
@@ -758,7 +855,8 @@ subroutine gw_salt_zone(sl, g, s, dts)
   !$omp end parallel do
 
   ! --- ループ2: 発散+容量超過の湧出(層1の規則)+整合クランプ ---
-  !$omp parallel do schedule(static) private(i, j, k, dhs, dhb, capc, fx, fs)
+  acell = real(g%dx, real64) * real(g%dy, real64)
+  !$omp parallel do schedule(static) private(i, j, k, dhs, dhb, capc, fx, fs, vs, ex, mv)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -806,11 +904,30 @@ subroutine gw_salt_zone(sl, g, s, dts)
         if (fs > 0.0) then
           s%hgs(i,j) = s%hgs(i,j) - fs
           s%hss(i,j) = s%hss(i,j) + fs * gw_to_h(s, i, j)   ! 地表の底層も河道の平面(§26.1)
+          ! 台帳(§140): 地表の塩水層へ入った体積と、換算の差(地表の側の増分 − 地下の側の減少)
+          vs = real(fs * gw_to_h(s, i, j), real64) * real(s%gv(i,j), real64) &
+               * real(wfr_of(s, i, j), real64) * acell
+          sl%sw%vrow(j,7) = sl%sw%vrow(j,7) + vs
+          sl%sw%vrow(j,14) = sl%sw%vrow(j,14) + (vs - real(fs, real64) * acell)
         end if
         s%fxslo(i,j) = 0.0
       end if
-      if (s%hgs(i,j) < 0.0) s%hgs(i,j) = 0.0
-      if (s%hgs(i,j) > s%hg(i,j)) s%hgs(i,j) = s%hg(i,j)
+      ! 整合クランプ。変えた体積は台帳の lost_gw に数える(負値の切り上げは負の損失。§140)
+      if (s%hgs(i,j) < 0.0) then
+        sl%sw%vrow(j,13) = sl%sw%vrow(j,13) + real(s%hgs(i,j), real64) * acell
+        s%hgs(i,j) = 0.0
+      end if
+      if (s%hgs(i,j) > s%hg(i,j)) then
+        ! 井戸が汲んだ水(汲んだ時点で淡水と数えた分 s%gwpf)を、側方から入った塩水が
+        ! 埋めた分は、井戸が汲んだ塩水として out_pump に数える。残りが lost_gw(状態の
+        ! 変え方は同じ。§140.1)
+        ex = s%hgs(i,j) - s%hg(i,j)
+        mv = min(ex, s%gwpf(i,j))
+        sl%sw%vrow(j,10) = sl%sw%vrow(j,10) + real(mv, real64) * acell
+        sl%sw%vrow(j,13) = sl%sw%vrow(j,13) + real(ex - mv, real64) * acell
+        s%hgs(i,j) = s%hg(i,j)
+      end if
+      s%gwpf(i,j) = 0.0
     end do
   end do
   !$omp end parallel do
@@ -830,7 +947,9 @@ subroutine gw_sea_exchange(sl, g, s, dts)
   integer :: i, j, k, in, jn
   real :: base, bc, bsea, bse, zetac, etac, etasea, psc, pssea, capc
   real :: fx, bf
+  real(real64) :: acell
 
+  acell = real(g%dx, real64) * real(g%dy, real64)
   !$omp parallel do schedule(static) &
   !$omp   private(i, j, k, in, jn, base, bc, bsea, bse, zetac, etac, etasea, &
   !$omp           psc, pssea, capc, fx, bf)
@@ -873,6 +992,12 @@ subroutine gw_sea_exchange(sl, g, s, dts)
             end if
             s%hgs(i,j) = s%hgs(i,j) + fx
             s%hg(i,j) = s%hg(i,j) + fx
+            ! 台帳(§140): 海から地下へ入った体積・地下から海へ出た体積
+            if (fx > 0.0) then
+              sl%sw%vrow(j,8) = sl%sw%vrow(j,8) + real(fx, real64) * acell
+            else
+              sl%sw%vrow(j,9) = sl%sw%vrow(j,9) - real(fx, real64) * acell
+            end if
           end if
         end if
         ! 淡水流出(η_land > 潮位のとき。海に淡水は存在しないため流入なし)
@@ -886,6 +1011,46 @@ subroutine gw_sea_exchange(sl, g, s, dts)
     end do
   end do
   !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 台帳 salt.csv の 1 行を書く(記録間隔 dt_recrd ごとに m_main が呼ぶ。§140)
+!   現在の塩水の体積(地表 = Σ hss·gv·wfrac·A、地下 = Σ hgs·A。海セルを除く)と、出入りの累積。
+!   総和は行部分和の決定的な集約(par_sum_rows)。collective なので全ランクが呼ぶ
+!----------------------------------------------------------------------
+subroutine m_saltwater_record(sl, p, g, s)
+  type(t_saltwater), intent(inout) :: sl
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  real(real64) :: v(1:nled), vsur, vgw, acell
+  real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je)
+  integer :: i, j, k
+  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  if (.not. sl%enabled) return
+
+  acell = real(g%dx, real64) * real(g%dy, real64)
+  do k = 1, nled
+    call par_sum_rows(sl%sw%vrow(:,k), v(k))
+  end do
+  rows(:) = 0.0_real64
+  rows2(:) = 0.0_real64
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      rows(j) = rows(j) + real(s%hss(i,j), real64) * real(s%gv(i,j), real64) &
+                * real(wfr_of(s, i, j), real64) * acell
+      rows2(j) = rows2(j) + real(s%hgs(i,j), real64) * acell
+    end do
+  end do
+  call par_sum_rows(rows, vsur)
+  call par_sum_rows(rows2, vgw)
+  if (is_root .and. sl%sw%un /= 0) then
+    write(sl%sw%un, '(f0.2,16(",",es15.7))') s%t, es_out([vsur, vgw, v(1:nled)])
+    flush(sl%sw%un)
+  end if
 end subroutine
 
 
@@ -948,6 +1113,9 @@ subroutine m_saltwater_dispose(sl, p, g, s)
   if (allocated(sl%sw%qs)) deallocate(sl%sw%qs)
   if (allocated(sl%sw%qb)) deallocate(sl%sw%qb)
   if (allocated(sl%sw%wlo)) deallocate(sl%sw%wlo)
+  if (allocated(sl%sw%vrow)) deallocate(sl%sw%vrow)
+  if (is_root .and. sl%sw%un /= 0) close(sl%sw%un)
+  sl%sw%un = 0
   sl%sw%initialized = .false.
   sl%enabled = .false.
   sl%initialized = .false.

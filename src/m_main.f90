@@ -4,7 +4,7 @@ module m_main
   use m_precip, only : t_precip, m_precip_init, m_precip_dispose, m_precip_makepre
   use m_tide, only : t_tide, m_tide_init, m_tide_calc, m_tide_dispose
   use m_saltwater, only : t_saltwater, m_saltwater_init, m_saltwater_calc, &
-                          m_saltwater_dispose
+                          m_saltwater_record, m_saltwater_dispose
   use m_boundary, only : t_boundary, m_boundary_init, m_boundary_set_etaref, m_boundary_dispose, m_boundary_makebdc, &
                          m_boundary_dam_seed, m_boundary_dam_record, &
                          m_boundary_dam_gwcheck, m_boundary_dam_gwforce, &
@@ -362,7 +362,7 @@ subroutine init_instance(fn_param, align)
 
     ! ==== 時間ループ: すべて帯確保(z のみ rank0 が全域を保持) ====
     ! ループ前の初期化・初期出力(従来 run_main の前半)
-    call run_init(p, g, b, pr, ic, s, r, ev, mt, wq, dw, bd, ou, enc%ierror)
+    call run_init(p, g, b, pr, ic, s, r, sl, ev, mt, wq, dw, bd, ou, enc%ierror)
 
   end associate
 
@@ -1102,7 +1102,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! 時間ループ前の初期化・初期出力(従来 run_main の前半)
 !----------------------------------------------------------------------
-subroutine run_init(p, g, b, pr, ic, s, r, ev, mt, wq, dw, bd, ou, ierror)
+subroutine run_init(p, g, b, pr, ic, s, r, sl, ev, mt, wq, dw, bd, ou, ierror)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_boundary), intent(inout) :: b
@@ -1110,6 +1110,7 @@ subroutine run_init(p, g, b, pr, ic, s, r, ev, mt, wq, dw, bd, ou, ierror)
   type(t_intercept), intent(inout) :: ic   ! 遮断(貯留型は calc/step/draw が状態を更新)
   type(t_state), intent(inout) :: s
   type(t_record), intent(inout) :: r
+  type(t_saltwater), intent(inout) :: sl  ! 淡塩2層(台帳 salt.csv の初期の行。§140)
   type(t_evap), intent(inout) :: ev    ! 蒸発散(PET の日次更新・累積診断を保持)
   type(t_meteo), intent(inout) :: mt   ! 気象強制場(分布気温の読み進みを保持)
   type(t_wq), intent(inout) :: wq      ! 水質(発生源・台帳を保持)
@@ -1144,6 +1145,7 @@ subroutine run_init(p, g, b, pr, ic, s, r, ev, mt, wq, dw, bd, ou, ierror)
   call m_boundary_dam_record(b, p, s)   ! ダム CSV(ダムがなければ no-op)
   call m_evap_record(ev, p, s)          ! 蒸発散 CSV(fn_evap 未指定なら no-op)
   call m_wq_record(wq, p, g, s)         ! 水質 CSV(fn_wq 未指定なら no-op)
+  call m_saltwater_record(sl, p, g, s)  ! 塩水の台帳 CSV(fn_salt 未指定なら no-op。§140)
   call m_driftwood_record(dw, p, g, s)  ! 流木 CSV(fn_driftwood 未指定なら no-op)
   call m_bldgdebris_record(bd, p, g, s) ! 瓦礫 CSV(fn_bldgdebris 未指定なら no-op)
   ierror = 0                            ! エラー数をリセット
@@ -1496,6 +1498,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
    call m_boundary_dam_record(b, p, s)
    call m_evap_record(ev, p, s)
    call m_wq_record(wq, p, g, s)
+   call m_saltwater_record(sl, p, g, s)
    call m_driftwood_record(dw, p, g, s)
    call m_bldgdebris_record(bd, p, g, s)
    call m_vzflow_record(vz, s)

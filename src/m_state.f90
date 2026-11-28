@@ -276,6 +276,25 @@ module m_state
     real, allocatable :: hgs(:,:)       ! 地下水(層1)の塩水貯留 (m。柱状換算。
                                         ! hg の内数。m_saltwater が確保・更新・
                                         ! 保存する。fn_salt 未指定なら未確保。§47)
+    real(real64), allocatable :: hssx(:,:) ! 塩水(地表の塩水層 hss・地下の塩水 hgs)の系外との
+                                        ! 出入りの記録 (m3。行部分和 (js:je, 1:8)。1〜7 は cqx と
+                                        ! 同じ並び: 1 = 海セルへの流出、2 = 開いた辺から外への流出、
+                                        ! 3 = 開いた辺から内への流入、4 = 水位規定セルへの流出、
+                                        ! 5 = 水位規定セルからの流入、6 = 構造物・内部ソースの
+                                        ! 吸い込みが系外へ運んだ量(salt_struct >= 1 のとき
+                                        ! boundary_h が書く)、7 = 海セルから陸への流入、
+                                        ! 8 = 井戸が汲んだ地下の塩水(m_gwflow_pump)。1〜5・7 は
+                                        ! swflow_enc の輸送カーネルと水位規定セルの置き直しが書く。
+                                        ! m_saltwater が読んで台帳 salt.csv へ移しゼロ戻し。確保は
+                                        ! m_saltwater_init(fn_salt 指定時)。§140)
+    real, allocatable :: gwpf(:,:)      ! 井戸(層 1)が汲んだ水のうち、汲んだ時点で淡水と数えた分
+                                        ! (m。セル面積の柱状量。m_gwflow_pump が積む。その水を、後から
+                                        ! 側方流で入る塩水が埋めた分 = 地下の整合クランプで hg を超えた
+                                        ! hgs は、m_saltwater が台帳の out_pump に数えてゼロ戻し。確保は
+                                        ! m_saltwater_init(f_salt_gw = 1 のとき。帯+ハロ)。§140.1)
+    integer :: salt_struct = 0          ! 構造物・内部ソースの吸い込みによる地表の塩水層の転送
+                                        ! (0 = 運ばない、1 = 底層の塩水から先に、2 = 混合比で。
+                                        ! m_saltwater_init が設定し boundary_h が読む。§140)
     logical :: salt_active = .false.    ! 地表塩水層の有効化(m_saltwater_init が設定。
                                         ! swflow_enc がステップ内で s%hss を移流する)
     real :: salt_alpha = 1.0            ! 塩水層のバロトロピック移流分担率 α
@@ -1198,6 +1217,8 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hgc)) deallocate(s%hgc)
   if (allocated(s%hss)) deallocate(s%hss)
   if (allocated(s%hgs)) deallocate(s%hgs)
+  if (allocated(s%hssx)) deallocate(s%hssx)
+  if (allocated(s%gwpf)) deallocate(s%gwpf)
   if (allocated(s%swe)) deallocate(s%swe)
   if (allocated(s%swi)) deallocate(s%swi)
   if (allocated(s%swimax)) deallocate(s%swimax)

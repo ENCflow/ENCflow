@@ -1,0 +1,69 @@
+!======================================================================
+! saltledger / gwsea: 地下の海側境界と井戸の揚水の台帳
+!   海(西端の 1 列。潮位 0.5 m)に接する乾いた陸(12 × 8 セル、dx = 2 m、地盤高 1 m、帯水層の底 −2 m)に
+!   海水が浸入する(test/salt の模式実験 B と同じ)。内陸の 1 セルの井戸が地下水を汲む(帯水層に淡水が
+!   ないので、汲むのは塩水)。台帳: 地下の体積 = 海から − 海へ − 揚水 − 整合クランプ。
+!======================================================================
+&list_sysparam
+  dt = 0.25
+  tt = 10000.0
+  dt_disp = 2000.0
+  dt_file = 10000.0
+  dt_recrd = 1000.0
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_gwflow = '-'
+  fn_tide = '-'
+  fn_salt = '-'
+  dir_data = 'data_saltledger'
+  dir_result = 'result_gwsea'
+  f_output_mode = 2
+  f_disp_debug = 1
+  f_check_cfl = 0
+  f_out_hg = 1
+/
+
+&list_geoinfo
+  nx = 12
+  ny = 8
+  dx = 2.0
+  dy = 2.0
+  f_ztype = 0
+  z0 = 1.0
+  rn0 = 0.05
+  f_masktype = 2
+  fn_sw = 'sw_gw.txt'       ! 海域マスク(西端の 1 列が海)
+  sd0 = 3.0                 ! 土層厚 (m)。帯水層の底 = −2 m
+  sy0 = 0.2
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 陸は乾いている
+/
+
+&list_tide
+  titype = 1                ! 一様な固定潮位
+  ti0 = 0.5                 ! 潮位 (m)
+  hsea0 = 1.0
+/
+
+&list_gwflow
+  f_gwvertical = 0
+  f_gwlateral = 1
+  f_gwpump = 1              ! 井戸揚水
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 36000.0      ! 側方の透水係数 (mm/h) = 0.01 m/s(模式値)
+/
+
+&list_gwflow_pump
+  gwp_cell(1:2,1,1) = 8, 4  ! 井戸(海から 7 セル内陸)
+  gwp_q0(1) = 2.0e-5        ! 流量 (m3/s)
+/
+
+&list_salt
+  f_salt_surf = 0
+  f_salt_gw = 1             ! 地下の塩水 zone と海側境界
+/

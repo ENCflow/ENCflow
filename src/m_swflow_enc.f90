@@ -1640,7 +1640,8 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 地表塩水層厚を移流する(同一カーネル。分担率 α で底層の流速分担を
   ! 表す。境界流入は清水 = cbin なし。§47)
   if (s%salt_active) then
-    call advect_scalar(p, g, s, sx_mod, s%hss, sx_mod%hss1, share=s%salt_alpha)
+    ! 系外との出入り(海・開いた辺)は台帳の記録場 s%hssx へ積む(salt.csv。§140)
+    call advect_scalar(p, g, s, sx_mod, s%hss, sx_mod%hss1, share=s%salt_alpha, xrow=s%hssx)
   end if
 
   ! 流動流木柱状量を移流する(同一カーネル。鉛直平均流速と同速の単相
@@ -1687,7 +1688,8 @@ contains
       end if
       if (s%wq_active) call stage_scalar_reset(g, b, s%gv, sx_mod%cq1, hh, h_is_vh, jlo, jhi, .true., &
                                                s%cqx)
-      if (s%salt_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hss1, hh, h_is_vh, jlo, jhi, .false.)
+      if (s%salt_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hss1, hh, h_is_vh, jlo, jhi, .false., &
+                                                 s%hssx)
       if (s%dw_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hd1, hh, h_is_vh, jlo, jhi, .false.)
       if (s%bd_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hbd1, hh, h_is_vh, jlo, jhi, .false.)
     else
@@ -1699,7 +1701,7 @@ contains
         end if
       end if
       if (s%wq_active) call stage_scalar_reset(g, b, s%gv, s%cq, hh, h_is_vh, jlo, jhi, .true., s%cqx)
-      if (s%salt_active) call stage_scalar_reset(g, b, s%gv, s%hss, hh, h_is_vh, jlo, jhi, .false.)
+      if (s%salt_active) call stage_scalar_reset(g, b, s%gv, s%hss, hh, h_is_vh, jlo, jhi, .false., s%hssx)
       if (s%dw_active) call stage_scalar_reset(g, b, s%gv, s%hd, hh, h_is_vh, jlo, jhi, .false.)
       if (s%bd_active) call stage_scalar_reset(g, b, s%gv, s%hbd, hh, h_is_vh, jlo, jhi, .false.)
     end if
@@ -4150,7 +4152,9 @@ end subroutine
 !       部分和(g)に積む: 1 = 海セルへの流出、2 = 開いた辺から外への流出、
 !       3 = 開いた辺から内への流入。数えるのは c1 の更新と同じ流束 × 供給元
 !       濃度(× セル幾何面積)なので台帳が厳密に閉じる。c1 の更新は変えない
-!       (渡さない呼び出しはビット不変)。行 j の書き手は 1 スレッド = 競合なし
+!       (渡さない呼び出しはビット不変)。行 j の書き手は 1 スレッド = 競合なし。
+!       記録場が 7 列以上あれば、海セルから入った量を列 7 に分ける(水質の csea と、海セルが
+!       量を持つ塩水層。§140)。7 列未満(浮遊砂)は列 1 に符号つきで積む
 !----------------------------------------------------------------------
 subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow, dcoef, csea)
   type(t_sysparam), intent(in) :: p
@@ -4177,6 +4181,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow, dcoef, csea
   integer :: im, jm, ing, jng           ! 側方 Neumann の辺の鏡像セル
   real :: mne, fw, winv, cdon, sh, cdn, cuu, rs, qsx, qsy, qdx, qdy
   real :: dco, vhc, vhn, amin, cse
+  integer :: nxc                        ! xrow の列数(7 列以上なら海から入った量を列 7 に分ける)
   real(real64) :: acell8, dmx
   logical :: has_cbin, muscl, nmn, use_eul, okn, okuu, stk, asym, has_x
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
@@ -4184,6 +4189,8 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow, dcoef, csea
 
   has_cbin = present(cbin)
   has_x = present(xrow)
+  nxc = 0
+  if (has_x) nxc = size(xrow, 2)
   dco = 0.0
   if (present(dcoef)) dco = dcoef
   cse = 0.0
@@ -4401,8 +4408,10 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow, dcoef, csea
               xrow(j,3) = xrow(j,3) - dmx
             end if
           else if (g%sw(in,jn) > 0) then
-            ! 海への流出は列 1。海から入った量(csea > 0 の呼び出しだけに生じる)は列 7
-            if (cse > 0.0 .and. dmx < 0.0_real64) then
+            ! 海への流出は列 1。海から入った量は、記録場が 7 列以上あれば列 7(水質は
+            ! csea > 0 の呼び出しだけに生じる。海セルが量を持つ塩水層は常に生じる。§140)。
+            ! 7 列未満の記録場(浮遊砂)は従来どおり列 1 に符号つきで積む
+            if (nxc >= 7 .and. dmx < 0.0_real64) then
               xrow(j,7) = xrow(j,7) - dmx
             else
               xrow(j,1) = xrow(j,1) + dmx

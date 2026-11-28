@@ -46,6 +46,15 @@
   ! the river turned off)
   !f_salt_exch = 1
 
+  ! Transfer of the surface salt layer by structures (pumps, culverts,
+  ! diversions) and sinks of internal sources. 0 (default) = not carried (the
+  ! salt water stays on the intake side). 1 = bottom salt layer first (the
+  ! intake is at the bed; runs that drain seawater through pumping stations or
+  ! sluices). 2 = by the mixing ratio Hss/H (sensitivity case). 1 and 2 require
+  ! f_salt_surf=1. The amount carried out of the system is out_struct_m3 of
+  ! the ledger salt.csv
+  !f_salt_struct = 1
+
   ! Fresh / salt densities (kg/m3); they set eps = (rho_s-rho_f)/rho_f
   salt_rhof = 1000.0
   salt_rhos = 1025.0

@@ -1,0 +1,61 @@
+!======================================================================
+! saltledger / exout: 湧出の淡塩配分(地下 → 地表)の台帳
+!   斜面(z = 1 → 0 m)と窪地(z = −0.5 m)の閉じた領域(20 × 8 セル、dx = 2 m)。全層が塩水の帯水層
+!   (容量の 8 割)が斜面を下り、空の窪地の下で容量を超えて湧き出る(test/salt の模式実験 C2 と同じ)。
+!   台帳: seep_m3 > 0、地下の体積 = 初期 − seep + infil − 整合クランプ、地表の体積 = seep − infil − 整合クランプ。
+!======================================================================
+&list_sysparam
+  dt = 0.5
+  tt = 3600.0
+  dt_disp = 600.0
+  dt_file = 3600.0
+  dt_recrd = 300.0
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_gwflow = '-'
+  fn_salt = '-'
+  dir_data = 'data_saltledger'
+  dir_result = 'result_exout'
+  f_output_mode = 2
+  f_disp_debug = 1
+  f_check_cfl = 0
+  f_out_hg = 1
+/
+
+&list_geoinfo
+  nx = 20
+  ny = 8
+  dx = 2.0
+  dy = 2.0
+  f_ztype = 1
+  fn_z = 'z_slope.txt'      ! 斜面(1 → 0 m)と窪地(−0.5 m)
+  rn0 = 0.03
+  f_sdtype = 1
+  fn_sd = 'sd_slope.txt'    ! 土層厚 = z + 1(帯水層の底 −1 m)
+  sy0 = 0.2
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 地表は乾いている
+/
+
+&list_gwflow
+  f_gwvertical = 2
+  f_gwlateral = 1
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 360.0
+  gw_psif = 0.0
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 36000.0      ! 側方の透水係数 (mm/h) = 0.01 m/s(模式値)
+/
+
+&list_salt
+  f_salt_surf = 1
+  f_salt_gw = 1
+  fn_salt_hgs0 = 'hgs0_slope.txt'   ! 初期の地下の塩水 = 容量の 8 割(淡水なし)
+/

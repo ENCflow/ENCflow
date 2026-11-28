@@ -30,8 +30,12 @@ outside the system with the outlet omitted (removal from the system).
 same fraction of the [water-quality](wq.md) substance as of the water they
 take, at the concentration of the intake cell (with Kd partitioning only the
 dissolved part; the particulate part stays on the intake side with the
-suspended sediment). Sediment such as suspended load, the salt layer (bottom
-salt water), driftwood and debris are not carried and stay on the intake
+suspended sediment). The surface salt layer (bottom salt water) of the
+[fresh and salt water layers](salt.md) is not carried by default and stays on the intake side,
+but with `f_salt_struct = 1` (bottom layer first) or 2 (by mixing ratio) it is carried with the
+water (runs that drain seawater through pumping stations or sluices; the amount that left the
+system is `out_struct_m3` of the ledger `salt.csv`). Sediment such as suspended load, driftwood
+and debris are not carried and stay on the intake
 side (by default, driftwood piled up on the intake side does not obstruct the flow through a
 culvert; only a culvert with `culv_jam = 1` puts the loss of the wood piled up at its inlet
 into the discharge law -- see [Culverts](#culverts-list_struct_culvert) below; the effect on

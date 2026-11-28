@@ -1,0 +1,48 @@
+!======================================================================
+! saltledger / evap: 蒸発で水深が塩水層を下回った分は、整合クランプの列に出る
+!   閉じた箱(10 × 10 セル、dx = 10 m)に、全層が塩水の水深 0.5 m の静水を張り、0.1 m/h で 2 時間
+!   蒸発させる。蒸発は水だけを抜くが、塩水の体積しか持たないモデルでは塩水層が水深に合わせて
+!   縮む(濃くなった塩水は表せない)。縮んだ体積が台帳の lost_surf_m3 に積まれ、
+!   地表の体積 = 初期 − lost_surf が閉じる。蒸発散は塩水の処理の後に働くので、クランプは 1 ステップ遅れる。
+!======================================================================
+&list_sysparam
+  dt = 10.0
+  tt_c = "2h"
+  dt_disp_c = "30m"
+  dt_file_c = "1h"
+  dt_recrd_c = "10m"
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_evap = '-'
+  fn_salt = '-'
+  dir_result = 'result_evap'
+  f_output_mode = 2
+  f_disp_debug = 1
+  f_check_cfl = 0           ! 水が動かない検定なので、クーラン数の検査を外す
+/
+
+&list_geoinfo
+  nx = 10
+  ny = 10
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  rn0 = 0.03
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.5                  ! 初期水深 (m)
+/
+
+&list_evap
+  f_evmodel = 1             ! 一定速度
+  evap0 = 2400.0            ! 蒸発 (mm/day) = 0.1 m/h
+/
+
+&list_salt
+  f_salt_surf = 1
+  f_salt_gw = 0
+  salt_hss0 = 0.5           ! 初期の塩水層の厚さ (m) = 全層が塩水
+/

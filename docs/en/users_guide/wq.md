@@ -498,8 +498,11 @@ before that only the water moved and the substance stayed on the intake side).
   groundwater (with a retardation factor R, the mobile dissolved part 1/R).
 - **With Kd partitioning only the dissolved part fd** is carried. The
   particulate part stays on the intake side with the suspended sediment
-  (structures carry no sediment; [structures](structure.md)). The salt layer,
-  driftwood and debris are not carried either.
+  (structures carry no sediment; [structures](structure.md)). Driftwood and
+  debris are not carried either. The surface salt layer of the
+  [fresh and salt water layers](salt.md) is not carried by default and is
+  carried with the water when `f_salt_struct` is specified (it is not linked
+  to the water-quality concentration).
 
 **What it cannot do and the limits of accuracy**
 

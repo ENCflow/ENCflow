@@ -1,0 +1,58 @@
+!======================================================================
+! saltledger / exin: 浸透の淡塩配分(地表 → 地下)の台帳
+!   閉じた箱(8 × 8 セル、dx = 10 m)の水深 1 m の水(底の 0.4 m が塩水)が、空の帯水層(容量 0.3 m)へ
+!   浸透する。浸透は底層の塩水から先なので、0.3 m の塩水が地下へ入る(test/salt の模式実験 C1 と同じ)。
+!   台帳: infil_m3 = 0.3 m × 面積、地表の体積 = 初期 − infil、地下の体積 = infil。
+!======================================================================
+&list_sysparam
+  dt = 1.0
+  tt = 600.0
+  dt_disp = 100.0
+  dt_file = 600.0
+  dt_recrd = 60.0
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_gwflow = '-'
+  fn_salt = '-'
+  dir_result = 'result_exin'
+  f_output_mode = 2
+  f_disp_debug = 1
+  f_check_cfl = 0
+  f_out_hg = 1
+/
+
+&list_geoinfo
+  nx = 8
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  rn0 = 0.03
+  sd0 = 1.5                 ! 土層厚 (m)
+  sy0 = 0.2                 ! 比湧水量(容量 0.3 m)
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 1.0
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt
+  f_gwlateral = 1           ! 側方流(一様なので流れない)
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 3600.0       ! 浸透能 (mm/h) = 1e-3 m/s
+  gw_psif = 0.0
+/
+
+&list_gwflow_lateral
+/
+
+&list_salt
+  f_salt_surf = 1
+  f_salt_gw = 1
+  salt_hss0 = 0.4           ! 初期の塩水層の厚さ (m)
+/

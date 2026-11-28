@@ -90,6 +90,7 @@ the lateral K and specific yield are shared).
 | f_salt_surf | 1 | 1: surface salt layer (advection + bottom gravity current) |
 | f_salt_gw | 1 | 1: subsurface (soil layer) salt zone. **Requires f_gwlateral=1** |
 | f_salt_exch | 1 if both are enabled | 1: split the surface–subsurface exchange (infiltration, saturation-excess seepage) into fresh and salt water (seepage takes fresh water first). 2: the same, but seepage is mixed in the salt fraction before seepage (lower-bound sensitivity case). 1 and 2 require f_salt_surf=1 and f_salt_gw=1. 0 disables the split (water infiltrating and seeping out treated as fresh; for comparison with salinization via the river turned off) |
+| f_salt_struct | 0 | Transfer of the surface salt layer by structures (pumps, culverts, diversions) and sinks of internal sources. 0: not carried (the salt water stays on the intake side). 1: bottom salt layer first. 2: by the mixing ratio (sensitivity case). 1 and 2 require f_salt_surf=1 ("Transfer of salt water by structures" below) |
 | salt_rhof / salt_rhos | 1000 / 1025 | Fresh / salt densities (kg/m3); they set eps |
 | salt_alpha | 1.0 | Barotropic advection share of the salt layer, alpha (the bottom layer carries less of the flow; 1 = concentration-proportional) |
 | salt_ni | 0.025 | Interfacial Manning roughness of the bottom gravity current |
@@ -111,8 +112,8 @@ quantities).
 | Coastal aquifer salt wedge (Ghyben-Herzberg) | 0 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface along the coast, or start fresh and wait for intrusion | f_gwlateral=1, K_sh 3600-36000 mm/h (sandy aquifer 1e-3 to 1e-2 m/s), sy0 0.2-0.3, sd0 = aquifer thickness 5-20 m | With recharge (rainfall + Green-Ampt) a freshwater lens appears |
 | Estuary / tidal-river salt wedge | 1 / 0 | 1025 (brackish inner bay 1005-1015) | 0 | fn_tide + segment inflow (river discharge) | Calibrate the wedge position with salt_ni 0.02-0.03 and salt_alpha 0.5-1 |
 | Estuary barrage and salinization of the surrounding ground | 1 / 1 (f_salt_exch at its default 1) | 1025 | fn_salt_hgs0 for the aquifer under the sea | fn_tide + segment inflow + Green-Ampt + f_gwlateral=1. The barrage is a step in the terrain (crest above high water) | Example [examples/estuary_barrage](../../../examples/estuary_barrage/en/README.md). The land aquifer starts empty, so put a preliminary stage that fills it with fresh water from a flood and rainfall |
-| Where storm-surge / tsunami seawater goes | 1 / 0 | 1025 | 0 | Tide (surge) or boundary incidence (tsunami) + seawalls | Mixing is not solved = extent of the salt-water run-up and where it drains |
-| Salinization of reclaimed lowland (intrusion and drainage) | 1 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface | Drainage pumps ([structures](structure.md)) | Run-up or ponded seawater enters the aquifer by infiltration, and groundwater containing salt water returns to the surface by seepage (f_salt_exch; section below). Concentration by evaporation is not represented |
+| Where storm-surge / tsunami seawater goes | 1 / 0 | 1025 | 0 | Tide (surge) or boundary incidence (tsunami) + seawalls | Mixing is not solved = extent of the salt-water run-up and where it drains. The amounts that entered and left are in the ledger `salt.csv` |
+| Salinization of reclaimed lowland (intrusion and drainage) | 1 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface | Drainage pumps ([structures](structure.md)) + f_salt_struct = 1 | Run-up or ponded seawater enters the aquifer by infiltration, and groundwater containing salt water returns to the surface by seepage (f_salt_exch; section below). For runs in which a pumping station drains seawater, specify f_salt_struct = 1. Concentration by evaporation is not represented (follow the salinity with [Water quality](wq.md)). |
 | Stratified brackish lake / reservoir (halocline position) | 1 / 0 | 1010-1020 | salt_hss0 = lower-layer thickness | - | Sharp interface: no mixed layer or entrainment |
 
 ## Connection to the sea
@@ -179,6 +180,32 @@ Notes for reading the results:
 - Evapotranspiration, percolation into layer 2 (f_gwlayer2) and exchange with
   the conduit layer are outside the scope and remain implicitly fresh.
 
+## Transfer of salt water by structures (f_salt_struct)
+
+The pumps, culverts and diversions of [structures](structure.md) and the sinks of internal sources
+in [boundary conditions](boundary.md) do not carry the surface salt layer by default
+(`f_salt_struct = 0`). All the water they take is treated as fresh, the salt water stays on the
+intake side, and the part by which the depth falls below the salt layer disappears
+(`lost_surf_m3` of the ledger). For runs that drain seawater through pumping stations or sluices,
+specify one of the following (our own simplification; developer.md §140).
+
+- **`f_salt_struct = 1` (bottom layer first)**: the intake is taken to be at the bed of the
+  channel, and of the depth taken, the part up to the thickness of the salt layer is carried as
+  salt water (fresh water follows only when more than the salt layer is taken). It is the
+  counterpart of subsurface wells taking the upper fresh water of the aquifer first.
+- **`f_salt_struct = 2` (by mixing ratio)**: of the water taken, only the fraction of the salt
+  layer in the intake cell, Hss/H, is carried as salt water (water that is layered being mixed as
+  it is taken; a sensitivity case for the range against 1).
+
+The salt water carried is added to the salt layer of the outlet cells with the same distribution
+as the water. The part of structures without an outlet (drainage out of the domain) and of sinks
+leaves the system and goes to `out_struct_m3` of the ledger. Pumps drawing from retention ponds
+(rscap) and from the conduit continuum layer carry no salt water (the salt layer is part of the
+surface water). Salt water that enters the capture band of a dam or lake is not carried and goes
+to `lost_surf_m3`.
+
+**Outputs for this section**: `out_struct_m3` and `lost_surf_m3` of the ledger `salt.csv` ([Output and monitoring](#output-and-monitoring)). The verification is [test/saltledger](../../../test/saltledger/en/README.md).
+
 ## Output and monitoring
 
 The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.
@@ -193,7 +220,34 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 **Ledgers and log** (budget checks)
 
 - Salt water is water, so the S columns of Log.txt (S_surf / S_grnd /
-  S_total) show the fresh + salt total. There is no salt-only ledger.
+  S_total) show the fresh + salt total.
+- The ledger of salt-water volume is `result/salt.csv` (every `dt_recrd`; in m³; sea cells
+  excluded). It holds 2 columns of current amounts and 14 columns of cumulative inflows and
+  outflows.
+
+| Columns | Meaning |
+|---|---|
+| vol_surf_m3 / vol_gw_m3 | volume of the surface salt layer / of the subsurface salt water (current amounts) |
+| in_sea_m3 / out_sea_m3 | amount that entered the surface from the sea / left the surface to the sea (shallow-water advection) |
+| in_edge_m3 / out_edge_m3 | amount that entered / left through open edges |
+| out_stage_m3 | amount that left to water-level cells |
+| infil_m3 / seep_m3 | amount moved from the surface to the ground by the split of infiltration / from the ground to the surface by the split of seepage (f_salt_exch) |
+| in_sea_gw_m3 / out_sea_gw_m3 | at the subsurface sea boundary, amount that entered from the sea / left to the sea |
+| out_pump_m3 | salt water pumped by wells (the part mixed in when fresh water was insufficient, including the part filled by inflowing salt water after the pumping) |
+| out_struct_m3 | amount carried out of the system by structures and sinks (f_salt_struct = 1, 2) |
+| lost_surf_m3 | amount removed by the surface consistency clamp (the part by which the depth fell below the salt layer through evapotranspiration, withdrawals, or absorption by ponds and dams) |
+| lost_gw_m3 | amount removed by the subsurface consistency clamp (the part by which the subsurface storage fell below the salt water through evapotranspiration, percolation into layer 2, or exchange with the conduit layer) |
+| gvadj_m3 | in cells whose building porosity is below 1, the difference in volume on the ground side arising from the conversion of the surface-ground transfer (0 for porosity 1) |
+
+  The balance closes as: surface volume = initial + in_sea − out_sea + in_edge − out_edge
+  − out_stage − infil + seep − out_struct − lost_surf, and subsurface volume = initial + infil
+  − seep + gvadj + in_sea_gw − out_sea_gw − out_pump − lost_gw (within the precision of the
+  CSV; [test/saltledger](../../../test/saltledger/en/README.md)). The cumulative columns start
+  from 0 on a restart. The replacement in the bands of [nesting](nest.md) is not counted.
+- `lost_surf_m3` and `lost_gw_m3` are amounts that a model holding only the volume of salt water
+  could not represent. Evaporation removes water only, so in reality the salt stays and
+  concentrates, but here it appears as the volume by which the salt layer shrank. To follow the
+  salinity and precipitation, use [Water quality](wq.md).
 
 **Measurements** (probe and transect columns)
 
@@ -213,7 +267,8 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   $`z_s = h_f/\varepsilon`$ (about 40 times the fresh head) as a function of
   distance from the coast (procedure of [test/salt](../../../test/salt/en/README.md)).
 - Where the run-up sea water ended up is read from the last frame of
-  `Hss0001...` (salt water left after drainage).
+  `Hss0001...` (salt water left after drainage) and from the columns of `salt.csv` (the amount
+  that returned to the sea, infiltrated into the ground, or was carried out by structures).
 
 ## Constraints and notes
 
@@ -227,7 +282,10 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   (gwc_leak_layer=1) are implicitly treated as fresh (and so are infiltration
   and seepage with f_salt_exch=0). When the fresh water is exhausted and
   Hg < Hgs, the consistency clamp (Hgs ≤ Hg) reduces the salt water, so the
-  salt-water volume is not a conserved quantity.
+  salt-water volume is not a conserved quantity. The amounts removed can be checked in
+  `lost_surf_m3` and `lost_gw_m3` of the ledger `salt.csv`.
+- Structures and sinks do not carry the surface salt layer by default (`f_salt_struct`; section
+  above).
 - The cap of the [river-bed exchange capacity](gwflow.md) (f_gwbed) also
   applies to the salt-zone flux at the boundary between river and non-river
   cells, in the same form (capacity × passage width × saturated salt
@@ -264,6 +322,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 |---|---:|---|---|
 | f_salt_surf / f_salt_gw | 1 / 1 | enable the surface and subsurface salt layers | **method** both by default; combinations by use are in "Recommended values by pattern" |
 | f_salt_exch | 1 if both are enabled | fresh/salt split of the surface–subsurface exchange | **method** in the sharp-interface picture the bottom salt water touches the river bed and the upper aquifer is fresh (own simplification; developer.md sec. 47.5). With both layers enabled the physically consistent side is the default; 2 is the lower-bound sensitivity case (sec. 47.9), 0 is for comparison |
+| f_salt_struct | 0 | transfer of the surface salt layer by structures and sinks | **method** not carried by default (pumped water is treated as fresh; how the salt water is carried depends on the height of the intake, so it is carried only when specified). Taking the intake of pumping stations and sluices to be at the bed (1) is consistent with the sharp interface that puts the salt water in the bottom layer (own simplification; developer.md §140, in Japanese). 2 is the sensitivity case for water mixed as it is taken |
 | salt_rhof / salt_rhos | 1000 / 1025 kg/m³ | fresh and sea water densities (density difference $`\varepsilon`$ = 2.5 %) | **customary value** standard seawater (salinity 35); Ghyben–Herzberg 1/ε ≈ 40[^bear79] |
 | salt_alpha | 1.0 | barotropic advection share of the salt layer | **empirical** 1 = proportional to the layer thickness; calibrate within 0.5–1 for the bottom layer carrying less of the flow |
 | salt_ni | 0.025 | interfacial Manning roughness of the gravity current | **empirical** placeholder of the order of a bed roughness; calibrate on observed salt-wedge positions |
@@ -292,6 +351,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   (D1: levee, D2: seawall).
 - [examples/estuary_barrage](../../../examples/estuary_barrage/en/README.md): how the presence of an estuary barrage affects the salt wedge travelling up a river and
   the intrusion of salt water into the surrounding aquifer (eight cases: with/without barrage × no / with / mixing-ratio exchange split / clogged river bed).
+- [test/saltledger](../../../test/saltledger/en/README.md): closure of the salt-water ledger `salt.csv` and the value of each path (inflow from and outflow to the sea,
+  shrinkage by evaporation, transfer by structures f_salt_struct = 0, 1, 2, the split of infiltration and seepage, the subsurface sea boundary, well pumping).
 - Worked example of the format: [examples/List_samples/en/list_salt.txt](../../../examples/List_samples/en/list_salt.txt).
 
 ## References

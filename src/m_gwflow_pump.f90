@@ -263,7 +263,17 @@ subroutine gwflow_pump_calc(gp, p, g, s, it, dts)
         ! sx <= hgs が構造的に成立。max は丸め保護)
         if (allocated(s%hgs)) then
           sx = fx - (hgb - s%hgs(i,j))
-          if (sx > 0.0) s%hgs(i,j) = max(s%hgs(i,j) - sx, 0.0)
+          if (sx > 0.0) then
+            ! 汲んだ塩水の体積を台帳の記録場へ(salt.csv の out_pump_m3。§140)
+            if (allocated(s%hssx)) s%hssx(j,8) = s%hssx(j,8) &
+                + real(min(sx, s%hgs(i,j)), real64) * real(g%dx, real64) * real(g%dy, real64)
+            s%hgs(i,j) = max(s%hgs(i,j) - sx, 0.0)
+          end if
+          ! 汲んだ時点で淡水と数えた分を記録する。合計の貯留 hg は側方流で先に埋まり、
+          ! 塩水 hgs はその後の m_saltwater が運ぶので、汲んだ水がじつは塩水だったか
+          ! どうかは、ここでは決まらない(塩水が埋めた分は、m_saltwater の地下の整合
+          ! クランプが台帳の out_pump に数える。§140.1)
+          if (allocated(s%gwpf)) s%gwpf(i,j) = s%gwpf(i,j) + max(fx - max(sx, 0.0), 0.0)
         end if
       else
         ! 風化基岩層から取水

@@ -157,16 +157,19 @@ module subroutine boundary_h(p, g, b, s, sx)
   type(t_boundary), intent(in) :: b
   type(t_state), intent(inout) :: s
   type(t_enc_status), intent(inout) :: sx
-  integer :: i, j, k, isrc, istage, ip, ncs, ncd
-  logical :: fwd, cqc
-  real :: qcell, dht, dh, hb, w, mcell, dhd
-  real(r64) :: dm
-  real, allocatable :: vst(:), mst(:), vbuf(:)
+  integer :: i, j, k, isrc, istage, ip, ncs, ncd, nb
+  logical :: fwd, cqc, ssc
+  real :: qcell, dht, dh, hb, w, mcell, dhd, scell
+  real(r64) :: dm, dsv
+  real, allocatable :: vst(:), mst(:), vbuf(:), sst(:)
 
   ! 取水で水質の柱状量を水と一緒に運ぶか(§30.10。水質が有効で、次の時刻の
-  ! 柱状量 cq1 と台帳の記録場 cqx が確保済み。浮遊砂・塩水層・流木・瓦礫は
-  ! 運ばない = 取水側に残る)
+  ! 柱状量 cq1 と台帳の記録場 cqx が確保済み。浮遊砂・流木・瓦礫は運ばない =
+  ! 取水側に残る。塩水層は下の ssc)
   cqc = s%wq_active .and. allocated(sx%cq1) .and. allocated(s%cqx)
+  ! 取水で地表の塩水層を水と一緒に運ぶか(淡塩2層の f_salt_struct >= 1。§140。次の時刻の
+  ! 塩水層厚 hss1 と台帳の記録場 hssx が確保済み)。0(既定)は運ばない = 取水側に残る
+  ssc = s%salt_struct >= 1 .and. allocated(sx%hss1) .and. allocated(s%hssx)
 
   !$omp parallel do schedule(dynamic) private(i, j)
   do j = dcp%js, dcp%je
@@ -227,6 +230,13 @@ module subroutine boundary_h(p, g, b, s, sx)
           s%cqx(j,6) = s%cqx(j,6) + dm
         end if
       end if
+      ! 吸い込みは地表の塩水層も系外へ持ち出す(f_salt_struct >= 1。台帳 out_struct_m3。§140)
+      if (ssc .and. b%src(isrc)%q < 0.0) then
+        if (hb > sx%h1(i,j)) then
+          call intake_salt(g, s, sx, i, j, hb, hb - sx%h1(i,j), dsv)
+          s%hssx(j,6) = s%hssx(j,6) + dsv
+        end if
+      end if
     end do
   end do
 
@@ -245,8 +255,13 @@ module subroutine boundary_h(p, g, b, s, sx)
   ! 吐口のない構造物(域外)の分は取水セルの行で台帳 out_intake_g へ。ため池から
   ! 汲む分はため池プール crs から、管路から汲むポンプの水は管路の水(wq_gwc_conc の
   ! 濃度)とみなし、送り先の水深の増分を記録場 fxco に積む(§30.10)
+  ! 地表の塩水層(ssc。淡塩2層の f_salt_struct >= 1。§140)も同じ形で運ぶ: 取水セルの塩水層から、
+  ! 底層から先に(1)か混合比で(2)取り出した体積 sst を、水と同じセル数等分で送り先の塩水層へ
+  ! 足す。吐口のない構造物(域外)の分は取水セルの行で台帳 out_struct_m3 へ。ため池・管路から
+  ! 汲む水は塩水を持たない(塩水層は地表水 h の内数)
   if (b%nstruct > 0) then
     allocate(vst(1:b%nstruct), source = 0.0)
+    allocate(sst(1:merge(b%nstruct, 0, ssc)), source = 0.0)
     ! 水質の質量の集計(cqc のときだけ構造物数ぶん。無効時は大きさ 0 で確保し、
     ! 触れない = 実質の確保なし。条件付き確保だとコンパイラが未確保の参照を
     ! 疑う警告を出すため、常に確保する形にした)
@@ -308,6 +323,16 @@ module subroutine boundary_h(p, g, b, s, sx)
           dh = min(max(sx%h1(i,j), 0.0), dht)
           sx%h1(i,j) = sx%h1(i,j) - dh
           if (cqc) call intake_cq(p, g, s, sx, i, j, hb, dh, dm)
+          if (ssc) then
+            call intake_salt(g, s, sx, i, j, hb, dh, dsv)
+            if (dsv > 0.0_r64) then
+              if (fwd .and. b%struct(ip)%ncout <= 0) then
+                s%hssx(j,6) = s%hssx(j,6) + dsv       ! 域外へ(台帳 out_struct_m3)
+              else
+                sst(ip) = sst(ip) + real(dsv)         ! 送り先へ配る分(後段)
+              end if
+            end if
+          end if
         end if
         if (chn%have_width) then
           vst(ip) = vst(ip) + dh * s%gv(i,j) * chn%wfrac(i,j) * g%dx * g%dy
@@ -327,13 +352,18 @@ module subroutine boundary_h(p, g, b, s, sx)
     end do
     ! 水の体積と水質の質量を 1 回の総和で全ランクに共有する(水質なしは従来の
     ! 呼び出しのまま。要素ごとの和なので水の体積は従来とビット同一)
-    if (cqc) then
-      allocate(vbuf(1:2*b%nstruct))
-      vbuf(1:b%nstruct) = vst(:)
-      vbuf(b%nstruct+1:2*b%nstruct) = mst(:)
+    if (cqc .or. ssc) then
+      ! 水の体積・水質の質量・塩水の体積を 1 回の総和で共有する(並びは 水・水質・塩水。
+      ! 無効な量の分は持たない。要素ごとの和なので、水の体積と水質の質量は従来とビット同一)
+      nb = b%nstruct
+      allocate(vbuf(1:nb * (1 + merge(1, 0, cqc) + merge(1, 0, ssc))))
+      vbuf(1:nb) = vst(:)
+      if (cqc) vbuf(nb+1:2*nb) = mst(:)
+      if (ssc) vbuf(size(vbuf)-nb+1:size(vbuf)) = sst(:)
       call par_allreduce_sumr(vbuf)
-      vst(:) = vbuf(1:b%nstruct)
-      mst(:) = vbuf(b%nstruct+1:2*b%nstruct)
+      vst(:) = vbuf(1:nb)
+      if (cqc) mst(:) = vbuf(nb+1:2*nb)
+      if (ssc) sst(:) = vbuf(size(vbuf)-nb+1:size(vbuf))
       deallocate(vbuf)
     else
       call par_allreduce_sumr(vst)
@@ -350,6 +380,8 @@ module subroutine boundary_h(p, g, b, s, sx)
       qcell = vst(ip) / (ncd * g%dx * g%dy)
       mcell = 0.0
       if (cqc) mcell = mst(ip) / real(ncd)
+      scell = 0.0
+      if (ssc) scell = sst(ip) / real(ncd)
       do k = 1, ncd
         if (fwd) then
           i = b%struct(ip)%cout(1,k)
@@ -363,6 +395,14 @@ module subroutine boundary_h(p, g, b, s, sx)
           sx%h1(i,j) = sx%h1(i,j) + qcell / s%gv(i,j) / chn%wfrac(i,j)
         else
           sx%h1(i,j) = sx%h1(i,j) + qcell / s%gv(i,j)
+        end if
+        ! 運んだ塩水の体積を水と同じセル数等分で、送り先の塩水層(gv・wfrac 基底)へ足す(§140)
+        if (scell > 0.0) then
+          if (chn%have_width) then
+            sx%hss1(i,j) = sx%hss1(i,j) + scell / (s%gv(i,j) * chn%wfrac(i,j) * g%dx * g%dy)
+          else
+            sx%hss1(i,j) = sx%hss1(i,j) + scell / (s%gv(i,j) * g%dx * g%dy)
+          end if
         end if
         if (cqc) then
           ! 運んだ質量を水と同じセル数等分で、柱状量(gv・wfrac 基底)へ足す
@@ -389,6 +429,7 @@ module subroutine boundary_h(p, g, b, s, sx)
     end do
     deallocate(vst)
     deallocate(mst)
+    deallocate(sst)
   end if
 
   ! 水位規定セル群(流域出口の流出境界、背水・感潮域等)
@@ -451,6 +492,44 @@ subroutine intake_cq(p, g, s, sx, i, j, hb, dh, dm)
          * real(g%dx, r64) * real(g%dy, r64)
   else
     dm = real(w, r64) * real(s%gv(i,j), r64) * real(g%dx, r64) * real(g%dy, r64)
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 取水(内部ソースの吸い込み・ポンプ・カルバート・分水)が水深 hb のセルから dh を汲むとき、
+! 地表の塩水層(次の時刻の値 hss1。h1 と同じ基底)から取り出す厚さを決めて引き、その体積
+! dsv (m3) を返す(淡塩2層の f_salt_struct。§140)。
+!   1: 底層から先に(取水口が底にある = ポンプ場の吸込槽・カルバートの呑口。鋭利界面で
+!      底にあるのは塩水なので、汲んだ分は塩水から先に出る。地下の井戸の「淡水から
+!      先に」と対)
+!   2: 混合比で(汲んだ水のうち塩水層の割合 hss/h だけ。上下に分かれた水を混ぜて汲む場合の
+!      感度ケース。f_salt_exch = 2 と同じ考え方)
+! 補助手続きは contained にしない(§13)
+!----------------------------------------------------------------------
+subroutine intake_salt(g, s, sx, i, j, hb, dh, dsv)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(inout) :: sx
+  integer, intent(in) :: i, j
+  real, intent(in) :: hb, dh
+  real(r64), intent(out) :: dsv
+  real :: w
+
+  dsv = 0.0_r64
+  if (hb <= 0.0 .or. dh <= 0.0) return
+  if (sx%hss1(i,j) <= 0.0) return
+  if (s%salt_struct == 2) then
+    w = sx%hss1(i,j) * min(dh / hb, 1.0)
+  else
+    w = min(sx%hss1(i,j), dh)
+  end if
+  sx%hss1(i,j) = sx%hss1(i,j) - w
+  if (chn%have_width) then
+    dsv = real(w, r64) * real(s%gv(i,j), r64) * real(chn%wfrac(i,j), r64) &
+          * real(g%dx, r64) * real(g%dy, r64)
+  else
+    dsv = real(w, r64) * real(s%gv(i,j), r64) * real(g%dx, r64) * real(g%dy, r64)
   end if
 end subroutine
 
