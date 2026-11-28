@@ -13,11 +13,11 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "b1d27971c2cf3db33d7c98e72ff6382f3b49276ae58f06eeaa8a29f472a4265d",
-      "target_sha256": "cabb20ec0e561b48b9b424b0c3445c5ee428e1983e856d0883e1d3886776c47a",
-      "reviewer": "Claude (Claude Code session; links to the project policy changed from developer.md §0 and its partial mirror to docs/policy.md / docs/en/policy.md, and developer.md described as the index of the records; both files compared)",
+      "source_sha256": "70bef17d0bce12d1fe3b941924cd03cac7b41de1c02d725b6b88efb78a467a7b",
+      "target_sha256": "a9e8b595e4e11cf4f779c788d68ed976901d8510b1196cbb077d30c623d97245",
+      "reviewer": "Claude (Claude Code session; \"Sustainability as a project\": the documents reordered to the overall map, then the reasons for each design decision; both bullets compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "TRADEMARKS.md",
@@ -95,11 +95,11 @@
     {
       "source": "docs/policy.md",
       "target": "docs/en/policy.md",
-      "source_sha256": "b2fda5f38be63c5ca76444487924a8582a2744f665d1be489599e40d8f3b2bef",
-      "target_sha256": "2f2caf5cf08d762b26b973d9c6eff1fc782b612fe87f00b946d4974df1126fe4",
-      "reviewer": "Claude (Claude Code session; new exception under item 6 agreed 2026-11-22 (mixed-size bed load: grain-size classes with one exchange layer and one substrate layer, conditions (1)-(5)) added to both files; the added paragraph compared in both files, the rest unchanged)",
+      "source_sha256": "19aa42e70d13b550bd877f4b854d2241c661c0234c3f74a418e26774dee00651",
+      "target_sha256": "7304c665c24be275693508b4c66b024aa8e54c2fdee5d7ad61a30c85ee95684b",
+      "reviewer": "Claude (Claude Code session; restructured into main text / notes / exceptions / about, developer.md §35.6; the English built by rearranging the previous translation and retranslating only the changed sentences; both files compared section by section)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/tutorial.md",
@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "d240941aa1ea1e7142ce242be5cc9ec616c5ae2da4bd921c7304a699719a7d95",
-      "target_sha256": "46766754a65f88c44c3dfb923aa8a21a119735b2007a983f496c1294236a3ff3",
-      "reviewer": "Claude (Claude Code session; tutorial link removed from the interoperability (BMI) entry and its task-table row, developer.md §35.5; both changed lines compared)",
+      "source_sha256": "c248ef6601a2718183bcc6464e400a8b4cc16bbc4304578a734df3eec101e3d8",
+      "target_sha256": "7bb2edfe48712beb9073bb4cbaacfd2f0a70e6bdd63143b353a82c0fb5314952",
+      "reviewer": "Claude (Claude Code session; table of contents: \"output locations and file names\" added to the description of the input/output chapter; both lines compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -374,11 +374,11 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "66d4624e88cbd9a467d6bb8d3611268b7977608b430874c756713a7446dc574f",
-      "target_sha256": "2881f6dfb9f2bcd835c6f0b4c805aea5c4c0473e0af2fa1500eb50ec88288d96",
-      "reviewer": "Claude (Claude Code session; merge of main and the paddy-dam branch: both sides changes present in both files, parameter count 862 checked, no model execution)",
+      "source_sha256": "04bd81975b1c13b30dd95fc7fb39a6e9c08cc17ad40ae12c63c2b140ac41671a",
+      "target_sha256": "3dca2e951c0583102ef637071f74150c0aaa689e9ff0d3f6b991a8bb0c94a56e",
+      "reviewer": "Claude (Claude Code session; the section \"Adjusting directories and file names\" moved to the top, one sentence added to the introduction; both sides compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/lavaflow.md",

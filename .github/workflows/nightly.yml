@@ -1,6 +1,6 @@
 # ENCflow Nightly: フル回帰+MPI np=1,2,4+debug(-fcheck=all)+BMI 適合性+毎 push から移した実行時間の長い検定
-#   毎 push の CI(ci.yml: 29 ケース×逐次、うち 27 ケース×np=2)を補う夜間の全数検査。
-#   6 ジョブ構成:
+#   毎 push の CI(ci.yml: 30 ケース×逐次、うち 29 ケース×np=2)を補う夜間の全数検査。
+#   6 種類のジョブ(full-mpi は np ごと、debug-fcheck はケースの組ごとに分かれ、全部で 10 ジョブ):
 #     full-serial : release 逐次で reference 全 25 ケース(chichibu・chichibu_cond・paddy 含む)
 #                   +トップレベル make(utils の追随漏れ検出。developer.md §10)
 #     full-mpi    : release MPI np=1,2,4 で逐次 reference と照合
@@ -9,13 +9,16 @@
 #                    どれも、ランナーの CPU が reference を作ったマシンと違うときの最終桁の差)
 #     debug-fcheck: -Og -fcheck=all ビルドで全ケースを実行し、
 #                   debug 逐次 reference と MPI np=2 のビット一致を検査
-#                   (確保範囲・FPE の実行時検査。developer.md §10)
+#                   (確保範囲・FPE の実行時検査。developer.md §10)。ケースを chichibu・chichibu_cond・
+#                   その他の 3 つの組に分け、別々のジョブで回す(2026-11-28。1 つのジョブでは遅いランナーで
+#                   GitHub の 1 ジョブの上限 360 分に迫るため。developer.md §10)
 #     bmi         : CSDMS bmi-tester 適合性+BMI 経由実行の逐次 reference 一致
 #                   +多格子(bmi_nest)・機能依存変数(bmi_vars)・ダム(bmi_dam)の受け入れ試験
 #     verify-serial: 毎 push の ci.yml から移した、実行時間の長い検定型(reference を持たない)の 5 ケース
 #                   (VERIFY_CASES)を release 逐次で回す。Run.sh の終了コードで判定(2026-11-27。ci.yml の
 #                   逐次のジョブが 30 分の制限で打ち切られていたため。developer.md §10)
-#     verify-mpi  : そのうち ci.yml で MPI np=2 も回していた 2 ケース(VERIFY_MPI_CASES)を release MPI np=2 で
+#     verify-mpi  : そのうち 3 ケース(VERIFY_MPI_CASES。ci.yml で np=2 も回していた tjunction・stairbank と、
+#                   2026-11-28 に足した vchannel)を release MPI np=2 で
 #                   (ci.yml の MPI のジョブと同じ環境。Run_MPI.sh の終了コードで判定)
 #   VERIFY_CASES の 5 ケース:
 #     tjunction は、1 セル幅の T 字の合流(格子の軸に沿う合流と 45° 回した合流)の上流の水深を運動量の理論と比べる
@@ -33,8 +36,9 @@
 #     vchannel は、一様な勾配の V 字水路の流れの横断分布と流量を、各列の流速が自分の流動深だけで決まる厳密解と
 #     比べる検定(流れの向き 0°・22.5°・45°。水のマニング則と、土砂流動の Voellmy 則)。塞がれた開口の動的振り替えの
 #     塞がり率を、土砂流動の計算では流動深 h + hs で測ることの見張りを兼ねる(水深 h だけで測ると、摩擦なしの
-#     加速度が g S の 1.12 倍になって不合格になる。developer.md §130)。逐次だけで回す(MPI np = 2 は回していない。
-#     手元の np = 2 は合格し、分布出力は逐次とバイト一致する。handoff 00ah)
+#     加速度が g S の 1.12 倍になって不合格になる。developer.md §130)。逐次と MPI の両方で回す(np = 2 は 2026-11-28 に
+#     足した。ランナーで約 2.5 分。土砂流動を MPI で回す検定はほかにない。np = 2 の合否は Check_vchannel.py の判定で、
+#     逐次の分布出力との比較は同じ場所で Run.sh を先に回したときだけ。developer.md §10)
 #     bldgdrag は、家屋の抗力項を含む等流の理論値との比較で、逐次だけで回す(辺ごとの局所の式で、MPI は同じ式を
 #     通るだけなので足さない)
 #     driftwood は、流木の材積保存・集積の抵抗による堰上げの解析解・カルバートの流量則と流入口の捕捉の検定で、
@@ -57,9 +61,9 @@ env:
   # reference がコミットされている回帰ケース(比較込みで PASS/FAIL 判定)
   REF_CASES: wave dambreak frost pump conduit salt coastal_drain damwq damops gwseep kdpart sewer_wq splash tide chichibu chichibu_cond vzcol vzzone sfzone wfshoal wfshadow wfcurrent wfdoppler wfsed paddy
   # 毎 push の ci.yml から移した、実行時間の長い検定型のケース(reference を持たない。Run.sh・Run_MPI.sh の終了コードで
-  # 判定。developer.md §10)。VERIFY_MPI_CASES は ci.yml で MPI np=2 も回していたもの
+  # 判定。developer.md §10)。VERIFY_MPI_CASES は np=2 でも回すもの(ci.yml で np=2 も回していた tjunction・stairbank と vchannel)
   VERIFY_CASES: tjunction stairbank vchannel bldgdrag driftwood
-  VERIFY_MPI_CASES: tjunction stairbank
+  VERIFY_MPI_CASES: tjunction stairbank vchannel
 
 jobs:
   full-serial:
@@ -69,7 +73,9 @@ jobs:
     # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
     # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    # reference の 25 ケースは普通のランナーで約 47 分(Nightly #77。chichibu・chichibu_cond の 2 つで 28 分)。
+    # 制限は 90 分(2026-11-28 に 60 分から延ばした。developer.md §10)
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - name: Install toolchain
@@ -90,9 +96,10 @@ jobs:
     # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
     # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
     runs-on: ubuntu-24.04
-    # np=1 は回帰テストだけで約 58 分かかる(1 プロセス・1 スレッド。2026-11-22 の実行はジョブ全体で
-    # 59 分 41 秒、11-21 と 11-24 は 60 分で打ち切られた)。np=2・4 は 33〜45 分。制限は 90 分(developer.md §10)
-    timeout-minutes: 90
+    # np=1 は回帰テストだけで 66〜74 分かかる(1 プロセス・1 スレッド。Nightly #75・#76)。遅いランナーでは全ケースが
+    # 約 1.5 倍で、#77 は 90 分で打ち切られた(約 100 分要る)。np=2・4 は 38〜60 分。制限は 150 分(2026-11-28 に
+    # 90 分から。developer.md §10)
+    timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:
@@ -146,7 +153,7 @@ jobs:
     # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
     # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
     runs-on: ubuntu-24.04
-    # 2 ケースは遅いランナーで約 9 分(developer.md §10)
+    # 3 ケースは遅いランナーで約 11 分(developer.md §10)
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -164,14 +171,37 @@ jobs:
           done
 
   debug-fcheck:
-    name: debug -fcheck=all (serial vs np=2 bit-identical)
+    name: debug -fcheck=all (${{ matrix.part }}; serial vs np=2 bit-identical)
     if: github.event_name != 'schedule' || github.repository_owner == 'ENCflow'
     # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
     # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
     runs-on: ubuntu-24.04
+    # REF_CASES の全部を 1 つのジョブで回すと、普通のランナーで 3.6〜4 時間、遅いランナーで約 5.2 時間かかり(Nightly
+    # #75〜#77)、制限の 300 分と GitHub の 1 ジョブの上限 360 分に迫る。全体の 6 割を占める chichibu・chichibu_cond を
+    # それぞれ 1 つのジョブにし、残りのケースを 1 つのジョブにする(遅いランナーでも 1 つ 2 時間前後の見込み。
+    # 2026-11-28。developer.md §10)
     timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [chichibu, chichibu_cond, others]
     steps:
       - uses: actions/checkout@v4
+      # REF_CASES から、この組のケースを選ぶ(others は chichibu・chichibu_cond 以外の全部)
+      - name: Select cases (${{ matrix.part }})
+        env:
+          PART: ${{ matrix.part }}
+        run: |
+          sel=""
+          for c in $REF_CASES; do
+            case "$PART" in
+              others) case "$c" in chichibu|chichibu_cond) ;; *) sel="$sel $c" ;; esac ;;
+              *) if [ "$c" = "$PART" ]; then sel="$sel $c"; fi ;;
+            esac
+          done
+          if [ -z "$sel" ]; then echo "no case selected for $PART" >&2; exit 1; fi
+          echo "cases:$sel"
+          echo "DEBUG_CASES=$sel" >> "$GITHUB_ENV"
       - name: Install toolchain
         run: sudo apt-get update && sudo apt-get install -y gfortran make openmpi-bin libopenmpi-dev
       # make.inc の gfortran debug 行と同一のフラグ(コマンドラインから上書き。
@@ -193,8 +223,8 @@ jobs:
       - name: Regenerate references with debug serial run
         run: |
           set -e
-          rm -rf test/*/reference
-          for c in $REF_CASES; do
+          for c in $DEBUG_CASES; do
+            rm -rf "test/$c/reference"
             echo "===== test/$c (debug serial; creates reference) ====="
             (cd "test/$c" && ./Run.sh)
           done
@@ -217,7 +247,7 @@ jobs:
           export OMPI_MCA_rmaps_base_oversubscribe=1
           export RTOL=0
           export ULP=0
-          for c in $REF_CASES; do
+          for c in $DEBUG_CASES; do
             echo "===== test/$c (debug np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done
