@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""設定例(List_samples)・検証ケースの一覧(test/README)・チュートリアルの詳説ページの表の一貫性検査。
+"""設定例(List_samples)・検証ケースと例題の一覧(test/README・examples/README)・チュートリアルの詳説ページの表の一貫性検査。
 Python 標準ライブラリのみ。
 
-  python3 tools/consistency/check.py [--root DIR] [samples] [tests] [guide]   (省略時はすべて)
+  python3 tools/consistency/check.py [--root DIR] [samples] [tests] [guide] [imports] [lengths]   (省略時はすべて)
 
 samples: examples/List_samples/list_*.txt と英語ミラー en/list_*.txt の各グループ(`&名前` から
   `/` の行まで。名前の末尾の `_数字` は同じグループの別の例で、その名前の namelist が src に
@@ -32,6 +32,9 @@ imports: 毎 push の CI(.github/workflows/ci.yml の `for c in …` の一覧)�
      (ランナーには numpy などがない。developer.md §10)。ImportError を捕まえる try の中の import は数えない
   シェルのコメント行とヒアドキュメントの中に書かれたファイル名は、実行するスクリプトに数えない。
   Python 3.10 より前の Python では調べない(参考として表示し、失敗にはしない)。
+lengths: 検証ケースの一覧(test/README.md)と例題の一覧(examples/README.md)の表(英語版も)の「内容」の列が、
+  上限 INDEX_LIMITS の字数以下であること(1 文の要約にし、細部は各ケースの README に置く規約。developer.md §35.7)。
+  末尾に添えた開発記録の §の括弧(「(§110・§114)」など)は数えない。上限は日本語が目安の上端、英語版はその約 4 倍。
 不一致があれば行ごとに報告して終了コード 1。索引・文書を生成・変更はしない(developer.md §35.1)。
 """
 from __future__ import annotations
@@ -75,6 +78,11 @@ PY_INLINE = re.compile(r"""\bpython3?\s+-c\s+(?:"([^"]*)"|'([^']*)')""")
 HEREDOC = re.compile(r"(?<!<)<<(-?)(?!<)\s*(['\"]?)([A-Za-z_]\w*)\2")
 PY_HEREDOC_CMD = re.compile(r"\bpython3?\s+-\s*(?:\|\||&&|;|$|<<)")
 IMPORT_ERRORS = {"ImportError", "ModuleNotFoundError", "Exception", "BaseException"}
+# 一覧の表の「内容」の列の字数の上限(末尾の §の括弧を除く。developer.md §35.7)
+INDEX_LIMITS = {"test/README.md": 80, "test/README.en.md": 300,
+                "examples/README.md": 60, "examples/README.en.md": 240}
+INDEX_ROW = re.compile(r"^\|\s*\[([^\]/]+)/?\]\([^)]*\)\s*\|([^|]*)\|")
+TRAILING_SECTIONS = re.compile(r"[((](?:developer\.md )?§[^()()]*[))]$")
 
 
 def text(path: Path) -> str:
@@ -460,16 +468,44 @@ def check_imports(root: Path) -> tuple[list[str], list[str]]:
     return errors, notes
 
 
+def contents_length(cell: str) -> int:
+    """「内容」の列の字数。末尾に添えた開発記録の §の括弧は数えない"""
+    return len(TRAILING_SECTIONS.sub("", cell.strip()).rstrip())
+
+
+def check_lengths(root: Path) -> tuple[list[str], list[str]]:
+    errors, notes = [], []
+    for rel, limit in INDEX_LIMITS.items():
+        path = root / rel
+        if not path.exists():
+            errors.append(f"{rel}: not found")
+            continue
+        rows = 0
+        for no, line in enumerate(text(path).split("\n"), 1):
+            m = INDEX_ROW.match(line)
+            if not m:
+                continue
+            rows += 1
+            n = contents_length(m.group(2))
+            if n > limit:
+                errors.append(f"{rel}:{no}: {m.group(1)}/: the contents cell has {n} characters, over the limit "
+                              f"of {limit} (a trailing (§...) is not counted). Write one sentence and leave the "
+                              f"details to the README of the case (developer.md §35.7)")
+        if rows == 0:
+            errors.append(f"{rel}: no table rows found")
+    return errors, notes
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--root", default=Path(__file__).resolve().parents[2], type=Path)
-    ap.add_argument("what", nargs="*", choices=["samples", "tests", "guide", "imports"],
+    ap.add_argument("what", nargs="*", choices=["samples", "tests", "guide", "imports", "lengths"],
                     help="checks to run (default: all)")
     args = ap.parse_args(argv)
-    what = args.what or ["samples", "tests", "guide", "imports"]
+    what = args.what or ["samples", "tests", "guide", "imports", "lengths"]
     errors_all = []
     for name, fn in (("samples", check_samples), ("tests", check_tests), ("guide", check_guide),
-                     ("imports", check_imports)):
+                     ("imports", check_imports), ("lengths", check_lengths)):
         if name not in what:
             continue
         errors, notes = fn(args.root)
