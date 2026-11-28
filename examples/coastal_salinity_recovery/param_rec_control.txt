@@ -1,0 +1,96 @@
+!======================================================================
+! coastal_salinity_recovery / rec_control: その後の 8 年(津波なし(比較の基準)。時間の圧縮 M = 100)
+!   スピンアップの状態(save_rec_control = save_spinup のコピー)から、津波なしで続ける。
+!   保存状態は save_rec_control(save_spinup のコピー)。雨・浸透能・透水係数・井戸と排水機場の流量を M 倍にして、
+!   8 年を 8 年 / M で計算する。
+!======================================================================
+&list_sysparam
+  dt = 10                 ! 時間刻み (s)
+  tt = 2524800.0
+  dt_disp = 315600.0
+  dt_file = 78900.0
+  dt_recrd = 15780.0
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_tide = '-'
+  fn_precip = '-'
+  fn_gwflow = '-'
+  fn_salt = '-'
+  fn_structure = '-'
+  dir_data = 'data_coast'
+  dir_result = 'result_rec_control'
+  dir_save = 'save_rec_control'
+  f_state_save = 1          ! 終了時の状態を保存(次の段の初期条件)
+  f_state_restore = 2       ! 保存状態を新しい時間軸の初期条件にする
+  f_output_mode = 2         ! 分布は bil
+  f_out_hg = 1              ! 地下の貯留 Hg と地下の塩水 Hgs の分布を出力
+/
+
+&list_geoinfo
+  nx = 40
+  ny = 10
+  dx = 25
+  dy = 25
+  f_ztype = 1
+  fn_z = 'z.txt'            ! 海・浜・堤防(天端 3 m)・排水路・低地(2 m)・台地
+  rn0 = 0.03
+  f_masktype = 2            ! 領域マスクを海域マスクから作る
+  fn_sw = 'sw.txt'          ! 海域マスク(西端の 2 列)
+  f_sdtype = 1
+  fn_sd = 'sd.txt'          ! 土層厚 = 地盤高 + 8 m(帯水層の底 −8 m)
+  sy0 = 0.2                 ! 有効間隙率
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_tide
+  titype = 2                ! 一様な潮位の時系列
+  hsea0 = 2.0               ! 海セルの見かけの水柱の厚さ (m)
+  dt_tiupdate = 0.1         ! 潮位の更新間隔 (min)
+  tival(1:2,1) = 0, 0
+  tival(1:2,2) = 9.9e+09, 0
+/
+
+&list_precip
+  prtype = 1                ! 一様な時系列
+  dt_prupdate = 60
+  prval(:,1) = 0, 13.689254      ! (min, mm/h) = 1200 mm/年 × M
+  prval(:,2) = 9.9e9, 13.689254
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt の浸透
+  f_gwlateral = 1           ! 地下水の側方流
+  f_gwpump = 1              ! 井戸揚水
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 720       ! 浸透能 (mm/h) = 2e-6 m/s × M
+  gw_psif = 0.0
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 360000    ! 側方の透水係数 (mm/h) = 1e-3 m/s × M
+/
+
+&list_gwflow_pump
+  fn_gwp_cell(1) = 'wells.txt'   ! 井戸(低地の 4 セル)
+  gwp_val(1:2,1,1) = 0.0000, 4.000000e-01
+  gwp_val(1:2,2,1) = 9900000000.0000, 4.000000e-01
+/
+
+&list_salt
+  f_salt_surf = 1           ! 地表の塩水層
+  f_salt_gw = 1             ! 地下の塩水 zone(浸透・湧出の淡塩配分 f_salt_exch は既定の 1)
+  f_salt_struct = 1         ! 排水機場は底層の塩水から先に汲む
+/
+
+&list_struct_pump
+  fn_pump_in_cell(1) = 'canal.txt'   ! 排水機場: 排水路の 10 セルから汲み、海へ出す(吐口なし = 域外)
+  f_pump_ref(1) = 1                  ! 基準 = 排水路の水深
+  pump_rule(:,1,1) = 0.10, 0.0       ! (水深 m, 流量 m3/s)。排水路の水深が 0.1 m になるまで汲む
+  pump_rule(:,2,1) = 0.30, 400
+/

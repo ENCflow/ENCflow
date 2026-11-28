@@ -91,7 +91,7 @@ f_gwlateral=1([地下水の章](gwflow.md)。側方 K と比湧水量を共有)�
 | 河口・感潮河川の塩水くさび | 1 / 0 | 1025(湾奥の汽水 1005〜1015) | 0 | fn_tide + 区間流入(河川流量) | salt_ni 0.02〜0.03、salt_alpha 0.5〜1 でくさびの位置を校正 |
 | 河口堰と周辺地盤の塩水化 | 1 / 1(f_salt_exch は既定の 1) | 1025 | 海底下の帯水層に fn_salt_hgs0 | fn_tide + 区間流入 + Green-Ampt + f_gwlateral=1。堰は地形の段(天端を満潮位より高く) | 例題 [examples/estuary_barrage](../../examples/estuary_barrage/)。陸の帯水層は空から始まるので、出水と降雨で淡水を満たす前段を置く |
 | 高潮・津波の遡上海水の行き先 | 1 / 0 | 1025 | 0 | 潮位(高潮)か境界入射(津波)+ 海岸堤防 | 混合は解かない = 塩水の遡上範囲と排水先の把握。入った量・出た量は台帳 `salt.csv` |
-| 干拓地・低平地の塩害(浸入と排水) | 1 / 1 | 1025 | fn_salt_hgs0 で既往の塩水面 | 排水ポンプ([構造物](structure.md))+ f_salt_struct = 1 | 遡上・湛水した海水は浸透で帯水層へ入り、塩水を含む地下水は湧出で地表へ戻る(f_salt_exch。下の節)。排水機場が海水を汲み出す計算では f_salt_struct = 1 を指定する。蒸発による濃縮は表さない([水質](wq.md)で塩分を追う) |
+| 干拓地・低平地の塩害(浸入と排水) | 1 / 1 | 1025 | fn_salt_hgs0 で既往の塩水面 | 排水ポンプ([構造物](structure.md))+ f_salt_struct = 1 | 遡上・湛水した海水は浸透で帯水層へ入り、塩水を含む地下水は湧出で地表へ戻る(f_salt_exch。下の節)。排水機場が海水を汲み出す計算では f_salt_struct = 1 を指定する。蒸発による濃縮は表さない([水質](wq.md)で塩分を追う)。例題 [examples/coastal_salinity_recovery](../../examples/coastal_salinity_recovery/) |
 | 汽水湖・貯水池の成層(躍層の位置) | 1 / 0 | 1010〜1020 | salt_hss0 = 下層厚 | — | 鋭利界面なので混合層・連行は出ない |
 
 ## 海との接続
@@ -288,6 +288,8 @@ f_gwlateral=1([地下水の章](gwflow.md)。側方 K と比湧水量を共有)�
   目詰まりした河床の 8 ケース)。
 - [test/saltledger](../../test/saltledger/): 塩水の台帳 `salt.csv` の閉合と、経路ごとの値(海からの流入と流出、
   蒸発で縮んだ分、構造物による転送 f_salt_struct = 0・1・2、浸透・湧出の配分、地下の海側境界、井戸の揚水)。
+- [examples/coastal_salinity_recovery](../../examples/coastal_salinity_recovery/): 津波・高潮で浸かった低地の
+  海水の排水と、帯水層に入った塩水のその後(排水の速さと井戸の揚水の続け方の比較)。
 - 書式の実例: [examples/List_samples/list_salt.txt](../../examples/List_samples/list_salt.txt)。
 
 ## 参考文献

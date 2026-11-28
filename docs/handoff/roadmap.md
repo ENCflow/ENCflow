@@ -289,7 +289,7 @@
   湧出面の損失と §47.2 の分割誤差も消えたので、旧 (5) の 2 zone 一体求解は要らない)、
   底層重力流の敷居(§47.8)、例題 examples/estuary_barrage(§47.10)、塩水の体積の台帳 salt.csv・
   構造物による地表の塩水層の転送 f_salt_struct・底層重力流の受け側のセルごとの上限(§140。
-  test/saltledger)は実装済み。残:
+  test/saltledger、例題 examples/coastal_salinity_recovery)は実装済み。残:
   (2) 段 4 の残り: 層2・管路層の淡塩配分(浸透・飽和湧出は f_salt_exch で実装済み。蒸発散は
       配分の規則を足さず、整合クランプで縮んだ塩水の体積を台帳の lost_surf・lost_gw に出す形にした。
       §140.3。塩分の濃度・析出は水質 §139)

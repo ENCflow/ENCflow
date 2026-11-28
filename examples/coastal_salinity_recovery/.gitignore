@@ -1,0 +1,7 @@
+result_*/
+save_*/
+data_coast/
+Screen_*.log
+encflow
+encflow_mpi
+__pycache__/

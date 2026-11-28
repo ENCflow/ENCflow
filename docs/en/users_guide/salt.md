@@ -113,7 +113,7 @@ quantities).
 | Estuary / tidal-river salt wedge | 1 / 0 | 1025 (brackish inner bay 1005-1015) | 0 | fn_tide + segment inflow (river discharge) | Calibrate the wedge position with salt_ni 0.02-0.03 and salt_alpha 0.5-1 |
 | Estuary barrage and salinization of the surrounding ground | 1 / 1 (f_salt_exch at its default 1) | 1025 | fn_salt_hgs0 for the aquifer under the sea | fn_tide + segment inflow + Green-Ampt + f_gwlateral=1. The barrage is a step in the terrain (crest above high water) | Example [examples/estuary_barrage](../../../examples/estuary_barrage/en/README.md). The land aquifer starts empty, so put a preliminary stage that fills it with fresh water from a flood and rainfall |
 | Where storm-surge / tsunami seawater goes | 1 / 0 | 1025 | 0 | Tide (surge) or boundary incidence (tsunami) + seawalls | Mixing is not solved = extent of the salt-water run-up and where it drains. The amounts that entered and left are in the ledger `salt.csv` |
-| Salinization of reclaimed lowland (intrusion and drainage) | 1 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface | Drainage pumps ([structures](structure.md)) + f_salt_struct = 1 | Run-up or ponded seawater enters the aquifer by infiltration, and groundwater containing salt water returns to the surface by seepage (f_salt_exch; section below). For runs in which a pumping station drains seawater, specify f_salt_struct = 1. Concentration by evaporation is not represented (follow the salinity with [Water quality](wq.md)). |
+| Salinization of reclaimed lowland (intrusion and drainage) | 1 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface | Drainage pumps ([structures](structure.md)) + f_salt_struct = 1 | Run-up or ponded seawater enters the aquifer by infiltration, and groundwater containing salt water returns to the surface by seepage (f_salt_exch; section below). For runs in which a pumping station drains seawater, specify f_salt_struct = 1. Concentration by evaporation is not represented (follow the salinity with [Water quality](wq.md)). Example [examples/coastal_salinity_recovery](../../../examples/coastal_salinity_recovery/en/README.md) |
 | Stratified brackish lake / reservoir (halocline position) | 1 / 0 | 1010-1020 | salt_hss0 = lower-layer thickness | - | Sharp interface: no mixed layer or entrainment |
 
 ## Connection to the sea
@@ -357,6 +357,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   the intrusion of salt water into the surrounding aquifer (eight cases: with/without barrage × no / with / mixing-ratio exchange split / clogged river bed).
 - [test/saltledger](../../../test/saltledger/en/README.md): closure of the salt-water ledger `salt.csv` and the value of each path (inflow from and outflow to the sea,
   shrinkage by evaporation, transfer by structures f_salt_struct = 0, 1, 2, the split of infiltration and seepage, the subsurface sea boundary, well pumping).
+- [examples/coastal_salinity_recovery](../../../examples/coastal_salinity_recovery/en/README.md): drainage of the seawater that flooded a lowland in a tsunami or storm surge,
+  and what happens afterwards to the salt water that entered the aquifer (comparison of the drainage speed and of how well pumping is continued).
 - Worked example of the format: [examples/List_samples/en/list_salt.txt](../../../examples/List_samples/en/list_salt.txt).
 
 ## References

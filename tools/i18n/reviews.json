@@ -482,8 +482,8 @@
     {
       "source": "docs/users_guide/salt.md",
       "target": "docs/en/users_guide/salt.md",
-      "source_sha256": "a3e426dd32236affe8598b25ae7a152f2a7f51ebddd186a52a34b7a63fe9d3b7",
-      "target_sha256": "0c764743b8b7145afccdade24b15863e12b2de90dc818488cb5135e8007a7920",
+      "source_sha256": "bc376b0869e4fc098e0b3fb9bda0fa0b991fff31576efe753f1c11e96eec2f93",
+      "target_sha256": "cec9c0aee7187ec07bd010595e3a3b18035b2288bfc0812892a0bb85db4327b0",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
@@ -563,8 +563,8 @@
     {
       "source": "docs/users_guide/time.md",
       "target": "docs/en/users_guide/time.md",
-      "source_sha256": "eadccde974061e279ff61db242584a0b656ce1c4a05957889e95fa2300d85909",
-      "target_sha256": "93c311b7cc9eea778c60d425d8841e3853cd77a85b90ca5de9e1eea68d33d964",
+      "source_sha256": "c617dd9d59d971f7bede8b9eb2208804057327d69f7c798609d82e84813ec8e1",
+      "target_sha256": "a9d356d36963f1733c1809734bc4467d06d8fb6a3747b1329715a7d50cb37e3b",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
@@ -581,8 +581,8 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "9f8a0c883f375c8d9e67bd76dc36ba9795115f684d531dc30b30b214b39a07b2",
-      "target_sha256": "446e3ba5a0ffd7e8e92d84f08aa4517e29c1b59e04d8e8113968e2e814201d8e",
+      "source_sha256": "809c2ea620afeae7de207a930756c554ee58487f8f799a087a14a582cd25073e",
+      "target_sha256": "0091037a96bb82fb311f2283c99d15de2a1bdaa78398aa11fc3c707b6571acaf",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
@@ -923,8 +923,8 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "0aa1bbe8a4783eda6e4318e1ba9a0d45cc0961ba59f73143a0bf1a8a2b2bf5f7",
-      "target_sha256": "708703ae03c159f8b7a171642da38839d2eace561993780f959340386528705a",
+      "source_sha256": "1278946146352538fb678c39119a00be447db1de6e6021ea39ca205ab1625b97",
+      "target_sha256": "4793f849443af1fe0eb6e47d6139e098e89977e3d146b06ef59ae0cc7409065b",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
@@ -1972,6 +1972,51 @@
       "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py (en switch) from the same results; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/coastal_salinity_recovery/README.md",
+      "target": "examples/coastal_salinity_recovery/en/README.md",
+      "source_sha256": "359690a9b3a2f68205f1fac033c23e312558ae513cc0d2d592c78e0132661ec8",
+      "target_sha256": "2017ddf9519a5b0325cfa89e56056093b1c710216ea23ffa4cb2d1fc21056f20",
+      "reviewer": "Claude (Claude Code session; full text compared side by side with the Japanese source; numbers checked against the test and example runs)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-28"
+    },
+    {
+      "source": "examples/coastal_salinity_recovery/figs/flood.png",
+      "target": "examples/coastal_salinity_recovery/en/figs/flood.png",
+      "source_sha256": "ec63c95b7ab359015c1b85870cac2e352c72a295e38c479f75bc87b0b841b653",
+      "target_sha256": "b975ad8ab183f385ae83aec5eb3bc4a398f1c94ab37f76218c29813d67dd27c7",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-28"
+    },
+    {
+      "source": "examples/coastal_salinity_recovery/figs/recovery.png",
+      "target": "examples/coastal_salinity_recovery/en/figs/recovery.png",
+      "source_sha256": "2a8ab564219f4170045e81615f88faec959c57799b9d0e08e18b82a8b3471e3d",
+      "target_sha256": "ec3ee920510ee309b9741d469df4680880e962c5513084ee9c1d59a2d36d31d4",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-28"
+    },
+    {
+      "source": "examples/coastal_salinity_recovery/figs/section.png",
+      "target": "examples/coastal_salinity_recovery/en/figs/section.png",
+      "source_sha256": "b19f1d51e8e6b8558ad4f13758efcc56f47590ddfb2e9d52d3bb2c28f5dd6ae1",
+      "target_sha256": "681b070ba5d62624485a8362c6ba0d9bdd58aa549a11ac9719ba52cbf19ff208",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-28"
+    },
+    {
+      "source": "examples/coastal_salinity_recovery/figs/setup.png",
+      "target": "examples/coastal_salinity_recovery/en/figs/setup.png",
+      "source_sha256": "56e645e435b8c76f11e21505052fb17e94bc49f9b0d7f2a840278130dedc0e2d",
+      "target_sha256": "0fe6ff92cfc23171657f3d3901af6a68ee40abac034aa10f5fdb0b16c1f09cde",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "examples/confluence_backwater/README.md",

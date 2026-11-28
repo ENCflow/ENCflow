@@ -188,3 +188,4 @@ M = 1000 で 17 %・M = 10000 で 82 % でした(25 年分の計算は M = 1000 
 - [test/nest_identity](../../test/nest_identity/): `restart` 構成で、同じ時間軸上の保存・再開を中断なしランと比較。
 - [examples/List_samples/list_sysparam.txt](../../examples/List_samples/list_sysparam.txt): 時刻・出力間隔・暦・周期強制を含む設定書式の注釈付き見本。
 - [examples/terminal_lake](../../examples/terminal_lake/)・[examples/irrigation_salt](../../examples/irrigation_salt/): 時間の圧縮で数十年の水・塩収支を計算する例(圧縮率を変えた比較を含む)。
+- [examples/coastal_salinity_recovery](../../examples/coastal_salinity_recovery/): 実時間の段(津波による浸水と排水)と、時間の圧縮の段(その前の地下水と、その後の帯水層の回復)を、再開(`f_state_restore = 2`)でつなぐ例。
