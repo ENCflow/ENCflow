@@ -1,0 +1,89 @@
+!======================================================================
+! dbmix: 土石流(f_debris)と混合粒径(f_bedmix)の併用の検定(developer.md §139)
+!   雛形 s(斜面安定判定): 雨の浸透で土層が飽和し、安全率が 1 を切ったセルの土層を上から slide_dmax だけ
+!   流動化する(土層厚 0.5 m に対して 0.2 m = 一部の深さ)。閉領域。
+!   構成 s3(混合粒径)は make_init.py がこの雛形に混合粒径の行を足して p_s3.txt に書く
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.05
+  t0 = 0
+  tt = 400                  ! 計算終了時刻 (s)
+  dt_disp = 100
+  dt_file = 1000
+  dt_recrd = 1000
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_gwflow = '-'
+  fn_precip = '-'
+  dir_result = 'result_s'
+  dir_save = 'save_s'
+  f_state_save = 1
+  f_state_restore = 0
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_gravity_correction = 2
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 20.0
+  ly = 60.0
+  nx = 20
+  ny = 60
+  f_ztype = 1
+  fn_z = 'z_slope.txt'      ! make_init.py が書く
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 0
+  sd0 = 0.5                 ! 薄い土層(飽和が早い)
+  sy0 = 0.3
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt の浸透
+  f_gwlateral = 0
+  gw_sat0 = 0.5             ! 土層の初期飽和度(上から 0.2 m の層に地下水位が届くまでの時間を縮める)
+/
+&list_gwflow_greenampt
+  gw_ksv_mmh = 600.0
+  gw_psif = 0.1
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 500
+  prval(1:2,2) = 9999, 500
+/
+
+!======================================================================
+! 地形変化(斜面安定判定 + 土石流 + 掃流砂)
+!======================================================================
+&list_geomorph
+  dt_geomorph = 1.0         ! 安全率の評価と侵食・堆積は 1 s ごと
+  morfac = 1.0
+  f_debris = 1
+  db_phi = 35.0
+  f_dbres = 1
+  f_dbstop = 1
+  db_vstop = 0.05
+  db_wstop = 0.05
+  f_slide = 1
+  slide_c = 0.0             ! 粘着力 (Pa)
+  slide_phi = 25.0          ! せん断抵抗角 (deg)
+  slide_gamma = 19000.0     ! 飽和単位体積重量 (N/m3)
+  slide_dmax = 0.2          ! 1 回に流動化する深さの上限 (m)(土層の上から一部)
+  fluv_porosity = 0.4
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_d50 = 0.002
+/

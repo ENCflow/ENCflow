@@ -292,6 +292,21 @@ module m_geomorph
     real(real64), allocatable :: rfrock(:,:)  ! 基岩から出て土層に加わった粒径階ごとの量の行部分和 (js:je, 1:nc)
                                      !   (厚さ × 河道平面積率。台帳で /(ainv·poroi) して固体 m3)
     real(real64), allocatable :: rfsea(:,:)   ! 海セルへ落ちた粒径階ごとの固体体積の行部分和 (js:je, 1:nc) (m3)
+    ! 土石流との併用(f_debris。流れの土砂を粒径階ごとの柱 s%hsk で運ぶ。段 2c-1。§139)
+    logical :: debris = .false.      ! 土石流の侵食・堆積・流動化の組成を s%hsk と交換層・下層の間で出し入れする
+    real(real64), allocatable :: dbxrow(:,:)  ! 河床から流れへ出た正味の粒径階ごとの量(侵食・流動化 − 堆積)の
+                                     !   行部分和 (js:je, 1:nc)(かさの厚さ × 河道平面積率。河床の在庫と同じ重み。
+                                     !   台帳で /(ainv·poroi) して固体 m3)
+    real(real64), allocatable :: dbsrow(:,:)  ! 流れの側で数えた同じ交換(Σ Δhsk·gv·wfrac·A)の行部分和
+                                     !   (js:je, 1:nc) (m3)
+    real(real64) :: hk0(1:nbmixmax) = 0.0_real64  ! 最初の更新の頭の、流れの土砂の粒径階ごとの在庫
+                                     !   (Σ hsk·gv·wfrac·A。m3)
+    integer :: nhneg = 0             ! 流れの組成が決まらず(粒径階の柱の和が 0 以下)、堆積を交換層の組成で
+                                     !   積んだセルの数(ランク局所の累計。丸めの水準の柱だけで起こる)
+    ! 土石流の式の侵食を動ける粒径階に限る(f_dbsel = 1・2。段 2c-4。§143)
+    integer :: nselk = 0             ! 動けない粒径階があって侵食を減らしたセル × 更新の数(ランク局所の累計。
+                                     !   終了時に全ランクの合計を表示する)
+    integer :: nsell = 0             ! 交換層にある動ける粒径階の量で侵食を頭打ちにした数(同上)
   end type
 
   type t_wave
@@ -379,6 +394,9 @@ module m_geomorph
     integer :: nslgeo = 0            ! Fs < 1 だが間隙水圧なしでも不安定なので流動化しなかった回数
                                      !   (f_slide_wet = 1。セル × 評価。ランク局所の診断)
     integer :: nslflow = 0           ! 濃い混合体が載るので判定しなかった回数(f_slide_noflow = 1。同上)
+    real, allocatable :: tsel(:,:)   ! 侵食するセルの流動面の勾配 tanθ (ish:ieh, js:je)。f_dbsel > 0 のときだけ確保
+                                     !   (calc_debris がパス 1 の後に入れ、debris_exchange_bmix_sel が型の区分に
+                                     !   使う作業面。§143)
     real(real64), allocatable :: wdrow(:)  ! 保持水の不足(f_dbwet = 3。堆積のとき地表水・地下貯留から
                                      !   取れなかった保持水のかさ体積 m3)の行部分和 (js:je)。
                                      !   f_dbwet = 3 のときだけ確保し、dispose が決定的な総和で報告する(§28.17)
@@ -520,6 +538,11 @@ module m_geomorph
     integer :: f_dbimm = 0           ! 緩い勾配の掃流状集合流動(f_dbed = 3。0:石礫型の式を全勾配で,
                                      !   1:平衡濃度 6.7 c∞² と掃流状集合流動の堆積速度式。§28.18)
     real :: db_deltdi = 0.0          ! 掃流状集合流動の堆積速度係数 δ'd(f_dbimm = 1)
+    integer :: f_dbsel = 0           ! 土石流の式の侵食を動ける粒径階に限る(f_dbed = 3 と f_bedmix。0:粒径を選ばない,
+                                     !   1:動ける粒径階だけ(粒径階ごとの侵食速度 i K3 F_k。式の印字どおり),
+                                     !   2:同(i F_k。本文のかさの侵食速度 i K3 に合わせた形)。段 2c-4。§143)
+    real :: db_seltan = 0.03         ! 同、型を分ける流動面の勾配(これ以下のセルは掃流の型 = 限界掃流力の判定、
+                                     !   超えるセルは流動深の判定)
     integer :: f_release = 0         ! 瞬時流動化(0:無効, 1:有効 = fn_dbinit 指定)
     real :: db_reltime = 0.0         ! 流動化の発生時刻 (s)
     real :: db_relsat = 1.0          ! 崩壊土塊の飽和度(gwflow 無効時のみ使用)
@@ -919,6 +942,30 @@ module m_geomorph
       type(t_state), intent(inout) :: s
       real, intent(in) :: dtw
     end subroutine
+    ! 土石流との併用(f_debris と f_bedmix。段 2c-1。§139): 河床との交換と流動化の組成を、粒径階ごとの土砂柱
+    ! s%hsk と交換層・下層の間で出し入れする。calc_debris・slide_pass2・release_debris の命令列は変えず、
+    ! 呼び出しの鉤だけを置く(判定はループの外)。無効時は呼ばない
+    module subroutine debris_exchange_bmix(gm, g, s)      ! 侵食・堆積(calc_debris のパス 1 の後・パス 2 の前)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+    end subroutine
+    module subroutine debris_exchange_bmix_sel(gm, p, g, s)  ! 同、動ける粒径階だけを侵食する写し(f_dbsel = 1・2。§143)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+    end subroutine
+    module subroutine debris_slide_bmix(gm, g, s)         ! 斜面安定判定の流動化(slide_pass2 の前)と組成のハロの同期
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+    end subroutine
+    module subroutine debris_release_bmix(gm, g, s)       ! 瞬時流動化(release_debris の発火の中、適用の前)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+    end subroutine
     ! calc_fluvial_bmix の有効掃流力版(f_taupart = 2。§121。calc_fluvial_bmix の写し)
     module subroutine calc_fluvial_bmix_te(gm, p, g, s, dts)
       type(t_geomorph), intent(inout) :: gm
@@ -1201,6 +1248,10 @@ subroutine m_geomorph_init(gm, p, g, s, b)
     if (b%nqbclass > 0) then
       call par_stop("list_bound_inflow: inflow_qbfrac / fn_inflow_qbmix require the mixed-size bed " &
                     // "(f_bedmix=1 in fn_geomorph)")
+    end if
+    if (b%ncsclass > 0) then
+      call par_stop("list_bound_inflow: inflow_csfrac / fn_inflow_csfrac require the mixed-size bed with debris " &
+                    // "flow (f_bedmix=1 and f_debris=1 in fn_geomorph)")
     end if
     return
   end if
@@ -1543,10 +1594,15 @@ subroutine m_geomorph_init(gm, p, g, s, b)
       call par_stop("list_geomorph: f_bedmix=1 cannot be combined with wet_lw yet (the spread pickup " &
                     // "would not update the class composition)")
     end if
-    ! 崩落と崖錐・深さ依存クリープ・沿岸漂砂は運ぶ(段 2b。§123)。動く土塊と乾式侵食はまだ止める
-    if (gm%f_bedslide > 0 .or. gm%f_debris > 0 .or. gm%f_splash > 0) then
-      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_bedslide, f_debris or f_splash yet " &
+    ! 崩落と崖錐・深さ依存クリープ・沿岸漂砂は運ぶ(段 2b。§123)。土石流は、流れの土砂を粒径階ごとの柱で
+    ! 運んで併用する(段 2c-1。§139)。動く底層と乾式侵食はまだ止める
+    if (gm%f_bedslide > 0 .or. gm%f_splash > 0) then
+      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_bedslide or f_splash yet " &
                     // "(docs/mixed_sediment_plan.md §3.7)")
+    end if
+    if (gm%f_debris > 0 .and. len_trim(p%fn_nest) > 0) then
+      call par_stop("list_geomorph: f_bedmix=1 with f_debris=1 is not supported with nesting (fn_nest) yet " &
+                    // "(the class columns of the flow are not passed between the grids)")
     end if
     if (gm%f_wthr > 0 .or. gm%f_dissol > 0 .or. gm%f_rockinc > 0) then
       call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_wthr, f_dissol or f_rockinc yet " &
@@ -1570,6 +1626,11 @@ subroutine m_geomorph_init(gm, p, g, s, b)
                     // "(f_bedmix=1 in fn_geomorph)")
     end if
   end if
+  ! 流入土砂の粒径階の組成(inflow_csfrac・fn_inflow_csfrac)は、混合粒径と土石流の併用だけが使う(§139)
+  if (b%ncsclass > 0 .and. .not. (gm%f_bedmix > 0 .and. gm%f_debris > 0)) then
+    call par_stop("list_bound_inflow: inflow_csfrac / fn_inflow_csfrac require the mixed-size bed with debris " &
+                  // "flow (f_bedmix=1 and f_debris=1 in fn_geomorph)")
+  end if
 
   ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。
   ! 初期化順序: 本 init は m_swflow_init より前)。土石流(f_debris)も
@@ -1578,7 +1639,9 @@ subroutine m_geomorph_init(gm, p, g, s, b)
   if (s%sed_active) s%sed_sgrav = gm%sgrav   ! fmax の混合密度係数用(§28.9)
   ! 交互計算(出水 ⇄ 土石流。§89.20): h_s を運ぶ過程のない構成に h_s > 0 の save を復元したら、
   ! その場の河床に堆積させる。そのままでは h_s が流れに凍って残る。判定は namelist 由来で
-  ! 全ランク同一(collective 安全)
+  ! 全ランク同一(collective 安全)。混合粒径では、保存に粒径階ごとの土砂柱があれば(土石流との併用の
+  ! 保存)、init_bedmix の復元がその組成で先に堆積させて h_s を 0 にしている(§139)。粒径階ごとの柱の
+  ! ない保存の h_s は、ここで止める(組成が決まらない。§122)
   if (p%f_state_restore > 0 .and. .not. s%sed_active) then
     call deposit_restored_hs(g, s, list%fluv_porosity, gm%f_bedmix > 0)
   end if
@@ -2173,6 +2236,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%flv%rsec)) deallocate(gm%flv%rsec)
   if (allocated(gm%fix%zref)) deallocate(gm%fix%zref)
   if (allocated(gm%dbr%fx)) deallocate(gm%dbr%fx)
+  if (allocated(gm%dbr%tsel)) deallocate(gm%dbr%tsel)
   if (allocated(gm%dbr%rel)) deallocate(gm%dbr%rel)
   if (allocated(gm%dbr%sld)) deallocate(gm%dbr%sld)
   if (allocated(gm%dbr%hd)) deallocate(gm%dbr%hd)

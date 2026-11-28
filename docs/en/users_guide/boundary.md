@@ -294,6 +294,16 @@ to reduce concentration of discharge into thin water layers.
   `inflow_qb`, `fn_inflow_qb` and `inflow_qbfrac`). All segments use the same
   number of classes. A feed without a composition stops the run at
   initialization ([Mixed grain sizes](geomorph.md#mixed-grain-sizes-f_bedmix)).
+- When mixed grain sizes and debris flow are combined (`f_bedmix = 1` and
+  `f_debris = 1` on the geomorph side), the inflowing sediment (`inflow_cs`,
+  `inflow_qs`) needs its class composition. Give either a constant composition
+  `inflow_csfrac(:,n)` (one fraction per class, summing to 1) or a composition
+  series `fn_inflow_csfrac(n)` (each line holds the time (min) and one fraction
+  per class, summing to 1 on each line; linear interpolation between lines;
+  exclusive with `inflow_csfrac`). All segments use the same number of classes.
+  Inflowing sediment without a composition stops the run at initialization, and
+  so does a composition given to a run without the combination
+  ([Mixed grain sizes](geomorph.md#mixed-grain-sizes-f_bedmix)).
 
 **Outputs for this section**: the transect Q just downstream equals the given discharge (a check of the distribution); the inflow peak is in Qmax of `summary.csv` ([Output and monitoring](#output-and-monitoring)).
 

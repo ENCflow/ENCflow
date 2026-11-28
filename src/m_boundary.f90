@@ -157,6 +157,13 @@ module m_boundary
     integer :: kqbm = 1                    ! 粒径階ごとの時系列の内挿の区間の控え(時刻は単調に進む)
     integer :: nqbfrac = 0                 ! 合計の組成の粒径階の数(0 = 指定なし)
     real :: qbfrac(1:nbmixmax) = 0.0       ! 合計の組成(和 1)
+    ! 混合粒径と土石流の併用(geomorph の f_bedmix と f_debris。developer.md §139)の流入土砂(cs)の粒径階の
+    ! 組成: 一定の組成(inflow_csfrac)か、組成の時系列(fn_inflow_csfrac)
+    integer :: ncsfrac = 0                 ! 一定の組成の粒径階の数(0 = 指定なし)
+    real :: csfrac(1:nbmixmax) = 0.0       ! 一定の組成(和 1)
+    integer :: ncsfval = 0                 ! 組成の時系列のデータ数(0 = 指定なし)
+    real, allocatable :: csfval(:,:)       ! 組成の時系列 (1:1+nc, 1:ncsfval) (s, 割合 × nc。各時刻の和 1)
+    integer :: kcsf = 1                    ! 組成の時系列の内挿の区間の控え(時刻は単調に進む)
     integer :: cs_eq = 0                   ! 浮遊砂の平衡濃度給砂(1: 流入濃度 = cs_fac × 流入セルの平衡濃度)
     real :: cs_fac = 1.0                   ! 平衡濃度給砂の倍率
   end type
@@ -270,6 +277,12 @@ module m_boundary
     integer :: nqbclass = 0                ! 区間流入の給砂の粒径階の数(混合粒径。0 = 粒径階の指定なし。§84.19)
     real, allocatable :: qbink(:,:,:)      ! 粒径階ごとの給砂のセル別テーブル (ish:ieh, jsh:jeh, 1:nqbclass)
                                            !   (m3/s 固体体積。geomorph の混合粒径が河床源泉として読む)
+    integer :: ncsclass = 0                ! 流入土砂の組成の粒径階の数(混合粒径と土石流の併用。0 = 組成の
+                                           !   指定なし。§139)
+    real, allocatable :: csink(:,:,:)      ! 粒径階ごとの境界流入濃度のセル別テーブル (ish:ieh, jsh:jeh,
+                                           !   1:ncsclass) (m3/m3)。csin × 粒径階の割合。組成の指定のある区間が
+                                           !   1 つでもあれば確保し、makebdc が毎ステップ自帯の行に書く。
+                                           !   swflow_enc が粒径階ごとの土砂柱の移流の風上濃度として読む
     real, allocatable :: csin(:,:)         ! 境界流入濃度のセル別テーブル (m3/m3)。
                                            !   濃度指定のある区間が1つでもあれば確保し、
                                            !   makebdc が毎ステップ現時刻値を書く。
@@ -492,6 +505,27 @@ subroutine m_boundary_makebdc(b, p, g, s, gwc)
           i2 = b%inflow(ifl)%cell(1,m2)
           j2 = b%inflow(ifl)%cell(2,m2)
           if (j2 >= dcp%js .and. j2 <= dcp%je) b%csin(i2,j2) = b%inflow(ifl)%cs
+        end do
+      end block
+    end if
+    ! 混合粒径と土石流の併用の粒径階ごとの流入濃度(§139): 上の cs に粒径階の割合(一定か時系列の内挿)を掛ける
+    if (b%inflow(ifl)%ncsfrac > 0 .or. b%inflow(ifl)%ncsfval > 0) then
+      block
+        integer :: m2, i2, j2, nc
+        real :: fk(1:nbmixmax), sm
+        nc = b%ncsclass
+        if (b%inflow(ifl)%ncsfval > 0) then
+          call interp_series_multi(b%inflow(ifl)%csfval, b%inflow(ifl)%ncsfval, nc, s%t, &
+                                   b%inflow(ifl)%kcsf, fk)
+          sm = sum(fk(1:nc))
+          if (sm > 0.0) fk(1:nc) = fk(1:nc) / sm
+        else
+          fk(1:nc) = b%inflow(ifl)%csfrac(1:nc)
+        end if
+        do m2 = 1, b%inflow(ifl)%ncell
+          i2 = b%inflow(ifl)%cell(1,m2)
+          j2 = b%inflow(ifl)%cell(2,m2)
+          if (j2 >= dcp%js .and. j2 <= dcp%je) b%csink(i2,j2,1:nc) = b%inflow(ifl)%cs * fk(1:nc)
         end do
       end block
     end if
@@ -724,6 +758,7 @@ subroutine m_boundary_dispose(b)
     deallocate(b%inflow)
   end if
   if (allocated(b%csin)) deallocate(b%csin)
+  if (allocated(b%csink)) deallocate(b%csink)
   if (allocated(b%qbin)) deallocate(b%qbin)
   if (allocated(b%qbink)) deallocate(b%qbink)
   if (allocated(b%cqin)) deallocate(b%cqin)
@@ -1261,6 +1296,60 @@ subroutine init_inflow(b, p, g, list)
       call par_stop("list_bound_inflow: inflow_cs_eq=1 excludes inflow_cs and inflow_qs" &
                     //" (segment "//itoa(ifl)//")")
     end if
+    !--- 混合粒径と土石流の併用の流入土砂の粒径階の組成(§139): 一定の組成 inflow_csfrac か、組成の時系列
+    !    fn_inflow_csfrac。併用のときに必須とする検証と、粒径階の数の照合は geomorph の init_bedmix ---
+    block
+      integer :: nfr, ncol, kk
+      nfr = 0
+      do k = 1, nbmixmax
+        if (list%inflow_csfrac(k,ifl) <= -9000.0) exit
+        nfr = nfr + 1
+      end do
+      if (nfr > 0 .or. len_trim(list%fn_inflow_csfrac(ifl)) > 0) then
+        if (b%inflow(ifl)%nsval <= 0 .and. b%inflow(ifl)%nqsval <= 0) then
+          call par_stop("list_bound_inflow: inflow_csfrac / fn_inflow_csfrac of segment "//itoa(ifl) &
+                        //" give the composition of the sediment inflow; they require inflow_cs, fn_inflow_cs, " &
+                        //"inflow_qs or fn_inflow_qs")
+        end if
+      end if
+      if (nfr > 0) then
+        if (len_trim(list%fn_inflow_csfrac(ifl)) > 0) then
+          call par_stop("list_bound_inflow: give either inflow_csfrac or fn_inflow_csfrac for segment " &
+                        //itoa(ifl)//", not both")
+        end if
+        if (any(list%inflow_csfrac(1:nfr,ifl) < 0.0)) then
+          call par_stop("list_bound_inflow: inflow_csfrac of segment "//itoa(ifl)//" must be >= 0")
+        end if
+        if (abs(sum(list%inflow_csfrac(1:nfr,ifl)) - 1.0) > 1.0e-6) then
+          call par_stop("list_bound_inflow: inflow_csfrac of segment "//itoa(ifl)//" must sum to 1")
+        end if
+        b%inflow(ifl)%ncsfrac = nfr
+        b%inflow(ifl)%csfrac(1:nfr) = list%inflow_csfrac(1:nfr,ifl) / sum(list%inflow_csfrac(1:nfr,ifl))
+      else if (len_trim(list%fn_inflow_csfrac(ifl)) > 0) then
+        call read_series_multi(trim(p%dir_data)//"/"//trim(list%fn_inflow_csfrac(ifl)), ncol, &
+                               b%inflow(ifl)%ncsfval, b%inflow(ifl)%csfval)
+        nfr = ncol - 1
+        if (nfr > nbmixmax) then
+          call par_stop("list_bound_inflow: fn_inflow_csfrac of segment "//itoa(ifl)//" has more than " &
+                        //itoa(nbmixmax)//" classes")
+        end if
+        do kk = 1, b%inflow(ifl)%ncsfval
+          if (any(b%inflow(ifl)%csfval(2:ncol,kk) < 0.0) &
+              .or. abs(sum(b%inflow(ifl)%csfval(2:ncol,kk)) - 1.0) > 1.0e-6) then
+            call par_stop("list_bound_inflow: the class fractions of fn_inflow_csfrac of segment "//itoa(ifl) &
+                          //" must be >= 0 and sum to 1 on every line (line "//itoa(kk)//")")
+          end if
+        end do
+      end if
+      if (nfr > 0) then
+        if (b%ncsclass == 0) then
+          b%ncsclass = nfr
+        else if (b%ncsclass /= nfr) then
+          call par_stop("list_bound_inflow: the number of grain-size classes of the sediment inflow composition " &
+                        //"differs between segments (segment "//itoa(ifl)//")")
+        end if
+      end if
+    end block
 
     !--- 検証と (セル, 辺) エントリの構築(角セルは辺ごとに複製) ---
     allocate(b%inflow(ifl)%cell(1:2,1:2*ncell))   ! 複製ぶんの余裕
@@ -1340,6 +1429,8 @@ subroutine init_inflow(b, p, g, list)
   end do
   !--- 混合粒径の粒径階ごとの給砂のセル別テーブル(粒径階の指定が 1 区間でもあれば確保。§84.19) ---
   if (b%nqbclass > 0) allocate(b%qbink(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:b%nqbclass), source = 0.0)
+  !--- 粒径階ごとの境界流入濃度のセル別テーブル(流入土砂の組成の指定が 1 区間でもあれば確保。§139) ---
+  if (b%ncsclass > 0) allocate(b%csink(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:b%ncsclass), source = 0.0)
 
 end subroutine
 

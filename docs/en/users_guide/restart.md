@@ -135,9 +135,12 @@ When a state saved with a process that carries the solids of the flow h_s
 (`f_suspend`, `f_debris`) is read by a landform-change configuration without such
 a process, the restored h_s is deposited on the bed in place (both modes; for
 alternating debris-flow event runs and long-term flood runs;
-[landform change chapter](geomorph.md#rock-erosion-by-debris-flows-rock_kdb)). A
-mixed-size configuration (`f_bedmix`) cannot decide the composition of what would be
-deposited, so it stops at initialization.
+[landform change chapter](geomorph.md#rock-erosion-by-debris-flows-rock_kdb)). In a
+mixed-size configuration (`f_bedmix`), a state saved with the debris-flow coupling (it
+holds the column of each class of the solids of the flow) is deposited with that
+composition (with `f_suspend` enabled, class 1 stays in the flow). For a state without
+the per-class columns the composition of what would be deposited cannot be decided, so
+the run stops at initialization.
 
 Use a separate `dir_result` for each scenario. If saving again, also give each
 scenario its own copy of `dir_save`. The save destination is the load source,

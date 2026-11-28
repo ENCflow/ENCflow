@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "c1fea572d2bb55ebca7b913227473baf5ccbd8cf929d98afe5ffaac5e3117210",
-      "target_sha256": "356039d99771aff6f03bf41107c5209acad2f9fc6407f59e04feecce0d198a08",
-      "reviewer": "Claude (Claude Code session; the row of volcanic flows and snow avalanches (path entrainment by the velocity-proportional or the Hungr law, momentum of the entrained mass) compared side by side with the Japanese source; the other rows are as recorded before)",
+      "source_sha256": "b0721ae3b6e2ab935954d464a7f39bf4a9d88811cf6c3449f148b3a1c9bd8fdf",
+      "target_sha256": "b9b7e51fdfc8a0b14d60478e5366466b341a6f1d73f73af6ee590f1012af4006",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/developer.md",
@@ -95,9 +95,9 @@
     {
       "source": "docs/policy.md",
       "target": "docs/en/policy.md",
-      "source_sha256": "19aa42e70d13b550bd877f4b854d2241c661c0234c3f74a418e26774dee00651",
-      "target_sha256": "7304c665c24be275693508b4c66b024aa8e54c2fdee5d7ad61a30c85ee95684b",
-      "reviewer": "Claude (Claude Code session; restructured into main text / notes / exceptions / about, developer.md §35.6; the English built by rearranging the previous translation and retranslating only the changed sentences; both files compared section by section)",
+      "source_sha256": "426f95e03092e9024d514b982b14be9dc8c1b14fbbde9198e4b2a3a58c31f81f",
+      "target_sha256": "dc3e675e1dcdbf4a59ec3e9a4844faa0fa82f1ddbed729053843bf1a885c5e13",
+      "reviewer": "Claude (Claude Code session; merge of main: the two agreed additions to the exception to policy 6 (2026-11-27, 11-28) moved into the reorganised structure in both languages and compared; the rest is main's reviewed text)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "c248ef6601a2718183bcc6464e400a8b4cc16bbc4304578a734df3eec101e3d8",
-      "target_sha256": "7bb2edfe48712beb9073bb4cbaacfd2f0a70e6bdd63143b353a82c0fb5314952",
-      "reviewer": "Claude (Claude Code session; table of contents: \"output locations and file names\" added to the description of the input/output chapter; both lines compared)",
+      "source_sha256": "7239d86467ce07ae322ca0c632eaf37f1cb470d8c0872edaf89150a576107ca9",
+      "target_sha256": "b9739432e4df5cc3c680266291324c52fc6387be1ab5c88f4d09b87d1d7e3f50",
+      "reviewer": "Claude (Claude Code session; merge of main: main's reviewed text with the parameter count 871 -> 875 in both languages)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -176,11 +176,11 @@
     {
       "source": "docs/users_guide/boundary.md",
       "target": "docs/en/users_guide/boundary.md",
-      "source_sha256": "a3ec8261bf51cef925f2594266756dfb0a7f7b1080f7e90c1deb843b70c3ff9f",
-      "target_sha256": "13a17507c9ead946f9a692ac7390c43a604523d1b1a1f0e1cb0e0bcf3f455672",
-      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the equilibrium-concentration feed multiplied by the class-1 fraction under mixed grain sizes, numbers checked against the test runs)",
+      "source_sha256": "ebb90a494ae7631f0770b7d006333cff4035e017f5b76bb0a50bd5470a535fb7",
+      "target_sha256": "70553abc3b09a4fe98beb8c45d0c50de8a7dd87729d3ad3b6cff36527ca4d150",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/channel.md",
@@ -311,20 +311,20 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "7dc99f803fc27b76d83af1b7b0c57dc5abb33157180b59cc3c9a6fd7b567bef2",
-      "target_sha256": "db0e72113c9e53d60a72fcd30155759f87e73bd5420afde54674e95d7db68281",
-      "reviewer": "Claude (Claude Code session; f_slide_noflow default changed to 1 with the former test of 2, developer.md §135: Japanese and English compared)",
+      "source_sha256": "99f25d13133b8b86c38baa7b11f31488fb9aae698748f83798ad76e19226e039",
+      "target_sha256": "0df0af6933bb47cbf1a1edd130f83fbeff97aec0b76ba74fad3fe3b2c256aeb1",
+      "reviewer": "Claude (Claude Code session; the user's decision that the recommended form of f_dbsel is 2: the Japanese and English sentences were added in the same work and compared line by line)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "8670550ad8024da52df2620f588573cd77e5a3aead0e08beeb42c5cafce5a659",
-      "target_sha256": "1be5924df207e20d7bfd022e4fe672f38a644a0d5557370b4e77d75ee490c9e8",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the recomputed debris_dam results)",
+      "source_sha256": "6f2d6c48a1f115a9c65fe77432bf17f240bedb9eae6c45b22559352ea13ebad0",
+      "target_sha256": "6cec4dd6f4a5e7854f2c5b53b364f578ccca1aad90df6ba5fc7d2427fd255a94",
+      "reviewer": "Claude (Claude Code session; f_dbsel cases of the examples debris_dam and debris_fan_flume: the Japanese and English text were written in the same work and compared section by section, numbers cross-checked against the table output of plot_results.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -392,11 +392,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "84932e80cf53f26fcbc4d0c37b3815a2b01d5a25021efc880fa28230741ddf60",
-      "target_sha256": "4d36d0fc3471af54d1b393b1ef8654a68d1ce26245fae5a9136cad8bfa6b4eb2",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the recomputed debris_dam results)",
+      "source_sha256": "87bef38347923cdf91c626ec5d202782078ff077f5cdcb1b53803c1937e4e468",
+      "target_sha256": "46bc192bca6d6690a2ad49ed4d51f5c5f119a7158562b6ad3f28b90805758c7f",
+      "reviewer": "Claude (Claude Code session; the user's decision that the recommended form of f_dbsel is 2: the Japanese and English sentences were added in the same work and compared line by line)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -446,11 +446,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "b6134932acd9c3341dfa72771f4204fa808248c8a80ac15866dd076d85dc18ea",
-      "target_sha256": "850d9088d09cca3b63662b8c9c9fc9ed27c61cef3ea8a7a36c3e08aece4b8ad3",
-      "reviewer": "Claude (Claude Code session; dam operation modes 4/5 (release and water-level time series), dam_hlim / dam_qon / dam_qmax cap of mode 2, developer.md §132; both files compared)",
+      "source_sha256": "620f4bcff137fd12c24161fd1476d3a87a01cc94de3fbaa096b1836e4f3a2b9d",
+      "target_sha256": "d2fc09bc1e79e5a2590cc5dfea8bf93f72966e325459669681e28f8fd9e8a2b4",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -473,11 +473,11 @@
     {
       "source": "docs/users_guide/restart.md",
       "target": "docs/en/users_guide/restart.md",
-      "source_sha256": "516a79046727f0c709f2ab992b7648d33c859251304e89a05143c4dbaf679313",
-      "target_sha256": "fa9298f5c2070b053886c659aed50bcbf688d5d5440f800646bed2382da7237f",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2a: one sentence on the stop for restored h_s under f_bedmix added to the paragraph on restored h_s in Japanese and English in the same work; both diffs read side by side; message checked against the code)",
+      "source_sha256": "c43a97fa950869a6bdbcaf560d9a0896a14e70c3cdb40129c80d1c337c3d9e3a",
+      "target_sha256": "8472c830f8aac38be40e9639f05852f039668e75eb9d8765e2051a428e1d13b1",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "docs/users_guide/salt.md",
@@ -491,11 +491,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "6e7a8a6834b8db19cd8d62e877cdf806e4fb441f9ea24234d74a3fb133bdc12d",
-      "target_sha256": "9b9fa60b162491c76c929fdb9d3a71258f5a47e11b3f6ea9b8bbeed4a7dcef2d",
-      "reviewer": "Claude (Claude Code session; merge of main and the paddy-dam branch: both sides changes present in both files, parameter count 862 checked, no model execution)",
+      "source_sha256": "b532b59b9970e5b72fc56f28672876ca736ca8c437c66a2cbf11cf034bc8a5a5",
+      "target_sha256": "e9627bfc3ca4a19a18d04f380ae2ebfb51ad75f4498934507ee96550bd5c0c26",
+      "reviewer": "Claude (Claude Code session; the user's decision that the recommended form of f_dbsel is 2: the Japanese and English sentences were added in the same work and compared line by line)",
       "method": "assistant",
-      "reviewed_on": "2026-11-25"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/sfm.md",
@@ -671,11 +671,11 @@
     {
       "source": "examples/List_samples/list_boundary.txt",
       "target": "examples/List_samples/en/list_boundary.txt",
-      "source_sha256": "da89ff5e3424d6cc151c03bcfbb00acad5d6741e3e347bcfed4f0c4339f63136",
-      "target_sha256": "d707b84b090b5fc1c4ae89ce52a4d4b61d5efb55d3fe6aae12e29d3d0eab4cd0",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 1: commented examples added in both languages; values, identifiers and states checked by tools/consistency/check.py samples, comments compared side by side)",
+      "source_sha256": "9949a9670ca2e7ae6a60cc984c09b532e5cb0072e254ac045d47d67e9a1a8c1a",
+      "target_sha256": "cc86c7924254f06d31209d3289f128b4cd9af3d5a3e6bba39d3668779cf7ca4c",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/List_samples/list_channel.txt",
@@ -725,11 +725,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "d5c6f52798065e049f48c8d7efaec0e3bead50a7532bd1e34c624d9c62fc7f39",
-      "target_sha256": "9a4d310d326f5dc9f54117bfb82aeb591efa260cb6c0df65125e97ec35bda971",
-      "reviewer": "Claude (Claude Code session; f_slide_noflow default changed to 1 with the former test of 2, developer.md §135: Japanese and English compared)",
+      "source_sha256": "74c4d7ae1096bd7d7a54fa111937b4de509cbe59d8819ea41b1b2d5cd8de34c7",
+      "target_sha256": "a9c1b254c638818d30a77962d2b22957df291c7fbff8f968ef2cb1d3edea031b",
+      "reviewer": "Claude (Claude Code session; the user's decision that the recommended form of f_dbsel is 2: the Japanese and English sentences were added in the same work and compared line by line)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -923,11 +923,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "c1d6ab25f8fe5380a37da6f14ac9175bde74a57da3eae85a02ca8ba3d25db40f",
-      "target_sha256": "cc40e20df857fd5500829e71e80e70a0917f7079e82cd51108d760b54771cdb0",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "40dd4f9f7dbb31418b21a75cf54f3c7d2231f70e70edf666c505ad34881a3090",
+      "target_sha256": "c4e071f5ee62aa3f5314bbde11d1101f0ea079e5da2e6eebe7d1ad65885391e9",
+      "reviewer": "Claude (Claude Code session; f_dbsel cases of the examples debris_dam and debris_fan_flume: the Japanese and English text were written in the same work and compared section by section, numbers cross-checked against the table output of plot_results.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -2165,11 +2165,11 @@
     {
       "source": "examples/debris_dam/README.md",
       "target": "examples/debris_dam/en/README.md",
-      "source_sha256": "7c3dc501a1440abd197cfa60fb9c4c965b872874021fee56029fdc0437d2ce18",
-      "target_sha256": "e93b66f551fb39c34dc9152e083cb217ca61e6bae4d97744fb422e55f2a8cc95",
-      "reviewer": "Claude (Claude Code session; debris_dam recomputed with 5faa59e (new f_slide_noflow default, 5 m dam cases to 120 min): values, changed conclusions and figures from the new results, Japanese and English compared section by section with numbers cross-checked)",
+      "source_sha256": "f2707c16b3d0cb2814bccdb53d558529b68bf149738299809c078aa9a7a47e13",
+      "target_sha256": "00f64045723fbb6422318f22584a58cd68fa283793c042d94cdf74bbbb1a83f2",
+      "reviewer": "Claude (Claude Code session; the user's decision that the recommended form of f_dbsel is 2: the Japanese and English sentences were added in the same work and compared line by line)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "examples/debris_dam/figs/breach.png",
@@ -2208,6 +2208,15 @@
       "reviewed_on": "2026-11-27"
     },
     {
+      "source": "examples/debris_dam/figs/mixed.png",
+      "target": "examples/debris_dam/en/figs/mixed.png",
+      "source_sha256": "1367bdfc577a7f20d0308d6098e4161729f2f48f316294ccccaf3c0e5b5b533c",
+      "target_sha256": "ee517f24a0815eb878be00df1893239072dde08955fcacdc49f3a60c48253ead",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; both viewed, labels compared)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
+    },
+    {
       "source": "examples/debris_dam/figs/profile.png",
       "target": "examples/debris_dam/en/figs/profile.png",
       "source_sha256": "2c53e3fa86eb28bdf484eb51a3f88839c9c20f4a4a916075dd76b0cb6cca67a1",
@@ -2215,6 +2224,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same debris_dam results; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-27"
+    },
+    {
+      "source": "examples/debris_dam/figs/select.png",
+      "target": "examples/debris_dam/en/figs/select.png",
+      "source_sha256": "fb0acb6821eed3a8e41a6bbb57b133157e81924374835695f9c986a81b6712f6",
+      "target_sha256": "c66ccba8e614cb113cc49fa2363367f00df30f67fe5cf0a41a452b98b021ea7d",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; both viewed)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "examples/debris_dam/figs/sequence.png",
@@ -2264,11 +2282,11 @@
     {
       "source": "examples/debris_fan/README.md",
       "target": "examples/debris_fan/en/README.md",
-      "source_sha256": "50fecbdbe8d40583a4af541eea6b4c6e5482ca8a7bd174025f1840f48ed0804e",
-      "target_sha256": "13b7c444a6e018c927aa989115b251486ab894dfb826feaed77f403ede1764d5",
-      "reviewer": "Claude (Claude Code session; debris_fan recomputed with main 8ba02f2: values, changed conclusions and figures from the new results, Japanese and English compared)",
+      "source_sha256": "7a4b5db0676f412da91787e11a2e6cce5c40144345f73ef0036de71134d879db",
+      "target_sha256": "1f7e9bf24ff46556cfa57ecb14f6f3d6f615d8479a1bb7d6cd323c2e543ab075",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2c-1 (debris flow combined with mixed grain sizes): the additions were written in Japanese and English in the same work and the changed passages compared side by side; values checked against the test runs and the source)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/debris_fan/figs/dependence.png",
@@ -2359,6 +2377,69 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/debris_fan_flume/README.md",
+      "target": "examples/debris_fan_flume/en/README.md",
+      "source_sha256": "d229e14c8f5abe90376c55304a058d512abc09587788fa1d62d97c252c3d5ca5",
+      "target_sha256": "dbf22c1dbf20fdb187427d0e5eae1dc23193b2803188e415032f8ab4f0d40e8a",
+      "reviewer": "Claude (Claude Code session; the user's decision that the recommended form of f_dbsel is 2: the Japanese and English sentences were added in the same work and compared line by line)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-28"
+    },
+    {
+      "source": "examples/debris_fan_flume/figs/armour.png",
+      "target": "examples/debris_fan_flume/en/figs/armour.png",
+      "source_sha256": "d8f6fa6fa9197c9fa313f96d02b0e612348c03b5bcdb2d2394869ce54b67c7bf",
+      "target_sha256": "ffee96ca185bfaa907cd9916475a0b8a3f906f1dd91d7770056e678db9d1d302",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; both viewed)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-28"
+    },
+    {
+      "source": "examples/debris_fan_flume/figs/erosion.png",
+      "target": "examples/debris_fan_flume/en/figs/erosion.png",
+      "source_sha256": "a7f16f2844c0a02656735fe4f9ab43fa0583ba12fe5ab2cd49e83a9046cb596f",
+      "target_sha256": "f83aa9b004d0f73dceded8c2ef98a14a56b46c2ff5e84ae800b94d186b37f72b",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
+    },
+    {
+      "source": "examples/debris_fan_flume/figs/fan.png",
+      "target": "examples/debris_fan_flume/en/figs/fan.png",
+      "source_sha256": "e6bb6b0a0aa3b6751a5e0acf4b8119c3daf922f9b4fc9fa9fe0cc5c10e5967fe",
+      "target_sha256": "5c875842aed8a9054fb41e0e931325fb2216e25f6b86336b3bd8f5f1149c3b1f",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
+    },
+    {
+      "source": "examples/debris_fan_flume/figs/outlet.png",
+      "target": "examples/debris_fan_flume/en/figs/outlet.png",
+      "source_sha256": "92cf2dccf7cda0c053a350e0d8f545ea07cf0ce0cfdc76662e2bf775d911d8b8",
+      "target_sha256": "98ac88be6551c1af4c87ec3b6c36e768e410ab4d1a2716f06568532cb090ba97",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
+    },
+    {
+      "source": "examples/debris_fan_flume/figs/select.png",
+      "target": "examples/debris_fan_flume/en/figs/select.png",
+      "source_sha256": "17142b93a3fbab1942d451a0d76a83703d5a45db2d6d3c112128bb7ee0055e13",
+      "target_sha256": "a6495dd667c31fac7843a98c2771f2b1666de290a1c9bf9484289a5259c34e5c",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; both viewed)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-28"
+    },
+    {
+      "source": "examples/debris_fan_flume/figs/setup.png",
+      "target": "examples/debris_fan_flume/en/figs/setup.png",
+      "source_sha256": "08a32da699bd3110f86596f79d98b92cb2403f7ad19520f361472f86cd7ab17e",
+      "target_sha256": "8872afa55787c70fed80e20bc794e1a7b102ed35e60e386b1c230624ecd5c68b",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-27"
     },
     {
       "source": "examples/delta/README.md",
@@ -4280,11 +4361,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "067dec040649f99a53dbc66b955ceea8e7a4cb94a52d29a7a7eb4fc3e646037c",
-      "target_sha256": "562de9660d3c2579cab293c0c39b7cfb9b9448dedfd268b7f9212cdd09b6a564",
-      "reviewer": "Claude (Claude Code session; the developer-record citation renumbered from §136 to §137 in both files (main's §136 is another section) and compared; the rest as reviewed earlier the same day)",
+      "source_sha256": "f1f2ccb1f2c6002e413ef41300e3535a9c369fa5cac5b6654e65c58fbf6488c7",
+      "target_sha256": "a7046ea5958c985e4160ab8cc0dbb36c4ba990abe7965d440401bb402fe48709",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "test/avalanche/README.md",
@@ -4744,6 +4825,15 @@
       "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "test/dbmix/README.md",
+      "target": "test/dbmix/en/README.md",
+      "source_sha256": "49dcbe121370c5aa403f1f861a45ae4c9a10d754649fe0106b844d0a75779984",
+      "target_sha256": "1cf016c10f129670c5fc3ebd2d0060a12aa0f1ef46d009cb9d7ad1149c808483",
+      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "test/dbonset/README.md",
