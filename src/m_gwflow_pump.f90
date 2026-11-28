@@ -248,7 +248,11 @@ subroutine gwflow_pump_calc(gp, p, g, s, it, dts)
         ! 同じ形。cg は幾何面積基底 = 質量 cg×A。台帳 out_intake_g。§30.10)
         if (allocated(s%cg)) then
           if (s%cg(i,j) > 0.0) then
-            wm = s%cg_rginv * s%cg(i,j) * (fx / hgb)
+            if (s%cg_csat > 0.0) then
+              wm = s%cg_rginv * min(s%cg(i,j) / hgb, s%cg_csat) * fx   ! 溶解度で頭打ち(§139)
+            else
+              wm = s%cg_rginv * s%cg(i,j) * (fx / hgb)
+            end if
             s%cg(i,j) = s%cg(i,j) - wm
             if (allocated(s%cqx)) s%cqx(j,6) = s%cqx(j,6) &
                 + real(wm, real64) * real(g%dx, real64) * real(g%dy, real64)

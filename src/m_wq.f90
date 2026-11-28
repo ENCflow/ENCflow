@@ -68,6 +68,17 @@ module m_wq
   !           docs/paddy_plan.md §16.1、developer.md §127.10
   !   蒸発:   純水のみが抜けるため質量は残留(濃縮)= 物理的に正しい。
   !           コード上の連携は不要
+  !   析出:   wq_csat(mg/L)を与えると、溶解度を超えた分と干上がったセルの水柱の物質を
+  !           表面蓄積プール s%bp へ移し(析出)、未飽和の水へ溶かす(wq_kdis の一次の溶解。
+  !           未指定は瞬時)。浸透する水は析出物を飽和まで溶かして地下の質量プールへ運ぶ。
+  !           地下水と一緒に動く濃度 cg/hg も溶解度で頭打ちにする(s%cg_csat 経由で
+  !           m_gwflow_lateral・m_gwflow_pump が読む)。wq.csv に precip_g・dissol_g を足す(§139)
+  !   海:     海域マスクの海セルは質量を持たない。海から陸へ入る水は清水だが、wq_sea_conc
+  !           (mg/L)を与えると、輸送カーネルが海セルを供給元とする面にその濃度を使う
+  !           (s%cq_sea 経由。台帳は in_sea_g。§139)。初期濃度は一様 wq_c0 か分布 fn_wq_c0
+  !   混合:   wq_diff(m2/s)を与えると、水のある陸のセルの間に、濃度の勾配に比例する拡散の
+  !           流束 D·h_e·ΔC/Δr を足す(湖・湾・幅の広い川の水平の混合。風・二次流などを
+  !           係数 1 つに代表させる校正値)。実体は輸送カーネル advect_scalar(§139)
   !   save:   s%cq と cg をモジュール私有ファイル wq.dat で保存(§7 の
   !           契約C と同型。state.dat の形式は不変。cg の基底変更
   !           (2026-08-26)で save_version を更新済み)
@@ -180,6 +191,11 @@ module m_wq
     real :: wkf = 0.0                               ! せん断洗い出し係数 (1/s)
     real :: wtauc = 1.0                             ! 限界せん断応力 (N/m2)
     integer :: f_settle = 0                         ! 沈降の行き先 (0:消失, 1:プール)
+    ! 析出と溶解(wq_csat。析出物は表面蓄積プール s%bp に置く。§139)
+    logical :: have_sat = .false.                   ! 溶解度の指定あり(wq.csv に析出・溶解の 2 列を足す)
+    logical :: have_sea = .false.                   ! 海から入る水の濃度の指定あり(wq.csv に in_sea_g を足す)
+    real :: csat = -1.0                             ! 溶解度 (g/m3。負 = 上限なし)
+    real :: kdis = -1.0                             ! 溶解の物質移動係数 (m/s。負 = 瞬時に飽和まで)
     integer :: ndam = 0
     type(t_wqdam), allocatable :: dam(:)
     logical :: have_rs = .false.            ! ため池(rscap)同伴の有効(§30.7)
@@ -188,7 +204,7 @@ module m_wq
     real(real64) :: dam_decay = 0.0_real64  ! ダムプールの減衰消失の累積 (g。全ランク
                                             !   同値 = 台帳へは rank0 の出力時に加算)
     ! 診断(行部分和 real64。累積 m3 でなく質量 g)
-    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:22) 1=点源 2=面源 3=浸透(→cg)
+    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:25) 1=点源 2=面源 3=浸透(→cg)
                                             !   4=ダム捕捉 5=減衰消失 6=沈降
                                             !   7=分布面源 8=降雨沈着 9=蓄積(→bp)
                                             !   10=洗い出し(bp→cq) 13=湧出還元(cg→cq)
@@ -201,6 +217,9 @@ module m_wq
                                             !   ポンプ・域外分水・内部ソースの吸い込み・
                                             !   井戸揚水。s%cqx から。§30.10)
                                             !   22=水田の減水深で系外へ(s%fmpd から。§127.10)
+                                            !   23=析出(cq→bp) 24=析出物の溶解(bp→cq、浸透水が
+                                            !   溶かして地下へ運んだ分 bp→cg を含む。§139)
+                                            !   25=海セルからの流入(s%cqx の列 7 から。§139)
     integer :: un = 0                       ! CSV 装置番号(rank0。open(newunit=) は負値。§22)
   end type
 
@@ -276,6 +295,42 @@ subroutine m_wq_init(wq, p, g, b, s)
     wq%vs = list%wq_vs / secday
   end if
 
+  ! --- 水平の混合係数(§139)。輸送カーネル(swflow_enc の advect_scalar)が読む。
+  !     陽解法の安定条件は幾何の確定する m_swflow_enc_init が検査する ---
+  if (list%wq_diff > -9998.0) then
+    if (list%wq_diff < 0.0) call par_stop("list_wq: wq_diff must be >= 0 (m2/s)")
+    s%cq_diff = list%wq_diff
+  end if
+
+  ! --- 溶解度と析出物の溶解の速さ(§139)。析出物は表面蓄積プールに置くので、プールを
+  !     有効にする(setup_pool)。二相分配 wq_kd との併用は初版では止める(溶解度は溶存態の
+  !     濃度の上限で、粒子態との配分の定義が要る) ---
+  if (list%wq_csat > -9998.0) then
+    if (list%wq_csat <= 0.0) call par_stop("list_wq: wq_csat must be > 0 (mg/L)")
+    if (list%wq_kd > -9998.0) then
+      call par_stop("list_wq: wq_csat cannot be combined with wq_kd (two-phase partition) in this version")
+    end if
+    wq%have_sat = .true.
+    wq%csat = list%wq_csat
+    s%cg_csat = wq%csat
+  end if
+  if (list%wq_kdis > -9998.0) then
+    if (.not. wq%have_sat) call par_stop("list_wq: wq_kdis requires wq_csat (solubility)")
+    if (list%wq_kdis < 0.0) call par_stop("list_wq: wq_kdis must be >= 0 (m/day)")
+    wq%kdis = list%wq_kdis / secday
+  end if
+
+  ! --- 海域マスクの海セルから陸へ入る水の濃度(§139)。輸送カーネルが海セルを供給元とする面の
+  !     濃度に使う(海セルは質量を持たないまま。台帳は in_sea_g) ---
+  if (list%wq_sea_conc > -9998.0) then
+    if (list%wq_sea_conc < 0.0) call par_stop("list_wq: wq_sea_conc must be >= 0 (mg/L)")
+    if (wq%have_sat .and. list%wq_sea_conc > wq%csat) then
+      call par_stop("list_wq: wq_sea_conc must not exceed the solubility wq_csat")
+    end if
+    wq%have_sea = .true.
+    s%cq_sea = list%wq_sea_conc
+  end if
+
   ! --- 平衡分配係数 Kd(K1。溶存⇄粒子態の二相分配。§30.6)---
   !     f_suspend の有効性は geomorph init が後のため最初の calc で遅延検査
   if (list%wq_kd > -9998.0) then
@@ -346,6 +401,28 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! (σ の sdep 未構築)だが、restore 前のフレッシュ初期 h に対する換算は
   ! vh=h の矩形でよい(σ 有効時の初期水深は通常 0。非 0 初期水面に σ を
   ! 併用する場合の初期質量は矩形換算=既知の妥協)
+  if (len_trim(list%fn_wq_c0) > 0) then
+    ! 初期濃度の分布(mg/L。§139)。一様値 wq_c0 と排他。換算は下の一様値と同じ
+    ! (cq = 濃度 × 水深)で、海セルに置かないのも同じ
+    if (list%wq_c0 > 0.0) then
+      call par_stop("list_wq: specify the initial concentration by either wq_c0 (uniform) " &
+                    //"or fn_wq_c0 (map), not both")
+    end if
+    block
+      real, allocatable :: c0m(:,:)
+      integer :: i2, j2
+      allocate(c0m(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      call read_map_scatter(p, g, list%fn_wq_c0, "fn_wq_c0", 1.0, c0m)
+      do j2 = max(dcp%jsh, 1), min(dcp%jeh, g%ny)
+        do i2 = max(dcp%ish, 1), min(dcp%ieh, g%nx)
+          if (g%x(i2,j2) <= 0) cycle
+          if (g%sw(i2,j2) > 0) cycle
+          s%cq(i2,j2) = c0m(i2,j2) * max(s%h(i2,j2), 0.0)
+        end do
+      end do
+      deallocate(c0m)
+    end block
+  end if
   if (list%wq_c0 > 0.0) then
     do k = dcp%jsh, dcp%jeh
       s%cq(:,k) = list%wq_c0 * max(s%h(:,k), 0.0)
@@ -368,11 +445,12 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- リスタート ---
   if (p%f_state_restore > 0) call restore_state(wq, p, g, s)
 
-  allocate(wq%vrow(dcp%js:dcp%je, 1:22), source = 0.0_real64)
+  allocate(wq%vrow(dcp%js:dcp%je, 1:25), source = 0.0_real64)
   ! 系外との出入りの記録場(swflow_enc の輸送カーネルと水位規定セルの置き直しが
   ! 行部分和で書き、m_wq_calc が台帳へ移してゼロ戻し。fxg と同型の契約。§30.9。
-  ! 列 6 は取水で系外へ持ち出した量。boundary_h と m_gwflow_pump が書く。§30.10)
-  allocate(s%cqx(dcp%js:dcp%je, 1:6), source = 0.0_real64)
+  ! 列 6 は取水で系外へ持ち出した量。boundary_h と m_gwflow_pump が書く。§30.10。
+  ! 列 7 は海セルから入った量。輸送カーネルが wq_sea_conc の指定のあるときだけ書く。§139)
+  allocate(s%cqx(dcp%js:dcp%je, 1:7), source = 0.0_real64)
   ! 水位規定セルの境界濃度の初期値(最初のステップの置き直しが読む。以後は
   ! m_wq_calc が毎ステップ更新する。restore 時は復元した時刻の値 = 連続ランと同じ)
   call update_stage_conc(wq, b, s%t)
@@ -384,7 +462,8 @@ subroutine m_wq_init(wq, p, g, b, s)
   wq%have_pd = len_trim(p%fn_paddy) > 0
   if (is_root) then
     open(newunit=wq%un, file=trim(p%dir_result)//"/wq.csv", status='replace')
-    ! 条件付きの列(水田 fn_paddy)は末尾に足す(指定のない計算の列は変わらない)
+    ! 条件付きの列は末尾に、水田(fn_paddy)→ 析出と溶解(wq_csat)→ 海からの流入(wq_sea_conc)の
+    ! 順で足す(指定のない計算の列は変わらない)
     block
       character(len=:), allocatable :: head
       head = "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_gwc_g," &
@@ -393,6 +472,8 @@ subroutine m_wq_init(wq, p, g, b, s)
              //"mass_dam_g,mass_rs_g,out_sea_g,out_edge_g,in_edge_g,out_stage_g," &
              //"in_stage_g,out_intake_g"
       if (wq%have_pd) head = head//",mass_paddy_g,out_paddy_perc_g"
+      if (wq%have_sat) head = head//",precip_g,dissol_g"
+      if (wq%have_sea) head = head//",in_sea_g"
       write(wq%un, '(a)') head
     end block
   end if
@@ -649,6 +730,9 @@ subroutine setup_stage_conc(wq, b, list)
         if (list%wq_stage_series(2,k,ist) < 0.0) then
           call par_stop("list_wq: wq_stage_series("//itoa(ist)//") concentrations must be >= 0")
         end if
+        if (wq%have_sat .and. list%wq_stage_series(2,k,ist) > wq%csat) then
+          call par_stop("list_wq: wq_stage_series("//itoa(ist)//") must not exceed the solubility wq_csat")
+        end if
         if (k > 1) then
           if (list%wq_stage_series(1,k,ist) <= list%wq_stage_series(1,k-1,ist)) then
             call par_stop("list_wq: wq_stage_series("//itoa(ist)//") must have monotonically " &
@@ -663,6 +747,9 @@ subroutine setup_stage_conc(wq, b, list)
     else
       if (list%wq_stage_conc(ist) < 0.0) then
         call par_stop("list_wq: wq_stage_conc("//itoa(ist)//") must be >= 0")
+      end if
+      if (wq%have_sat .and. list%wq_stage_conc(ist) > wq%csat) then
+        call par_stop("list_wq: wq_stage_conc("//itoa(ist)//") must not exceed the solubility wq_csat")
       end if
       wq%stval(m) = list%wq_stage_conc(ist)
     end if
@@ -832,7 +919,7 @@ subroutine setup_pool(wq, p, g, s, list)
   end if
 
   ! --- プールの有効判定と確保 ---
-  wq%have_pool = wq%have_bd .or. have_bd0 .or. wq%f_settle == 1
+  wq%have_pool = wq%have_bd .or. have_bd0 .or. wq%f_settle == 1 .or. wq%have_sat
   if (wq%have_wash .and. .not. wq%have_pool) then
     call par_stop("list_wq: washoff (wq_wash_*) requires a pool supply, one of " &
                   //"a buildup rate, an initial pool or f_wq_settle=1")
@@ -990,6 +1077,7 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
   integer, intent(in) :: it
   integer :: i, j, k, m, nd, lk
   real :: w, rate, fx, fp, a1, a2
+  real :: vb, cap, wd                  ! 析出と溶解(wq_csat。§139)
   real(real64) :: acell, w8, m8
   real(real64) :: drow(dcp%js:dcp%je)
   real(real64) :: vout(wq%ndam), vrun(wq%ndam)
@@ -1016,6 +1104,7 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
   if (allocated(s%cqx)) then
     do j = dcp%js, dcp%je
       wq%vrow(j,16:21) = wq%vrow(j,16:21) + s%cqx(j,1:6)
+      wq%vrow(j,25) = wq%vrow(j,25) + s%cqx(j,7)
     end do
     s%cqx(:,:) = 0.0_real64
   end if
@@ -1035,13 +1124,36 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
   ! (2) 浸透同伴(fxg = このステップの浸透量。柱状量の同率移動なので
   !     面積基底によらず質量保存が厳密。消費後ゼロ戻し)
   if (wq%f_infil == 1 .and. allocated(s%fxg)) then
-    !$omp parallel do schedule(static) private(i, j, fx, w)
+    !$omp parallel do schedule(static) private(i, j, fx, w, vb, wd)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
         fx = s%fxg(i,j)
         if (fx <= 0.0) cycle
         s%fxg(i,j) = 0.0
+        ! 析出物を浸透水が溶かして地下へ運ぶ(wq_csat。§139): 浸透する水(浸透前の地表水の濃度。
+        ! 乾いた地面にしみ込む雨なら 0)は、析出物を通るときに飽和までの余地 (Csat − C)·fx だけ
+        ! 溶かして地下の質量プールへ運ぶ。wq_kdis を与えたときは、水柱の溶解と同じ形
+        ! 1 − exp(−k·Δt/fx) を掛ける。上限は析出物の在庫。台帳は溶解と浸透の両方に数える
+        ! (析出物 → 溶存 → 地下。地表の水柱 cq は通らない)
+        if (wq%have_sat) then
+          if (s%bp(i,j) > 0.0) then
+            if (sect_cell(s, i, j)) then
+              vb = sect_vh(s, i, j, s%h(i,j)) + fx
+            else
+              vb = s%h(i,j) + fx
+            end if
+            wd = max(wq%csat - max(s%cq(i,j), 0.0) / max(vb, tiny(fx)), 0.0) * fx
+            if (wq%kdis >= 0.0) wd = wd * (1.0 - exp(-wq%kdis * p%dt / fx))
+            wd = min(wd * gwfac_of(s, i, j), s%bp(i,j))       ! 幾何面積基底 (g/m2)
+            if (wd > 0.0) then
+              s%bp(i,j) = s%bp(i,j) - wd
+              s%cg(i,j) = s%cg(i,j) + wd
+              wq%vrow(j,24) = wq%vrow(j,24) + real(wd, real64) * acell
+              wq%vrow(j,3) = wq%vrow(j,3) + real(wd, real64) * acell
+            end if
+          end if
+        end if
         if (s%cq(i,j) <= 0.0) cycle
         ! 移動割合 = fx / 浸透前水深(浸透後の h に fx を足し戻して復元)。
         ! 断面形 σ のセルの fx は体積(矩形換算水深)なので、水深も vh で(§26.2)
@@ -1530,6 +1642,50 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
     end if
   end if
 
+  ! (6) 析出と溶解(wq_csat。§139)。析出物は表面蓄積プール bp(幾何面積基底)に置く。
+  !     - 水のあるセル(矩形換算水深 vh > dd): 溶解度を超えた分 cq − Csat·vh をプールへ(析出)。
+  !       未飽和でプールがあれば溶かす: 物質移動係数 k の一次の溶解 dC/dt = (k/vh)(Csat − C) を
+  !       ステップの中で厳密に解いた (Csat·vh − cq)(1 − exp(−k·Δt/vh))。wq_kdis 未指定なら
+  !       飽和まで瞬時に。上限はプールの在庫
+  !     - 干上がったセル(vh <= dd): 水柱に残る物質をすべてプールへ(析出)
+  !     蒸発散はこの後(evap_calc)に働くので、出力の濃度は溶解度を 1 ステップの蒸発の分だけ
+  !     超えうる。台帳は析出 = 23 列、溶解 = 24 列(wq.csv の precip_g・dissol_g)
+  if (wq%have_sat) then
+    !$omp parallel do schedule(static) private(i, j, w, vb, cap, a1)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        vb = swflow_vh(i, j, s%h(i,j))
+        a1 = gwfac_of(s, i, j)                       ! 柱状量(gv × wfrac 基底)→ 幾何面積基底
+        if (vb > p%dd) then
+          cap = wq%csat * vb                         ! 飽和の柱状量 (g/m2)
+          if (s%cq(i,j) > cap) then
+            w = s%cq(i,j) - cap
+            s%cq(i,j) = cap
+            s%bp(i,j) = s%bp(i,j) + w * a1
+            wq%vrow(j,23) = wq%vrow(j,23) + mass_of(g, s, i, j, w)
+          else if (s%bp(i,j) > 0.0) then
+            w = cap - max(s%cq(i,j), 0.0)
+            if (wq%kdis >= 0.0) w = w * (1.0 - exp(-wq%kdis * p%dt / vb))
+            w = min(w, s%bp(i,j) / a1)
+            if (w > 0.0) then
+              s%cq(i,j) = s%cq(i,j) + w
+              s%bp(i,j) = max(s%bp(i,j) - w * a1, 0.0)
+              wq%vrow(j,24) = wq%vrow(j,24) + mass_of(g, s, i, j, w)
+            end if
+          end if
+        else if (s%cq(i,j) > 0.0) then
+          w = s%cq(i,j)
+          s%cq(i,j) = 0.0
+          s%bp(i,j) = s%bp(i,j) + w * a1
+          wq%vrow(j,23) = wq%vrow(j,23) + mass_of(g, s, i, j, w)
+        end if
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
 end subroutine
 
 
@@ -1555,6 +1711,11 @@ subroutine m_wq_derive(wq, p, g, s)
         s%cqc(i,j) = s%cq(i,j) / vh
       else
         s%cqc(i,j) = 0.0
+      end if
+      ! 海セルは質量を持たないが、海から入る水の濃度の指定(wq_sea_conc)があれば、分布 C には
+      ! その濃度を出す(陸へ入る水の濃度が分布の上で続いて見えるように。§139)
+      if (s%cq_sea > 0.0) then
+        if (g%sw(i,j) > 0) s%cqc(i,j) = s%cq_sea
       end if
     end do
   end do
@@ -1640,7 +1801,7 @@ subroutine m_wq_record(wq, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(1:22), msur, mgw, mpool, mdam, mrs, mpd, acell
+  real(real64) :: v(1:25), msur, mgw, mpool, mdam, mrs, mpd, acell
   real(real64), allocatable :: vals(:)
   character(len=40) :: fmt
   real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je), rows3(dcp%js:dcp%je)
@@ -1650,7 +1811,7 @@ subroutine m_wq_record(wq, p, g, s)
   if (.not. wq%enabled) return
 
   acell = real(g%dx, real64) * real(g%dy, real64)
-  do k = 1, 22
+  do k = 1, 25
     call par_sum_rows(wq%vrow(:,k), v(k))
   end do
   rows(:) = 0.0_real64
@@ -1685,11 +1846,14 @@ subroutine m_wq_record(wq, p, g, s)
   end do
 
   if (is_root .and. wq%un /= 0) then
-    ! 条件付きの列(水田)は末尾に足す。書式は列数だけが変わる(既存の列の値と表記は変わらない)
+    ! 条件付きの列(水田・析出と溶解・海からの流入)は末尾に足す。書式は列数だけが変わる
+    ! (既存の列の値と表記は変わらない)
     vals = [v(1), v(2), v(7), v(8), v(11), v(9), v(10), v(3), v(13), v(12), v(4), v(14), v(15), &
             v(5) + wq%dam_decay, v(6), msur, mgw, mpool, mdam, mrs, &
             v(16), v(17), v(18), v(19), v(20), v(21)]
     if (wq%have_pd) vals = [vals, mpd, v(22)]
+    if (wq%have_sat) vals = [vals, v(23), v(24)]
+    if (wq%have_sea) vals = [vals, v(25)]
     write(fmt, '(a,i0,a)') '(f0.2,', size(vals), '(",",es15.7))'
     write(wq%un, fmt) s%t, es_out(vals)
     flush(wq%un)

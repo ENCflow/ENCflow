@@ -158,8 +158,70 @@ what it applies to, see the developer document
 [developer.md Sec. 32.4](../../developer.md) (in Japanese)). It is not
 used in ordinary computations.
 
+## Time compression (long-term water and salt balances)
+
+Quantities that change over years to decades, such as the level of a lake, the water in the
+soil and the salt dissolved in it, cannot be computed in a realistic time with the time step
+of the shallow-water flow (seconds). **Multiplying the speed of every slow process by M and
+shortening the simulated period to 1/M** follows the same change in 1/M of the computing time
+(time compression; M is the compression factor). There is no dedicated feature: the input
+values are given with this reading.
+
+**What to multiply by M (the speeds)** - the speeds at which water and substances enter and
+leave are all multiplied by the same factor.
+
+| Process | Inputs to multiply by M |
+|---|---|
+| Rainfall and irrigation | Rainfall intensity (`prval` and the like) |
+| Evapotranspiration | `evap0`, or the values of the time series `evap_val` |
+| Inflow and withdrawal | Discharges of inflow segments and internal sources, of pumps and wells |
+| Infiltration and groundwater | Infiltration capacity (`gw_ksv_mmh` and the like), lateral hydraulic conductivity (`gw_ksh_mmh`) |
+| Water quality | Loads of point and areal sources, decay coefficients, the horizontal mixing coefficient `wq_diff`, the dissolution coefficient `wq_kdis` |
+
+Concentrations (rain concentration, boundary inflow concentration, solubility) and the sizes of
+the stores (soil thickness, effective porosity, `evap_hglim`) are not changed. The times of the
+time series (rainfall, inflow, evapotranspiration, loads) are divided by M. Read the times of
+the results multiplied by M.
+
+**Premises** - the shallow-water flow only "keeps the water surface level and delivers water to
+low places", and the flow itself does not affect the result. The following cannot be
+compressed.
+
+- Fast phenomena such as floods, tides and storm surges (multiplying the discharge by M changes
+  the hydraulics). The same holds for an inflow routed down a river channel: give the inflow
+  directly at the edge of the lake or the field.
+- Quantities decided by the accumulation of fast phenomena. Mixing by wind and tide, for
+  example, is given again in the form of a slow process such as the mixing coefficient
+  `wq_diff` (multiplied by M).
+- Structures whose discharge is decided by a head difference or a depth (culverts, weirs,
+  diversions and the like): there is no input that reads their discharge as M times larger.
+  For those whose discharge is given by a table or a time series (pump operation rules,
+  withdrawals, wells), multiply that discharge by M.
+- Inputs tied to the calendar (monthly evapotranspiration, estimates from air temperature,
+  snow accumulation and melt). Give the seasonal change with time series whose times are
+  divided by M (`f_evmodel = 5` for evapotranspiration) and the cyclic forcing.
+- Use together with the morfac of [Sediment and morphology](geomorph.md) or the gl_morfac of
+  [Glaciers](glacier.md) (a different idea: those keep the water in real time and speed up
+  only the terrain or the ice).
+
+**How to choose the compression factor** - confirm that changing M (to one tenth, for example)
+does not change the result. The error of the compression grows with M and is larger in shallower
+water: in the compressed calculation, the flow that makes up for the water lost by evaporation
+is M times faster than in reality, so friction matters in shallow water and the water surface
+slopes. Do not concentrate an inflow on one cell; spread it over several cells or more. In the
+examples, the error of the volume of a lake of 5 km radius (the difference from the
+water-balance solution for a level lake surface) is 0.1 % or less with M = 1000 and 0.6 % or
+less with M = 10000 while the lake is 2.5 m deep or more, and 17 % with M = 1000 and 82 % with
+M = 10000 for the lake shrunk to a depth of 0.4 m (25 years take about 10 minutes on one thread
+with M = 1000). For an irrigated field 800 m wide without surface flow, the soil salt differs by
+at most 0.04 % between M = 100 and 1000
+([examples/terminal_lake](../../../examples/terminal_lake/en/README.md),
+[examples/irrigation_salt](../../../examples/irrigation_salt/en/README.md)). This reading is
+our own arrangement of how to use the model, and it applies only within the premises above.
+
 ## Tests and examples
 
 - [test/wave](../../../test/wave/en/README.md): a minimal setup specifying the time step, end time and spatial-output interval.
 - [test/nest_identity](../../../test/nest_identity/en/README.md): the `restart` configuration compares save/resume on the same time axis with an uninterrupted run.
 - [examples/List_samples/en/list_sysparam.txt](../../../examples/List_samples/en/list_sysparam.txt): annotated settings for time, output intervals, calendar and periodic forcing.
+- [examples/terminal_lake](../../../examples/terminal_lake/en/README.md), [examples/irrigation_salt](../../../examples/irrigation_salt/en/README.md): examples that compute decades of water and salt balance with time compression (including comparisons of the compression factor).

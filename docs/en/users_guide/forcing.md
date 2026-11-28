@@ -256,11 +256,13 @@ Select how potential evapotranspiration (PET) is given with `f_evmodel`.
 | 2 | Monthly climatology evap_monthly (mm/day x 12) | Calendar (date0_c) |
 | 3 | Hamon formula (estimated from temperature and daylight hours) | Calendar, temperature (fn_meteo), latitude lat |
 | 4 | Thornthwaite formula | As 3, plus monthly normal temperatures temp_normal (x 12) |
+| 5 | Time series evap_val (elapsed days, mm/day) given directly | - (the calendar is not used) |
 
 | Parameter | Default | Meaning |
 |---|---|---|
 | evap0 | 3.0 | Mode 1: PET (mm/day). When unspecified the default is adopted and printed with "(default)" |
 | evap_monthly | - | Mode 2: monthly PET (mm/day). 12 months |
+| evap_val | - | Mode 5: time series of PET (elapsed days, mm/day; up to 4000 points). Linear interpolation, end values held. Folded by the cyclic forcing t_cycle |
 | evap_kc | 1.0 | Conversion coefficient (pan coefficient / calibration; common to all modes) |
 | evap_hglim | - | Subsurface storage (m) below which the dryness of the soil reduces evapotranspiration (common to all modes). When given, the evapotranspiration taken from groundwater is reduced to the fraction hg/evap_hglim while the subsurface storage hg is smaller than this. No reduction when unspecified |
 | lat | - | Representative latitude (deg). Required for modes 3, 4 |
@@ -269,6 +271,25 @@ Select how potential evapotranspiration (PET) is given with `f_evmodel`.
 Modes 3 and 4 are simple methods estimating PET from temperature and
 daylight hours only, without radiation, wind or humidity (equations in
 [the explanation](forcing_models.md) §3); calibrate with `evap_kc`.
+
+Mode 5 is for giving a potential evapotranspiration obtained from observations or a separate
+estimate directly as a time series. The time is in days elapsed from t=0 (as in the air
+temperature series `tempval`) and is evaluated by linear interpolation every step (modes 1-4
+are evaluated daily). With the [cyclic forcing](time.md#cyclic-forcing-for-long-term-runs)
+`t_cycle_c`, the series is folded like the rainfall and air temperature series, so the seasonal
+change of a representative year can be repeated. This is also the mode to use when giving a
+shortened seasonal change with
+[time compression](time.md#time-compression-long-term-water-and-salt-balances) (the monthly
+values of mode 2 are tied to the calendar and cannot be shortened).
+
+```
+&list_evap
+  f_evmodel = 5
+  evap_val(1:2,1) =   0.0, 1.0     ! (elapsed days, mm/day)
+  evap_val(1:2,2) = 182.5, 5.0
+  evap_val(1:2,3) = 365.0, 1.0
+/
+```
 
 PET is evaluated daily, scaled by `evap_kc`, and each step withdraws the
 depth `PET × dt` in the order **canopy water (storage interception only)
@@ -413,7 +434,7 @@ Temperature, interception and evapotranspiration are not written as fields.
 | Precipitation | None (works on its own) |
 | Interception | Acts when precipitation is present; no mandatory dependency for enabling it |
 | Meteorological forcing field | None (used together with a consuming feature) |
-| Evapotranspiration (mode 1) | None |
+| Evapotranspiration (modes 1 and 5) | None |
 | Evapotranspiration (modes 2-4) | Calendar date0_c; 3 and 4 also need meteorological forcing and latitude; 4 also needs temp_normal |
 | Snowpack / snowmelt | Meteorological forcing; precipitation supplies new snow but is not required to enable the module |
 | Glaciers ([dedicated chapter](glacier.md)) | Meteorological forcing + active snowpack/snowmelt; precipitation supplies accumulation but is not required to enable the module |
@@ -427,6 +448,7 @@ list_meteo / list_evap / list_snow in
 - [test/chichibu](../../../test/chichibu/en/README.md): uniform rainfall on a real-terrain catchment, with regression checks for runoff collection and flood-wave propagation.
 - [test/icevap](../../../test/icevap/en/README.md): equivalence of minimal input and explicitly specified defaults for fixed-rate interception, initial loss and constant evapotranspiration.
 - [test/evapdry](../../../test/evapdry/en/README.md): reduction by the dryness of the soil (evap_hglim). In a flat closed domain, the subsurface storage after rain matches the analytical solution (linear, then exponential decay).
+- [test/wqsalt](../../../test/wqsalt/en/README.md): time-series input of the potential evapotranspiration (case evts: a triangular series repeated twice by the cyclic forcing; the cumulative evaporation matches the integral).
 - [test/frost](../../../test/frost/en/README.md): comparison with analytical values for the freezing index and infiltration suppression under constant air temperature.
 
 ## References

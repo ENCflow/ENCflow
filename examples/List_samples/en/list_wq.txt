@@ -11,6 +11,8 @@
 &list_wq
   f_wq = 1                          ! 0 temporarily disables while keeping the file
   wq_c0 = 0.0                       ! initial concentration (mg/L; uniform)
+  !fn_wq_c0 = "c0map.txt"           ! map of the initial concentration (mg/L; exclusive with
+                                    !   wq_c0; e.g. a salt lake and fresh rivers in one run)
   f_wq_infil = 1                    ! substance transport on infiltration
                                     !   (1: carried with the concentration into
                                     !   the subsurface pool = for dissolved
@@ -123,6 +125,29 @@
   !   the shear washoff)
   !wq_kd = 1.0e4                   ! equilibrium partition coefficient (L/kg.
                                    !   E.g. Pb is 1e4 to 1e6)
+
+  ! ---- Horizontal mixing (lakes, bays, wide rivers; diffusion proportional to the
+  !      concentration difference) ----
+  !   Adds the flux D*h*dC/dr between wet cells (advection only towards dry cells, walls
+  !   and sea cells). Explicit, so there is an upper limit (about 0.35 dx^2/dt on a square
+  !   grid; a larger value stops at initialization). A calibrated quantity
+  !wq_diff = 1.0                    ! horizontal mixing coefficient D (m2/s; omitted = no mixing)
+
+  ! ---- Solubility and dissolution of the precipitate (e.g. salt concentrated by evaporation) ----
+  !   The excess over the solubility, and the substance of cells that dry up, precipitate into
+  !   the surface buildup pool (field B) and dissolve into unsaturated water. Infiltrating water
+  !   dissolves the precipitate up to saturation and carries it underground. precip_g and
+  !   dissol_g are added to wq.csv. Cannot be combined with wq_kd
+  !wq_csat = 3.6e5                  ! solubility (mg/L; the amount dissolving in 1 L of water;
+                                    !   e.g. sodium chloride 3.6e5, gypsum 2.4e3; omitted = no limit)
+  !wq_kdis = 1.0e-3                 ! mass-transfer coefficient of dissolution of the precipitate
+                                    !   (m/day; needs wq_csat; water of depth h approaches saturation
+                                    !   with the time constant h/wq_kdis; omitted = instantly)
+
+  ! ---- Concentration of water entering from the sea (water entering the land from the sea
+  !      cells of the sea mask fn_sw; mg/L) ----
+  !wq_sea_conc = 35000.0            ! example for the salinity of seawater (omitted = clean
+                                    !   water; in_sea_g is added to wq.csv)
 
   ! ---- Boundary inflow concentrations (per inflow-section number of
   !      &list_bound_inflow; mg/L) ----

@@ -8,11 +8,12 @@ This page gives the equations and the sources of the representative values
 for the processes of the [water-quality chapter](wq.md): transport,
 sources, first-order decay, settling, Kd two-phase partitioning,
 infiltration and transport through groundwater, surface buildup and
-washoff, reservoirs and sewer surcharge. The implementation is in
+washoff, reservoirs, sewer surcharge, horizontal mixing, and concentration
+by evaporation with precipitation and dissolution. The implementation is in
 `src/m_wq.f90` (sources, vertical exchange, ledger), with the transport in
 `src/m_swflow_enc.f90` (`advect_scalar`) and `src/m_gwflow_lateral.f90`
 (accompanying transport underground); the design history is in
-developer.md §30 and docs/wq_metal_plan.md.
+developer.md §30, §139 and docs/wq_metal_plan.md.
 
 ## 1. State variables and transport
 
@@ -40,7 +41,9 @@ sources (point g/s, areal and distributed kg/ha/day, rain concentration
 mg/L, boundary inflow concentration) are additive and can be superposed.
 The sea cells of the sea mask (fn_sw) hold no mass (a sea area with the
 initial concentration is zeroed) and the inflow from the sea onto land is
-clean water. Sea cells are not receivers of the transport, so mass that
+clean water by default (with `wq_sea_conc`, the concentration of faces whose
+donor is a sea cell is set to that value; first-order upwind; the amount that
+entered is the `in_sea_g` column of the ledger). Sea cells are not receivers of the transport, so mass that
 flows into a sea cell leaves the system as it is. The transport kernel counts
 the outflow to sea cells and the exchange through open edges face by face,
 with the same flux times donor concentration that updates the concentration,
@@ -237,7 +240,101 @@ and of the rain that fell in the same step is added after the step, so it is
 not in that step's withdrawal (a relative bias of one step's inflow /
 storage). Verification: [test/wqstruct](../../../test/wqstruct/en/README.md).
 
-## 7. Parameters and the basis of their defaults
+## 7. Horizontal mixing
+
+With `wq_diff` (mixing coefficient $`D`$ [m²/s]), a diffusive flux proportional to the gradient
+of the concentration, integrated over the depth, is added to the advection.
+
+```math
+\frac{\partial (v_h C)}{\partial t} + \nabla\!\cdot(\boldsymbol{q}\,C)
+ = \nabla\!\cdot\left(D\,v_h\,\nabla C\right)
+```
+
+The discretization uses the same 8-neighbour links as the advection: the flux of link $`k`$
+(passing width $`l_k`$, centre distance $`\Delta r_k`$) is
+$`D\,h_e\,(C_i - C_n)\,l_k/\Delta r_k`$. The interface depth $`h_e`$ is the shallower of the
+rectangular-equivalent depths of the two sides, the passing-width factors are those of the
+advection (the virtual walls of levees and closed openings pass nothing), and the flux acts
+only between land cells that both hold water. The flux is counted with the same value from
+both cells, so mass is conserved and a uniform concentration stays uniform. Whatever the
+distribution of the passing widths over the 8 neighbours (the diagonal share $`d`$), the
+variance of a distribution in still water grows by $`2Dt`$ in each direction and the covariance
+does not grow ([test/wqsalt](../../../test/wqsalt/en/README.md), case mix; agreement to rounding).
+The stability condition of the explicit scheme is
+
+```math
+D\,\Delta t \sum_{k=1}^{8} \frac{l_k}{\Delta r_k} \le \Delta x\,\Delta y
+```
+
+(on a square grid $`\sum l_k/\Delta r_k = 4 - 2d`$; with $`d`$ = 0.59, $`D \le 0.35\,\Delta x^2/\Delta t`$),
+and a larger value stops at initialization. In cells with a subgrid channel width or a
+cross-section shape, and in cells whose building porosity is below 1, the area of the link is
+multiplied by the smaller of the plan-area fractions and porosities of the two sides (a guide
+to the open fraction of the link; our own simplification, and the stability condition above
+is still sufficient. Conservation of mass and the approach to a uniform concentration are
+checked by the cases mixgv and mixwd of [test/wqsalt](../../../test/wqsalt/en/README.md)).
+
+$`D`$ is a calibrated quantity that represents the mixing by wind, eddies, secondary flow and
+the non-uniformity of the velocity with one coefficient. As a guide, transverse mixing in
+rivers is $`\varepsilon_t \approx 0.15\,h\,u_*`$ (straight channels) to $`0.6\,h\,u_*`$ (gently
+meandering natural rivers, ±50 %; $`u_*`$ is the shear velocity)[^fischer79], and horizontal mixing in
+lakes and the sea grows with the size of the patch $`\ell`$: the empirical law compiled from dye
+diffusion experiments, $`K_a = 0.0103\,\ell^{1.15}`$ (cm²/s, $`\ell`$ in cm)[^okubo71], gives
+about 0.6 m²/s at 1 km, 8 m²/s at 10 km and 100 m²/s at 100 km. Values smaller than the
+numerical diffusion (§1) have no effect. Wind-driven currents and density-driven circulation
+are not solved, so the speed at which a whole lake mixes is set by the choice of $`D`$.
+
+## 8. Concentration by evaporation, precipitation and dissolution
+
+Evapotranspiration removes water only (from the surface water, ponds and groundwater alike).
+The substance stays, so the concentration of a water column of depth $`h`$ rises as
+$`C = c_q/h`$. With `wq_csat` (solubility $`C_s`$), the following is done cell by cell every
+step (the precipitate is kept in the surface buildup pool $`B`$).
+
+```math
+\text{precipitation:}\quad c_q > C_s v_h \ \Rightarrow\ B \leftarrow B + (c_q - C_s v_h),\quad c_q \leftarrow C_s v_h
+```
+
+```math
+\text{dissolution:}\quad c_q < C_s v_h,\ B > 0 \ \Rightarrow\
+\Delta c_q = \min\!\left[(C_s v_h - c_q)\left(1 - e^{-k\,\Delta t/v_h}\right),\ B\right]
+```
+
+In a cell that has dried up ($`v_h \le`$ the limit depth dd), all the substance of the water
+column moves to $`B`$. The dissolution formula is the exact solution, within the step, of the
+first-order dissolution $`dC/dt = (k/v_h)(C_s - C)`$ with the mass-transfer coefficient $`k`$
+(`wq_kdis`; without `wq_kdis`, $`k \to \infty`$ = instantly up to saturation. Expressing the
+dissolution from a solid surface by a flux proportional to the difference from the saturation
+concentration is the standard treatment of dissolution[^noyes1897]). With a constant depth and
+precipitate, $`C(t) = C_s(1 - e^{-kt/h})`$, and the numerical solution agrees with it whatever
+the time step ([test/wqsalt](../../../test/wqsalt/en/README.md), case disk).
+
+Water soaking into the ground dissolves, on its way through the precipitate, as much as the
+room up to saturation allows and carries it to the subsurface mass pool.
+
+```math
+\Delta c_g = \min\!\left[(C_s - C_{inf})\,f_x\left(1 - e^{-k\,\Delta t/f_x}\right),\ B\right]
+```
+
+$`f_x`$ is the infiltration of the step and $`C_{inf}`$ the concentration of the infiltrating
+water (the surface water before the infiltration; 0 for rain soaking into dry ground).
+Underground, the concentration that moves with the water (lateral flow, seepage and well
+pumping; §4) is $`\min(c_g/h_g,\ C_s)`$ (the part above the solubility, left when evaporation
+removed water only, stays in the soil).
+
+Judging precipitation only by comparing the concentration of the water column with the
+solubility, using the limit depth to judge drying up, and assuming that infiltrating water
+dissolves up to saturation are simplifications of this model (our own). Representative
+solubilities are about 360 g per kg of water for sodium chloride (25 °C; it changes little
+with temperature)[^haynes14] and roughly 2-2.6 g per litre of water for gypsum (calcium sulfate
+dihydrate; 25 °C; the value varies between sources). The concentration is the mass per volume of water, and the volume
+added by the dissolved substance is not counted. In a lake that dries up, salts precipitate in
+the order of increasing solubility, carbonates → gypsum → mirabilite → halite, and the
+precipitate on the bed of the Aral Sea is estimated to be mostly gypsum and
+mirabilite[^zavialov10]. This order and the interactions between substances are not
+represented, so run a separate calculation for each substance with its own solubility.
+
+## 9. Parameters and the basis of their defaults
 
 The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default). Water quality has **no defaults for the substance
 properties** because they differ by orders of magnitude between substances
@@ -247,7 +344,7 @@ representative values.
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| wq_c0 | 0 | initial concentration (mg/L) | **given** |
+| wq_c0 / fn_wq_c0 | 0 / — | initial concentration (mg/L); a uniform value or a map | **given** |
 | wq_thalf / wq_k20 | — | half-life (day) / first-order decay coefficient (1/day) (§2) | **literature value** BOD 0.1–0.5 /day[^streeter25][^chapra97], coliforms $`\ln 10/T_{90}`$, Cs-137 11019 day, pesticides 10–60 day[^wauchope92] |
 | wq_vs | — | single-phase settling velocity (m/day) (§3) | **derived** Stokes' law: clay 2 µm 0.3, silt 10 µm 8 m/day |
 | wq_kd | — | partition coefficient (L/kg) (§3; needs f_suspend) | **literature value** Pb 10⁴–10⁶, Cu, Zn, Cd 10³–10⁵, Cs 10³–10⁴[^sheppard90][^iaea10][^epa99] |
@@ -259,6 +356,10 @@ representative values.
 | wq_wash_kf / wq_wash_tauc | — | shear washoff coefficient (1/s) and critical shear stress (N/m²) | **calibration** no universal value |
 | wq_gwc_conc / f_wq_gwc_in | — / 1 | fixed concentration of surcharge water (mg/L), removal at inlets (§6) | **customary value** sewage 10⁵–10⁷ CFU/100 mL (table of the chapter) / **method** |
 | wq_rain_conc / wq_in_conc | — | rain and boundary-inflow concentrations (mg/L) | **given** |
+| wq_sea_conc | — | concentration of water entering the land from the sea (mg/L) | **given** the salinity of seawater is about 35 g/L |
+| wq_diff | — | horizontal mixing coefficient $`D`$ (m²/s) (§7) | **calibration** transverse mixing in rivers 0.15–0.6 $`h u_*`$[^fischer79]; lakes and the sea 0.6–100 m²/s for patch sizes of 1–100 km[^okubo71] |
+| wq_csat | — | solubility (mg/L) (§8) | **literature value** sodium chloride 3.6×10⁵[^haynes14], gypsum 2–2.6×10³ |
+| wq_kdis | — (instant) | mass-transfer coefficient of the dissolution of the precipitate (m/day) (§8) | **calibration** no universal value; give it to slow down hardened or covered precipitate |
 
 **Where to look when revising the defaults**
 
@@ -275,7 +376,7 @@ representative values.
 - Representative sewage concentrations and T90 values, with the unit
   conversion, are tabulated in the chapter (sewer surcharge section).
 
-## 8. Verification cases
+## 10. Verification cases
 
 | Case | Content | Point |
 |---|---|---|
@@ -285,6 +386,7 @@ representative values.
 | [test/sewer_wq](../../../test/sewer_wq/en/README.md) | sanitary risk of sewer surcharge | ledger check of surcharge → inundation → spreading → decay |
 | [test/tracer](../../../test/tracer/en/README.md) | Numerical diffusion of the first-order upwind transport | Spreading of a clean-water front D = u·Δx·(1−Cr)/2 and lateral variance of a steady plume Dy = 0.29·u·Δy, both within 5 % of the theory |
 | [test/wqstruct](../../../test/wqstruct/en/README.md) | Proportional transfer by structures and withdrawals | Water at 1 mg/L stays at 1 in every compartment, closure of the ledger, out_intake_g = volume of water leaving the system × concentration |
+| [test/wqsalt](../../../test/wqsalt/en/README.md) | Horizontal mixing, precipitation and dissolution, sea concentration, map of the initial concentration | Variance increment = 2·D·t, precipitation by evaporation agrees with the formula, dissolution agrees with $`C_s(1 - e^{-kt/h})`$, dissolution by infiltrating water and the cap on the subsurface concentration, closure of the ledger |
 
 ## References
 
@@ -296,3 +398,8 @@ representative values.
 [^epa99]: US EPA (1999): Understanding Variation in Partition Coefficient, Kd, Values. EPA 402-R-99-004A.
 [^freeze79]: Freeze, R. A. and Cherry, J. A. (1979): *Groundwater*. Prentice-Hall. (retardation factor of linear equilibrium sorption)
 [^rossman15]: Rossman, L. A. (2015): Storm Water Management Model User's Manual Version 5.1. US EPA, EPA/600/R-14/413b. (buildup–washoff)
+[^fischer79]: Fischer, H. B., List, E. J., Koh, R. C. Y., Imberger, J. and Brooks, N. H. (1979): *Mixing in Inland and Coastal Waters*. Academic Press. (transverse mixing coefficient of rivers)
+[^okubo71]: Okubo, A. (1971): Oceanic diffusion diagrams. *Deep-Sea Res.*, 18, 789–802. (empirical law between the size of the patch and the apparent diffusivity)
+[^noyes1897]: Noyes, A. A. and Whitney, W. R. (1897): The rate of solution of solid substances in their own solutions. *J. Am. Chem. Soc.*, 19, 930–934. (the rate of dissolution is proportional to the difference from the saturation concentration)
+[^haynes14]: Haynes, W. M. (ed.) (2014): *CRC Handbook of Chemistry and Physics*, 95th ed. CRC Press. (solubility of inorganic compounds in water; sodium chloride 36.0 g per 100 g of water at 25 °C)
+[^zavialov10]: Zavialov and Zavialov (2010): estimate of the amount of precipitate on the bed of the Aral Sea. Abstract EGU2010-15141 of the EGU General Assembly 2010 (<https://meetingorganizer.copernicus.org/EGU2010/EGU2010-15141.pdf>; checked on 2026-11-28 through the summary of a web search result; the text itself was not read).

@@ -1,0 +1,40 @@
+!======================================================================
+! wqsalt / mixflow: 一様な濃度は、流れと水平の混合があっても一様のまま
+!   閉じた箱(40 × 20 セル、dx = 10 m)の西半分の水深を 1.2 m、東半分を 0.8 m にして
+!   放すと、水が揺れる。初期濃度は全域で 100 mg/L。混合の流束は濃度の差に比例するので、
+!   濃度が一様なら流束は 0 で、濃度は 100 mg/L のまま変わらない(移流も同じ性質を持つ)。
+!======================================================================
+&list_sysparam
+  dt = 0.5
+  tt = 300.0
+  dt_disp = 60.0
+  dt_file = 100.0
+  dt_recrd = 60.0
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_wq = '-'
+  dir_data = 'data_wqsalt'
+  dir_result = 'result_mixflow'
+  f_output_mode = 2
+  f_disp_debug = 1
+/
+
+&list_geoinfo
+  nx = 40
+  ny = 20
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  rn0 = 0.03
+/
+
+&list_initial
+  f_htype = 1               ! 水深の分布ファイル
+  fn_hinit = 'h_step.txt'   ! 西半分 1.2 m、東半分 0.8 m
+/
+
+&list_wq
+  wq_c0 = 100.0             ! 初期濃度 (mg/L。一様)
+  wq_diff = 5.0             ! 水平の混合係数 D (m2/s)
+/

@@ -110,6 +110,8 @@ the ground elevation $`z`$.
 
 ## 3. Potential evapotranspiration (Hamon and Thornthwaite)
 
+Modes 1 (constant), 2 (monthly) and 5 (time series) give the potential evapotranspiration
+(PET) directly.
 Modes 3 and 4 estimate the PET (mm/day) from the daylight hours $`N`$
 (hours; solar declination by Cooper's approximation) and the daily mean
 temperature $`T`$ (°C):

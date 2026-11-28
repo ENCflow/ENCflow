@@ -12,6 +12,9 @@ module list_evap
   private
   public :: t_list_evap
   public :: list_evap_read
+  public :: nevmax
+
+  integer, parameter :: nevmax = 4000    ! 可能蒸発散の時系列の最大点数(日次で約 11 年)
 
   type t_list_evap
     ! 可能蒸発散(PET)の決定法(排他切替)
@@ -19,9 +22,12 @@ module list_evap
     !   2: 月別気候値 evap_monthly(暦 = &list_sysparam の date0_c が必要)
     !   3: Hamon 式(気温 = &list_meteo+可照時間。暦・緯度が必要)
     !   4: Thornthwaite 式(3 に加えて熱指数用の平年値が必要)
+    !   5: 時系列 evap_val(経過日, mm/day。暦を使わない。周期強制 t_cycle で折り返す)
     integer :: f_evmodel = 0
     real :: evap0 = -9999.0                        ! モード1: PET (mm/day。未指定なら既定 3。§66)
     real :: evap_monthly(1:12) = -9999.0           ! モード2: 月別 PET (mm/day)
+    real :: evap_val(1:2,1:nevmax) = -9999.0       ! モード5: PET の時系列 (経過日数, mm/day)。
+                                                   !   線形補間・端値保持。未使用は番兵 -9999
     real :: evap_kc = 1.0                          ! 換算係数(パン係数・校正用。全モード共通)
     real :: lat = -9999.0                          ! 代表緯度 (deg。モード3,4で必須)
     real :: temp_normal(1:12) = -9999.0            ! 月平均気温の平年値 (℃。モード4の
@@ -42,6 +48,7 @@ subroutine list_evap_read(p, list)
   integer :: f_evmodel
   real :: evap0
   real :: evap_monthly(1:12)
+  real :: evap_val(1:2,1:nevmax)
   real :: evap_kc
   real :: lat
   real :: temp_normal(1:12)
@@ -50,13 +57,14 @@ subroutine list_evap_read(p, list)
   integer :: ios
   character(len=1024) :: iom
 
-  namelist /list_evap/ f_evmodel, evap0, evap_monthly, evap_kc, lat, temp_normal, evap_hglim
+  namelist /list_evap/ f_evmodel, evap0, evap_monthly, evap_val, evap_kc, lat, temp_normal, evap_hglim
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
   f_evmodel = list%f_evmodel
   evap0 = list%evap0
   evap_monthly = list%evap_monthly
+  evap_val = list%evap_val
   evap_kc = list%evap_kc
   lat = list%lat
   temp_normal = list%temp_normal
@@ -75,6 +83,7 @@ subroutine list_evap_read(p, list)
   list%f_evmodel = f_evmodel
   list%evap0 = evap0
   list%evap_monthly = evap_monthly
+  list%evap_val = evap_val
   list%evap_kc = evap_kc
   list%lat = lat
   list%temp_normal = temp_normal

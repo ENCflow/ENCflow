@@ -1,0 +1,63 @@
+!======================================================================
+! terminal_lake / mix_m10000: 圧縮率の確かめ(mix と同じ湖を M = 10000 で、縮小の 12 年だけ)
+!   mix と同じ設定の最初の 12 年(流入を 5 % に絞った期間)を、圧縮率 10000 で計算する。湖の体積を、
+!   湖面を水平とみなした水収支の解と比べて、圧縮率による誤差を見る(plot_results.py)。混合係数が
+!   10 倍になるので、その安定条件(約 0.35 dx²/dt)に合わせて時間刻みを 1 s にする。
+!   時間の圧縮(docs/users_guide/time.md): 圧縮率 M = 10000。蒸発・流入・塩の負荷・混合係数・溶解の
+!   係数を M 倍にし、12 年を 12 年 / M で計算する。結果の時刻は M 倍して読む。
+!======================================================================
+&list_sysparam
+  dt = 1                  ! 時間刻み (s)
+  tt = 37910.0            ! 計算終了時刻 (s) = 12 年 / M
+  dt_disp = 788.8          ! Log.txt の間隔(実時間の 0.25 年ごと)
+  dt_file = 3155.0         ! 分布出力の間隔(実時間の 1 年ごと)
+  dt_recrd = 157.8         ! wq.csv・evap.csv・プローブの間隔(実時間の 0.05 年ごと)
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_evap = '-'
+  fn_wq = '-'
+  fn_record = '-'
+  dir_data = 'data_lake'
+  dir_result = 'result_mix_m10000'
+  f_output_mode = 2         ! 分布は bil
+/
+
+&list_geoinfo
+  nx = 61
+  ny = 61
+  dx = 200.0
+  dy = 200.0
+  f_ztype = 1
+  fn_z = 'z.txt'            ! 放物面のすり鉢(gen_data.py)
+  rn0 = 0.03
+/
+
+&list_initial
+  f_htype = 2               ! 水位の固定値
+  e0 = 8                  ! 初期水位 (m)。流入 Q0 と蒸発が釣り合う水位
+/
+
+&list_bound_source
+  fn_src_cell(1) = 'inflow_cells.txt'   ! 流入(川の水)を湖の中心の 5 × 5 セル(1 km 四方)へ直接入れる
+  src_val(:,1,1) = 0.0, 9.955106e+02          ! (min, m3/s) = 0.05 × Q0 × M
+  src_val(:,2,1) = 9.9e9, 9.955106e+02
+/
+
+&list_evap
+  f_evmodel = 1             ! 一定(年平均値を直接与える)
+  evap0 = 2.737851e+04    ! 蒸発 (mm/day) = 1 m/年 × M
+/
+
+&list_wq
+  wq_c0 = 10000             ! 湖の初期の濃度 (mg/L)
+  fn_wq_pt_cell(1) = 'inflow_cells.txt'   ! 流入水の塩(流入と同じセルへの点源)
+  wq_pt_load(1) = 4.977553e+05          ! (g/s) = 流入 × 流入水の濃度
+  wq_diff = 10000.0         ! 水平の混合係数 (m2/s) = 1 m2/s × M
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 31, 31        ! 湖の中心(流入を入れる範囲の中)
+  pbxy(:,2) = 31, 38        ! 中心から 1.4 km
+/

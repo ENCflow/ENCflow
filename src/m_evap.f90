@@ -3,8 +3,9 @@ module m_evap
   ! 気温(または直接指定)から可能蒸発散量 PET を暦日ごとに評価し、
   ! 毎ステップ、各セルの貯留から優先順位付きで減算する加算的プロセス。
   !   有効化: fn_evap の指定(&list_evap。f_evmodel=0 で一時無効化)
-  !   PET:    1=一定速度, 2=月別気候値, 3=Hamon, 4=Thornthwaite(排他切替。
-  !           式の追加は pet_mmday に case を足す)
+  !   PET:    1=一定速度, 2=月別気候値, 3=Hamon, 4=Thornthwaite, 5=時系列(排他切替。
+  !           式の追加は pet_mmday に case を足す)。5 は evap_val(経過日, mm/day)を
+  !           毎ステップ線形補間で直接与える(暦を使わない。周期強制 t_cycle で折り返す。§139)
   !   気温:   m_meteo(&list_meteo。§29)が提供(一様定数/一様時系列/
   !           分布時系列+標高減率)。モード3,4は fn_meteo が必須
   !   評価粒度: 暦日平均の思想で「日の先頭の気温」から1日1回更新、日内一定。
@@ -34,10 +35,10 @@ module m_evap
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state, sect_cell, sect_dvh, wfr_of
-  use m_boundary, only : t_boundary
+  use m_boundary, only : t_boundary, interp_series
   use m_intercept, only : t_intercept
   use m_meteo, only : t_meteo, meteo_temp_set, meteo_temp_cell, meteo_temp_mean
-  use list_evap, only : t_list_evap, list_evap_read
+  use list_evap, only : t_list_evap, list_evap_read, nevmax
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_sum_rows
   use m_util, only : itoa, jdn_to_ymd, ymd_to_jdn, param_default, es_out
   implicit none
@@ -62,6 +63,9 @@ module m_evap
     real :: hglim = 0.0            ! 抑制を始める地下の貯留量 (m。stress 時のみ)
     real :: pet0 = 0.0             ! モード1: PET (mm/day)
     real :: pmon(1:12) = 0.0       ! モード2: 月別 PET (mm/day)
+    integer :: nser = 0            ! モード5: 時系列の点数
+    real, allocatable :: ser(:,:)  ! モード5: 時系列 (1:2, 1:nser) = (s, mm/day)
+    real :: pser = -1.0            ! モード5: いま ev%pet に入れてある値 (mm/day。kc 適用前)
     integer :: jdn0 = 0            ! t=0 の日のユリウス通日(p から転記)
     real :: sec0 = 0.0             ! t=0 の日内秒(同上)
     real :: latrad = 0.0           ! 緯度 (rad)
@@ -91,7 +95,7 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   type(t_state), intent(in) :: s
   type(t_meteo), intent(in) :: mt
   type(t_list_evap) :: list
-  integer :: m
+  integer :: m, n
   character(len=32) :: buf
   if (allocated(b%struct) .or. allocated(s%h)) continue  ! 引数未使用の警告を抑制
 
@@ -100,9 +104,9 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   call list_evap_read(p, list)
   if (list%f_evmodel == 0) return    ! fn を書いたまま一時無効化する経路
 
-  if (list%f_evmodel < 1 .or. list%f_evmodel > 4) then
+  if (list%f_evmodel < 1 .or. list%f_evmodel > 5) then
     call par_stop("list_evap: f_evmodel must be 0(none), 1(constant), 2(monthly), " &
-                  //"3(Hamon) or 4(Thornthwaite): "//itoa(list%f_evmodel))
+                  //"3(Hamon), 4(Thornthwaite) or 5(time series): "//itoa(list%f_evmodel))
   end if
   ev%model = list%f_evmodel
   if (list%evap_kc <= 0.0) call par_stop("list_evap: evap_kc must be > 0")
@@ -119,7 +123,7 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   end if
 
   ! --- 暦の原点(モード2〜4で必須。正本は &list_sysparam の date0_c。§29) ---
-  if (ev%model >= 2) then
+  if (ev%model >= 2 .and. ev%model <= 4) then
     if (.not. p%has_date) then
       call par_stop("list_evap: f_evmodel>=2 requires date0_c in &list_sysparam " &
                     //'(calendar at t=0, "YYYY-MM-DD" or "YYYY-MM-DD hh:mm")')
@@ -150,6 +154,26 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
         call par_stop("list_evap: f_evmodel>=3 requires lat (-90 to 90 deg)")
       end if
       ev%latrad = list%lat * pi / 180.0
+    case (5)
+      ! 時系列(経過日 -> 秒。interp_series の規約 = 線形補間・端値保持。気温の tempval と同じ)
+      n = 0
+      do m = 1, nevmax
+        if (list%evap_val(1,m) <= -9998.0) exit     ! 番兵で終端
+        n = n + 1
+      end do
+      if (n < 1) call par_stop("list_evap: f_evmodel=5 requires evap_val (elapsed days, mm/day)")
+      do m = 1, n
+        if (list%evap_val(2,m) < 0.0) call par_stop("list_evap: evap_val rates must be >= 0 (mm/day)")
+        if (m > 1) then
+          if (list%evap_val(1,m) <= list%evap_val(1,m-1)) then
+            call par_stop("list_evap: evap_val must have monotonically increasing times (elapsed days)")
+          end if
+        end if
+      end do
+      ev%nser = n
+      allocate(ev%ser(1:2, 1:n))
+      ev%ser(1,1:n) = list%evap_val(1,1:n) * secday
+      ev%ser(2,1:n) = list%evap_val(2,1:n)
   end select
 
   ! --- Thornthwaite の熱指数(平年月平均気温から) ---
@@ -170,7 +194,7 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   end if
 
   ! --- 気温(モード3,4。&list_meteo が提供する。§29) ---
-  if (ev%model >= 3) then
+  if (ev%model == 3 .or. ev%model == 4) then
     if (.not. mt%enabled) then
       call par_stop("list_evap: f_evmodel>=3 requires air temperature input (&list_meteo, fn_meteo)")
     end if
@@ -219,9 +243,24 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   if (it < 0 .or. allocated(b%struct)) continue  ! 引数未使用の警告を抑制
   if (.not. ev%enabled) return
 
-  ! 暦日が変わったら PET を再評価(t=0 の暦日を 0 とする通し日)
-  day = floor((s%t + ev%sec0) / secday)
-  if (day /= ev%curday) call update_pet(ev, p, g, s, day, mt)
+  if (ev%model == 5) then
+    ! 時系列(§139): 毎ステップ、この時刻の値を線形補間で求める。周期強制 t_cycle の指定が
+    ! あれば折り返す(降雨・気温の時系列と同じ。§32.4)。値が変わったときだけ分布を埋め直す
+    if (p%t_cycle > 0.0) then
+      w = interp_series(ev%ser, ev%nser, mod(max(s%t, 0.0), p%t_cycle))
+    else
+      w = interp_series(ev%ser, ev%nser, s%t)
+    end if
+    if (w /= ev%pser) then
+      ev%pser = w
+      ev%pet(:,:) = w * ev%kc * mmday2ms
+      ev%petref = w * ev%kc
+    end if
+  else
+    ! 暦日が変わったら PET を再評価(t=0 の暦日を 0 とする通し日)
+    day = floor((s%t + ev%sec0) / secday)
+    if (day /= ev%curday) call update_pet(ev, p, g, s, day, mt)
+  end if
 
   canopy = ic%enabled .and. associated(ic%draw)
   to_tank = allocated(s%sfe)
@@ -459,6 +498,7 @@ subroutine m_evap_dispose(ev, p)
   if (is_root .and. ev%un /= 0) close(ev%un)
   ev%un = 0
   if (allocated(ev%pet)) deallocate(ev%pet)
+  if (allocated(ev%ser)) deallocate(ev%ser)
   if (allocated(ev%vrow)) deallocate(ev%vrow)
   ev%enabled = .false.
   ev%initialized = .false.

@@ -16,6 +16,7 @@
   !   2: monthly climatology (evap_monthly)
   !   3: Hamon formula (air temperature + possible sunshine duration)
   !   4: Thornthwaite formula (temp_normal required in addition to 3)
+  !   5: time series (evap_val; no calendar; folded by the cyclic forcing t_cycle)
   f_evmodel = 3
 
   !evap0 = 3.0                  ! mode 1: PET (mm/day; default 3 = lower side
@@ -23,6 +24,9 @@
                                 !   climate; Sec. 66)
   !evap_monthly = 0.5, 0.7, 1.2, 2.0, 2.8, 3.2, 3.6, 3.8, 2.8, 1.8, 1.0, 0.6
                                 ! mode 2: monthly PET (mm/day)
+  !evap_val(1:2,1) = 0.0, 1.0   ! mode 5: time series of PET (days elapsed from t=0,
+  !evap_val(1:2,2) = 182.5, 5.0 !   mm/day); linear interpolation, end values held.
+  !evap_val(1:2,3) = 365.0, 1.0 !   Gives observed or separately estimated values directly
   evap_kc = 1.0                 ! conversion factor (pan coefficient / for
                                 !   calibration; common to all modes)
   !evap_hglim = 0.05            ! subsurface storage (m) below which the dryness

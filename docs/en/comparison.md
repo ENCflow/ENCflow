@@ -205,6 +205,7 @@ could be confirmed.
 | Driftwood blockage (jamming and backwater at bridges and open check dams, blockage of culvert inlets) | Partial: a cell ledger with the capture ratio as a given, and a drag treating the jam as a porous obstruction; for openings narrower than a cell, an inlet loss put into the discharge law of the culvert | IberWood (individual rigid-body tracking) | Whether a log gets caught is not solved (individual tracking resolves the geometry of blockage). The amount of the jam evolves in time coupled with the driftwood transport, and backwater and bypass flooding come out of the same run. The coefficients are calibration values, not yet compared with measurements |
 | Building destruction and debris (wooden houses, debris transport and deposition) | Partial: raster-field estimate (fragility-type destruction + Eulerian debris transport + void-ratio feedback) | Fragility-function post-processing, DEM and particle-method debris tracking | The practical standard is depth-based fragility post-processing. Original in handling the fate of debris and the added destructive force of driftwood and debris in the same time evolution |
 | Water quality (load runoff, decay, settling, buildup-washoff, Kd partitioning, in-groundwater transport, completely mixed reservoirs) | Yes | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | Free and open codes rarely combine hydrology, water quality and hydraulics. Closes the mass budget across surface, subsurface and reservoirs in one code |
+| Concentration by evaporation and salt accumulation (soil salt of irrigated fields; shrinking of a lake without an outlet, precipitation of salt and its dissolution when the level recovers) | Partial: the salt is tracked as a water-quality substance (horizontal mixing coefficient, precipitation by a solubility, dissolution rate of the precipitate, concentration of water entering from the sea). The change over decades is computed by a reading of the inputs (time compression) | SaltMod / SahysMod (seasonal water and salt balances of irrigated land), HYDRUS-1D (vertical solute transport), MODFLOW+SEAWAT, SUTRA, FEFLOW (variable-density groundwater) | The dedicated models have the vertical structure of the root zone and the farmers' responses (SaltMod), the vertical distribution of water and solutes (HYDRUS), or the effect of density (variable-density groundwater models). ENCflow is a rough estimate with one fully mixed soil layer and a concentration that does not act on the flow; within the same grid and time stepping as the surface flow, groundwater and evapotranspiration, it follows where the salt goes (lake water, precipitate, soil, drainage) with a closed ledger. A single substance |
 | Snow accumulation and snowmelt | Yes: degree-day + frozen-ground infiltration suppression | MIKE SHE, GSSHA, SHETRAN | HEC-RAS leaves it to HMS |
 | Glaciers | Yes: degree-day mass balance + SIA flow + sliding + glacial erosion + avalanche redistribution | None among general flood models. Detailed ice dynamics: PISM, Elmer/Ice, OGGM | No other model runs glaciers side by side with flood hydraulics, catchment hydrology and landform change |
 | Coastal wave field (shoaling, refraction, breaking, breakwater shadows) | Partial: stage W1, a phase-averaged energy balance with one representative period and directional bins (two-link upwind decomposition, unsteady/quasi-steady). On a fixed bed; does not act on the bed | XBeach stationary mode, SnapWave (coupled with SFINCS), HISWA, SWAN, CMS-Wave | Does not compete with the specialised models in accuracy; it runs on the same grid and in the same time evolution as catchments, rivers, floods, tsunamis and sediment. Process-based sediment transport comes in stages (docs/wavefield_plan.md, developer.md §90; Japanese). No diffraction or wind growth |
@@ -294,6 +295,25 @@ user's guide chapters, not in this table.
   landslides and debris flows to the channel transport of sediment and
   driftwood in one computation, but it carries the sediment with the
   hydraulics computed by RRI.
+- **Salt accumulation (versus SaltMod and SahysMod)**: SaltMod follows the water
+  and salt balances of irrigated land for decades through the inflows and
+  outflows of seasonal reservoirs (surface, root zone, transition zone,
+  aquifer) and solves no flow equation (§1). It limits the input to the terms
+  of the balances and aims at long-term trends including drains, wells and the
+  farmers' responses. ENCflow computes the same balance (irrigation water
+  brings the salt, evapotranspiration removes water only, drainage carries the
+  salt out) for decades on a grid that solves the lateral groundwater flow and
+  the surface flow, using time compression (the
+  [time axis](users_guide/time.md) page of the user's guide;
+  examples/irrigation_salt). Areal distributions, such as the soil salt
+  against the distance from a drain, and the shrinking of a lake without an
+  outlet, the precipitation of its salt and its dissolution when the level
+  recovers (examples/terminal_lake) are handled by the same mechanism. On the
+  other hand, the shallow root zone and the deep groundwater are not separated,
+  so the gathering of salt near the surface cannot be represented, and there
+  is no response of crops or farmers. The division is: SaltMod for long-term
+  trends from little input, ENCflow for the terrain, the layout of drains and
+  the relation to floods and storm surges.
 - **Position of nesting (multi-level grids)**: nested grids are standard
   equipment in tsunami models (COMCOT, TUNAMI, MOST, JAGURS, NEOWAVE, the
   AMR of GeoClaw), but coupling dispersive waves (non-hydrostatic,

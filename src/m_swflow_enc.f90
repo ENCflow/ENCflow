@@ -1340,6 +1340,29 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 重み係数をセットする
   call init_weights(p, g)
 
+  ! 水質の水平の混合(wq_diff。§139)の陽解法の安定条件: 1 ステップでセルの濃度が隣の濃度を
+  ! 行き過ぎない条件 D·Δt·Σ_k(l_k/Δr_k)/(Δx·Δy) <= 1(界面の水深は浅い側、家屋の空隙率と
+  ! 河道の平面積率は小さい側を使うので、どのセルでもこの上限で足りる)。s%cq_diff は
+  ! namelist 由来で全ランク同一 = par_stop も同時
+  if (s%wq_active .and. s%cq_diff > 0.0) then
+    block
+      real :: sw8
+      character(len=32) :: b1, b2
+      sw8 = sum(geo%mn2dh(1:8) / geo%w8dr(1:8))
+      if (s%cq_diff * sw8 > 1.0) then
+        write(b1, '(es12.4)') s%cq_diff
+        write(b2, '(es12.4)') 1.0 / sw8
+        call par_stop("list_wq: wq_diff = "//trim(adjustl(b1))//" m2/s is too large for dt " &
+                      //"(explicit mixing needs wq_diff <= "//trim(adjustl(b2))//" m2/s on this grid; " &
+                      //"reduce dt or wq_diff)")
+      end if
+      write(b1, '(es12.4)') s%cq_diff
+      write(b2, '(f6.3)') s%cq_diff * sw8
+      call par_info("swflow_enc: horizontal mixing of water quality, wq_diff = "//trim(adjustl(b1)) &
+                    //" m2/s (stability number "//trim(adjustl(b2))//", must be <= 1)")
+    end block
+  end if
+
   ! エッジ通過幅係数(開口補正+幅キャップ)とセル平面積率を構築する
   ! (通過幅シェア lp/ld を使うため init_weights より後。zbank / wrw は
   ! 帯+ハロ(scatter_coeffs 済み)、rw/sw/x はゾーン2で全域=
@@ -1607,9 +1630,10 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 行部分和で記録し、m_wq が台帳へ移す(§30.9)
   if (s%wq_active) then
     if (allocated(b%cqin)) then
-      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1, cbin=b%cqin, xrow=s%cqx)
+      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1, cbin=b%cqin, xrow=s%cqx, dcoef=s%cq_diff, &
+                         csea=s%cq_sea)
     else
-      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1, xrow=s%cqx)
+      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1, xrow=s%cqx, dcoef=s%cq_diff, csea=s%cq_sea)
     end if
   end if
 
@@ -4116,13 +4140,19 @@ end subroutine
 !       平均を超えうる。eul も水と違う流束)。強い乾燥化では c1 が僅かに負になり得る
 !     - eul = 真(波浪場の浮遊砂。§90)は面流束から h (r u^S − u_a ê_θ) を引く。このときは
 !       一様濃度でもその発散の分だけ濃度が変わる(水と違う速度で動く)
+!     - csea(任意。水質の海の濃度。§139)が正なら、海域マスクの海セルを供給元とする面の濃度を
+!       その値にする(海セルは質量を持たないまま。1 次風上)。xrow があれば、海から入った量を
+!       列 7 に積む。0・省略の呼び出しはビット不変
+!     - dcoef(任意。水質の水平の混合係数 D。§139)が正なら、両方とも水のある陸のセルの間の
+!       リンクに拡散の流束 D·h_e·ΔC/Δr を足す(海セル・領域外・乾いたセルとの間は移流だけ)。
+!       0・省略の呼び出しはビット不変。安定条件は init_geometry の後で m_swflow_enc_init が検査する
 !     - xrow(任意。水質の台帳。§30.9)を渡すと、系外との出入りを自帯の行
 !       部分和(g)に積む: 1 = 海セルへの流出、2 = 開いた辺から外への流出、
 !       3 = 開いた辺から内への流入。数えるのは c1 の更新と同じ流束 × 供給元
 !       濃度(× セル幾何面積)なので台帳が厳密に閉じる。c1 の更新は変えない
 !       (渡さない呼び出しはビット不変)。行 j の書き手は 1 スレッド = 競合なし
 !----------------------------------------------------------------------
-subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow)
+subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow, dcoef, csea)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
@@ -4137,11 +4167,16 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow)
                                                      !   省略時は偽。§90)
   real(real64), intent(inout), optional :: xrow(dcp%js:, 1:)  ! 系外との出入りの行部分和
                                                      !   (g。上の契約。§30.9)
+  real, intent(in), optional :: dcoef                ! 水平の混合係数 D (m2/s。水質だけ。省略時 0 =
+                                                     !   混合なし。上の契約。§139)
+  real, intent(in), optional :: csea                 ! 海域マスクの海セルから入る水の濃度(水質だけ。
+                                                     !   省略時 0 = 海セルの c/h。上の契約。§139)
   integer :: i, j, k
   integer :: in, jn, ie, je
   integer :: iu, ju, id, jd, iuu, juu   ! 風上・風下・さらに風上のセル(MUSCL。§78)
   integer :: im, jm, ing, jng           ! 側方 Neumann の辺の鏡像セル
   real :: mne, fw, winv, cdon, sh, cdn, cuu, rs, qsx, qsy, qdx, qdy
+  real :: dco, vhc, vhn, amin, cse
   real(real64) :: acell8, dmx
   logical :: has_cbin, muscl, nmn, use_eul, okn, okuu, stk, asym, has_x
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
@@ -4149,6 +4184,10 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow)
 
   has_cbin = present(cbin)
   has_x = present(xrow)
+  dco = 0.0
+  if (present(dcoef)) dco = dcoef
+  cse = 0.0
+  if (present(csea)) cse = csea
   acell8 = real(g%dx, real64) * real(g%dy, real64)
   sh = 1.0
   if (present(share)) sh = share
@@ -4161,7 +4200,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow)
 
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, mne, fw, winv, cdon, &
   !$omp                                      iu, ju, id, jd, iuu, juu, cdn, cuu, im, jm, nmn, qsx, qsy, &
-  !$omp                                      ing, jng, okn, okuu, qdx, qdy, dmx)
+  !$omp                                      ing, jng, okn, okuu, qdx, qdy, dmx, vhc, vhn, amin)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
@@ -4183,6 +4222,31 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow)
         end if
         ie = i + die(k)
         je = j + dje(k)
+        ! 水平の混合(dcoef > 0 の呼び出しだけ。§139): 両方とも水のある陸のセルの間のリンクに、
+        ! 濃度の勾配に比例する拡散の流束 D·h_e·(C_i − C_n)/Δr を足す。界面の水深 h_e は浅い側
+        ! (矩形換算水深)、通過幅係数は移流と同じ(壁・閉じた開口は通さない)。家屋の空隙率と
+        ! 河道の平面積率は小さい側を掛ける(リンクの開いている割合の目安。独自の簡略化)。
+        ! 流束は両側のセルから同じ値で数えるので質量を保存し、一様な濃度は一様のまま
+        if (dco > 0.0) then
+          if (g%x(in,jn) > 0) then
+            if (g%sw(in,jn) == 0 .and. s%h(i,j) >= p%dd .and. s%h(in,jn) >= p%dd) then
+              if (sct%have_sect) then
+                vhc = sect_v(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j))
+                vhn = sect_v(s%h(in,jn), sct%sdep(in,jn), sct%sfl(in,jn))
+              else
+                vhc = s%h(i,j)
+                vhn = s%h(in,jn)
+              end if
+              fw = 1.0
+              if (chn%have_frw) fw = chn%frw(ke(k),ie,je)
+              if (chn%have_fwd) fw = fw * chn%fwd(ke(k),ie,je)
+              amin = min(s%gv(i,j), s%gv(in,jn))
+              if (chn%have_width) amin = amin * min(chn%wfrac(i,j), chn%wfrac(in,jn))
+              c1(i,j) = c1(i,j) - dco * min(vhc, vhn) * (c(i,j) / vhc - c(in,jn) / vhn) / geo%w8dr(k) &
+                                  * geo%mn2dh(k) * fw * amin * winv / s%gv(i,j)
+            end if
+          end if
+        end if
         mne = sign_e(k) * sx%mn1(ke(k),ie,je)
         if (mne == 0.0) cycle
         if (use_eul) then
@@ -4232,7 +4296,10 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow)
           end if
         else
           if (g%x(in,jn) > 0) then
-            if (s%h(in,jn) > 0.0) then
+            if (cse > 0.0 .and. g%sw(in,jn) > 0) then
+              ! 海セルから入る水は、与えた海の濃度を持つ(csea > 0 の呼び出しだけ。§139)
+              cdon = cse
+            else if (s%h(in,jn) > 0.0) then
               if (sct%have_sect) then
                 cdon = c(in,jn) / sect_v(s%h(in,jn), sct%sdep(in,jn), sct%sfl(in,jn))
               else
@@ -4280,6 +4347,10 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow)
           if (.not. okn) then
             call bc_neumann_cell(in, jn, okn, ing, jng)
             if (okn) okn = (g%x(ing,jng) > 0)
+          end if
+          ! 海セルから入る水(csea > 0)は、与えた濃度のまま 1 次風上(規定の濃度は勾配を供給しない)
+          if (okn .and. cse > 0.0 .and. mne < 0.0) then
+            if (g%sw(ing,jng) > 0) okn = .false.
           end if
           if (okn) then
             if (mne > 0.0) then
@@ -4330,7 +4401,12 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow)
               xrow(j,3) = xrow(j,3) - dmx
             end if
           else if (g%sw(in,jn) > 0) then
-            xrow(j,1) = xrow(j,1) + dmx
+            ! 海への流出は列 1。海から入った量(csea > 0 の呼び出しだけに生じる)は列 7
+            if (cse > 0.0 .and. dmx < 0.0_real64) then
+              xrow(j,7) = xrow(j,7) - dmx
+            else
+              xrow(j,1) = xrow(j,1) + dmx
+            end if
           end if
         end if
         c1(i,j) = c1(i,j) - mne * cdon * sh * geo%mn2dh(k) * fw * winv / s%gv(i,j)

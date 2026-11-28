@@ -1,12 +1,12 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   毎 push で、reference を持つ 14 ケースと、実行時間の短い検定型の 16 ケースを回す(逐次 30 ケース、うち 29 ケースは
+#   毎 push で、reference を持つ 14 ケースと、実行時間の短い検定型の 17 ケースを回す(逐次 31 ケース、うち 30 ケースは
 #   MPI np=2 でも)。chichibu は実行時間の都合で対象外(ローカルで test/chichibu/Run.sh を実行すること)。test/paddy も
 #   実行時間の都合で、夜間の nightly.yml だけで回す(developer.md §127.16)。実行時間の長い検定型の 5 ケース
 #   (tjunction・stairbank・vchannel・bldgdrag・driftwood。ランナーで 1 本 2〜6 分)は、夜間の nightly.yml の
 #   verify-serial・verify-mpi で回す(逐次のジョブが 30 分の制限で打ち切られていたため。developer.md §10)。src を
 #   変える作業では、手元でこの 5 ケースも回すこと。
 #   prmap・wfswash・gwlateral・gwtani・stg・vshaped・bankcap・brink・bankspill・chutepool・cascade・stageside・bankhalo・
-#   wallpond・sliver は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の終了コードで判定)。
+#   wallpond・sliver・wqsalt は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の終了コードで判定)。
 #   stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。
 #   vshaped は V 字流域の降雨流出の運動学的波の理論解との比較。bankcap は、エッジ水深の頭打ち f_dry_head_cap = 2・3 と、
 #   既定の 4 つの値の組み合わせで、河道の水が濡れた河岸へ登らないことの検定で、逐次と MPI の両方で回す(np = 2 では
@@ -48,6 +48,11 @@
 #   1 列に 1 セルの河道と格子に沿う 2 行の河道。developer.md §137)。逐次と MPI の両方で回す(ランナーで数秒。
 #   MPI のジョブは細片を添えた 2 ケースを 2 ランクと 1 ランクで回して Log・水位・水深をバイト比較する。帯の境が
 #   河道と細片を横切る。MPI は 2026-11-28 に足した。developer.md §10)
+#   wqsalt は、蒸発で濃くなる物質(塩分など)のための水質の追加(水平の混合 wq_diff・溶解度による析出と析出物の溶解
+#   wq_csat / wq_kdis・海から入る水の濃度 wq_sea_conc・初期濃度の分布 fn_wq_c0)と、可能蒸発散の時系列入力
+#   (f_evmodel = 5)を、解析解と保存則で判定する検定(12 ケース。developer.md §139)。逐次と MPI の両方で回す
+#   (逐次はランナーで約 15 秒。MPI のジョブは、帯の境をまたぐ輸送のある 7 ケースを 2 ランクと 1 ランクで回して
+#   Log.txt・wq.csv・濃度の分布をバイト比較する)
 #   フル回帰・MPI np=1,2,4・-fcheck=all・BMI 適合性と、上の実行時間の長い検定型の 5 ケースは、夜間の nightly.yml で回す
 name: CI
 
@@ -73,7 +78,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade stageside river_flowline bankhalo wallpond sliver damops; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade stageside river_flowline bankhalo wallpond sliver damops wqsalt; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done
@@ -94,7 +99,7 @@ jobs:
         run: |
           set -e
           export OMP_NUM_THREADS=1
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade stageside bankhalo wallpond sliver damops; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade stageside bankhalo wallpond sliver damops wqsalt; do
             echo "===== test/$c (np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done

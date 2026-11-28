@@ -48,6 +48,8 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [paddy_dam/](paddy_dam/) | 低平地の排水区(内水)で、田んぼダムが集落の浸水と田面水の物質の行方をどう変えるかを、細かい格子と粗い格子で比べる | 田んぼダム fn_paddy(区画の解像 fn_pd_plot・双方向 f_pd_exchange・集水面積率 fn_pd_catch)、ポンプ、水質 fn_wq |
 | [qanat/](qanat/) | 山麓の扇状地の地下水を集めるカナート(横坑)の湧出と、近くの揚水井でそれが細り枯れる過程を見る | 管路連続体層 f_gwconduit(交換能のマップ fn_gwc_leak・開放の吐口 fn_gwc_outfall)、層2 f_gwlayer2、井戸揚水 f_gwpump |
 | [catchment_metal/](catchment_metal/) | 流域の重金属(鉱山の排水・農地の負荷)の行き先と川の濃度を、機構を一つずつ加えて比べ、ため池と蒸発散の効果を見る | 水質 fn_wq(点源・面源・浸透同伴・遅延化 wq_rg・沈降 wq_vs・再懸濁 wq_wash_kf)、Green-Ampt、地下水の側方流、蒸発散 fn_evap |
+| [irrigation_salt/](irrigation_salt/) | 灌漑水の塩が 30 年かけて農地の土にたまる過程と、排水路・多めの灌漑の効果を、時間の圧縮で見る | 水質 fn_wq(降雨中濃度 wq_rain_conc・浸透同伴)、蒸発散 fn_evap(evap_hglim)、Green-Ampt、地下水の側方流、水位規定セル、時間の圧縮 |
+| [terminal_lake/](terminal_lake/) | 流入が減った出口のない湖が縮んで濃くなり、陸地化した湖底に塩が残り、水位が戻ると溶ける過程を、混合・溶解度・溶けやすさを変えて見る | 水質 fn_wq(水平の混合 wq_diff・溶解度 wq_csat・溶解の速さ wq_kdis)、蒸発散 fn_evap、内部ソース、時間の圧縮 |
 | [meander/](meander/) | 氾濫原の正弦波状の河道が蛇行を発達させる過程。外岸の後退、内岸砂州の成長・定着と氾濫原化を見る | 掃流砂の方向補正 fluv_slope・f_secflow、側岸侵食 f_berode、安息角崩落 f_repose、定着 f_fixation、給砂 |
 | [meander_cutoff/](meander_cutoff/) | 蛇行ループが出水で陸を越える流れや河岸の後退だけで短絡し、旧河道が滞水域になって埋まり始める過程を見る | 同上 + 崩落土塊 f_rockfall、区間流入の時系列 |
 | [joganji_flume/](joganji_flume/) | 国総研の常願寺川 1/100 移動床模型を混合粒径で計算し、水位・河床の変化・表層の粒度を計測と比べ、単一粒径とも並べる | 混合粒径 f_bedmix(粒径階ごとの給砂 fn_inflow_qbmix)、掃流砂 f_fluvial、安息角崩落 f_repose、区間流入の流量の時系列 |
@@ -96,6 +98,8 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - 山からの涵養 → 扇状地の地下水 → カナートの集水・湧出(揚水井で細る): [qanat/](qanat/)。
 - 雨 → 浸透 → 土層の側方流 → 谷の飽和域の発達・縮小 → 湧出 → 河道 → 出口の流量(等価粗度の地表流と比べる): [source_area/](source_area/)。
 - 雨 → 地表流と浸透 → 地下水の流れ → 湧出(基底流)→ 川の重金属の濃度(吸着の遅れ・ため池・粒子態の沈降・蒸発散で変わる): [catchment_metal/](catchment_metal/)。
+- 灌漑(塩を含む水)→ 浸透 → 蒸発散(水だけが抜ける)→ 土の塩の集積 → 地下水の流れ → 排水路(届く範囲だけ塩が出る): [irrigation_salt/](irrigation_salt/)。
+- 流入の減少 → 湖の縮小 → 蒸発による濃縮 → 析出 → 陸地化した湖底に残る塩 → 水位の回復 → 溶解(物質の溶解度と析出物の溶けやすさで変わる): [terminal_lake/](terminal_lake/)。
 - 理論解のある降雨流出の基準問題と、格子に対する谷の向き・近傍の数の確認: [benchmark/](benchmark/)。
 - 斜面崩壊 → 土石流 → 扇状地の住宅地(格子の大きさ・谷の向きへの依存、粗い格子での 8 近傍と 4 近傍): [debris_fan/](debris_fan/)。
 - 豪雨 → 斜面崩壊 → 土石流 → 天然ダム → 湛水 → 越流 → 決壊 → 洪水 → 家屋の流失(仮排水路で防ぐ。決壊が急になる条件の比較): [debris_dam/](debris_dam/)。

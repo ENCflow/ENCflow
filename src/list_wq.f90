@@ -21,6 +21,9 @@ module list_wq
   type t_list_wq
     integer :: f_wq = 1                            ! 0 でファイルを残したまま一時無効化
     real :: wq_c0 = 0.0                            ! 初期濃度 (mg/L。一様)
+    character(len=maxpathlen) :: fn_wq_c0 = ""     ! 初期濃度の分布ファイル (mg/L。wq_c0 と排他。§139)
+    real :: wq_sea_conc = -9999.0                  ! 海域マスクの海セルから陸へ入る水の濃度 (mg/L。
+                                                   !   省略 = 清水。§139)
     integer :: f_wq_infil = 1                      ! 浸透時の輸送物質 (0:地表に残留=粒子態向け,
                                                    !   1:濃度同伴で地下質量プール cg へ=溶存態向け)
     real :: wq_rg = -9999.0                        ! 地下輸送の遅延化係数 R (>=1。平衡吸着の
@@ -32,6 +35,13 @@ module list_wq
     real :: wq_thalf = -9999.0                     ! 半減期 (day。放射性核種等。wq_k20 と排他)
     real :: wq_k20 = -9999.0                       ! 一次減衰係数 (1/day。20℃基準。温度補正は将来)
     real :: wq_vs = -9999.0                        ! 沈降速度 (m/day。地表水のみ。河床への消失)
+    real :: wq_diff = -9999.0                      ! 水平の混合係数 D (m2/s。地表水の濃度の勾配に
+                                                   !   比例する拡散。省略 = 混合なし。§139)
+    real :: wq_csat = -9999.0                      ! 溶解度(飽和濃度 mg/L)。超えた分と干上がった
+                                                   !   セルの物質を表面蓄積プールへ析出させ、未飽和の
+                                                   !   水へ溶かす。省略 = 上限なし(§139)
+    real :: wq_kdis = -9999.0                      ! 析出物の溶解の物質移動係数 (m/day。要 wq_csat)。
+                                                   !   省略 = 水に触れた分は飽和まで瞬時に溶ける
     ! ---- 点源(セル群+負荷 g/s。一定 wq_pt_load か時系列 wq_pt_series の排他)----
     integer, allocatable :: wq_pt_cell(:,:,:)      ! セル (1:2, 1:nwqcmax, 1:nwqgmax)
     character(len=maxpathlen) :: fn_wq_pt_cell(1:nwqgmax) = ""  ! セル一覧ファイル(inline との排他)
@@ -90,10 +100,13 @@ subroutine list_wq_read(p, list)
 
   integer :: f_wq
   real :: wq_c0
+  character(len=maxpathlen) :: fn_wq_c0
+  real :: wq_sea_conc
   integer :: f_wq_infil
   real :: wq_rg
   real :: wq_kd
   real :: wq_thalf, wq_k20, wq_vs
+  real :: wq_diff, wq_csat, wq_kdis
   integer :: wq_pt_cell(1:2,1:nwqcmax,1:nwqgmax)
   character(len=maxpathlen) :: fn_wq_pt_cell(1:nwqgmax)
   real :: wq_pt_load(1:nwqgmax)
@@ -122,6 +135,8 @@ subroutine list_wq_read(p, list)
   character(len=1024) :: iom
 
   namelist /list_wq/ f_wq, wq_c0, f_wq_infil, wq_rg, wq_kd, wq_thalf, wq_k20, wq_vs, &
+                     wq_diff, wq_csat, wq_kdis, &
+                     fn_wq_c0, wq_sea_conc, &
                      wq_pt_cell, fn_wq_pt_cell, wq_pt_load, wq_pt_series, &
                      wq_ar_cell, fn_wq_ar_cell, wq_ar_load, wq_ar_series, &
                      fn_wq_map, wq_map_factor, f_wq_map, &
@@ -134,12 +149,17 @@ subroutine list_wq_read(p, list)
 
   f_wq = list%f_wq
   wq_c0 = list%wq_c0
+  fn_wq_c0 = list%fn_wq_c0
+  wq_sea_conc = list%wq_sea_conc
   f_wq_infil = list%f_wq_infil
   wq_rg = list%wq_rg
   wq_kd = list%wq_kd
   wq_thalf = list%wq_thalf
   wq_k20 = list%wq_k20
   wq_vs = list%wq_vs
+  wq_diff = list%wq_diff
+  wq_csat = list%wq_csat
+  wq_kdis = list%wq_kdis
   wq_pt_cell = -9999
   fn_wq_pt_cell = list%fn_wq_pt_cell
   wq_pt_load = list%wq_pt_load
@@ -177,12 +197,17 @@ subroutine list_wq_read(p, list)
 
   list%f_wq = f_wq
   list%wq_c0 = wq_c0
+  list%fn_wq_c0 = fn_wq_c0
+  list%wq_sea_conc = wq_sea_conc
   list%f_wq_infil = f_wq_infil
   list%wq_rg = wq_rg
   list%wq_kd = wq_kd
   list%wq_thalf = wq_thalf
   list%wq_k20 = wq_k20
   list%wq_vs = wq_vs
+  list%wq_diff = wq_diff
+  list%wq_csat = wq_csat
+  list%wq_kdis = wq_kdis
   allocate(list%wq_pt_cell(1:2,1:nwqcmax,1:nwqgmax), source = wq_pt_cell)
   list%fn_wq_pt_cell = fn_wq_pt_cell
   list%wq_pt_load = wq_pt_load

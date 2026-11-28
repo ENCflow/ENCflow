@@ -1,0 +1,70 @@
+!======================================================================
+! irrigation_salt / nodrain: 灌漑農地の土に塩がたまる(排水路なし)
+!   幅 820 m の平らな農地(41 × 5 セル、dx = 20 m。土層 5 m、有効間隙率 0.2)に、
+!   塩分 0.5 g/L の灌漑水を年 1000 mm かける(雨として一様に与える)。可能蒸発散は年 1500 mm。
+!   水は蒸発散で抜け、塩は土の水(地下の質量プール)に残る。出口がないので、入った塩は
+!   すべて土にたまる(年 0.5 kg/m2)。
+!   時間の圧縮(docs/users_guide/time.md): 圧縮率 M = 1000。灌漑・蒸発散・浸透能・側方の
+!   透水係数を 1000 倍にし、30 年を 30 年 / 1000 = 10.96 日で計算する。結果の時刻は 1000 倍して読む。
+!======================================================================
+&list_sysparam
+  dt = 10.0                 ! 時間刻み (s)
+  tt = 946800.0             ! 計算終了時刻 (s) = 30 年 / 1000
+  dt_disp = 31560.0         ! Log.txt の間隔(実時間の 1 年ごと)
+  dt_file = 157790.0        ! 分布出力の間隔(実時間の 5 年ごと)
+  dt_recrd = 7890.0         ! wq.csv・evap.csv の間隔(実時間の 0.25 年ごと)
+  fn_geoinfo = '-'
+  fn_gwflow = '-'
+  fn_precip = '-'
+  fn_evap = '-'
+  fn_wq = '-'
+  dir_data = 'data_irrigation'
+  dir_result = 'result_nodrain'
+  f_check_cfl = 0           ! 地表に流れがないので、クーラン数の検査を外す
+  f_out_hg = 1              ! 地下貯留 Hg と地下の質量プール Cg を出力
+  f_output_mode = 2         ! 分布は bil
+/
+
+&list_geoinfo
+  nx = 41
+  ny = 5
+  dx = 20.0
+  dy = 20.0
+  f_ztype = 1
+  fn_z = 'z_flat.txt'       ! 平らな農地(gen_data.py)
+  rn0 = 0.05
+  sd0 = 5.0                 ! 土層厚 (m)
+  sy0 = 0.2                 ! 有効間隙率(土層の水の容量 1.0 m)
+/
+
+&list_precip
+  prtype = 1                ! 一様な時系列
+  dt_prupdate = 1
+  prval(:,1) =     0, 114.0772    ! 灌漑水 (mm/h) = 1000 mm/年 × M
+  prval(:,2) = 9.9e9, 114.0772
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt
+  f_gwlateral = 1           ! 土層の側方流
+  gw_sat0 = 0.4             ! 初期の地下貯留 0.4 m(蒸発散と灌漑が釣り合う水準)
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 1.0e4        ! 浸透能 10 mm/h × M(灌漑水はすべてしみ込む)
+  gw_psif = 0.0
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 3.6e5        ! 側方の透水係数 1e-4 m/s(360 mm/h)× M
+/
+
+&list_evap
+  f_evmodel = 1             ! 一定(年平均値を直接与える)
+  evap0 = 4106.776          ! 可能蒸発散 (mm/day) = 1500 mm/年 × M
+  evap_hglim = 0.6          ! 地下の貯留がこれより少ないと、地下水から引く蒸発散を減らす (m)
+/
+
+&list_wq
+  wq_rain_conc = 500.0      ! 灌漑水の塩分 (mg/L) = 0.5 g/L(濃度は圧縮率を掛けない)
+/

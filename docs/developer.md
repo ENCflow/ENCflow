@@ -93,12 +93,12 @@
 ### 降雨・気象・蒸発散・雪氷
 
 - 現行: [降雨・気象](users_guide/forcing.md)・[降雨・気象のモデルの解説](users_guide/forcing_models.md)・[氷河](users_guide/glacier.md)。既定値は [§65](developer/065.md)・[§66](developer/066.md)
-- 記録: [§27](developer/027.md)(蒸発散)・[§29](developer/029.md)(気象強制場と暦)・[§31](developer/031.md)(積雪・融雪)・[§45](developer/045.md)(氷河)・[§65](developer/065.md)・[§66](developer/066.md)・[§88](developer/088.md)(降雨分布の時間の単位)・[§99](developer/099.md)(氷河の 8 近傍化)
+- 記録: [§27](developer/027.md)(蒸発散)・[§29](developer/029.md)(気象強制場と暦)・[§31](developer/031.md)(積雪・融雪)・[§45](developer/045.md)(氷河)・[§65](developer/065.md)・[§66](developer/066.md)・[§88](developer/088.md)(降雨分布の時間の単位)・[§99](developer/099.md)(氷河の 8 近傍化)・[§139.5](developer/139.md)(可能蒸発散の時系列入力 f_evmodel = 5)
 
 ### 地下水・淡塩
 
 - 現行: [地下水](users_guide/gwflow.md)・[地下水モデルの解説](users_guide/gwflow_models.md)・[淡塩2層](users_guide/salt.md)。既定値は [§64](developer/064.md)
-- 記録: [§16](developer/016.md)・[§46](developer/046.md)(管路層)・[§47](developer/047.md)(淡塩 2 層)・[§64](developer/064.md)・[§98](developer/098.md)・[§117](developer/117.md)(1 層の側方飽和透水係数の等価な値。例題 source_area)・[§125](developer/125.md)(管路層の 1 セル幅の幹線の通水能と、吐口の時間刻みごとの頭打ち。例題 coastal_compound_flood)
+- 記録: [§16](developer/016.md)・[§46](developer/046.md)(管路層)・[§47](developer/047.md)(淡塩 2 層)・[§64](developer/064.md)・[§98](developer/098.md)・[§117](developer/117.md)(1 層の側方飽和透水係数の等価な値。例題 source_area)・[§125](developer/125.md)(管路層の 1 セル幅の幹線の通水能と、吐口の時間刻みごとの頭打ち。例題 coastal_compound_flood)・[§139.1](developer/139.md)(塩分の質量と濃度は水質の物質として追い、淡塩 2 層に蒸発濃縮を持ち込まない決定)
 
 ### 流出の指標と区画流出(土壌雨量指数・VZ・貯留関数法)
 
@@ -142,8 +142,8 @@
 
 ### 水質とスカラー輸送
 
-- 現行: [水質](users_guide/wq.md)・[水質モデルの解説](users_guide/wq_models.md)。スカラー輸送の既定 f_scalar_scheme = 3 は [§78](developer/078.md)、代表値の表は [§66](developer/066.md)
-- 記録: [§30](developer/030.md)・[§66](developer/066.md)・[§78](developer/078.md)
+- 現行: [水質](users_guide/wq.md)・[水質モデルの解説](users_guide/wq_models.md)。スカラー輸送の既定 f_scalar_scheme = 3 は [§78](developer/078.md)、代表値の表は [§66](developer/066.md)。蒸発で濃くなる物質(塩分)の扱い(水平の混合・析出と溶解・海から入る水の濃度)と、長期の計算の時間の圧縮([時間軸](users_guide/time.md))は [§139](developer/139.md)
+- 記録: [§30](developer/030.md)・[§66](developer/066.md)・[§78](developer/078.md)・[§139](developer/139.md)
 
 ### 計測・出力・可視化
 
@@ -314,3 +314,4 @@
 - [§136](developer/136.md) f_slide_noflow の既定を 1 にし、1 の判定をそれまでの 2 に置き換える(薄い膜は下の層の判定を止めない。2026-11-26。利用者の決定)
 - [§137](developer/137.md) 幅の極端に狭いサブグリッド河道のセルを、開口の動的振り替えと通水率で計算の外と同じに数える(占有率の細片。2026-11-27。利用者の依頼。挙動の変更)
 - [§138](developer/138.md) 河道のセルは堤内地を持たない: 利用者ガイドと例題の注記、河道にする占有率の下限と氾濫原の面積(例題 coarse_channel の系列 fmin。2026-11-27。利用者の依頼。計算本体は変えていない)
+- [§139](developer/139.md) 塩分を水質の物質として追う: 水平の混合・析出と溶解・海から入る水の濃度・蒸発散の時系列入力と、長期の計算の時間の圧縮(2026-11-28 設計合意・実装。無効時はビット一致)

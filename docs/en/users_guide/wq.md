@@ -8,7 +8,11 @@ Handles load input, advective transport, decay, settling,
 infiltration entrainment, Kd two-phase partitioning, and transport
 through groundwater of a single substance. Usable for runoff analyses
 of pollutant loads, radionuclide migration, basin-scale heavy-metal
-transport, tracer experiments, and so on. Enable it with `fn_wq`. The
+transport, tracer experiments, and so on. Substances that evaporation
+concentrates, such as salt, are handled by adding horizontal mixing, a
+solubility and the dissolution of the precipitate
+([concentration by evaporation, precipitation and dissolution](#concentration-by-evaporation-precipitation-and-dissolution-wq_csat-wq_kdis)).
+Enable it with `fn_wq`. The
 equations of each process and the sources of the representative values are
 in [Water-quality models](wq_models.md).
 
@@ -68,15 +72,19 @@ residual (see "Output and monitoring").
 
 ## Substance properties
 
-Equations of decay, settling and partitioning and the sources of the representative values: [supplement](wq_models.md) §2–§4, §7.
+Equations of decay, settling, partitioning, mixing and precipitation and the sources of the representative values: [supplement](wq_models.md) §2–§4, §7–§9.
 
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_wq | 1 | 0 temporarily disables while keeping the file |
 | wq_c0 | 0 | Initial concentration (mg/L, uniform) |
+| fn_wq_c0 | "" | Map file of the initial concentration (mg/L). Exclusive with wq_c0 ("Initial concentration" below) |
 | wq_thalf / wq_k20 | - | Decay: half-life (day) or first-order decay coefficient (1/day). Mutually exclusive |
 | wq_vs | — | Settling velocity (m/day). Single-phase treatment of total mass; mutually exclusive with wq_kd. Select the destination with f_wq_settle |
 | wq_kd | - | Equilibrium partition coefficient (L/kg). Two-phase dissolved/particulate partitioning (below; requires f_suspend) |
+| wq_diff | — | Horizontal mixing coefficient (m²/s). Adds a diffusion proportional to the concentration difference between wet cells ("Horizontal mixing" below). No mixing when omitted |
+| wq_csat | — | Solubility (mg/L). The excess, and the substance of cells that dry up, precipitate into the surface buildup pool and dissolve into unsaturated water ("Concentration by evaporation, precipitation and dissolution" below). No upper limit on the concentration when omitted |
+| wq_kdis | — | Mass-transfer coefficient of the dissolution of the precipitate (m/day). Needs wq_csat. When omitted, precipitate touched by water dissolves instantly up to saturation |
 | f_wq_settle | 0 | Destination of settling. 0: lost to the riverbed, 1: to the surface buildup pool (resuspension cycle) |
 | f_wq_infil | 1 | Behavior at infiltration. 0: remains on the surface (for particulate substances), 1: entrained at the current concentration into the subsurface pool (for dissolved substances) |
 | wq_rg | 1 | Retardation factor R (>= 1) for subsurface transport. Reduces the effective concentration of groundwater advection and seepage return to 1/R (see "Transport through groundwater" below). Specifying it explicitly requires f_wq_infil=1 (combining it with 0 is stopped at initialisation with an error) |
@@ -92,6 +100,8 @@ approach (sources in developer.md §66).
 | Substance type | Decay | Settling / partitioning | Subsurface | Notes |
 |---|---|---|---|---|
 | Conservative tracer (salinity, dye, turbidity index) | none | none | f_wq_infil=1, wq_rg=1 | Extent and dilution; the first thing to run |
+| Salt (sodium chloride; lakes, reclaimed land and irrigated fields concentrated by evaporation) | none | wq_csat 3.6e5 mg/L (about 360 g dissolve in 1 L of water). Omit wq_kdis (dissolves at once when wetted) | f_wq_infil=1, wq_rg=1 | Give the mixing of lakes and bays with wq_diff. Seawater is about 35 g/L (wq_sea_conc). See "Concentration by evaporation, precipitation and dissolution" below |
+| Sparingly soluble salts (gypsum and the like) | none | wq_csat 2–3e3 mg/L (gypsum roughly 2-2.6 g/L) | same as above | Precipitates early during evaporation, and dissolves only up to the saturation concentration when the water returns |
 | Coliforms / pathogen indicators (sewer surcharge, CSO) | wq_k20 1-5 /day (T90 0.5-2 days; fast in sunny summer, slow in cloudy / winter conditions) | none (wq_kd 1e3-1e4 to see attachment to turbidity) | f_wq_infil=0 (stays on the surface) | Concentrations in "Sanitary risk of sewer surcharge" below |
 | Organic pollution (BOD), ammonia | wq_k20 0.1-0.5 /day (Streeter-Phelps deoxygenation coefficient) | none | f_wq_infil=1 | Dissolved oxygen is not solved |
 | Nutrients (nitrate), dissolved salts | none to 0.01 /day | none | f_wq_infil=1, wq_rg=1 | Returns through groundwater seepage |
@@ -157,7 +167,22 @@ the water-level cell group. When omitted, it is clean water (concentration
 0). Use it to give the concentration of water entering through a backwater
 or tidal boundary (that of a downstream lake or of the sea, for example).
 
-**Outputs for this section**: the cumulative input of each route is recorded in the `in_point_g` (point), `in_area_g` (area), `in_map_g` (distributed) and `in_rain_g` (rain concentration) columns of `wq.csv`. Input through boundary inflow concentrations is recorded in the `in_edge_g` column, together with inflow through side-Neumann edges, and the inflow from water-level cells in the `in_stage_g` column. The spreading after input is seen in the concentration field `C0001...` ([Output and monitoring](#output-and-monitoring)).
+**Concentration of water entering from the sea** - the sea cells of the sea mask of
+[Tide and sea level](tide.md) hold no mass, and by default water entering the land from the
+sea is clean. With `wq_sea_conc` (mg/L), the water that enters the land from sea cells with a
+flood tide, a storm surge or a tsunami carries that concentration (about 35000 for the
+salinity of seawater). Substance that left to the sea stays out of the system (water that
+left with the ebb enters again with the given concentration at the next flood). Horizontal
+mixing (wq_diff) does not act towards sea cells. Groundwater does not exchange water with
+sea cells, so this concentration only affects water that enters over the surface.
+
+**Initial concentration** - a uniform value is given by `wq_c0`, values that differ by place
+by the map file `fn_wq_c0` (mg/L; the same format and orientation as the terrain); give one
+of the two. The initial water (the depth of the initial condition) carries that concentration.
+Use it, for example, to put a salt lake and fresh rivers in one run. Nothing is placed on sea
+cells.
+
+**Outputs for this section**: the cumulative input of each route is recorded in the `in_point_g` (point), `in_area_g` (area), `in_map_g` (distributed) and `in_rain_g` (rain concentration) columns of `wq.csv`. Input through boundary inflow concentrations is recorded in the `in_edge_g` column, together with inflow through side-Neumann edges, and the inflow from water-level cells in the `in_stage_g` column. The inflow from the sea is recorded in the `in_sea_g` column, which is added at the end only in runs that specify `wq_sea_conc`. The spreading after input is seen in the concentration field `C0001...` ([Output and monitoring](#output-and-monitoring)).
 
 ## Single-phase settling (wq_vs)
 
@@ -176,6 +201,124 @@ be added as a system loss when checking the combined mass in all stores.
 Specifying `wq_kd` at the same time is an error.
 
 **Outputs for this section**: the cumulative settled mass is the `settle_g` column of `wq.csv`. With `f_wq_settle=1` the settled mass moves to the surface buildup pool, so it also appears in the pool field `B0001...` (kg/ha) and the `mass_pool_g` column ([Output and monitoring](#output-and-monitoring)).
+
+## Horizontal mixing (wq_diff)
+
+Equation and the sources of the guide values: [supplement](wq_models.md#7-horizontal-mixing).
+
+With advection alone, the substance only moves with the water and does not mix with the
+neighbouring water (dense water far from an inflow is merely pushed along by the fresh water).
+With `wq_diff` [m²/s], a diffusive flux proportional to the concentration difference is added
+between wet cells (mixing coefficient D). Use it to represent, with one coefficient, the
+horizontal mixing by wind and eddies in lakes, bays and wide rivers.
+
+- It does not act towards dry cells, the virtual walls of levees, the sea cells of the sea
+  mask, or the outside of the domain (a face that passes no water passes no substance).
+- A uniform concentration stays uniform, and mass is conserved. The ledger columns do not
+  change (a transfer within the surface).
+- It is explicit, so D has an upper limit set by the time step (D ≤ about 0.35 Δx²/Δt on
+  the default square grid). A larger value stops at initialization and the limit is printed.
+- The value is a calibrated quantity. Guide values: transverse mixing in rivers is
+  0.15–0.6 × depth × shear velocity (straight channels to gently meandering natural rivers);
+  horizontal mixing in lakes and the sea grows with the size of the patch, about 0.6 m²/s at
+  1 km, 8 m²/s at 10 km and 100 m²/s at 100 km (sources in the supplement).
+- When computing with [time compression](time.md#time-compression-long-term-water-and-salt-balances), multiply D by the same factor.
+
+**What it cannot do, and limits of accuracy**
+
+- Wind-driven currents and density-driven circulation themselves are not solved. The speed of
+  mixing is given data, uniform over the domain (differences by place, depth or velocity
+  cannot be given).
+- On links that involve cells with a subgrid channel width or a cross-section shape, or cells
+  whose building porosity is below 1, the open fraction of the link is estimated by the
+  smaller of the plan-area fractions and porosities of the two sides (a rough guide).
+- Numerical diffusion remains even with the default transport scheme (per-link MUSCL), so a
+  small D is buried in it (compare with the estimate in [supplement](wq_models.md) §1).
+
+Examples: [test/wqsalt](../../../test/wqsalt/en/README.md) (the variance of a substance in still
+water grows as 2·D·t), [examples/terminal_lake](../../../examples/terminal_lake/en/README.md)
+(the salinity distribution of a lake with and without mixing).
+
+**Outputs for this section**: the concentration field `C0001...`. The adopted D and the stability number (1 or less) are printed at the start of the run ([Output and monitoring](#output-and-monitoring)).
+
+## Concentration by evaporation, precipitation and dissolution (wq_csat, wq_kdis)
+
+Equations and the sources of the representative values: [supplement](wq_models.md#8-concentration-by-evaporation-precipitation-and-dissolution).
+
+[Evapotranspiration](forcing.md) removes water only, so the substance of the water column
+stays and its concentration rises (no setting needed). Without `wq_csat`, the concentration
+has no upper limit, the substance of a cell that dries up stays there as the column amount of
+the water column (it does not appear in the concentration field C; check the cq column of a
+probe and the ledger), and all of it dissolves instantly when water returns.
+
+With `wq_csat` (solubility, mg/L), the part that cannot stay dissolved is kept as a
+**precipitate** in the [surface buildup pool](#surface-buildup--washoff-nonlinear-l-q) (field
+B) and dissolved when water returns.
+
+- **Precipitation**: in a wet cell, the excess of the concentration over the solubility moves
+  to the pool. In a cell that has dried up (depth at or below the limit depth dd), all the
+  substance of the water column moves to the pool.
+- **Dissolution**: where a cell with precipitate has unsaturated water, it dissolves. Without
+  `wq_kdis`, it dissolves instantly up to saturation (or until the precipitate is used up).
+  With `wq_kdis` (mass-transfer coefficient k [m/day]), the concentration of water of depth h
+  approaches saturation as dC/dt = (k/h)(Csat − C) (time constant h/k).
+- **Infiltrating water**: water soaking into the ground (rain, ponded water) dissolves the
+  precipitate up to saturation and carries it to the subsurface mass pool (with
+  f_wq_infil = 1; the path by which the precipitate of dry ground enters the soil with rain).
+- **Groundwater**: the concentration that moves with groundwater (lateral flow, seepage, well
+  pumping) is capped at the solubility. The part above the solubility, left when evaporation
+  removed water only, stays in the soil and does not move.
+
+The distribution of the substance left on an exposed lake bed or a dried-up field is seen in
+the field `B0001...` (kg/ha).
+
+**How to give easy and hard dissolution** - the difference between substances is given by the
+solubility, and the difference in the state of the precipitate (hardened or covered) by
+`wq_kdis`. Run one calculation per substance (a single substance). The concentration is the
+mass per volume of water and the volume added by the dissolved substance is not counted, so
+give the solubility as the amount that dissolves in 1 L of water.
+
+| Target | wq_csat | wq_kdis | When water returns |
+|---|---|---|---|
+| Sodium chloride (halite) | 3.6e5 mg/L | omit | Dissolves at once where wetted; the salinity of the water jumps and then dilutes |
+| Gypsum | 2–3e3 mg/L | omit | The water stays capped at the saturation concentration (roughly 2-2.6 g/L) and the precipitate remains for a long time |
+| Hardened or covered precipitate | value of the substance | 1e-4–1e-2 m/day (calibrated) | Dissolves with a time constant of 100 days to 30 years in water 1 m deep |
+
+**What it cannot do, and limits of accuracy**
+
+- Reactions between substances, the order of precipitation (carbonates → gypsum → halite and
+  so on), the change of solubility by other ions, and the change of solubility with
+  temperature (mirabilite precipitating in winter, for example) are not represented. The
+  solubility is a single constant.
+- The concentration does not act on the flow (the sinking and stratification of dense water,
+  and the reduction of evaporation by salinity, are not represented). Seawater and fresh
+  water separated by density are the task of the [fresh-salt two-layer model](salt.md).
+- Evapotranspiration acts after the water-quality step, so the output concentration can exceed
+  the solubility by the evaporation of one step.
+- The subsurface mass pool is one fully mixed soil layer, separate from the precipitate on the
+  surface (B). Substance in soil under water returns to the surface only with water
+  overflowing from the saturated soil layer (seepage); release by diffusion from the sediment
+  is not represented. The dissolution rate (wq_kdis) is not applied to the subsurface pool.
+- The scattering of the precipitate by wind (salt dust) and its burial by sediment are not
+  represented.
+- The surface buildup pool is shared with buildup (wq_bd_*), washoff (wq_wash_*) and the
+  settling destination (f_wq_settle = 1); used together they enter the same pool. It cannot
+  be combined with two-phase partitioning `wq_kd` (stops at initialization). It does not act
+  inside the fully mixed pools of dams and lakes, retention ponds, or the tanks of paddy-field
+  dams.
+- The boundary concentration of water-level cells and the concentration of water entering
+  from the sea must not exceed the solubility (stops at initialization otherwise).
+
+Examples: [test/wqsalt](../../../test/wqsalt/en/README.md) (evaporation → precipitation →
+drying up, instantaneous dissolution and dissolution with a rate, dissolution by infiltrating
+water and the cap on the subsurface concentration),
+[examples/terminal_lake](../../../examples/terminal_lake/en/README.md) (the shrinking of a lake
+whose inflow decreased, the rise of its salinity, the salt left on the exposed bed, and how it
+dissolves when the level recovers),
+[examples/irrigation_salt](../../../examples/irrigation_salt/en/README.md) (salt accumulating in
+the soil of an irrigated field and the effect of a drain).
+
+**Outputs for this section**: the precipitate field `B0001...` (kg/ha), `mass_pool_g` of `wq.csv` (current mass of the precipitate), and the columns `precip_g` (cumulative precipitation) and `dissol_g` (cumulative dissolution, including the part that infiltrating water dissolved and carried underground), which are added at the end only in runs that specify `wq_csat` ([Output and monitoring](#output-and-monitoring)).
 
 ## Two-phase partitioning of sorbing substances (Kd; e.g. heavy metals)
 
@@ -262,7 +405,9 @@ that judgement through R.
   in layer 1: percolation into the weathered-bedrock layer (f_gwlayer2) and
   infiltration water into the conduit layer (gwc_leak_layer=1).
   Evapotranspiration also removes pure water only (which is the physically
-  correct behavior). Two consequences follow: (a) the layer-1 concentration
+  correct behavior, and raises the concentration of the soil water; with a
+  solubility `wq_csat`, the concentration that moves with the water is capped
+  at the solubility). Two consequences follow: (a) the layer-1 concentration
   Cg/Hg is pushed apparently higher, and (b) water that returns to the
   surface through layer 2 or the conduits is clean water, so a configuration
   that reproduces baseflow with f_gwlayer2 can underestimate the load
@@ -323,7 +468,7 @@ No setting is needed; it works automatically when [paddy-field dams](paddy.md) (
 
 Details and limits are in "Combination with water quality" of the paddy-field dam chapter.
 
-**Outputs for this section**: the last 2 columns of `wq.csv`, `mass_paddy_g` (current mass of the pools of the tanks of
+**Outputs for this section**: the 2 columns added after the basic columns of `wq.csv`, `mass_paddy_g` (current mass of the pools of the tanks of
 A) and `out_paddy_perc_g` (cumulative mass that left the system with the decrease in depth), and the mean concentration of
 each class `c1`, `c2` in `paddy.csv` ([Output and monitoring](#output-and-monitoring)).
 
@@ -525,7 +670,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | File | How | Contents |
 |---|---|---|
 | C0001... | automatic | volume-averaged concentration (mg/L = g/m³); meaningful in wet cells only, 0 in dry cells |
-| B0001... | automatic (with the buildup pool) | surface buildup pool (kg/ha; geometric area basis) |
+| B0001... | automatic (with the buildup pool; also when wq_csat is specified) | surface buildup pool (kg/ha; geometric area basis). Includes the precipitate when wq_csat is specified |
 | Cg0001... | rides on f_out_hg (with infiltration entrainment f_wq_infil=1) | subsurface mass pool (g/m²; geometric area basis = mass in the cell is Cg × A); groundwater concentration = Cg / Hg (mg/L; Hg is a column-equivalent water depth, so do not divide by θ; in cells with building porosity gv < 1 an approximation of order gv applies) |
 
 **Ledgers and log** (budget checks)
@@ -559,12 +704,15 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   `mass_paddy_g` and `out_paddy_perc_g` follow `out_intake_g`
   ([paddy fields of paddy-field dams](#paddy-fields-of-paddy-field-dams)). The
   columns of runs without them do not change.
-- Sea cells hold no mass (a sea area with the initial concentration wq_c0
+- Only in runs that specify the solubility `wq_csat`, the 2 columns `precip_g` and `dissol_g`
+  follow, and only in runs that specify the concentration of water entering from the sea
+  `wq_sea_conc`, the 1 column `in_sea_g` follows (in the order paddy fields → precipitation and
+  dissolution → inflow from the sea). The columns of runs without them do not change.
+- Sea cells hold no mass (a sea area with an initial concentration
   is zeroed; sea cells are excluded from decay and from the ledger). Water
-  that flows from the sea onto land is clean water (concentration 0). To
-  give the seawater a concentration, express it as the boundary inflow
-  concentration of a point source or an inflow segment on the land cells
-  adjacent to the sea.
+  that flows from the sea onto land is clean water (concentration 0) by default.
+  Give the concentration of seawater with `wq_sea_conc` (the sea cells of the field C
+  then show that concentration).
 
 | Columns | Meaning |
 |---|---|
@@ -579,6 +727,8 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | out_sea_g, out_edge_g, in_edge_g, out_stage_g, in_stage_g | cumulative exchange with the outside: outflow to sea cells, outflow through open edges, inflow through open edges, outflow to water-level cells, inflow from water-level cells (appended at the end on 2026-11-03; the positions of the existing columns are unchanged) |
 | out_intake_g | cumulative mass taken out of the system by withdrawals: pumps without an outlet, out-of-domain diversions, sinks of internal sources and well pumping (appended at the end on 2026-11-04; the positions of the existing columns are unchanged) |
 | mass_paddy_g, out_paddy_perc_g | only in runs with paddy-field dams (`fn_paddy`): current mass of the pools of the paddy tanks (representation A), cumulative mass that left the system with the decrease in depth |
+| precip_g, dissol_g | only in runs that specify the solubility (`wq_csat`): cumulative precipitation into the surface buildup pool, cumulative dissolution of the precipitate (the part dissolved into the water column and the part that infiltrating water dissolved and carried underground; the latter is also counted in `to_gw_g`) |
+| in_sea_g | only in runs that specify the concentration of water entering from the sea (`wq_sea_conc`): cumulative inflow from sea cells onto land |
 
 **Measurements** (probe and transect columns)
 
@@ -612,7 +762,10 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   `settle_g` with `f_wq_settle=0`, `to_gwc_g`, `out_sea_g`, `out_edge_g`,
   `out_stage_g`, `out_intake_g`, capture by fixed-level lakes) = current mass of the whole
   system". In runs with paddy-field dams, add `mass_paddy_g` to the mass of
-  the whole system and `out_paddy_perc_g` to the removals. Internal transfers
+  the whole system and `out_paddy_perc_g` to the removals. In runs that specify the
+  concentration of water entering from the sea, add `in_sea_g` to the inputs. Precipitation
+  (`precip_g`) and dissolution (`dissol_g`) are internal transfers (their difference is the
+  increase of the precipitate). Internal transfers
   (`wash_g`, `to_gw_g`, `seep_g`, `rel_dam_g`, `to_rs_g`, `settle_g` to the
   pool, and `to_dam_g` of storage-type lakes) are not counted twice.
   `to_dam_g` is the sum of the captures by storage-type and fixed-level
@@ -630,6 +783,9 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - [examples/coastal_compound_flood](../../../examples/coastal_compound_flood/en/README.md) (supplementary cases): a conservative tracer with a concentration of 1 on the surcharged water (`wq_gwc_conc = 1`), used to read the share of the flood water that came through the sewers (the surface concentration C) and the volume of surcharged water (`in_gwc_g`).
 - [test/wqstruct](../../../test/wqstruct/en/README.md): checks that pumps, culverts, diversions, sinks of internal sources and well pumping carry the substance with the water (concentration, closure of the ledger, `out_intake_g`).
 - [test/paddy](../../../test/paddy/en/README.md): checks of the pools of the paddy tanks (exact solution of first-order decay of the concentration, rain substance, concentration of the water entering by backflow in the two-way mode) and of the substance taken out by the decrease in depth of resolved plots (closure of the ledger).
+- [test/wqsalt](../../../test/wqsalt/en/README.md): checks of horizontal mixing (the variance grows as 2·D·t), precipitation by evaporation and dissolution of the precipitate (instantaneous and with a rate), dissolution by infiltrating water and the cap on the subsurface concentration, the concentration of water entering from the sea, and the map of the initial concentration.
+- [examples/terminal_lake](../../../examples/terminal_lake/en/README.md): the shrinking of a lake whose inflow decreased and the rise of its salinity, the salt left on the exposed lake bed, and how it dissolves when the level recovers (comparison of mixing, solubility and dissolution rate).
+- [examples/irrigation_salt](../../../examples/irrigation_salt/en/README.md): salt accumulating in the soil of an irrigated field and the effect of a drain (decades computed with time compression).
 - Worked example of the format: [examples/List_samples/en/list_wq.txt](../../../examples/List_samples/en/list_wq.txt)
 - Combined with groundwater, infiltration entrainment and the
   subsurface pool can be tracked

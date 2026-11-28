@@ -652,12 +652,15 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
   real, intent(in), optional :: rginv                ! 移流分担率 1/R(省略時 1.0)
   integer :: i, j, k, in, jn, jt
   real :: hgwc, hgwn, hc0, hn0, hgw_up, hgw_e, gq, dh_up, dhg, capc, capn, fx
-  real :: qmv, dcm, wm, rgi, qcap, wle
+  real :: qmv, dcm, wm, rgi, qcap, wle, csg
   logical :: do_cg, do_bed, do_open
 
   do_cg = present(cg)
   rgi = 1.0
   if (present(rginv)) rgi = rginv
+  ! 水質の溶解度(wq_csat。負 = 上限なし。§139)。同伴輸送のある層1の呼び出しだけが使う
+  csg = -1.0
+  if (do_cg) csg = s%cg_csat
   ! 河床交換能(§16.5): 層1のみ。河道セルと非河道セルの間のエッジ流量を
   ! |q| <= k_bed·l_k·h_e に抑える(両向き同じ上限)。無効時は分岐に入らない
   do_bed = lay%to_surface .and. allocated(s%kbed)
@@ -741,10 +744,20 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
         ! 必ず代入する)。gq /= 0 なら風上 hg > eps·sy > 0 が保証される
         if (do_cg) then
           qmv = 0.0
-          if (gq > 0.0) then
-            if (cg(i,j) > 0.0) qmv = gq * rgi * cg(i,j) / hg(i,j)
-          else if (gq < 0.0) then
-            if (cg(in,jn) > 0.0) qmv = gq * rgi * cg(in,jn) / hg(in,jn)
+          if (csg > 0.0) then
+            ! 溶解度の指定あり(wq_csat。§139): 水と一緒に動く濃度を溶解度で頭打ちにする
+            ! (蒸発で水だけが抜けて cg/hg が溶解度を超えた分は、土に残って動かない)
+            if (gq > 0.0) then
+              if (cg(i,j) > 0.0) qmv = gq * rgi * min(cg(i,j) / hg(i,j), csg)
+            else if (gq < 0.0) then
+              if (cg(in,jn) > 0.0) qmv = gq * rgi * min(cg(in,jn) / hg(in,jn), csg)
+            end if
+          else
+            if (gq > 0.0) then
+              if (cg(i,j) > 0.0) qmv = gq * rgi * cg(i,j) / hg(i,j)
+            else if (gq < 0.0) then
+              if (cg(in,jn) > 0.0) qmv = gq * rgi * cg(in,jn) / hg(in,jn)
+            end if
           end if
           glt%qm(k, i+die(k), j+dje(k)) = qmv
         end if
@@ -789,7 +802,11 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
         ! 分母は超過処理前の貯留 = capc + fx。柱状量同士の同率移動)
         if (do_cg) then
           if (cg(i,j) > 0.0) then
-            wm = rgi * cg(i,j) * (fx / (capc + fx))
+            if (csg > 0.0) then
+              wm = rgi * min(cg(i,j) / (capc + fx), csg) * fx    ! 溶解度で頭打ち(§139)
+            else
+              wm = rgi * cg(i,j) * (fx / (capc + fx))
+            end if
             cg(i,j) = cg(i,j) - wm
             s%fxs(i,j) = s%fxs(i,j) + wm
           end if

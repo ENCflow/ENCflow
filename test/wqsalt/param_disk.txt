@@ -1,0 +1,50 @@
+!======================================================================
+! wqsalt / disk: 析出物が水に溶ける(溶解の速さ wq_kdis つき)
+!   平らな閉じた水域(10 × 10 セル)に、水深 0.2 m の真水を張る。底には初期の析出物
+!   (表面蓄積プール)が、西半分に 100 kg/m2、東半分に 30 kg/m2 ある。溶解度 300 g/L なら
+!   水深 0.2 m の水が溶かせるのは 60 kg/m2 まで。溶解の物質移動係数 k = 8.64 m/day(1e-4 m/s)なので、
+!   濃度は C = 300 (1 − exp(−k t / 0.2)) g/L で上がり(時定数 2000 s)、東は 150 g/L に達した所で析出物が尽きる。
+!======================================================================
+&list_sysparam
+  dt = 10.0
+  tt = 6000.0
+  dt_disp = 1000.0
+  dt_file = 3000.0
+  dt_recrd = 200.0
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_wq = '-'
+  fn_record = '-'
+  dir_data = 'data_wqsalt'
+  dir_result = 'result_disk'
+  f_output_mode = 2
+  f_disp_debug = 1
+  f_check_cfl = 0           ! 水が動かない検定なので、クーラン数の検査を外す
+/
+
+&list_geoinfo
+  nx = 10
+  ny = 10
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  rn0 = 0.03
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.2                  ! 初期水深 (m)。真水
+/
+
+&list_wq
+  wq_csat = 300000.0        ! 溶解度 (mg/L) = 300 g/L
+  wq_kdis = 8.64            ! 溶解の物質移動係数 (m/day) = 1e-4 m/s
+  fn_wq_bd0 = 'pool_dis.txt'   ! 初期の析出物 (kg/ha)。西 1e6(100 kg/m2)、東 3e5(30 kg/m2)
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 3, 5          ! 西半分(析出物が余る)
+  pbxy(:,2) = 8, 5          ! 東半分(析出物が尽きる)
+/
