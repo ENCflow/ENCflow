@@ -36,7 +36,7 @@ ENCflow の設定と実行のしかたを調べるためのリファレンスで
   - [時間刻みの設計方針](users_guide/timestep_policy.md) — 陽解法主体と固定刻みの理由・可変刻みとサブサイクルとの関係・方程式の精度と現象の再現の区別(時刻の管理の補足。中級〜上級)
   </details>
 - [座標系の管理](users_guide/coordinates.md) — 絶対座標とローカル座標・EPSG・経緯度格子
-- [入出力の形式](users_guide/io.md) — テキスト/bil/GeoTIFF・出力ファイル体系
+- [入出力の形式](users_guide/io.md) — 出力先とファイル名・テキスト/bil/GeoTIFF・出力ファイル体系
 - [ユーザールーチンの作り方](users_guide/user_routines.md) — 地形・初期条件をコードで与える(手順・添字の契約・落とし穴)
 - [中断と再開](users_guide/restart.md) — 状態保存・時刻継続・初期条件としての利用
 - [ネスティング(多段格子)](users_guide/nest.md)(fn_nest、&list_nest)— 親格子の中の子格子を同時に解く(多段・双方向・Flather 放射・非静水圧の帯) <details><summary>解説(1 件)</summary>

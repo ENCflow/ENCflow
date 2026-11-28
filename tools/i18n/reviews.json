@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "058d5b7eadd67c19e6569409ec51844f5e320a884a80927f7d871c28040a50d5",
-      "target_sha256": "e4c762be7c0fd5ecea826c4acab0d5a6eb69c25b69b9c5da10b06a398a389e27",
-      "reviewer": "Claude (Claude Code session; \"Explanations\" in the intro marked with the disclosure triangle U+25B8 so that the clickable place is clear; both sides compared)",
+      "source_sha256": "c248ef6601a2718183bcc6464e400a8b4cc16bbc4304578a734df3eec101e3d8",
+      "target_sha256": "7bb2edfe48712beb9073bb4cbaacfd2f0a70e6bdd63143b353a82c0fb5314952",
+      "reviewer": "Claude (Claude Code session; table of contents: \"output locations and file names\" added to the description of the input/output chapter; both lines compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
