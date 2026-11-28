@@ -311,9 +311,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "5384ccefc2572173114bc8b0f12e4233d2e392dce73657e2607bfa58cb59dadc",
-      "target_sha256": "dd3103413041850ebc4fb5e9a7905eebc15e7a7576e6e28e4bcf62c881498532",
-      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
+      "source_sha256": "99f25d13133b8b86c38baa7b11f31488fb9aae698748f83798ad76e19226e039",
+      "target_sha256": "0df0af6933bb47cbf1a1edd130f83fbeff97aec0b76ba74fad3fe3b2c256aeb1",
+      "reviewer": "Claude (Claude Code session; the user's decision that the recommended form of f_dbsel is 2: the Japanese and English sentences were added in the same work and compared line by line)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "3ab46a217305e10fdd8fdb4bdcaa9f83121fdc026b84a7d56099b15e1b299d2f",
-      "target_sha256": "74496c87e62bc2b6cb128362777be5358395de4487a33b1d5c9b446221faf77f",
-      "reviewer": "Claude (Claude Code session; f_dbsel cases of the examples debris_dam and debris_fan_flume: the Japanese and English text were written in the same work and compared section by section, numbers cross-checked against the table output of plot_results.py)",
+      "source_sha256": "87bef38347923cdf91c626ec5d202782078ff077f5cdcb1b53803c1937e4e468",
+      "target_sha256": "46bc192bca6d6690a2ad49ed4d51f5c5f119a7158562b6ad3f28b90805758c7f",
+      "reviewer": "Claude (Claude Code session; the user's decision that the recommended form of f_dbsel is 2: the Japanese and English sentences were added in the same work and compared line by line)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -491,9 +491,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "f9bcace201f9443f64751819bed7cfc628a33da06d79f0f19140dd1200cf7e90",
-      "target_sha256": "4664782c50f4ba593bab84dd1d5e6992bf6d73d581f909ad8fcd58ea2729f9af",
-      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
+      "source_sha256": "b532b59b9970e5b72fc56f28672876ca736ca8c437c66a2cbf11cf034bc8a5a5",
+      "target_sha256": "e9627bfc3ca4a19a18d04f380ae2ebfb51ad75f4498934507ee96550bd5c0c26",
+      "reviewer": "Claude (Claude Code session; the user's decision that the recommended form of f_dbsel is 2: the Japanese and English sentences were added in the same work and compared line by line)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -725,9 +725,9 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "24c7d684264703c33eca7fcbc1e40315bbaf5afa9d339d004939fbfd28072a31",
-      "target_sha256": "9019a5d22836852d3ebdc1e9614ebf6321d8362073dbf309bc1c1f37ca929813",
-      "reviewer": "Claude (Claude Code session; stage 2c-4 selector f_dbsel: the Japanese and English changes were written in the same work and compared change by change)",
+      "source_sha256": "74c4d7ae1096bd7d7a54fa111937b4de509cbe59d8819ea41b1b2d5cd8de34c7",
+      "target_sha256": "a9c1b254c638818d30a77962d2b22957df291c7fbff8f968ef2cb1d3edea031b",
+      "reviewer": "Claude (Claude Code session; the user's decision that the recommended form of f_dbsel is 2: the Japanese and English sentences were added in the same work and compared line by line)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -2165,9 +2165,9 @@
     {
       "source": "examples/debris_dam/README.md",
       "target": "examples/debris_dam/en/README.md",
-      "source_sha256": "81df8281abf88e2f92dfb6bcc8736193ca643189ca6455f71f3bf02bf94c0c6b",
-      "target_sha256": "8b36bf3b16d77480944fc7592ae281ec21519a30a3372824151f46b4c023041c",
-      "reviewer": "Claude (Claude Code session; f_dbsel cases of the examples debris_dam and debris_fan_flume: the Japanese and English text were written in the same work and compared section by section, numbers cross-checked against the table output of plot_results.py)",
+      "source_sha256": "f2707c16b3d0cb2814bccdb53d558529b68bf149738299809c078aa9a7a47e13",
+      "target_sha256": "00f64045723fbb6422318f22584a58cd68fa283793c042d94cdf74bbbb1a83f2",
+      "reviewer": "Claude (Claude Code session; the user's decision that the recommended form of f_dbsel is 2: the Japanese and English sentences were added in the same work and compared line by line)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -2381,9 +2381,9 @@
     {
       "source": "examples/debris_fan_flume/README.md",
       "target": "examples/debris_fan_flume/en/README.md",
-      "source_sha256": "c16d928069a1170ccb615ffa038408bfff6beb2d78fe2b9a81ec68420a211907",
-      "target_sha256": "ce63c022fffd0259122a4523a81fba2437f369237e03b39227e484f59a6329be",
-      "reviewer": "Claude (Claude Code session; f_dbsel cases of the examples debris_dam and debris_fan_flume: the Japanese and English text were written in the same work and compared section by section, numbers cross-checked against the table output of plot_results.py)",
+      "source_sha256": "d229e14c8f5abe90376c55304a058d512abc09587788fa1d62d97c252c3d5ca5",
+      "target_sha256": "dbf22c1dbf20fdb187427d0e5eae1dc23193b2803188e415032f8ab4f0d40e8a",
+      "reviewer": "Claude (Claude Code session; the user's decision that the recommended form of f_dbsel is 2: the Japanese and English sentences were added in the same work and compared line by line)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },

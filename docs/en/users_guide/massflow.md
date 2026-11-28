@@ -602,7 +602,9 @@ properties as seen from the debris-flow side.
     the size-blind law and the bulk erosion rate is $`i K_3`$. The text of the sources states that
     "$`i K_3`$ is the bulk erosion velocity", which differs by one power of $`K_3`$ from the bulk rate
     $`i K_3^2`$ obtained from the per-class equation; 2 is the form that matches the text. The erosion
-    rate of the immobile classes is 0 in both.
+    rate of the immobile classes is 0 in both. The recommended form is 2 (the side closer to the experiment
+    in the example compared with a flume experiment; "Results of the examples" below). Choose 1 to use the
+    form faithful to the printed equations.
   - **Coarsening of the surface and the end of the erosion**: the immobile classes stay on the bed and are
     added from the substrate, with their fraction $`f_k`$ there, each time the exchange layer moves down,
     so their surface fraction grows with the erosion depth $`\Delta`$ as
@@ -636,8 +638,8 @@ properties as seen from the debris-flow side.
     [debris_fan_flume](../../../examples/debris_fan_flume/en/README.md), the erosion by clear water no longer
     cuts the channel down to the base (exposed base 500 cm² → 0 to 25 cm²), but the erosion of the thick part
     of the fan becomes weaker than in the experiment (the change in 10 minutes of the volume above a thickness
-    of 2 cm is −0.1 to −0.8 L against −1.9 L in the experiment; the flow depth on the fan is 2.5 mm on
-    average, shallower than the two coarse classes of 4.5 and 8 mm).
+    of 2 cm is −0.8 L with `f_dbsel = 2` and −0.1 L with 1 against −1.9 L in the experiment; the flow depth
+    on the fan is 2.5 mm on average, shallower than the two coarse classes of 4.5 and 8 mm).
 - **Sediment rich in fines**: the effect of fines becoming part of the interstitial fluid and raising the
   concentration is not represented. For flows of sediment rich in fines this model errs on the low side. In
   a rough surrogate computation in which the submerged specific gravity `fluv_sgrav` was set to 1.41 and
@@ -918,7 +920,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | db_immexp | 1 | exponent of (d_L/h) in the resistance of the bedload-like collective flow of the Takahashi–Nakagawa law (§2) | **method** 1: as printed in eqs. (24)(25) of the original paper[^tn91], 2: the form derived from the uniform-flow law, eq. (3), of the same paper (eq. (31) of [^tny91]) |
 | f_dbunsat / db_kunsat | 0 / 0.01 | erosion formula for an unsaturated bed / its constant K (§3; f_dbed = 3) | **method** eq. (10) of the original paper[^tn91]. **literature** K is the value applied to Horadani |
 | f_dbimm / db_deltdi | 0 / 0.1 | equilibrium concentration 6.7 c∞² and deposition formula of the bedload-like collective flow on gentle slopes / deposition coefficient δ'd (§3; f_dbed = 3) | **method** eq. (12) of [^tny91] and eq. (28) of [^tn91]. **literature** δ'd is the value applied to Horadani |
-| f_dbsel / db_seltan | 0 / 0.03 | limits the erosion by the debris-flow law to the movable size classes / flow-surface slope that separates the flow regimes ("Coupling with mixed grain sizes" in §3; f_dbed = 3 and f_bedmix = 1) | **method** 1: as printed in eq. (21) of [^tinis00] and eq. (26) of [^tnsk01], 2: the form that matches the bulk erosion velocity stated in the text of the same papers. **literature** 0.03 is the boundary between the bedload-like collective flow and bed load in [^tnsk01]. Using the shear stress and hiding function of the bed load for the bed-load regime is ENCflow's own choice |
+| f_dbsel / db_seltan | 0 / 0.03 | limits the erosion by the debris-flow law to the movable size classes / flow-surface slope that separates the flow regimes ("Coupling with mixed grain sizes" in §3; f_dbed = 3 and f_bedmix = 1) | **method** 1: as printed in eq. (21) of [^tinis00] and eq. (26) of [^tnsk01], 2: the form that matches the bulk erosion velocity stated in the text of the same papers (the recommended form). **literature** 0.03 is the boundary between the bedload-like collective flow and bed load in [^tnsk01]. Using the shear stress and hiding function of the bed load for the bed-load regime is ENCflow's own choice |
 | f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation (1: entrainment, 2: with the groundwater computation, 3: 2 + retained water) | **method** total-volume continuity of Takahashi–Nakagawa[^tn91] (1). 2 exchanges pore water between the surface water and subsurface storage, and 3 adds the exchange of the retained water λ − sy0 (both own) |
 | db_reltime / db_relsat | 0 / 1.0 | release time / saturation of the failed mass (§4) | **given** |
 | slide_c / slide_phi / slide_gamma | 0 / 30° / 18 kN/m³ | strength constants of the stability test (§4) | **customary value** shallow-landslide values; c' = 0 is on the safe side |

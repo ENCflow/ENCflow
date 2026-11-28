@@ -604,7 +604,8 @@ load (the design document is docs/mixed_sediment_plan.md).
   and $`\Delta h_s`$ the exchange of the size-blind law, the amount of class $`k`$ that enters the flow is
   $`K_3 F_k \Delta h_s`$ for `f_dbsel = 1` (as printed in the equations of the sources[^tinis00][^tnsk01];
   the total is $`K_3^2 \Delta h_s`$) and $`F_k \Delta h_s`$ for `f_dbsel = 2` (the total is
-  $`K_3 \Delta h_s`$; the form that matches the bulk erosion velocity stated in the text of the sources),
+  $`K_3 \Delta h_s`$; the form that matches the bulk erosion velocity stated in the text of the sources, and
+  the recommended form),
   and 0 for the immobile classes. In a cell with immobile classes only the movable classes are removed from
   the exchange layer, in proportion to their fractions, and one update removes at most the amount of the
   movable classes present in the exchange layer, $`L_e K_3`$ (a limit of ENCflow). The lowered part is

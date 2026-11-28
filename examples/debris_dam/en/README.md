@@ -843,7 +843,8 @@ with the same configuration.
 - **`f_dbsel` 1 and 2**: 1 restrains the erosion more strongly than 2 once the surface has coarsened (the
   lowering of the bed is proportional to the square of K3). The breach starts at 107 and 70 minutes, later
   with 1. In the computations after the breach there is hardly any difference between 1 and 2 (height of
-  the breach channel after 3 hours 5.89 and 5.88 m).
+  the breach channel after 3 hours 5.89 and 5.88 m). The recommended form is 2
+  ([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
 - **The results are sensitive to the form of the criterion (a limit).** For the dam of 1, 5 and 40 cm the time
   of the breach is 57, 83 and 120 minutes and the peak 197, 220 and 259 m³/s for the selector 0, 2 and 1. The
   depth of the overflow (0.3 to 0.4 m) is about the same as the coarsest class (40 cm), right at the threshold

@@ -431,7 +431,8 @@
                            !   2: the same with the erosion rate of class k set
                            !   to i F_k (the bulk erosion rate is i K3; the form
                            !   that matches the statement in the text of the same
-                           !   papers that "i K3 is the bulk erosion velocity").
+                           !   papers that "i K3 is the bulk erosion velocity";
+                           !   the recommended form).
                            !   A class is movable when its grain size is not
                            !   larger than the flow depth h + h_s in cells whose
                            !   flow-surface slope exceeds db_seltan, and when it

@@ -328,7 +328,9 @@ restored into the configuration without debris flow.
 - **The difference between `f_dbsel` = 1 and 2**: the erosion in 10 minutes is almost the same (1.71 and
   1.72 L), but in the first 2 minutes 1 is slower (0.27 against 0.52 L), and more of the thick part of the
   fan remains with 1. With 1 the lowering of the bed is proportional to the square of K3, so it restrains
-  the erosion more strongly than 2 as the surface coarsens.
+  the erosion more strongly than 2 as the surface coarsens. 2 is the closer one to the experiment, and it
+  is also the recommended form
+  ([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
 - **The difference from the bed-load-only run**: because the debris-flow laws are on, the sediment left in
   the flume is carried on instead of piling up at the apex (the maximum thickness stays at 8 cm; 12 cm with
   bed load alone) and the fan spreads downstream. In this respect the run comes closer to the experiment.
