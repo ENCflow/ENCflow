@@ -6,7 +6,33 @@
 
 Input and output of distributed data (topography, roughness, results,
 etc.) supports three formats. All of them are selected in
-`&list_sysparam`.
+`&list_sysparam`. How to change where input data is read from, where
+results are written and the file names is summarised in the first section.
+
+## Adjusting directories and file names
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| dir_data | "." | base directory of input data files |
+| dir_result | "result" | result output directory |
+| dir_save | "save" | directory for state files ([Suspend and Restart](restart.md)) |
+| fn_log | "Log.txt" | log file name |
+| outfn_suffix | "" | string inserted just before the extension of rasters and measurement CSVs |
+| out_fill | 0.0 | value written in rasters outside the computational window (bounding box of the region mask) |
+
+`out_fill` is the value written outside the computational window when a
+small region mask is placed on a large grid. ENCflow keeps only the
+bounding box of the region mask (plus halo) in memory and writes rasters
+in the full shape of the input. Cells outside the window are not computed,
+so they are filled with this value (default 0; use e.g. `-9999` to tell
+them apart in a GIS). Masked-out cells inside the window keep their
+internal values (zero depth, input elevation). X0000 (the region mask) is
+always written with its actual full-domain values.
+
+`outfn_suffix` also applies to Z0000 / X0000, bil `.hdr` files, CSVs in
+probes/ and fluxes/, and summary.csv. It does not apply to
+`FILENUMBER.csv`, logs or configuration copies. Use separate `dir_result`
+directories to preserve results from separate runs.
 
 ## Common raster conventions
 
@@ -359,28 +385,3 @@ displayed; the columns of field maxima are selectable: `f_disp_h`
 `f_disp_debug = 1` displays the S column with all significant digits
 (for balance debugging and regression tests). For how to read the
 columns, see [Tutorial Step 1](../../../tutorials/wave/en/README.md#running).
-
-## Adjusting directories and file names
-
-| Parameter | Default | Meaning |
-|---|---|---|
-| dir_data | "." | base directory of input data files |
-| dir_result | "result" | result output directory |
-| dir_save | "save" | directory for state files ([Suspend and Restart](restart.md)) |
-| fn_log | "Log.txt" | log file name |
-| outfn_suffix | "" | string inserted just before the extension of rasters and measurement CSVs |
-| out_fill | 0.0 | value written in rasters outside the computational window (bounding box of the region mask) |
-
-`out_fill` is the value written outside the computational window when a
-small region mask is placed on a large grid. ENCflow keeps only the
-bounding box of the region mask (plus halo) in memory and writes rasters
-in the full shape of the input. Cells outside the window are not computed,
-so they are filled with this value (default 0; use e.g. `-9999` to tell
-them apart in a GIS). Masked-out cells inside the window keep their
-internal values (zero depth, input elevation). X0000 (the region mask) is
-always written with its actual full-domain values.
-
-`outfn_suffix` also applies to Z0000 / X0000, bil `.hdr` files, CSVs in
-probes/ and fluxes/, and summary.csv. It does not apply to
-`FILENUMBER.csv`, logs or configuration copies. Use separate `dir_result`
-directories to preserve results from separate runs.
