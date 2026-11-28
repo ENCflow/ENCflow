@@ -13,11 +13,11 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "b1d27971c2cf3db33d7c98e72ff6382f3b49276ae58f06eeaa8a29f472a4265d",
-      "target_sha256": "cabb20ec0e561b48b9b424b0c3445c5ee428e1983e856d0883e1d3886776c47a",
-      "reviewer": "Claude (Claude Code session; links to the project policy changed from developer.md §0 and its partial mirror to docs/policy.md / docs/en/policy.md, and developer.md described as the index of the records; both files compared)",
+      "source_sha256": "183ad38047bc4f92f8f6339ffaa55b9c777c12b8d859fee0970921b00186a67b",
+      "target_sha256": "f8c6cf5cb3d4959888a3891fd7af7dd9750a88cd7c097e494c7d8fda9e752bdd",
+      "reviewer": "Claude (Claude Code session; \"Learning to use it\": the pointers for developers reordered to policy, then the architecture map; both paragraphs compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "TRADEMARKS.md",
