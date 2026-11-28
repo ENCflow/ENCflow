@@ -134,6 +134,39 @@ crosses the cell size, so a single width dataset connects the thin
 upstream streams to the large downstream river (formulation, design
 rationale and accuracy limits in [the explanation](channel_models.md) §2).
 
+**A drawback not to forget: channel cells have no landside.** In a cell whose width W is narrower than the cell size
+Δ, the part of the cell area that is not channel (1 − W/Δ) does not exist in the computation, even where it is
+really landside, a bank or a high-water bed. The smaller W/Δ, the more this affects the hydraulics of the floodplain,
+in the following ways.
+
+- **The floodplain along the river becomes narrower**: the landside inside channel cells is never flooded and stores no
+  water. Along each river the floodplain is narrower by the width of the channel cells minus the river width, which
+  changes the flooded area and the flood depth for the same volume of water.
+- **Overflowing water goes straight into the next cell**: water from overtopping, bank overflow and breaches enters the
+  neighbouring landside cell directly across the face of the channel cell, skipping the strip from the real bank to
+  the cell face. Levees (virtual walls) also stand on the cell faces, not where the real levees are. Water returning
+  from the landside to the channel does the same.
+- **The ground elevation beside the river cannot be represented**: the ground of a channel cell is the river bed; the
+  height of natural levees or low back swamps beside the channel can only be represented by the ground elevation of
+  the neighbouring cells.
+- **Above the banks, a channel cell still stores and conveys only its width W**: when the water rises above the ground
+  beside a channel without levees, nothing flows over the high-water bed or the landside inside the channel cell;
+  the neighbouring cells carry the flow along the river.
+- **Rain falling on a channel cell goes straight into the channel**: the rain on the whole cell gathers in the channel
+  (the volume is kept). There is no travel time over the landside beside the river and no ponding there.
+
+How much it matters: the area lost inside channel cells is, per length of river, roughly "width of the channel cells −
+river width". With Δ = 250 m and a river 8 m wide it is 97 % of the area of a channel cell, and the share of a
+catchment taken by channel cells is roughly the density of the rivers drawn on the grid × Δ (6 % of the land in the
+example catchment_metal). When the aim is the discharge at the catchment outlet, this mostly acts as a small
+difference in the storage and travel time along the rivers; when the aim is the extent or depth of flooding beside the
+rivers, it acts strongly. Where flooding beside the rivers is itself what you want to see, refine the cells to about
+the river width and use resolved channels. When adding up the flooded area or the water on the landside, count without
+the channel cells, and read the result knowing that the strip beside the rivers is not in the computation.
+
+For channel masks made from the covered fraction, the balance between the floodplain area and the conveyance of
+the channel is in [the next section](#making-the-channel-mask-and-width-coarse-grids).
+
 ```
   fn_width = "channel_width.txt"  ! channel width distribution (m; effective on channel cells only.
                                   !   0 or below means no width information = treated as resolved)
@@ -167,6 +200,121 @@ rationale and accuracy limits in [the explanation](channel_models.md) §2).
   to the surface and lose the rest; developer.md §26.1).
 
 **Outputs for this section**: `H0001...` on width cells is the depth within the width. Check how the width acts by whether the transect column `B` (= Q / Hmax / Vmax) is close to the given width ([Output and monitoring](#output-and-monitoring)).
+
+## Making the channel mask and width (coarse grids)
+
+On a catchment-scale coarse grid (channels at most a few cells wide), the channel mask (fn_rw) and the channel width
+(fn_width) of the coarse cells are made in preprocessing from channel polygons or a high-resolution channel mask. Even
+for the same river, the way they are made changes how much water the channel can carry (its conveyance), which
+affects the stage at narrows and confluences. ENCflow only reads the channel mask and width it is given and contains no
+tool to make them. This section sums up the methods checked in the examples and guides to their errors (the systematic
+comparison is in [examples/coarse_channel](../../../examples/coarse_channel/en/README.md); a worked case of backwater
+flooding at a confluence is supplement 1 of
+[examples/confluence_backwater](../../../examples/confluence_backwater/en/README.md)).
+
+**Recommended method** (channel mask and subgrid channel width together)
+
+1. For each coarse cell, find the fraction of its area covered by the channel (the covered fraction f), from the area
+   of the channel polygons clipped by the cell or from the number of cells of a high-resolution channel mask.
+2. Make every cell with f of 5 % or more a channel cell, and give it the channel width f·Δx. Cells with f close to 1
+   are resolved channel cells (a large value such as 9999 will do). The same holds in bends: no hand correction such
+   as adding cells at the steps is needed.
+3. For a river narrower than one cell, do not use the covered fraction: make the centreline a line of one cell per
+   column (8-connected) and give the river width as it is. Laying the centreline segments on cells with Bresenham's
+   line drawing or similar makes this mechanical.
+4. Where a reach runs along a grid axis with its banks inside cells, add up the covered fraction column (or row) by
+   column and pack it, from the cell nearest the centreline, into "resolved cells + one cell of the remaining width".
+   For example, a river 120 m wide centred on a cell boundary splits by covered fraction into two cells of 60 m + 60 m;
+   make this 100 m + 20 m. Partial cells side by side are also linked by diagonal edges and convey more. Check this
+   especially where a reach that controls the stage, such as a narrows, a bridge or a weir, lies there.
+
+Give the channel levees as virtual walls on the channel cells (fn_bank, [Levees](#levees-virtual-walls)). A channel
+bounded by virtual walls carries the same flow whatever water (rain, ponding) lies on the landside beside it. Without
+walls, with banks represented by the terrain, a thin water film on the banks can reduce the conveyance by about 5 %
+(section 6 of coarse_channel).
+
+**When the floodplain area should be kept**
+
+The recommended method favours the conveyance of the channel. Channel cells have no landside
+([Subgrid channel width](#subgrid-channel-width)), so making every cell covered 5 % or more a channel cell leaves the
+floodplain along a river about 0.9 cell narrower (both banks together). Raising the cutoff of the covered fraction gives
+the floodplain back, at the price of a thinner channel (oblique rivers; section 7 of coarse_channel).
+
+| Cutoff of the covered fraction | Error in floodplain width (cells) | Conveyance width ÷ river width (1.2 / 2 / 3 / 6 cells wide) | Backwater upstream of a bend |
+|---|---:|---|---:|
+| 5 % (recommended) | −0.9 | 0.95 / 0.99 / 0.99 / 0.99 | −1.0 to −0.1 cm |
+| 15 % | −0.6 to −0.8 | 0.95 / 1.00 / 1.00 / 1.00 | −1.7 to −0.8 cm |
+| 30 % | −0.35 to −0.45 | 0.89 / 0.96 / 0.97 / 0.98 | −1.7 to +0.2 cm |
+| 50 % or more resolved (simple method) | about 0 | 0.66 / 0.81 / 0.86 / 0.95 | +1.7 to +7.5 cm |
+
+The conveyance is the median; the bends are the difference from the fine grid.
+
+- **When looking at flooding by water leaving the channel (overtopping, bank overflow, backwater flooding), keep the
+  cutoff low**: the overflow is sensitive to the channel level, and a 10 % error in conveyance (about 6.5 % in depth)
+  tends to matter more than a few per cent of floodplain area.
+- **When looking at the floodplain itself, consider raising the cutoff**: pluvial flooding and ponding of rain, the
+  extent of flooding with the river level given at boundaries, storage in wide retention areas and the like. On rivers
+  2 cells wide or more, 30 % halves the floodplain error and keeps the conveyance at 0.90–1.01 times (on rivers 1.2–1.6
+  cells wide it drops to 0.64–1.03 times). To remove the error, resolve the cells covered 50 % or more, but the channel
+  level of oblique rivers comes out high. Keeping the covered width at a 50 % cutoff lowers the conveyance further and is
+  not recommended.
+- **15 % reduces the floodplain error by about 30 % with hardly any change in conveyance**: the extra conveyance of 45°
+  rivers grows a little and the backwater of bends comes out about 1 cm smaller.
+- With any cutoff, the position of the floodplain along the river (the position of the banks) shifts by up to half a
+  cell, and the ground elevation beside the river cannot be represented. Where flooding beside the river is itself the
+  aim, refine the cells to about the river width.
+
+**Simple method** (channel mask alone)
+
+Make the cells covered 50 % or more channel cells and give no channel width (no fn_width). It is easy to make, but the
+conveyance changes greatly in oblique rivers, bends and widths that are not a multiple of the cell size. Since the
+direction of the error changes from place to place, errors can cancel and seem to fit. Use it only for first rough
+estimates, and remake the reaches whose stage you read with the recommended method.
+
+**Guide to the errors**
+
+| Situation | Recommended method | Simple method |
+|---|---|---|
+| Oblique river (11–34°), 1.2 cells wide | 0.84–1.04 | 0.40–0.96 |
+| Oblique river, 1.6–3 cells wide | 0.90–1.03 | 0.56–1.03 |
+| Oblique river, 6–10 cells wide | 0.98–1.00 | 0.90–1.01 |
+| River along a grid axis, 1.2–3 cells wide | 0.76–1.36 (0.97–1.14 when packed by step 4) | 0.62–1.67 |
+| River at 45°, 1.2–3 cells wide | 1.01–1.36 | 0.59–1.39 |
+| River narrower than one cell | 0.99–1.00 (up to 0.6 cells), 0.88–0.97 (0.8 cells) | The channel mask often breaks |
+| Backwater upstream of a bend (2 cells wide, radius 2.5–7.5 times the width) | −1.0 to −0.1 cm from the fine grid | +1.7 to +7.5 cm |
+| Main-river stage at a confluence (bend + narrows, steady) | −0.05 m (−0.53 m without step 4) | −0.26 m |
+| Water on the landside in backwater flooding | 0.76–0.84 times (0.12–0.31 times without step 4) | 0.33–0.51 times |
+| Floodplain width along a river (both banks together) | about 0.9 cell narrower | about no error |
+
+The first six rows are conveyance width ÷ river width. At 1 the river carries what its width should; below 1 the
+channel stage comes out high (by Manning's formula, a conveyance width 10 % short makes the depth about 6.5 % deeper).
+The ranges are the minimum to maximum over all cases of direction and offset from the grid (Δx = 100 m, uniform flow
+3.5 m deep in a straight channel; coarse_channel). The bend row is the difference from the fine grid (Δx = 20 m); the
+two rows after it are the difference from and ratio to the fine grid in supplement 1 of confluence_backwater (Δx = 100
+m and 20 m; river 200 m wide with a 120 m narrows). The last row is the error in floodplain width due to the landside
+inside channel cells (mean of oblique rivers; section 7 of coarse_channel).
+
+**What cannot be done, and accuracy limits**
+
+- **Channel cells have no landside**: the floodplain along the river becomes narrower, and overtopping water skips the
+  strip beside the river and enters the next cell ([Subgrid channel width](#subgrid-channel-width)). Even with a raised
+  cutoff, the position of the floodplain shifts by up to half a cell.
+- **Rivers along a grid axis and at 45° convey more**: channel cells side by side are linked to the downstream cells by
+  diagonal edges as well as by the orthogonal ones (the subgrid channel is a treatment that assumes a channel one cell
+  wide, like a line; cells side by side are outside it; section 5 of coarse_channel). Reaches along an axis can be
+  corrected by step 4, but no correction has been found for reaches near 45°.
+- **Oblique rivers 1–1.5 cells wide keep an error of about 10 %**: the conveyance depends on the shape of the band of
+  cells (its waists). Where the stage must be accurate, refine the grid or check against observed stages.
+- **The amount of backwater flooding changes greatly with small differences of the stage at the confluence**: when the
+  overflow is shallow, a stage difference of only 0.1 m at the confluence changes the overflow by 30–40 %. Even with the
+  recommended method, the water on the landside was 0.76–0.84 times that of the fine grid. Read coarse-grid results as
+  whether flooding occurs and as a guide to its amount.
+- **Only steady conveyance and the flood at one confluence have been checked**: the delay and attenuation of flood
+  waves (channel storage), meanders, mid-channel bars, reaches of changing width and the connectivity of channel
+  networks have not been checked.
+- **After changing the method, compare representative reaches by their steady stage**: comparing the steady stage with
+  a fine grid or a 1-D computation is the sure way. coarse_channel and coarse_check of confluence_backwater are examples
+  of that procedure.
 
 ## Cross-section shape (sigma law)
 
@@ -350,6 +498,8 @@ written as fields.
 
 - [test/bendloss](../../../test/bendloss/en/README.md): straight, bent and diagonal channels, subgrid width and opening correction, assessed against Manning uniform flow or a straight-channel comparison.
 - [test/chichibu](../../../test/chichibu/en/README.md): real-terrain examples comparing channel masks, roughness, width and levee settings through flood-wave behaviour.
+- [examples/coarse_channel](../../../examples/coarse_channel/en/README.md): ways of making the channel mask and channel width that represent a river on a coarse grid, compared over river width, direction to the grid, bends, connectivity of the channel mask and water beside the channel (the basis of [making the channel mask and width](#making-the-channel-mask-and-width-coarse-grids)).
+- Supplement 1 of [examples/confluence_backwater](../../../examples/confluence_backwater/en/README.md): backwater flooding at a confluence computed on a coarse grid (Δx = 100 m), with three ways of making the channel mask (simple, covered fraction as is, corrected) compared with the fine grid.
 - The supplement of [examples/benchmark/v-shaped](../../../examples/benchmark/v-shaped/en/README.md): a 20 m wide channel on a 40 m grid, with and without the channel mask and the sub-grid channel width (fn_width), compared with the kinematic-wave theory in the outlet discharge and the channel depth (an example of the rise and the depth approaching the theory on a grid coarser than the channel).
 - Format samples: [examples/List_samples/list_channel.txt](../../../examples/List_samples/en/list_channel.txt)
 - Seawalls (fn_seawall) are the coastal application of the same

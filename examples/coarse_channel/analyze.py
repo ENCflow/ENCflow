@@ -7,6 +7,8 @@
 傾き I から、通水の幅 B_eff = n Q /(h^(5/3) √I) を逆算し、川幅 B で割る(細かい格子は表した幅 round(B/δ) δ で割る)。
 屈曲: 上流の直線区間(中心線の距離 1〜2.5 km)の河道セルの水位が等流の水位より高い分(背水の高さ)。
 河道の脇の水: 直線の河道と同じ通水の幅。雨のケースは、流入の流量に、測る区間の中ほどより上流に降った雨を足す。
+面積の勘定(occ_area): 占有率の作り方で、河道のセルの中にある氾濫原と、河道でないセルの中にある河道を、測る区間で
+数える(河道のセルは堤内地を持たないので、前者は計算から消え、後者は氾濫原として計算される)。
 """
 import math
 import os
@@ -81,6 +83,23 @@ def measure(name, kind, kw):
     near = bank & near_channel(chan)
     return dict(rel=beff / mc.WET_B, h=h, slope=slope / mc.S, q=q, hbank=float(hb.mean()),
                 hnear=float((e1 - g["z"])[near].mean()), drift=drift)
+
+
+def occ_area(an, b, off, rep):
+    """占有率の作り方の面積の勘定(測る区間の、川の長さあたりの幅。セル幅の単位): fp_in = 河道のセルの中の氾濫原、
+    ch_in = 河道でないセルの中の河道、fp_bias = ch_in − fp_in(計算の氾濫原の幅 − 本当の氾濫原の幅。両岸の合計)、
+    ch_bias = 表した河道の面積 ÷ 本当の河道の面積 − 1(解像のセルはセル全体、サブグリッドのセルは幅で数える)"""
+    g = mc.straight(an, b, rep, mc.DX, off)
+    f = mc.occupancy_straight(an, b, g["dn"], mc.DX)
+    sel = (g["s"] >= mc.S1) & (g["s"] <= mc.S2)
+    ch = g["width"] > 0
+    res = g["width"] >= mc.RESOLVED
+    n = (mc.S2 - mc.S1) / mc.DX
+    fp_in = float(((1.0 - f) * (ch & sel)).sum()) / n
+    ch_in = float((f * (~ch & sel)).sum()) / n
+    rep_ch = float((res & sel).sum() + (np.where(ch & ~res, g["width"] / mc.DX, 0.0) * sel).sum()) / n
+    true_ch = float((f * sel).sum()) / n
+    return dict(fp_in=fp_in, ch_in=ch_in, fp_bias=ch_in - fp_in, ch_bias=rep_ch / true_ch - 1.0)
 
 
 def near_channel(chan):
