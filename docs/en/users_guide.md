@@ -39,7 +39,7 @@ related checks and examples.
   - [Time-step design policy](users_guide/timestep_policy.md) -- why mainly explicit with a fixed step, relation to variable steps and sub-cycling, solving the equations accurately vs reproducing the phenomenon (supplement to time management; intermediate to advanced)
   </details>
 - [Coordinate systems](users_guide/coordinates.md) -- absolute vs. local coordinates, EPSG, geographic (lat-lon) grids
-- [Input and output formats](users_guide/io.md) -- text / bil / GeoTIFF, output file organization
+- [Input and output formats](users_guide/io.md) -- output locations and file names, text / bil / GeoTIFF, output file organization
 - [Writing user routines](users_guide/user_routines.md) — giving topography and initial conditions in code (procedure, index contract, pitfalls)
 - [Suspend and restart](users_guide/restart.md) -- state files, time continuation, use as initial conditions
 - [Nesting (multi-level grids)](users_guide/nest.md) (fn_nest, &list_nest) -- child grids solved inside a parent grid in the same run (multi-level, two-way, Flather radiation, non-hydrostatic band) <details><summary>Explanations (1)</summary>
