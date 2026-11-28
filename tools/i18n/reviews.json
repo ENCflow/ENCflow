@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "0bcb0b0723fd77d671d0138b5f44c994991b3fdf2a71f533289c099adc7c073a",
-      "target_sha256": "471fa11011e3c25a139353e24c244f103de27e44169a1b57c951eb2338de53a6",
-      "reviewer": "Claude (Claude Code session; \"This page (Part I)\" item: a sentence asking everyone to read it, phrased like the tutorial guide; both sides compared)",
+      "source_sha256": "058d5b7eadd67c19e6569409ec51844f5e320a884a80927f7d871c28040a50d5",
+      "target_sha256": "e4c762be7c0fd5ecea826c4acab0d5a6eb69c25b69b9c5da10b06a398a389e27",
+      "reviewer": "Claude (Claude Code session; \"Explanations\" in the intro marked with the disclosure triangle U+25B8 so that the clickable place is clear; both sides compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
