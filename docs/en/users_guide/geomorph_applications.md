@@ -426,9 +426,13 @@ that make the breach rapid).
     grading (in the example, within 2 % of the single size with the same mean grain size). The effect of coarse
     grains left behind stopping the erosion appears at the bed-load stage after the breach, when the coarsest
     class does not move ("A graded dam and the coarsening after the breach" in the example). While the
-    debris-flow model is active, armour does not limit the erosion, and suspension of fines and
-    hyperconcentration are not represented
-    ([explanation](massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
+    debris-flow model is active, armour does not limit the erosion by default. With the selector `f_dbsel`,
+    which limits the erosion to the movable size classes, the lowering of the breach channel after the breach
+    almost stops in about an hour, but for a dam whose coarsest class is about as large as the depth of the
+    overflow the start of the breach varies from 35 to 107 minutes and the peak from 197 to 259 m³/s with the
+    form of the selector, so it cannot be used quantitatively ("Limiting the erosion by the debris-flow law
+    to the movable size classes" in the example). Suspension of fines and hyperconcentration are not
+    represented ([explanation](massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
   - The choice of the transport law on gentle reaches (with or without bed load, the effective-shear ratio,
     `f_dbimm`) changes the peak discharge by more than a factor of 2 (2.5 in the example). The grain size is a
     calibration quantity too. For the dam of the example, an erosion coefficient `db_delte` seven times

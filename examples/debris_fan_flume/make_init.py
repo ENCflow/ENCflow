@@ -129,10 +129,11 @@ SERIES_FORM = [(0.0, Q_FORM), (T_FORM / 60.0, Q_FORM), (T_FORM / 60.0 + 1.0e-4, 
 SERIES_ERO = [(0.0, Q_ERO), (9999.0, Q_ERO)]
 # 土石流の行(侵食の段の掃流砂だけのケースで消す)
 DEBRIS_KEYS = ("f_debris", "f_dbed", "f_dbres", "db_phi", "db_d50", "db_delte", "db_deltd", "f_dbimm", "db_immexp",
-               "f_dbstop", "db_vstop", "db_wstop", "f_dbwet", "db_satbed", "f_out_hs")
+               "f_dbsel", "f_dbstop", "db_vstop", "db_wstop", "f_dbwet", "db_satbed", "f_out_hs")
 # 混合粒径の行(単一粒径のケースで消す)
 MIX_KEYS = ("f_bedmix", "bmix_d", "bmix_frac0", "bmix_la", "f_out_bmix")
 SINGLE = {k: None for k in MIX_KEYS}
+SINGLE_DB = dict(SINGLE, f_dbsel=None)   # 土石流を残す単一粒径のケース(選択子は混合粒径が前提なので行を消す)
 NODEBRIS = {k: None for k in DEBRIS_KEYS}
 
 
@@ -148,15 +149,22 @@ def ero(src, **rep):
 CASES = {
     # ---- 形成(土石流。給水 600 cc/s を 20 秒、そのあと 20 秒)
     "form": ("dx5", {}),                                   # 混合粒径 5 階(param.txt そのもの)
-    "form_single": ("dx5", dict(SINGLE)),                  # 単一粒径 3.04 mm
+    "form_single": ("dx5", dict(SINGLE_DB)),               # 単一粒径 3.04 mm
     "form_dx25": ("dx25", {}),                             # 格子 2.5 cm
+    # 土石流の式の侵食を動ける粒径階に限る(f_dbsel。1 = 粒径階ごとの式の印字どおり、2 = 本文のかさの侵食速度)
+    "form_sel1": ("dx5", {"f_dbsel": "1"}),
+    "form_sel2": ("dx5", {"f_dbsel": "2"}),
     # ---- 侵食(清水 300 cc/s を 10 分)。掃流砂だけ(土石流のない構成に復元)と、土石流の式を有効にしたまま
     "ero": ("dx5", ero("form", **NODEBRIS)),               # 混合粒径、掃流砂だけ
     "ero_single": ("dx5", ero("form_single", **NODEBRIS, **SINGLE)),   # 単一粒径、掃流砂だけ
     "ero_debris": ("dx5", ero("form")),                    # 混合粒径、土石流の式を有効にしたまま
-    "ero_debris_single": ("dx5", ero("form_single", **SINGLE)),        # 単一粒径、同
+    "ero_debris_single": ("dx5", ero("form_single", **SINGLE_DB)),     # 単一粒径、同
+    # 同じ扇状地(form の保存)から、土石流の式を有効にしたまま、侵食を動ける粒径階に限る
+    "ero_sel1": ("dx5", ero("form", f_dbsel="1")),
+    "ero_sel2": ("dx5", ero("form", f_dbsel="2")),
 }
-ORDER = ("form", "form_single", "form_dx25", "ero", "ero_single", "ero_debris", "ero_debris_single")
+ORDER = ("form", "form_single", "form_dx25", "form_sel1", "form_sel2",
+         "ero", "ero_single", "ero_debris", "ero_debris_single", "ero_sel1", "ero_sel2")
 
 
 def write_param(case):

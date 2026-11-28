@@ -1,6 +1,6 @@
 # ENCflow/examples/debris_fan_flume/Makefile
 #   make          ../../bin/ の実行ファイルへのリンクと、全ケースの入力・設定(make_init.py)を作る
-#   make run      7 ケースを順に計算する(形成の 3 ケース → 侵食の 4 ケース。侵食は形成の保存を初期条件にする)
+#   make run      11 ケースを順に計算する(形成の 5 ケース → 侵食の 6 ケース。侵食は形成の保存を初期条件にする)
 #   make figs     図を描く(python3 plot_results.py と python3 plot_results.py en)
 #   make clean    リンクと生成物を削除する
 

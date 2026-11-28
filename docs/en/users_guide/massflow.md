@@ -618,6 +618,26 @@ properties as seen from the debris-flow side.
     `db_seltan`). (3) One update removes at most the amount of the movable classes present in the exchange
     layer (a limit of ENCflow; the number of capped updates is reported at the end of the run). (4) The
     results depend on the exchange-layer thickness $`L_a`$.
+  - **Results of the examples**: for the dam of 1, 5 and 40 cm of the example
+    [debris_dam](../../../examples/debris_dam/en/README.md), in the computation that keeps the main-river
+    discharge running for 3 hours after the breach with the debris-flow laws left on, the lowering of the
+    breach channel almost stops in about an hour (0.55 m in the first hour and 0.07 to 0.08 m in the next two; 0.66 m
+    and 0.22 m without the selection, 0.06 m in 3 hours with bed load alone). It stops where the flow-surface
+    slope has eased to `db_seltan` and the criterion has switched to the critical shear stress. The result
+    depends strongly on `db_seltan` (the height of the breach channel after 1.5 hours is 5.83, 5.93 and 6.28 m
+    for `db_seltan` = 0.02, 0.03 and 0.05; 5.75 m without the selection). The breach of
+    the same dam is delayed. The depth of the overflow (0.3 to 0.4 m) is about the same as the coarsest 40 cm,
+    so the thin flow over the crest cannot move the 40 cm class and the breach starts only after the face has
+    been cut partway down. The start of the breach moves from 35 minutes to 70 (`f_dbsel = 2`) and 107 minutes
+    (1), and the peak from 197 m³/s to 220 and 259 m³/s. The time and the peak of a breach like this one, in
+    which the coarsest class is about as large as the depth of the overflow, cannot be obtained quantitatively
+    with this selector. The dam of 0.5, 2 and 8 cm, whose coarsest class is smaller than the depth of the
+    overflow, is unchanged (393 and 391 m³/s). In the example compared with a flume experiment,
+    [debris_fan_flume](../../../examples/debris_fan_flume/en/README.md), the erosion by clear water no longer
+    cuts the channel down to the base (exposed base 500 cm² → 0 to 25 cm²), but the erosion of the thick part
+    of the fan becomes weaker than in the experiment (the change in 10 minutes of the volume above a thickness
+    of 2 cm is −0.1 to −0.8 L against −1.9 L in the experiment; the flow depth on the fan is 2.5 mm on
+    average, shallower than the two coarse classes of 4.5 and 8 mm).
 - **Sediment rich in fines**: the effect of fines becoming part of the interstitial fluid and raising the
   concentration is not represented. For flows of sediment rich in fines this model errs on the low side. In
   a rough surrogate computation in which the submerged specific gravity `fluv_sgrav` was set to 1.41 and
@@ -642,7 +662,8 @@ properties as seen from the debris-flow side.
   size), while with bed load alone the erosion is weak and the surface coarsens. The erosion of the
   experiment lies between the two. In the computations after the breach of the example debris_dam, too, with
   the debris-flow laws left on the breach channel of the dam body with a 40 cm class falls by 0.88 m in
-  3 hours (0.06 m with bed load alone).
+  3 hours (0.06 m with bed load alone). The computations with `f_dbsel`, which limits the erosion to the
+  movable classes, are in "Results of the examples" of the item above.
 - **Usage**: sediment entering through a boundary needs its class composition (`inflow_csfrac`,
   `fn_inflow_csfrac`; [Boundary conditions](boundary.md)). When alternating with long-term flood runs
   (`morfac > 1`), set `f_bedmix = 1` in both configurations (restoring into a configuration without debris
@@ -944,7 +965,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/bedslide](../../../test/bedslide/en/README.md) | analytical speed of the layer, 45° slope, entry into a lake | $`V`$ of interior cells within 0.5% of the analytical value |
 | [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md) | rock avalanche, hand-over, submarine landslide | four patterns compared |
 | [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) | ash fall → rain → lahar, check dam | the lahar setting pattern (infiltration capacity, f_dbwet=2) |
-| [examples/debris_fan_flume](../../../examples/debris_fan_flume/en/README.md) | a flume experiment (Takahashi, Nakagawa and Yamashiki 1991) in which a debris flow of mixed-size sediment builds a fan that clear water then erodes; debris flow combined with mixed grain sizes, restore into a configuration without debris flow | discharge and concentration at the flume outlet and the length of the fan within the range of the experiment, width and apex thickness too large; the erosion is too deep with the debris-flow laws left on and weak with bed load alone (the surface coarsens with mixed sizes) |
+| [examples/debris_fan_flume](../../../examples/debris_fan_flume/en/README.md) | a flume experiment (Takahashi, Nakagawa and Yamashiki 1991) in which a debris flow of mixed-size sediment builds a fan that clear water then erodes; debris flow combined with mixed grain sizes, restore into a configuration without debris flow | discharge and concentration at the flume outlet and the length of the fan within the range of the experiment, width and apex thickness too large; the erosion is too deep with the debris-flow laws left on and weak with bed load alone (the surface coarsens with mixed sizes). With f_dbsel, which limits the erosion to the movable classes, the channel is no longer cut down to the base, but the erosion of the thick part is weaker than in the experiment |
 | [examples/debris_fan](../../../examples/debris_fan/en/README.md) | slope failure → valley → residential area on the fan (Takahashi–Nakagawa stony type); grid spacings 40-2.5 m, the valley at 0°, 22.5° and 45°, four-neighbour control | grid dependence: with eight neighbours the valley orientation changes the results by a few % at 5 m, and the sediment reaches the fan even at 40 m (coarser than the valley floor); with four neighbours sediment stays in oblique valleys at 20 m and above |
 | [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md) | a dense snow avalanche down a gully (Voellmy + velocity-proportional entrainment + momentum of the entrained snow); track snow of 0, 1 and 2 m, a deflecting dam, friction coefficients, grid spacing, gully direction and time step, with and without the dynamic reassignment of openings, threshold depth, snow everywhere (minimum flow depth db_hent, the Hungr law), comparison with runs that do not count the momentum | the avalanche setting pattern (exchange of the carrier f_dbwet=1, threshold depth 0.1 mm, f_dbmom=1; f_opening_dynamic=0 because the gully is resolved by the grid). With the entrainable snow given as a band, the amount taken up is set by the amount placed and does not depend on the time step; placed everywhere, it is set by the threshold depth (2.5 to 14.6 times the release), but with a minimum flow depth of 0.3 m (2.5 times) or the Hungr law (2.3 to 2.4 times) it does not depend on the threshold depth. The tip of the deposit stays within ±5 m for the gully direction and the time step and within −18 to +14 m for the grid spacing; the flow depth in the gully and the area and width of the deposit change by about 10 % with the gully direction |
 

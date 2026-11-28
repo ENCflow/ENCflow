@@ -7,6 +7,8 @@
   figs/erosion.png   侵食の段(清水 300 cc/s)の 0・2・10 分の堆積厚(掃流砂だけの混合粒径・単一粒径、
                      土石流の式を有効にしたままの混合粒径)
   figs/armour.png    侵食の段の時間変化(氾濫台の侵食量・基盤の露出・表層の平均粒径)と 10 分後の表層の平均粒径
+  figs/select.png    土石流の式の侵食を動ける粒径階に限る f_dbsel の侵食の段(10 分後の堆積厚と表層の平均粒径)と、
+                     論文の図 10 の読み取り(厚さの等値線の中の面積、厚さ 2 cm より上の体積)との比較
 数表(標準出力): 形成と侵食の指標。
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。計算結果がなければ setup.png だけを描く。
 
@@ -36,8 +38,9 @@ CSTAR = 1.0 - M.LAMBDA
 TH_EDGE = 0.005                  # 堆積の縁とみなす厚さ (m)(論文の図の「0」の線に当てる)
 TH_BARE = 0.002                  # 基盤の露出とみなす厚さ (m)
 TH_FAN = 0.01                    # 扇状地の本体とみなす厚さ (m)
-COL = {"form": "#1f5f8b", "form_single": "#c0392b", "form_dx25": "#2b8a3e",
-       "ero": "#1f5f8b", "ero_single": "#c0392b", "ero_debris": "#7b2d8e", "ero_debris_single": "#d08c00"}
+COL = {"form": "#1f5f8b", "form_single": "#c0392b", "form_dx25": "#2b8a3e", "form_sel1": "#2b8a3e", "form_sel2": "#e8590c",
+       "ero": "#1f5f8b", "ero_single": "#c0392b", "ero_debris": "#7b2d8e", "ero_debris_single": "#d08c00",
+       "ero_sel1": "#2b8a3e", "ero_sel2": "#e8590c"}
 
 # ---- 論文の図からの読み取り(概略)
 # 図 1: 水路の下流端の流量。先端の到達を t = 0 とする。実験 6 回の点の範囲と、計算の線(混合砂・均一砂)
@@ -50,16 +53,25 @@ PAPER_FAN = {"exp": dict(length=0.85, halfwidth=0.38, thick=0.055),
              "cal": dict(length=1.00, halfwidth=0.40, thick=0.055)}
 # 図 10(侵食の実験): 10 分後の厚さ 0 の線の下流端
 PAPER_ERO_LEN = 1.15
+# 図 10(侵食の実験。0 分と 10 分の厚さの等値線): 厚さ 0・1・2・3・4・5 cm の線の中の面積 (cm²)。等値線の幅と長さから
+# 概算した値で、±15 % 程度の不確かさがある。厚さ 2 cm より上の体積は、この面積を厚さについて台形で積分した値 (ℓ)
+PAPER_ERO_LEVELS = (0, 1, 2, 3, 4, 5)
+PAPER_ERO_AREA = {0: (6100, 4200, 2900, 2200, 1400, 440), 10: (10500, 5700, 3100, 1500, 700, 0)}
+PAPER_ERO_V2 = {0: 5.5, 10: 3.6}
 
 
 def lab(name):
     return {"form": T("混合粒径(5 階)", "mixed sizes (5 classes)"),
             "form_single": T("単一粒径 3.04 mm", "single size 3.04 mm"),
             "form_dx25": T("混合粒径、格子 2.5 cm", "mixed sizes, 2.5 cm grid"),
+            "form_sel1": T("混合粒径、f_dbsel = 1", "mixed sizes, f_dbsel = 1"),
+            "form_sel2": T("混合粒径、f_dbsel = 2", "mixed sizes, f_dbsel = 2"),
             "ero": T("混合粒径、掃流砂だけ", "mixed sizes, bed load only"),
             "ero_single": T("単一粒径、掃流砂だけ", "single size, bed load only"),
             "ero_debris": T("混合粒径、土石流の式も有効", "mixed sizes, debris-flow laws on"),
-            "ero_debris_single": T("単一粒径、土石流の式も有効", "single size, debris-flow laws on")}[name]
+            "ero_debris_single": T("単一粒径、土石流の式も有効", "single size, debris-flow laws on"),
+            "ero_sel1": T("混合粒径、土石流の式も有効、f_dbsel = 1", "mixed sizes, debris-flow laws on, f_dbsel = 1"),
+            "ero_sel2": T("混合粒径、土石流の式も有効、f_dbsel = 2", "mixed sizes, debris-flow laws on, f_dbsel = 2")}[name]
 
 
 class Case:
@@ -347,10 +359,13 @@ def fig_armour(cases):
     for ax in axs[:3]:
         ax.set_xlabel(T("清水を流し始めてからの時間 (分)", "time after the clear water starts (min)"))
         ax.grid(alpha=0.3)
-    axs[0].legend(fontsize=7.5, loc="upper left")
-    axs[1].legend(fontsize=7.5, loc="upper left")
-    axs[2].legend(fontsize=7, loc="lower left")
-    axs[2].set_ylim(0.8, 5.2)
+    axs[0].set_ylim(-0.2, 6.6)
+    axs[0].legend(fontsize=7.5, loc="upper left")                # 色は (b)・(c) も同じ
+    axs[2].plot([], [], color="k", lw=1.6, label=T("侵食された所", "eroded cells"))
+    axs[2].plot([], [], color="k", lw=1.2, ls="--", label=T("扇状地の外に新しく積もった所", "new deposit outside the fan"))
+    h, lb = axs[2].get_legend_handles_labels()
+    axs[2].legend(h[-2:], lb[-2:], fontsize=7.5, loc="lower left")
+    axs[2].set_ylim(0.8, 5.4)
     ax = axs[3]
     c = next((x for x in cases if x.name == "ero"), None)
     if c is not None:
@@ -367,6 +382,83 @@ def fig_armour(cases):
         ax.set_title(T("(d) 10 分後の表層の平均粒径\n(混合粒径、掃流砂だけ)", "(d) Surface mean grain size after 10 min\n(mixed sizes, bed load only)"), fontsize=10)
     fig.tight_layout()
     fig.savefig(f"{FIGDIR}/armour.png", dpi=130, bbox_inches="tight")
+    plt.close(fig)
+
+
+def contour_areas(c, th):
+    """厚さ PAPER_ERO_LEVELS (cm) 以上の面積 (cm²。0 cm は堆積の縁 TH_EDGE)と、厚さ 2 cm より上の体積 (ℓ。かさ)。"""
+    a = c.dx * c.dx
+    areas = [float(((th >= k / 100.0) if k > 0 else (th > TH_EDGE)).sum() * a * 1e4) for k in PAPER_ERO_LEVELS]
+    return areas, float(np.clip(th - 0.02, 0.0, None).sum() * a * 1e3)
+
+
+def fig_select(cases):
+    """f_dbsel の侵食の段: 上段 = 10 分後の堆積厚(粒径を選ばない・f_dbsel = 1・2)、下段 = 実験の図 10 の読み取りとの
+    比較(厚さの等値線の中の面積の 10 分後と初めの比、厚さ 2 cm より上の体積の変化)と、10 分後の表層の平均粒径。"""
+    by = {c.name: c for c in cases}
+    top = [by[n] for n in ("ero_debris", "ero_sel1", "ero_sel2") if n in by]
+    fig, axs = plt.subplots(2, 3, figsize=(15.0, 8.6))
+    short = {"ero_debris": T("(a) 粒径を選ばない(f_dbsel = 0)", "(a) no selection (f_dbsel = 0)"),
+             "ero_sel1": "(b) f_dbsel = 1", "ero_sel2": "(c) f_dbsel = 2"}
+    for ax, c in zip(axs[0], top):
+        im = draw_thick(ax, c, c.thick(9998), short[c.name] + T("、10 分後", ", after 10 min"), vmax=0.12)
+        ax.set_xlabel(T("出口からの距離 (cm)", "distance from the outlet (cm)"))
+    axs[0][0].set_ylabel("y (cm)")
+    fig.colorbar(im, ax=list(axs[0]), shrink=0.8, label=T("堆積厚 (cm)。等値線 0.5〜10 cm", "thickness (cm); contours 0.5 to 10 cm"))
+    # (d) 厚さの等値線の中の面積: 10 分後 / 初め
+    ax = axs[1][0]
+    lv = np.array(PAPER_ERO_LEVELS, dtype=float)
+    e0, e1 = np.array(PAPER_ERO_AREA[0], dtype=float), np.array(PAPER_ERO_AREA[10], dtype=float)
+    ax.plot(lv, e1 / e0, color="k", lw=2.0, marker="o", label=T("実験(図 10 の読み取り)", "experiment (read from Fig. 10)"))
+    dv = [(T("実験", "experiment"), PAPER_ERO_V2[10] - PAPER_ERO_V2[0], "k")]
+    for n in ("ero", "ero_debris", "ero_sel1", "ero_sel2"):
+        if n not in by:
+            continue
+        c = by[n]
+        a0, v0 = contour_areas(c, c.thick(0))
+        a1, v1 = contour_areas(c, c.thick(9998))
+        ax.plot(lv, np.array(a1) / np.maximum(np.array(a0), 1.0e-9), color=COL[n], lw=1.6, marker="s", ms=4, label=lab(n))
+        dv.append((lab(n), v1 - v0, COL[n]))
+    ax.axhline(1.0, color="#999999", lw=0.8, ls="--")
+    ax.set_xlabel(T("厚さ (cm)", "thickness (cm)"))
+    ax.set_ylabel(T("その厚さ以上の面積(10 分後 / 初め)", "area at least that thick (10 min / start)"))
+    ax.set_ylim(0, 2.0)
+    ax.set_title(T("(d) 厚さごとの面積の変化", "(d) Change of the area by thickness"), fontsize=10)
+    ax.legend(fontsize=7.5, loc="upper right")
+    ax.grid(alpha=0.3)
+    # (e) 厚さ 2 cm より上の体積の変化
+    ax = axs[1][1]
+    xx = np.arange(len(dv))
+    ax.bar(xx, [v for _, v, _ in dv], color=[col for _, _, col in dv])
+    for x, (_, v, _) in zip(xx, dv):
+        ax.text(x, v + (0.12 if v >= 0 else -0.12), "%+.1f" % v, ha="center", va="bottom" if v >= 0 else "top", fontsize=9)
+    ax.axhline(0.0, color="k", lw=0.6)
+    ax.set_xticks(xx)
+    ax.set_xticklabels([T("実験", "experiment"), T("掃流砂\nだけ", "bed load\nonly"), T("選ばない\n(f_dbsel = 0)", "no selection\n(f_dbsel = 0)"),
+                        "f_dbsel\n= 1", "f_dbsel\n= 2"][:len(dv)], fontsize=8.5)
+    ax.set_ylabel(T("厚さ 2 cm より上の体積の変化 (ℓ。かさ)", "change of the volume above 2 cm (L, bulk)"))
+    ax.set_ylim(-3.2, 4.8)
+    ax.set_title(T("(e) 扇状地の厚い部分の体積の変化(10 分)", "(e) Change of the volume of the thick part (10 min)"), fontsize=10)
+    ax.grid(alpha=0.3, axis="y")
+    # (f) 10 分後の表層の平均粒径(f_dbsel = 1)
+    ax = axs[1][2]
+    c = by.get("ero_sel1")
+    if c is not None:
+        th = c.thick(9998)
+        dm = c.board("Dm", 9998) * 1e3
+        X, Y = np.meshgrid(c.xb * 100, c.yc * 100)
+        im = ax.pcolormesh(X, Y, np.where(th > TH_BARE, dm, np.nan), cmap="viridis", vmin=2, vmax=7, shading="nearest")
+        ax.contour(X, Y, th, levels=LEVELS, colors="w", linewidths=0.4)
+        fig.colorbar(im, ax=ax, shrink=0.8, label="Dm (mm)")
+        ax.set_xlim(0, 170)
+        ax.set_ylim(70, -70)
+        ax.set_aspect("equal")
+        ax.set_xlabel(T("出口からの距離 (cm)", "distance from the outlet (cm)"))
+        ax.set_title(T("(f) 10 分後の表層の平均粒径\n(f_dbsel = 1)", "(f) Surface mean grain size after 10 min\n(f_dbsel = 1)"), fontsize=10)
+    fig.suptitle(T("侵食の段(土石流の式を有効にしたまま): 侵食を動ける粒径階に限る f_dbsel。上段は堆積厚",
+                   "Erosion stage with the debris-flow laws on: erosion limited to the movable classes (f_dbsel). Top: deposit thickness"),
+                 fontsize=10, y=0.90)
+    fig.savefig(f"{FIGDIR}/select.png", dpi=130, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -408,6 +500,22 @@ def table_ero(cases):
                   f"{m['length'] * 100:.0f}")
 
 
+def table_select(cases):
+    print("\n侵食の段と実験(論文の図 10 の読み取り。概略): 厚さ 0・1・2・3・4・5 cm 以上の面積 (cm²) と、厚さ 2 cm より上の体積 (ℓ。かさ)")
+    for t in (0, 10):
+        print(f"実験, {t}, " + ", ".join("%d" % v for v in PAPER_ERO_AREA[t]) + f", {PAPER_ERO_V2[t]:.1f}")
+    for c in cases:
+        for tt in (0.0, 10.0):
+            a, v = contour_areas(c, c.thick(c.nearest(tt * 60.0)))
+            print(f"{c.name}, {tt:.0f}, " + ", ".join("%d" % round(x) for x in a) + f", {v:.2f}")
+        if c.mixed:
+            th, th0 = c.thick(9998), c.thick(0)
+            dm = c.board("Dm", 9998) * 1e3
+            w = (th - th0 < -0.002) & (th > TH_BARE)
+            if w.any():
+                print(f"  {c.name}: 侵食された所の表層の平均粒径 {dm[w].mean():.2f} mm(最大 {dm[w].max():.2f} mm。{int(w.sum())} セル)")
+
+
 def main():
     fig_setup()
     cases = {n: Case(n) for n in M.CASES}
@@ -417,12 +525,16 @@ def main():
     if form:
         fig_outlet(form)
         fig_fan(form)
-        table_form(form)
+        table_form(form + [done[n] for n in ("form_sel1", "form_sel2") if n in done])
     ero = [done[n] for n in ("ero", "ero_single", "ero_debris", "ero_debris_single") if n in done]
+    sel = [done[n] for n in ("ero_sel1", "ero_sel2") if n in done]
     if ero:
         fig_erosion([c for c in ero if c.name != "ero_debris_single"])
-        fig_armour(ero)
-        table_ero(ero)
+        fig_armour(ero + sel)
+        table_ero(ero + sel)
+    if sel and "ero_debris" in done:
+        fig_select(ero + sel)
+        table_select(ero + sel)
 
 
 if __name__ == "__main__":

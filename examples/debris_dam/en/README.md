@@ -146,6 +146,9 @@ note "基本ケースは …", i.e. the value of the base case).
 | | `mix_d10cm` | the same conditions as `dam_d10cm` (grain size 10 cm), with the sediment in classes of 1, 5 and 40 cm (fractions 0.50, 0.30 and 0.20; the same mean grain size of 10 cm) | 90 min |
 | | `after_one_d3cm`, `after_mix_d3cm`; `after_one`, `after_mix` | start from the final state of `dam_ref`, `mix_d3cm`; `dam_d10cm`, `mix_d10cm` (`f_state_restore = 2`) and keep the main-river discharge of 40 m³/s running, without the debris-flow model and the slope-stability test (bed load only) | 180 min |
 | | `after_one_debris`, `after_mix_debris` | continue from the final state of `dam_d10cm`, `mix_d10cm` with the same configuration as the breach computation (the debris-flow laws kept on) | 180 min |
+| | `mix_d10cm_sel1`, `mix_d10cm_sel2` | `mix_d10cm` with the selector `f_dbsel` = 1, 2 that limits the erosion by the debris-flow law to the movable size classes ([section below](#limiting-the-erosion-by-the-debris-flow-law-to-the-movable-size-classes-f_dbsel)) | 180 min |
+| | `after_mix_debris_sel1`, `after_mix_debris_sel2` | `after_mix_debris` with `f_dbsel` = 1, 2 (from the final state of `mix_d10cm`) | 180 min |
+| | `mix_d3cm_sel1` | `mix_d3cm` with `f_dbsel = 1` | 60 min |
 
 ## How to run
 
@@ -154,15 +157,16 @@ cd examples/debris_dam
 make                     # links, and the inputs and settings of all cases (make_init.py)
 make run                 # compute the 32 cases in turn
 make perturb             # compute the 14 cases that show the spread of the results (only the inflow is changed slightly)
-make mixed               # compute the 10 graded-dam cases (four breach runs and six runs of the 3 hours after them)
+make mixed               # compute the 15 graded-dam cases (four breach runs, six runs of the 3 hours after them, five with f_dbsel)
 python3 plot_results.py  # figs/*.png and tables (argument en writes the English version to en/figs/; setup.png can be drawn before the computation)
 ```
 
 `make quick` computes only the base case, the drain and the four main cases of the pre-built-dam series;
 `make dams` computes only the 20 cases of the pre-built-dam series. The 14 cases of `make perturb` are not
-part of `make run` (they are used in the figure and the table of "Spread of the results"). Of the 10 cases of
+part of `make run` (they are used in the figure and the table of "Spread of the results"). Of the 15 cases of
 `make mixed`, only the single-size cases compared, `dam_ref` and `dam_d10cm`, are part of `make run`. When only
-these 10 cases have been computed, `python3 plot_results.py mixed` writes just `figs/mixed.png` and its table.
+these 15 cases have been computed, `python3 plot_results.py mixed` writes just `figs/mixed.png`,
+`figs/select.png` and their tables.
 For a single
 case, run `./encflow param.txt` (the base case).
 
@@ -666,9 +670,11 @@ a single grain size. Mixed grain sizes (`f_bedmix`; [mixed grain sizes](../../..
 can be combined with the debris-flow model: the grain-size distribution of the bed is held as fractions of
 size classes (an exchange layer and a substrate), and bed load is carried class by class. The debris flow
 carries the composition by class, but the debris-flow laws (equilibrium concentration, rates of erosion and
-deposition, resistance) still use the single representative grain size `db_d50`, and the erosion by the
-debris-flow laws and the failures by the slope-stability test and the angle of repose do not select grain
-sizes ([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
+deposition, resistance) still use the single representative grain size `db_d50`, and by default the erosion
+by the debris-flow laws and the failures by the slope-stability test and the angle of repose do not select
+grain sizes ([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix);
+the selector that limits the erosion to the movable size classes is in "Limiting the erosion by the
+debris-flow law to the movable size classes" at the end of this section).
 Here, for a dam of the same shape as the reference, two pairs of materials show what changes when the
 sediment is divided into three size classes with the same mean grain size.
 
@@ -753,11 +759,103 @@ of the thalweg, above the original bed). Solid: bed load only; dotted: debris-fl
   for `mix_d10cm` (material 0.50, 0.30, 0.20), shifted to the fine side. The 40 cm class hardly leaves the
   domain as bed load (its fraction in what left as debris flow is 0.06).
 - **Not represented**: grain-size sorting inside the flow (large stones gathering at the front of a debris
-  flow), the effect of fine particles being suspended and raising the concentration of the flow, and the
-  effect of coarse grains remaining and limiting the erosion by the debris-flow laws are not part of this
-  combination. The exchange-layer thickness `bmix_la` sets how much erosion is needed before the surface
+  flow) and the effect of fine particles being suspended and raising the concentration of the flow are not
+  part of this combination. The effect of coarse grains remaining and limiting the erosion by the debris-flow
+  laws is not included by default (the computations with the selector `f_dbsel` are in the subsection
+  below). The exchange-layer thickness `bmix_la` sets how much erosion is needed before the surface
   coarsens (with this setting, about 1.2 m of erosion is needed for the fraction of the 40 cm class to grow
   from 0.2 to 0.8). Choose it from the measured grading and the thickness of the surface gravel layer.
+
+### Limiting the erosion by the debris-flow law to the movable size classes (`f_dbsel`)
+
+In the computations above the erosion by the debris-flow laws does not select grain sizes. `f_dbsel` = 1, 2
+limits the erosion of the Takahashi–Nakagawa laws to the size classes the flow can move
+([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix);
+Takahashi et al. 2000, Takahashi et al. 2001). Where the flow-surface slope exceeds `db_seltan` (default
+0.03) only the classes whose grain size is not larger than the flow depth are eroded, and elsewhere only the
+classes that exceed the critical shear stress. With K3 the sum of the surface fractions of the movable
+classes, the bed is lowered at K3² (`f_dbsel = 1`) and K3 (`f_dbsel = 2`) times the rate of the size-blind
+law. Deposition and the failures by the slope-stability test and the angle of repose do not select grain
+sizes. Computed here are the breach of the dam of 1, 5 and 40 cm (`mix_d10cm_sel1`, `mix_d10cm_sel2`), the
+3 hours after the breach (`after_mix_debris_sel1`, `after_mix_debris_sel2`; from the final state of
+`mix_d10cm`, with the debris-flow laws kept on) and the breach of the dam of 0.5, 2 and 8 cm
+(`mix_d3cm_sel1`).
+
+![Limiting the erosion by the debris-flow law to the movable size classes, f_dbsel](figs/select.png)
+
+(a) Discharge just below the dam (the dam of 1, 5 and 40 cm, and the single size of 10 cm). (b) Long profile
+of the thalweg of the main valley 10 minutes before the breach starts. (c) Height of the breach channel after
+the breach. (d) Surface mean grain size of the deposit under the flow 3 hours after the breach (the grey
+dotted line is the mean of the material). The start of the breach is counted as the time when the discharge
+just below the dam passes 60 m³/s (1.5 times the inflow).
+
+| Breach | Peak discharge (m³/s) | Time of peak (min) | Start of the breach (min) | From the start to the peak (min) | Height of the breach channel after 180 min (m) | Lake level after 180 min (m) |
+|---|---|---|---|---|---|---|
+| `mix_d10cm` (1, 5, 40 cm, no selection) | 197 | 57 | 35 | 22 | 5.75 | 60.25 |
+| `mix_d10cm_sel2` (`f_dbsel = 2`) | 220 | 83 | 70 | 13 | 5.98 | 60.31 |
+| `mix_d10cm_sel1` (`f_dbsel = 1`) | 259 | 120 | 107 | 13 | 4.95 | 59.90 |
+| `mix_d3cm` (0.5, 2, 8 cm, no selection) | 393 | 27 | 19 | 8 | — | — |
+| `mix_d3cm_sel1` (`f_dbsel = 1`) | 391 | 28 | 20 | 8 | — | — |
+
+The values of `mix_d10cm` after 180 minutes are those of `after_mix_debris`, which continues from 90 minutes
+with the same configuration.
+
+| The 3 hours after the breach (from the end of `mix_d10cm`) | Height of the breach channel (m), 0 → 1 → 3 h | Lake level (m) | Loss of deposit at the dam site (%) | Surface mean grain size of the deposit under the flow at the dam site (cm) | Fractions by class of the sediment that left through the downstream end as debris flow |
+|---|---|---|---|---|---|
+| `after_mix` (bed load only) | 6.52 → 6.49 → 6.46 | 61.22 → 60.47 | 1.0 | 11.3 → 13.1 | — |
+| `after_mix_debris` (no selection) | 6.52 → 5.86 → 5.64 | 61.22 → 60.04 | 5.3 | 11.3 → 11.1 | 0.51, 0.29, 0.20 |
+| `after_mix_debris_sel2` (`f_dbsel = 2`) | 6.52 → 5.96 → 5.88 | 61.22 → 60.26 | 4.2 | 11.3 → 15.2 | 0.58, 0.32, 0.10 |
+| `after_mix_debris_sel1` (`f_dbsel = 1`) | 6.52 → 5.97 → 5.89 | 61.22 → 60.26 | 3.9 | 11.3 → 14.8 | 0.58, 0.33, 0.10 |
+
+- **The lowering of the breach channel after the breach almost stops in about an hour.** Even with the
+  debris-flow laws kept on, with `f_dbsel` the breach channel falls by 0.55 m in the first hour and by 0.07 to
+  0.08 m in the next two (nearly the same for 1 and 2; 0.66 m and then 0.22 m without the selection). The loss
+  of deposit at the dam site slows down as well but does not stop (650 to 750 m³ in the third hour; 1,290 m³
+  without the selection and 120 m³ with bed load only). Right after the breach the flow through
+  the breach channel and below it is deep (around 1.5 m) and the flow-surface slope exceeds 0.03 in most
+  places, so the 40 cm class is movable as well. Once the bed has fallen and the flow-surface slope has eased
+  to 0.03, the criterion switches to the critical shear stress and the 40 cm class becomes immobile
+  (dimensionless shear stress 0.015 to 0.03). Downstream of the breach channel (x = 885 to 955 m) the
+  flow-surface slope stays around 0.03 (0.023 to 0.031) from 1 hour on, and the surface fraction of the 40 cm
+  class grows from 0.34–0.48 (after 1 hour) to 0.58–0.74 (after 3 hours) (0.31–0.45 after 3 hours without the
+  selection). 0.03 is the value of `db_seltan`, which separates the flow regimes, and the result depends
+  strongly on this input. In 90-minute computations with `db_seltan` changed to 0.02 and 0.05 (add a
+  `db_seltan` line to `param_after_mix_debris_sel2.txt`; they are not among the cases of `make_init.py`) the
+  height of the breach channel after 1.5 hours is 5.83 and 6.28 m (5.93 m with 0.03, 5.75 m without the
+  selection and 6.48 m with bed load only).
+- **The breach is not prevented; it is delayed.** The depth of the overflow (at most 0.33 to 0.38 m in the
+  crest section, 0.3 to 0.4 m on average over the wet cells of the face) is smaller than the coarsest 40 cm,
+  and the thin flow over the crest and the face cannot erode the 40 cm class. The 40 cm class increases at the
+  surface of the face (from 0.20 to 0.34–0.40 on average over the wet cells) and the crest falls only slowly
+  (with `f_dbsel = 1`, from 12.74 to 12.55 m between 67 and 97 minutes; the discharge stays at 47 m³/s and the
+  lake level falls by 0.13 m). Where the flow gathers partway down the face and becomes deeper than 0.4 m,
+  all classes are movable, so that part is cut first and forms a step (panel (b); at x = 935 to 955 m the bed
+  is 1.6 to 3.7 m lower than without the selection). When the step has moved upstream to the crest, the breach
+  starts.
+- **Once started, the breach is fast and the peak is larger.** From the discharge passing 60 m³/s to the peak
+  takes 13 minutes, shorter than without the selection (22 minutes), and the peak is 220 and 259 m³/s (1.1 and
+  1.3 times). Because the face is already cut partway down, the crest falls faster once it starts to give way
+  (4.7 m in 20 minutes; 3.9 m without the selection). The lake level at the start of the breach is 65.1 to
+  65.3 m in the three cases, so the stored volume is nearly the same.
+- **The dam of 0.5, 2 and 8 cm is unchanged.** The coarsest 8 cm is smaller than the depth of the overflow
+  (0.3 to 0.4 m), so the breach is not delayed. The peak is 391 m³/s at 28 minutes, within 1 % of the
+  computation without the selection (393 m³/s at 27 minutes).
+- **`f_dbsel` 1 and 2**: 1 restrains the erosion more strongly than 2 once the surface has coarsened (the
+  lowering of the bed is proportional to the square of K3). The breach starts at 107 and 70 minutes, later
+  with 1. In the computations after the breach there is hardly any difference between 1 and 2 (height of
+  the breach channel after 3 hours 5.89 and 5.88 m).
+- **The results are sensitive to the form of the criterion (a limit).** For the dam of 1, 5 and 40 cm the time
+  of the breach is 57, 83 and 120 minutes and the peak 197, 220 and 259 m³/s for the selector 0, 2 and 1. The
+  depth of the overflow (0.3 to 0.4 m) is about the same as the coarsest class (40 cm), right at the threshold
+  of the flow-depth criterion. That criterion is binary, "movable if the grain size is not larger than the
+  flow depth", so the erosion changes greatly depending on whether the depth crosses the grain size. The
+  position of the breach channel changes as well (with `f_dbsel = 1` it forms not on the cells of the bedrock
+  bench at the foot of the valley wall but on the neighbouring cells of the valley floor; with no bedrock
+  bench below, it falls deeper, and its height after 180 minutes is as low as 4.95 m). No computations were
+  made with different grain sizes of the classes, exchange-layer thickness or grid spacing. The time and the
+  peak of the breach of a boulder-bearing dam cannot be obtained quantitatively with this selector. What it
+  can be used for is to see, with the debris-flow laws kept on, the tendency of the coarse gravel to stay
+  and weaken the erosion after the breach.
 
 ## What this model cannot represent (differences from the real phenomena)
 
@@ -772,7 +870,12 @@ of the thalweg, above the original bed). Solid: bed load only; dotted: debris-fl
   The debris-flow formulas, however, stay single-size with the representative size `db_d50`, and giving a
   width of the grain-size distribution at the same mean grain size does not change the peak discharge of the
   breach (396 and 393, 194 and 197 m³/s). The width matters at the bed-load stage after the breach, when the
-  coarsest class does not move. While the debris flow model is active, armour does not limit the erosion.
+  coarsest class does not move. While the debris flow model is active, armour does not limit the erosion by
+  default. With the selector `f_dbsel`, which limits the erosion to the movable size classes, the lowering of
+  the breach channel after the breach almost stops, but the time and the peak of the breach of a
+  boulder-bearing dam are sensitive to
+  the form of the criterion and cannot be used quantitatively ("Limiting the erosion by the debris-flow law
+  to the movable size classes" above).
   The effect of fine grains being suspended and raising the concentration, and grain-size sorting inside the
   flow, are not represented
   ([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
@@ -818,9 +921,10 @@ of the thalweg, above the original bed). Solid: bed load only; dotted: debris-fl
   are values with four cases running side by side. The 32 cases of `make run` take about 17 hours in total and
   the 14 cases of `make perturb` (six base cases, and five 10 m and three 5 m cases of the pre-built-dam series)
   about 13 hours; run four at a time with one thread each, they take a little over 4 hours and a little over
-  3 hours respectively. The 10 cases of `make mixed` take about 5.5 hours in total (10 to 25 minutes each
-  for the four breach runs and 28 to 58 minutes each for the six runs after the breach). The output of all cases
-  is about 5 GB (remove it with `make clean`).
+  3 hours respectively. The 15 cases of `make mixed` take a little over 9 hours in total (10 to 25 minutes
+  each for the four breach runs, 28 to 58 minutes each for the six runs after the breach and 17 to 54 minutes
+  each for the five runs with `f_dbsel`). The output of all cases
+  is close to 6 GB (remove it with `make clean`).
 - **Reproducibility of the numbers**: The numbers of the chain cases from the overtopping onward (peak discharge,
   damage to houses) change even when only the sixth digit of the inflow is changed (40 → 40.0001 m³/s changes the
   peak from 470 to 464 m³/s; the 7 runs spread by 7 %; "Spread of the results"). A different machine or compiler
@@ -856,6 +960,9 @@ of the thalweg, above the original bed). Solid: bed load only; dotted: debris-fl
   thickness of the size classes) and the length of the computation after the breach `T_AFTER`. Changing the
   coarsest class between a size that moves and one that does not move in the flow after the breach shows
   where the breach channel starts to be preserved.
+- **Selector that limits the erosion to the movable size classes**: `f_dbsel` (1, 2) and the flow-surface
+  slope `db_seltan` that separates the flow regimes. Whether the coarsest class is larger or smaller than
+  the depth of the overflow (0.3 to 0.4 m) changes how the breach is delayed.
 - **Dam shape and breach**: adding `dam = (height, crest length, upstream face slope, downstream face
   slope)` to `GEOMS` in `make_init.py` adds computations with a pre-built dam.
 
@@ -884,11 +991,17 @@ English titles.
 - Shi, Z., Zhang, G., Peng, M., Zhang, Q., Zhou, Y., Zhou, M. (2022): Experimental investigation on the
   breaching process of landslide dams with differing materials under different inflow conditions. Materials,
   15(6), 2029.
+- Takahashi, T., Inoue, M., Nakagawa, H., Satofuka, Y. (2000): Prediction of sediment runoff from a mountain
+  watershed. Annual Journal of Hydraulic Engineering, JSCE, 44, 717–722 (in Japanese; the title is the
+  published English title). doi:10.2208/prohe.44.717
 - Takahashi, T., Nakagawa, H. (1991): Prediction of stony debris flow induced by severe rainfall. Shin-Sabo,
   44(3), 12–19 (in Japanese).
 - Takahashi, T., Nakagawa, H., Yamashiki, Y. (1991): Formation and erosion of debris fans composed of
   sediment mixtures. Annuals of the Disaster Prevention Research Institute, Kyoto University, 34 B-2,
   355–372 (in Japanese).
+- Takahashi, T., Nakagawa, H., Satofuka, Y., Kawaike, K. (2001): Flood and sediment disasters triggered by
+  1999 rainfall in Venezuela; A river restoration plan for an alluvial fan. Journal of Natural Disaster
+  Science, 23(2), 65–82.
 - Takayama, S., Fujimoto, M., Satofuka, Y. (2020): Study on the breach process of natural dams by progressive
   failure. Journal of the Japan Society of Erosion Control Engineering, 72(5) (in Japanese). (From the
   abstract.)

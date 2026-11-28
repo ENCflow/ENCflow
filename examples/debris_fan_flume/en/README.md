@@ -12,7 +12,9 @@ erodes the fan (the erosion stage).
 It uses the combination of ENCflow's debris-flow model (`f_debris`) and mixed grain sizes (`f_bedmix`). In
 the combination the solids of the flow are carried as one column per size class, and the composition of
 what is exchanged with the bed is tracked. The debris-flow formulas themselves keep a single representative
-grain size ([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
+grain size, and by default the exchange with the bed does not select grain sizes. The erosion by the
+debris-flow law alone can be limited, with the selector `f_dbsel`, to the size classes the flow can move
+([the mass-flow page](../../../docs/en/users_guide/massflow.md#coupling-with-mixed-grain-sizes-f_bedmix)).
 The aim of the example is to show, next to a published experiment, what this combination can compute and
 what it cannot.
 
@@ -38,8 +40,14 @@ what it cannot.
     configuration the effect of mixed grain sizes appears: the surface of the eroded cells coarsens to a
     mean of 4.8 mm, the fines are carried out of the fan and deposited there (mean 1.9 mm), and the eroded
     volume is 0.65 times that of the single size.
+  - With the debris-flow laws left on and the erosion limited to the movable classes (`f_dbsel` = 1, 2), the
+    surface coarsens (mean 5 mm), the erosion is restrained and the base is hardly exposed. It is restrained
+    too much, however. The volume of the thick part of the fan (above a thickness of 2 cm) decreases by
+    1.9 L in the reading of the experiment's figure, but by 0.8 L with `f_dbsel = 2` and 0.1 L with
+    `f_dbsel = 1` (2.3 L without the selection). The flow over the fan (mean flow depth 2.5 mm) is
+    shallower than the coarse classes (4.5 and 8 mm), so the flow-depth criterion treats them as immobile.
 - The erosion of the experiment (channels form, the base is not exposed, the fan extends about 30 cm
-  downstream) lies between the two.
+  downstream) lies between these runs.
 
 ## The experiment
 
@@ -87,6 +95,13 @@ material (the five classes of the runs and the mean grain size used in the singl
 - **Erosion stage**: the state at the end of the formation stage is the initial condition
   (`f_state_restore = 2`). The bed-load-only cases restore it into a configuration without debris flow; the
   solids left in the flow are then deposited on the bed in place with their composition.
+- **Selector that limits the erosion to the movable classes** (`f_dbsel`; the default 0 does not select
+  grain sizes): where the flow-surface slope exceeds 0.03 (the slope of the board is 0.087 and that of the
+  flume 0.32), only the classes whose grain size is not larger than the flow depth are eroded; at or below
+  0.03, only the classes above the critical shear stress of the bed load. With K3 the sum of the surface
+  fractions of the movable classes, `1` multiplies the erosion rate of each class by K3 (as printed in the
+  equations of the original papers[^tinis00][^tnsk01]; the lowering of the bed is multiplied by K3²), and
+  `2` leaves the erosion rate of each class unchanged (the lowering of the bed is multiplied by K3).
 
 The following values are not given in the paper and were chosen for this example.
 
@@ -103,7 +118,7 @@ The following values are not given in the paper and were chosen for this example
   Between 0.05 and 1 the discharge at the outlet and the shape of the fan hardly change ("Sensitivity"
   below).
 
-Seven cases are computed. `param.txt` (case `form`) is the annotated template, and `make_init.py` writes
+Eleven cases are computed. `param.txt` (case `form`) is the annotated template, and `make_init.py` writes
 `param_<case>.txt` of the other cases by replacing lines.
 
 | Stage | Case | Content | Computed time |
@@ -111,21 +126,23 @@ Seven cases are computed. `param.txt` (case `form`) is the annotated template, a
 | Formation | `form` | mixed sizes (5 classes) | 40 s (water for 20 s) |
 | | `form_single` | single size 3.04 mm | 40 s |
 | | `form_dx25` | mixed sizes, 2.5 cm grid | 40 s |
+| | `form_sel1`, `form_sel2` | mixed sizes, erosion limited to the movable classes (`f_dbsel` = 1, 2) | 40 s |
 | Erosion | `ero` | continues `form`; mixed sizes, bed load only (restored into a configuration without debris flow) | 10 min |
 | | `ero_single` | continues `form_single`; single size, bed load only | 10 min |
 | | `ero_debris` | continues `form`; mixed sizes, debris-flow laws left on | 10 min |
 | | `ero_debris_single` | continues `form_single`; single size, debris-flow laws left on | 10 min |
+| | `ero_sel1`, `ero_sel2` | continue `form`; mixed sizes, debris-flow laws left on, erosion limited to the movable classes (`f_dbsel` = 1, 2) | 10 min |
 
 ## How to run
 
 ```bash
 cd examples/debris_fan_flume
 make                     # links, and the inputs and settings of all cases (make_init.py)
-make run                 # computes the 7 cases in order (about 30 minutes in total on one thread)
+make run                 # computes the 11 cases in order (about 50 minutes in total on one thread)
 python3 plot_results.py  # figs/*.png and the tables (argument en writes the English versions to en/figs/; setup.png can be drawn before the runs)
 ```
 
-The four erosion cases read the saves of the formation cases (`save_form/`, `save_form_single/`), so the
+The six erosion cases read the saves of the formation cases (`save_form/`, `save_form_single/`), so the
 formation cases are computed first (the order of `make run`). For a single case, `./encflow param.txt` (case
 `form`).
 
@@ -145,6 +162,8 @@ solids.
 | `form` (mixed sizes) | 11.3 | 2.12 | 2.76 | 2.15 | 3.22 | 0.46 | 16.3 |
 | `form_single` (single size) | 11.4 | 2.20 | 2.71 | 2.22 | 3.37 | 0.46 | 16.4 |
 | `form_dx25` (2.5 cm grid) | 12.3 | 2.47 | 2.58 | 1.53 | 3.10 | 0.45 | 14.9 |
+| `form_sel1` (`f_dbsel = 1`) | 11.4 | 2.32 | 2.74 | 2.14 | 3.45 | 0.46 | 17.0 |
+| `form_sel2` (`f_dbsel = 2`) | 11.3 | 2.23 | 2.45 | 2.23 | 3.35 | 0.46 | 16.4 |
 | Experiment (read from the figures) | — | 1.2–3.4 (range of the points, 0–12 s) | | | — | 0.40–0.50 | — |
 | Computation of the paper (same) | — | mixture 2.4 → 1.6, uniform 1.6–1.8 | | | mixture 2.4 | 0.42–0.45 | — |
 
@@ -159,6 +178,10 @@ Times are counted from the arrival of the front at the outlet.
 - The solids concentration, 0.46, is within the range of the experiment. Of the material (19.5 L of solids),
   16 L pass the outlet within the 40 s.
 - The difference between the mixed-size and the single-size runs is within the variation of the pulsation.
+- Limiting the erosion to the movable classes (`form_sel1`, `form_sel2`) hardly changes the formation stage.
+  The flow depth of the debris flow in the flume (a few centimetres) exceeds the coarsest class (8 mm), so
+  almost all classes are movable. The shape of the fan is also the same (deposit 21.4 and 21.2 L, maximum
+  thickness 8.7 and 8.6 cm, length 85 cm, half-width 50 cm).
 
 ### Formation: shape of the fan
 
@@ -242,10 +265,78 @@ initial 2 cm thickness contour.
   effect of mixed grain sizes" (our translation).
 
 The experiment lies between the two pairs of runs. With the debris-flow laws left on the fan is cut too
-deeply, and with bed load alone it is hardly eroded. ENCflow has no formula that treats together the
-transport by a sediment-laden flow on a gentle slope (the bedload-like collective flow) and the transport by
-grain size (armouring). The former is covered by the debris-flow laws and the latter by the bed-load
-formula, and the debris-flow laws do not select grain sizes.
+deeply, and with bed load alone it is hardly eroded. In ENCflow's default combination the transport by a
+sediment-laden flow on a gentle slope (the bedload-like collective flow) is covered by the debris-flow laws
+and the transport by grain size (armouring) by the bed-load formula, and the debris-flow laws do not select
+grain sizes. The selector that puts a grain-size criterion into the erosion by the debris-flow law is
+`f_dbsel`, below.
+
+### Erosion: limiting the erosion by the debris-flow law to the movable classes (f_dbsel)
+
+![The erosion stage with f_dbsel, and the comparison with the reading of the experiment's Fig. 10](figs/select.png)
+
+Top: deposit thickness after 10 minutes of clear water with the debris-flow laws left on. (a) no selection
+(`ero_debris`), (b) `f_dbsel = 1` (`ero_sel1`), (c) `f_dbsel = 2` (`ero_sel2`). Bottom: (d) the ratio of the
+area at least that thick after 10 minutes to the area at the start (black: read from Fig. 10 of the
+experiment), (e) the change in 10 minutes of the volume above a thickness of 2 cm, (f) the surface mean
+grain size of `ero_sel1` after 10 minutes. The three cases start from the same fan (the end of `form`).
+
+| | Eroded volume (L) at 2 min | 5 min | 10 min | Area stripped to the base (cm²) at 10 min | Surface mean grain size of the eroded cells (mm) at 10 min | Maximum thickness (cm) 0 → 10 min |
+|---|---|---|---|---|---|---|
+| `ero_debris` (no selection) | 1.05 | 2.84 | 4.33 | 500 | 3.5 | 8.2 → 7.3 |
+| `ero_sel1` (`f_dbsel = 1`) | 0.27 | 1.21 | 1.71 | 25 | 5.2 | 8.2 → 8.2 |
+| `ero_sel2` (`f_dbsel = 2`) | 0.52 | 1.18 | 1.72 | 0 | 5.0 | 8.2 → 7.7 |
+| `ero` (bed load only) | 0.03 | 0.40 | 0.72 | 0 | 4.8 | 8.8 → 12.1 |
+
+The areas inside the thickness contours were estimated from Fig. 10 of the experiment (the contours at 0 and
+10 minutes) for comparison. The readings are rough, with an uncertainty of about ±15 %. The computed fan is
+thicker and wider than the experiment from the start ("Shape of the fan" above), so what is compared is the
+direction and the proportion of the change.
+
+| | Area inside the edge of the deposit (cm²) 0 → 10 min | At least 2 cm thick | At least 4 cm thick | Volume above 2 cm (L) 0 → 10 min | Change (L) |
+|---|---|---|---|---|---|
+| Experiment (read from Fig. 10) | 6100 → 10500 | 2900 → 3100 | 1400 → 700 | 5.5 → 3.6 | −1.9 |
+| `ero_debris` (no selection) | 7300 → 10050 | 4000 → 3800 | 1750 → 1275 | 8.6 → 6.3 | −2.3 |
+| `ero_sel1` (`f_dbsel = 1`) | 7300 → 10050 | 4000 → 4425 | 1750 → 1750 | 8.6 → 8.4 | −0.1 |
+| `ero_sel2` (`f_dbsel = 2`) | 7300 → 10100 | 4000 → 4250 | 1750 → 1600 | 8.6 → 7.8 | −0.8 |
+| `ero` (bed load only) | 7450 → 8525 | 4000 → 4675 | 2000 → 2500 | 9.3 → 13.1 | +3.8 |
+
+The "edge of the deposit" of the computation is the 5 mm thickness line. The initial values of the
+bed-load-only case differ because the solids left in the flow are deposited in place when the state is
+restored into the configuration without debris flow.
+
+- **The base is hardly exposed any more.** Without the selection the channel is cut down to the base from
+  5 minutes on and 500 cm² are exposed at 10 minutes; with `f_dbsel = 1` it is 25 cm² (one cell) and with
+  `f_dbsel = 2` it is 0. The surface of the eroded cells coarsens to a mean of 5.0 to 5.2 mm (maximum 7.3
+  to 7.8 mm), and the coarse classes (4.5 and 8 mm) cover the bottom of the channel ((f)). The experiment
+  does not show an exposed base either.
+- **The erosion of the thick part of the fan is weaker than in the experiment.** The volume above a
+  thickness of 2 cm decreases by 1.9 L in the experiment, but only by 0.8 L with `f_dbsel = 2` and 0.1 L
+  with `f_dbsel = 1` (2.3 L without the selection). In the experiment the area at least 4 cm thick is
+  halved; it is 0.91 times with `f_dbsel = 2` and unchanged with `f_dbsel = 1`. The thin spreading of the
+  fan downstream (the area inside the edge of the deposit becomes 1.4 times; 1.7 times in the experiment)
+  is the same in the three cases.
+- **The reason it is too weak** is the flow-depth criterion. The flow depth over the fan is 2.5 mm on
+  average (from the outputs every minute, the mean over the wet cells is 1.7 to 4.0 mm and the maximum 7 to
+  16 mm), and in nine tenths of the wet cells the flow is shallower than the two coarse classes (4.5 and
+  8 mm, 43 % of the material). There only the three fine classes are movable, and as the erosion proceeds
+  the coarse classes increase at the surface and the erosion weakens. In the experiment the
+  thick part of the fan was cut (Fig. 10), so the coarse grains were carried as well. The assumption that
+  "the largest particle the flow can move has the same diameter as the flow depth" was used for computing
+  the sediment runoff of river channels in a catchment[^tinis00][^tnsk01]; it is too severe for the flow
+  over the fan of a flume experiment, which is only about as deep as the grains.
+- **The difference between `f_dbsel` = 1 and 2**: the erosion in 10 minutes is almost the same (1.71 and
+  1.72 L), but in the first 2 minutes 1 is slower (0.27 against 0.52 L), and more of the thick part of the
+  fan remains with 1. With 1 the lowering of the bed is proportional to the square of K3, so it restrains
+  the erosion more strongly than 2 as the surface coarsens.
+- **The difference from the bed-load-only run**: because the debris-flow laws are on, the sediment left in
+  the flume is carried on instead of piling up at the apex (the maximum thickness stays at 8 cm; 12 cm with
+  bed load alone) and the fan spreads downstream. In this respect the run comes closer to the experiment.
+
+In summary, `f_dbsel` corrects the point that "with the debris-flow laws left on the channel is cut down to
+the base", but it does not reproduce the amount of erosion of this experiment. Without the selection the
+decrease of the volume of the thick part is close to the experiment, but the channel is cut down to the
+base.
 
 ### Sensitivity
 
@@ -276,10 +367,15 @@ thick and the fan too wide does not change with any of these settings.
   solids of the flow is only carried passively; there is no vertical motion of grains within the flow depth.
 - **The debris-flow formulas have one representative grain size**: the grain size in the formulas of
   resistance, erosion and deposition stays `db_d50` when the composition of the flow changes.
-- **Armouring does not restrain the erosion by the debris-flow laws**: to compute the coarsening by the
-  flow of water after a debris flow, restore the state into a configuration without debris flow and compute
-  with bed load alone (`ero` in this example). That configuration does not include the transport by a
-  sediment-laden flow on a gentle slope.
+- **By default armouring does not restrain the erosion by the debris-flow laws**: to compute the coarsening
+  by the flow of water after a debris flow, either restore the state into a configuration without debris
+  flow and compute with bed load alone (`ero` in this example; the transport by a sediment-laden flow on a
+  gentle slope is then not included), or limit the erosion by the debris-flow law to the movable classes
+  (`f_dbsel`; `ero_sel1` and `ero_sel2` in this example).
+- **`f_dbsel` underestimates the erosion by thin flows**: in a flow shallower than a grain size that class
+  is treated as immobile. In the erosion stage of this example the erosion of the thick part of the fan is
+  0.05 to 0.4 times that of the experiment. The result also depends on the form of the criterion (1 or 2)
+  and on the exchange-layer thickness.
 - **The water is shallower than the grains**: in the erosion stage the flow on the board has a mean depth of
   1 to 2 mm over the wet cells and at most 1 to 4 cm (the grains are 3 mm on average and 8 mm in the largest
   class). This is outside the assumptions of the shallow-water equations and of the bed-load formulas.
@@ -299,11 +395,13 @@ thick and the fan too wide does not change with any of these settings.
 [^tny91]: Takahashi, T., Nakagawa, H. and Yamashiki, Y. (1991): Formation and erosion of debris fan that is composed of sediment mixtures. *Annuals, Disaster Prevention Research Institute, Kyoto University*, 34 B-2, 355–372 (in Japanese). <https://repository.kulib.kyoto-u.ac.jp/dspace/handle/2433/72336> (Conditions of the experiment, §3.1 to 3.3; discharge and concentration at the flume outlet, Figs. 1 and 2; shape of the fan, Fig. 8; grain sizes inside the deposit, Fig. 9; experiment and computation of the erosion, Figs. 10 and 11. Checked against the text and figures of the published version.)
 [^tnh90]: Takahashi, T., Nakagawa, H. and Harada, T. (1990): Prediction of debris flow generated by erosion of steep well-graded sediment mixture bed. *Annuals, Disaster Prevention Research Institute, Kyoto University*, 33 B-2, 443–456 (in Japanese). <https://repository.kulib.kyoto-u.ac.jp/dspace/handle/2433/72271> (Experiment 2 with the same flume and material = its Fig. 9 and the grain-size curve of its Fig. 10. Checked against the text and figures of the published version.)
 [^tn91]: Takahashi, T. and Nakagawa, H. (1991): Prediction of stony debris flow induced by severe rainfall. *J. Jpn. Soc. Erosion Control Eng.* (Shin-Sabo), 44(3), 12–19 (in Japanese). (The formulas of ENCflow's `f_dbed = 3` and `f_dbres = 3`.)
+[^tinis00]: Takahashi, T., Inoue, M., Nakagawa, H. and Satofuka, Y. (2000): Prediction of sediment runoff from a mountain watershed. *Annual Journal of Hydraulic Engineering, JSCE*, 44, 717–722 (in Japanese). doi:10.2208/prohe.44.717 (Erosion rate by size class, eqs. (19) to (21). Checked against the published text.)
+[^tnsk01]: Takahashi, T., Nakagawa, H., Satofuka, Y. and Kawaike, K. (2001): Flood and sediment disasters triggered by 1999 rainfall in Venezuela; A river restoration plan for an alluvial fan. *Journal of Natural Disaster Science*, 23(2), 65–82. <https://jsnds.sakura.ne.jp/jnds/23_2_2.pdf> (Flow regimes and the erosion rate by size class, eqs. (10) to (12) and (26). Checked against the published text.)
 
 ## Related documents
 
 - [Debris flow, slope failure and the moving bed layer](../../../docs/en/users_guide/massflow.md) (coupling with mixed grain sizes, the Takahashi–Nakagawa laws)
 - [Sediment transport](../../../docs/en/users_guide/sediment.md#mixed-grain-sizes-f_bedmix) (formulas and limits of mixed grain sizes)
-- Verification [test/dbmix](../../../test/dbmix/en/README.md) (conservation in the combination and agreement with the single size)
+- Verification [test/dbmix](../../../test/dbmix/en/README.md) (conservation in the combination, agreement with the single size, and the selector that limits the erosion to the movable classes)
 - Examples [debris_fan](../../debris_fan/en/README.md) (a debris-flow fan at field scale; grid dependence) and
   [joganji_flume](../../joganji_flume/en/README.md) (mixed-size bed load against a movable-bed model experiment)
