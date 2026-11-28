@@ -1,0 +1,5 @@
+# 生成物(make が作る入力・設定・リンクと計算結果)
+data/
+runs/
+encflow
+__pycache__/

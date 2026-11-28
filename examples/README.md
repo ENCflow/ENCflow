@@ -46,6 +46,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [sewer_hybrid/](sewer_hybrid/) | 幹線 1 本と枝管網を同じ管路連続体層で表し、都市の雨水が下水道を流れて噴出・排水される様子を見る模式実験 | 管路連続体層 f_gwconduit |
 | [coastal_compound_flood/](coastal_compound_flood/) | 高潮で吐口が閉じ、下水道を通った雨水が低地の枡から噴き出す町の浸水を、豪雨・高潮・高い地下水位を重ねて見る | 管路連続体層 f_gwconduit(海域吐口 fn_gwc_outfall)、管路から汲むポンプ f_pump_src、潮位 fn_tide と防潮堤、Green-Ampt |
 | [paddy_dam/](paddy_dam/) | 低平地の排水区(内水)で、田んぼダムが集落の浸水と田面水の物質の行方をどう変えるかを、細かい格子と粗い格子で比べる | 田んぼダム fn_paddy(区画の解像 fn_pd_plot・双方向 f_pd_exchange・集水面積率 fn_pd_catch)、ポンプ、水質 fn_wq |
+| [paddy_basin/](paddy_basin/) | 傾斜地の流域で、田んぼダムによる出口のピークカット率を水田面積率と雨を変えて計算し、田んぼダムの手引きの概算式と比べる | 田んぼダム fn_paddy(表現 A の片方向・取組率 pd_adopt)、河道マスク fn_rw、サブグリッド河道幅 fn_width、水位規定、測線 |
 | [qanat/](qanat/) | 山麓の扇状地の地下水を集めるカナート(横坑)の湧出と、近くの揚水井でそれが細り枯れる過程を見る | 管路連続体層 f_gwconduit(交換能のマップ fn_gwc_leak・開放の吐口 fn_gwc_outfall)、層2 f_gwlayer2、井戸揚水 f_gwpump |
 | [catchment_metal/](catchment_metal/) | 流域の重金属(鉱山の排水・農地の負荷)の行き先と川の濃度を、機構を一つずつ加えて比べ、ため池と蒸発散の効果を見る | 水質 fn_wq(点源・面源・浸透同伴・遅延化 wq_rg・沈降 wq_vs・再懸濁 wq_wash_kf)、Green-Ampt、地下水の側方流、蒸発散 fn_evap |
 | [meander/](meander/) | 氾濫原の正弦波状の河道が蛇行を発達させる過程。外岸の後退、内岸砂州の成長・定着と氾濫原化を見る | 掃流砂の方向補正 fluv_slope・f_secflow、側岸侵食 f_berode、安息角崩落 f_repose、定着 f_fixation、給砂 |
@@ -94,6 +95,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。
 - 豪雨 + 高潮 → 吐口の閉鎖 → 下水道を通った水の噴出 → 低地の浸水(地下水位が高いと増え、雨が先だと長引く。機場で減る): [coastal_compound_flood/](coastal_compound_flood/)。
 - 豪雨 → 水田の貯留(田んぼダムの落水口で絞る)→ 排水路 → 排水機場 → 集落の内水氾濫(排水路から水田への逆流、取組の位置、格子の大きさと表し方で変わる): [paddy_dam/](paddy_dam/)。
+- 豪雨 → 水田の貯留(田んぼダム)→ 山地と水田の流出 → 河道 → 流域の出口のピーク(水田面積率・雨・取組率で変わる。手引きの概算式との比べ): [paddy_basin/](paddy_basin/)。
 - 山からの涵養 → 扇状地の地下水 → カナートの集水・湧出(揚水井で細る): [qanat/](qanat/)。
 - 雨 → 浸透 → 土層の側方流 → 谷の飽和域の発達・縮小 → 湧出 → 河道 → 出口の流量(等価粗度の地表流と比べる): [source_area/](source_area/)。
 - 雨 → 地表流と浸透 → 地下水の流れ → 湧出(基底流)→ 川の重金属の濃度(吸着の遅れ・ため池・粒子態の沈降・蒸発散で変わる): [catchment_metal/](catchment_metal/)。
