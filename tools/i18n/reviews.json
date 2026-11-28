@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "243d2e04b0f313e7f483bf55093dce1062309b7b9eed80a1dafa83e530ae3157",
-      "target_sha256": "d53ff1feef49ad453a1141e5f2ff67399a3efd8affa2fc7b7ec616862d7ae5b4",
-      "reviewer": "Claude (Claude Code session; the opening paragraph split into short blocks for beginners: what it is, tutorial first, no need to read all, the three kinds of pages, other catalogues; content kept; both sides compared)",
+      "source_sha256": "0bcb0b0723fd77d671d0138b5f44c994991b3fdf2a71f533289c099adc7c073a",
+      "target_sha256": "471fa11011e3c25a139353e24c244f103de27e44169a1b57c951eb2338de53a6",
+      "reviewer": "Claude (Claude Code session; \"This page (Part I)\" item: a sentence asking everyone to read it, phrased like the tutorial guide; both sides compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
