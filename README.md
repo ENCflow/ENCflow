@@ -236,10 +236,10 @@ belong to specialized models
   reference results. Keeping the state in which a third party can trace
   "why this result" is a basic policy alongside full source disclosure
   ([docs/en/policy.md](docs/en/policy.md)).
-- **Sustainability as a project** — everything from the reasoning
-  behind each design decision ([docs/developer.md](docs/developer.md),
-  in Japanese) to the overall map
-  ([docs/architecture.md](docs/architecture.md), in Japanese) is
+- **Sustainability as a project** — everything from the overall map
+  ([docs/architecture.md](docs/architecture.md), in Japanese) to the
+  reasoning behind each design decision
+  ([docs/developer.md](docs/developer.md), in Japanese) is
   documented, and
   the correctness of changes is verified mechanically by the
   regression tests and CI. Because the development knowledge lives in
