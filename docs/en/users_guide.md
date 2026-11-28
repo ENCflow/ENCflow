@@ -17,7 +17,7 @@ This guide has three kinds of pages.
   Read them in the order "overview" → "just try it" → "recommended values by pattern" → the sections
   you need, and you can run it. "Just try it" gives the minimal input.
 - **Explanation pages**: theory, equations, the basis of the defaults and detailed settings.
-  Open "Explanations" under a chapter in the table of contents to see pages such as "... explained".
+  Open "▸ Explanations" under a chapter in the table of contents to see pages such as "... explained".
 
 The checks and how to run them are in the [test catalogue](../../test/README.en.md), and setups by
 phenomenon are in the [examples catalogue](../../examples/README.en.md). Each chapter also links to the
