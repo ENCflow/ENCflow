@@ -384,19 +384,17 @@ subroutine m_wq_init(wq, p, g, b, s)
   wq%have_pd = len_trim(p%fn_paddy) > 0
   if (is_root) then
     open(newunit=wq%un, file=trim(p%dir_result)//"/wq.csv", status='replace')
-    if (wq%have_pd) then
-      write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_gwc_g," &
-                          //"in_bldup_g,wash_g,to_gw_g,seep_g,to_gwc_g,to_dam_g,rel_dam_g," &
-                          //"to_rs_g,decay_g,settle_g,mass_surface_g,mass_gw_g,mass_pool_g," &
-                          //"mass_dam_g,mass_rs_g,out_sea_g,out_edge_g,in_edge_g,out_stage_g," &
-                          //"in_stage_g,out_intake_g,mass_paddy_g,out_paddy_perc_g"
-    else
-      write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_gwc_g," &
-                          //"in_bldup_g,wash_g,to_gw_g,seep_g,to_gwc_g,to_dam_g,rel_dam_g," &
-                          //"to_rs_g,decay_g,settle_g,mass_surface_g,mass_gw_g,mass_pool_g," &
-                          //"mass_dam_g,mass_rs_g,out_sea_g,out_edge_g,in_edge_g,out_stage_g," &
-                          //"in_stage_g,out_intake_g"
-    end if
+    ! 条件付きの列(水田 fn_paddy)は末尾に足す(指定のない計算の列は変わらない)
+    block
+      character(len=:), allocatable :: head
+      head = "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_gwc_g," &
+             //"in_bldup_g,wash_g,to_gw_g,seep_g,to_gwc_g,to_dam_g,rel_dam_g," &
+             //"to_rs_g,decay_g,settle_g,mass_surface_g,mass_gw_g,mass_pool_g," &
+             //"mass_dam_g,mass_rs_g,out_sea_g,out_edge_g,in_edge_g,out_stage_g," &
+             //"in_stage_g,out_intake_g"
+      if (wq%have_pd) head = head//",mass_paddy_g,out_paddy_perc_g"
+      write(wq%un, '(a)') head
+    end block
   end if
 
   s%wq_active = .true.
@@ -1643,6 +1641,8 @@ subroutine m_wq_record(wq, p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   real(real64) :: v(1:22), msur, mgw, mpool, mdam, mrs, mpd, acell
+  real(real64), allocatable :: vals(:)
+  character(len=40) :: fmt
   real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je), rows3(dcp%js:dcp%je)
   real(real64) :: rows4(dcp%js:dcp%je), rows5(dcp%js:dcp%je)
   integer :: i, j, k
@@ -1685,19 +1685,13 @@ subroutine m_wq_record(wq, p, g, s)
   end do
 
   if (is_root .and. wq%un /= 0) then
-    if (wq%have_pd) then
-      write(wq%un, '(f0.2,28(",",es15.7))') s%t, es_out([v(1), v(2), v(7), v(8), v(11), v(9), &
-                                            v(10), v(3), v(13), v(12), v(4), v(14), v(15), &
-                                            v(5) + wq%dam_decay, v(6), &
-                                            msur, mgw, mpool, mdam, mrs, &
-                                            v(16), v(17), v(18), v(19), v(20), v(21), mpd, v(22)])
-    else
-      write(wq%un, '(f0.2,26(",",es15.7))') s%t, es_out([v(1), v(2), v(7), v(8), v(11), v(9), &
-                                            v(10), v(3), v(13), v(12), v(4), v(14), v(15), &
-                                            v(5) + wq%dam_decay, v(6), &
-                                            msur, mgw, mpool, mdam, mrs, &
-                                            v(16), v(17), v(18), v(19), v(20), v(21)])
-    end if
+    ! 条件付きの列(水田)は末尾に足す。書式は列数だけが変わる(既存の列の値と表記は変わらない)
+    vals = [v(1), v(2), v(7), v(8), v(11), v(9), v(10), v(3), v(13), v(12), v(4), v(14), v(15), &
+            v(5) + wq%dam_decay, v(6), msur, mgw, mpool, mdam, mrs, &
+            v(16), v(17), v(18), v(19), v(20), v(21)]
+    if (wq%have_pd) vals = [vals, mpd, v(22)]
+    write(fmt, '(a,i0,a)') '(f0.2,', size(vals), '(",",es15.7))'
+    write(wq%un, fmt) s%t, es_out(vals)
     flush(wq%un)
   end if
 end subroutine
