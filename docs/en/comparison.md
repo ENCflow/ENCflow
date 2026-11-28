@@ -76,6 +76,7 @@ site before citing.
 | SUTRA | USGS | Free | Open | Variable-density, variably saturated groundwater flow and transport |
 | FEFLOW | DHI | Commercial | Closed | 3-D groundwater, heat and mass transport (variable density) |
 | HYDRUS-1D | Šimůnek (UC Riverside), PC-Progress et al. | Free | Partly open (only the 2009 computational module) | 1-D vertical variably saturated water flow (Richards), solute and heat transport (Šimůnek et al. 2013). Distributed as public-domain software. The 2-D/3-D version is commercial |
+| SaltMod / SahysMod | ILRI (Oosterbaan et al.) | Free | Closed (freeware; distributed at waterlog.info) | Follow the water and salt balances of irrigated land season by season (one to four seasons a year) over decades, and predict the long-term trends of soil salinity, water-table depth and drain discharge. SaltMod has four reservoirs at one location (surface, root zone, transition zone, aquifer); SahysMod is the spatial version that couples it with a groundwater model on a network of polygons (SGMP), solving the groundwater exchange between polygons. They handle drains and wells, and the farmers' responses to waterlogging and salinity. Surface flow is not solved |
 | MOLASSES / Q-LavHA | USF / VUB | Free | Open | Cellular-automaton and probabilistic lava-flow models |
 | MAGFLOW / LavaSIM | INGV / Japan (Hidaka et al.) | — | Closed (to be confirmed) | Thermally coupled lava-flow models |
 | LAHARZ | USGS | Free | Open | Empirical lahar inundation extent (GIS) |
@@ -162,6 +163,19 @@ RSR sources (checked 2026-11-21):
 [iRIC solver page](https://i-ric.org/en/solvers/rri-on-iric/) /
 [RSR chapter of the manual](https://v4-rri-doc.readthedocs.io/ja/en/02/06_rsr.html) /
 [source and terms of use (GitHub iRICsolvers/v4_RRI)](https://github.com/iRICsolvers/v4_RRI).
+
+SaltMod and SahysMod sources (checked 2026-11-28; the pages themselves could not be read from
+the working environment, so this was checked from web-search result summaries; verify before
+citing):
+[SaltMod (waterlog.info)](https://www.waterlog.info/saltmod.htm) /
+[SahysMod (waterlog.info)](https://www.waterlog.info/sahysmod.htm) /
+[SaltMod (Wikipedia)](https://en.wikipedia.org/wiki/SaltMod),
+[SahysMod (Wikipedia)](https://en.wikipedia.org/wiki/SahysMod) /
+[SALTMOD (an ILRI document in the Wageningen University repository)](https://edepot.wur.nl/81683).
+The free distribution is from the distributor's own description; the licence category (proprietary
+freeware) and the four reservoirs are from Wikipedia. The program was first written in Fortran
+(Oosterbaan and de Lima, ILRI, 1990) and later became a Windows program. No published source code
+could be confirmed.
 
 ## 2. Comparison of process coverage (against ENCflow's current state)
 

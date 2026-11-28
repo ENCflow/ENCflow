@@ -65,6 +65,7 @@ buildup-washoff+積雪+長期地形変動+流木+家屋破壊・瓦礫+非静水
 | SUTRA | USGS | 無償 | 公開 | 変密度・変飽和の地下水流動・輸送 |
 | FEFLOW | DHI | 有償 | 非公開 | 3D 地下水・熱・物質輸送(変密度) |
 | HYDRUS-1D | Šimůnek(UC Riverside)・PC-Progress ほか | 無償 | 一部公開(2009 年版の計算部のみ) | 鉛直 1 次元の変飽和の水分移動(Richards)・溶質・熱の輸送(Šimůnek ら 2013)。パブリックドメインとして配布。2D/3D 版は有償 |
+| SaltMod / SahysMod | ILRI(Oosterbaan ほか) | 無償 | 非公開(フリーウェア。配布は waterlog.info) | 灌漑農地の水収支と塩収支を季節単位(1 年を 1〜4 季)で数十年追い、土壌塩分・地下水位・排水量の長期の傾向を予測する。SaltMod は 1 地点の 4 つの貯留(地表・根群域・遷移帯・帯水層)、SahysMod はそれを多角形の網の地下水モデル(SGMP)と結合した空間版(多角形どうしの地下水の出入りを解く)。排水・井戸と、湛水や塩害に対する農家の対応を扱う。地表の流れは解かない |
 | MOLASSES / Q-LavHA | USF / VUB | 無償 | 公開 | 溶岩流のセルオートマトン・確率論系 |
 | MAGFLOW / LavaSIM | INGV / 日本(日高ほか) | — | 非公開(要確認) | 温度結合の溶岩流モデル |
 | LAHARZ | USGS | 無償 | 公開 | ラハールの到達範囲の経験則(GIS) |
@@ -143,6 +144,17 @@ RSR の出典(2026-11-21 確認):
 [iRIC のソルバ紹介](https://i-ric.org/ja/solvers/rri-on-iric/) /
 [解説の RSR の章](https://v4-rri-doc.readthedocs.io/ja/jp/02/06_rsr.html) /
 [ソースと利用条件(GitHub iRICsolvers/v4_RRI)](https://github.com/iRICsolvers/v4_RRI)。
+
+SaltMod・SahysMod の出典(2026-11-28 確認。作業環境から各サイトの本文は読めず、Web 検索の結果の
+要約で確認した。引用前に要確認):
+[SaltMod(waterlog.info)](https://www.waterlog.info/saltmod.htm) /
+[SahysMod(waterlog.info)](https://www.waterlog.info/sahysmod.htm) /
+[SaltMod(Wikipedia)](https://en.wikipedia.org/wiki/SaltMod)・
+[SahysMod(Wikipedia)](https://en.wikipedia.org/wiki/SahysMod) /
+[SALTMOD(ILRI の文書。Wageningen 大の文献庫)](https://edepot.wur.nl/81683)。
+無償の配布は配布元の記述、ライセンスの区分(プロプライエタリのフリーウェア)と 4 つの貯留の
+構成は Wikipedia の記述による。当初は Fortran で書かれ(Oosterbaan と de Lima、ILRI、1990 年)、
+のちに Windows 版になった。ソースの公開は確認できなかった。
 
 ## 2. プロセスカバレッジの比較(ENCflow 現況との対比)
 
