@@ -223,8 +223,8 @@ OS は Linux / macOS / WSL を想定しています。詳細は
 根拠として答えさせることができます。
 
 開発に参加したい方・中身を知りたい方は
-[docs/architecture.md](docs/architecture.md) で全体像の案内図を、
 [docs/policy.md](docs/policy.md) で基本方針を、
+[docs/architecture.md](docs/architecture.md) で全体像の案内図を、
 [docs/developer.md](docs/developer.md) で設計判断と規約の記録の目次を、
 [docs/comparison.md](docs/comparison.md) で他モデルとの比較を
 参照してください。
