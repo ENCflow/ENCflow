@@ -370,7 +370,7 @@ come from `FILENUMBER.csv`.
 | Slope safety factor | flag | Fs / Fs9999 (f_out_fs) | −1 = not evaluated |
 | Driftwood / debris distribution and reach | flag | Hd / Wd / Wd9999 (f_out_hd, wd), Wj (f_out_wj), Bf / Bd / Bd9999 / Bs (f_out_hbd, wbd, bds) | reach = Wd9999 / Bd9999 (run maximum of moving + deposited); wood jammed at structures is Wj |
 | Water-quality concentration / pools | automatic (Cg by flag) | C, B, Cg (f_out_hg) | run-maximum concentration from the C series in post-processing; total mass from `wq.csv`, point time series from probes ([Water Quality](wq.md)) |
-| Surface / subsurface salt water | flag | Hss (f_out_h), Hgs (f_out_hg) | with [Salt Water](salt.md) enabled |
+| Surface / subsurface salt water | flag | Hss (f_out_h), Hgs (f_out_hg) | with [Salt Water](salt.md) enabled. The total volumes and the inflows and outflows are in `salt.csv` |
 | Retention-pond depth | flag | Hrs (f_out_hrs) | — |
 | Glacier / lava thickness | automatic | Hi, Hl | [Glacier](glacier.md), [Lava Flow](lavaflow.md) |
 | Lava temperature | automatic (temperature mode f_lvtemp = 1) | Tl | [Lava Flow](lavaflow.md) |

@@ -329,7 +329,7 @@ Z = 潮位 − hsea0)で、海の水深・海底地形ではありません([潮
 | 斜面安全率 | 指定 | Fs / Fs9999(f_out_fs) | −1 は評価対象外 |
 | 流木・瓦礫の分布と到達範囲 | 指定 | Hd / Wd / Wd9999(f_out_hd, wd)、Wj(f_out_wj)、Bf / Bd / Bd9999 / Bs(f_out_hbd, wbd, bds) | 到達範囲は Wd9999 / Bd9999(流動+堆積の期間最大)。構造物に集積した流木は Wj |
 | 水質の濃度・プール | 自動(Cg は指定) | C、B、Cg(f_out_hg) | 期間最大濃度は C の連番から後処理。質量の総量は `wq.csv`、地点の時系列はプローブ([水質](wq.md)) |
-| 地表・地下の塩水 | 指定 | Hss(f_out_h)、Hgs(f_out_hg) | [塩水](salt.md)有効時 |
+| 地表・地下の塩水 | 指定 | Hss(f_out_h)、Hgs(f_out_hg) | [塩水](salt.md)有効時。体積の総量と出入りは `salt.csv` |
 | ため池水深 | 指定 | Hrs(f_out_hrs) | — |
 | 氷河・溶岩の厚さ | 自動 | Hi、Hl | [氷河](glacier.md)・[溶岩流](lavaflow.md) |
 | 溶岩の温度 | 自動(温度モード f_lvtemp = 1) | Tl | [溶岩流](lavaflow.md) |

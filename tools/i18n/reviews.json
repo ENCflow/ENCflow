@@ -58,9 +58,9 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "44e58df155fc93340df522b7cffb132ebd9eef5785c3202cbb4697ff23c9caf4",
-      "target_sha256": "9eeff607b75fa9447c73ad219c9ca0aa5e1fba3dbc29f6a5741281a065cbee4e",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
+      "source_sha256": "abdf0f052e2b36596393af052a4a7695fdbbb57ac6b21260b50c9c28b844dcad",
+      "target_sha256": "edaeb639fd43b912fba2a5e6041d8f3856c7853a9925b3c3c3846e643a09da9f",
+      "reviewer": "Claude (Claude Code session; changed rows compared side by side with the Japanese source)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
@@ -374,9 +374,9 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "04bd81975b1c13b30dd95fc7fb39a6e9c08cc17ad40ae12c63c2b140ac41671a",
-      "target_sha256": "3dca2e951c0583102ef637071f74150c0aaa689e9ff0d3f6b991a8bb0c94a56e",
-      "reviewer": "Claude (Claude Code session; the section \"Adjusting directories and file names\" moved to the top, one sentence added to the introduction; both sides compared)",
+      "source_sha256": "80c27f934c8f7b764fb1b853d7ce8651042a80043609d46e5a1e2c5a20d2cbcb",
+      "target_sha256": "7c34e0b6c91759cc1c8a75bede21622d83775a16a28c2e6454235ddb3de89952",
+      "reviewer": "Claude (Claude Code session; changed rows compared side by side with the Japanese source)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
