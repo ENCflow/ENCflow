@@ -16,8 +16,9 @@
 #                     6 h で保存 → 再開(連続計算とビット一致)
 #   param_b_*.txt     区画の解像(表現 B。fn_pd_plot。§127.8。入力は make_plots.py が作る): 1 区画の落水(堰の厳密解・
 #                     穴の参照解)、畦畔・市松の角の水密、畦畔の越流と閉じた領域の水の保存、落水口からの逆流、畦畔を
-#                     越える外からの流入、畦畔と河川堤防が重なるエッジ、区画から区画への落水口(田越し)。b_back は sed で
-#                     6 h で保存 → 再開(連続計算とビット一致)
+#                     越える外からの流入、畦畔と河川堤防が重なるエッジ、区画から区画への落水口(田越し)、堤防のない
+#                     幅 1 m の河道のセルを向く落水口(b_rw: 堰の厳密解、b_rwc: 閉じた領域の水深 × 平面積率の水量の
+#                     保存。§127.23)。b_back は sed で 6 h で保存 → 再開(連続計算とビット一致)
 #   param_wq_*.txt    水質(fn_wq。§127.10): タンクの濃度の一次減衰(厳密解)、雨の物質、双方向の逆流で入る水の
 #                     濃度、区画の解像の減水深の持ち出し(wq.csv の質量の収支)、タンクの沈降(離散式の厳密解。
 #                     §127.18)。wq_a は sed で 6 h で保存 → 再開
@@ -116,7 +117,7 @@ expect_stop tw_mode "$tmp" "f_pd_exchange differs from the saved state"
 
 # 区画の解像(表現 B。§127.8)
 python3 make_plots.py data_paddy || exit 1
-for t in b_drain b_tight b_over b_back b_ext b_bank b_chain; do
+for t in b_drain b_tight b_over b_back b_ext b_bank b_chain b_rw b_rwc; do
     run $t param_$t.txt
     python3 Check_paddy.py $t result_$t || exit 1
 done

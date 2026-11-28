@@ -123,19 +123,22 @@ above the crest it flows in over the levees. The small, branch and main drains a
 | Du: upstream half dams | — | — | — | param_B10_Du.txt |
 | Dd: downstream half dams | — | — | — | param_B10_Dd.txt |
 
+The comparison of representation B with the small drains at their actual width of 1.5 m (supplement to result 1) uses
+param_B10_Nw.txt (N) and param_B10_Dw.txt (D).
+
 In the names of the settings files, A30 stands for representation A (Δx = 30 m), B10 for representation B (Δx = 10 m),
-a trailing 2 for the two-way mode, and 2c for the two-way mode with the catchment fraction `fn_pd_catch`
-(`data/catch30.txt`; result 2). The results are written to `result_<name>/`. Every case also computes water quality
-(`fn_wq`; result 3). Water quality does not affect the water, so the water values of results 1 and 2 are the same
-without it.
+a trailing 2 for the two-way mode, 2c for the two-way mode with the catchment fraction `fn_pd_catch`
+(`data/catch30.txt`; result 2), and w for the small drains at their actual width. The results are written to
+`result_<name>/`. Every case also computes water quality (`fn_wq`; result 3). Water quality does not affect the water,
+so the water values of results 1 and 2 are the same without it.
 
 ## How to run
 
 ```
 cd examples/paddy_dam
 make            # links and inputs (make_district.py writes the 10 m and 30 m inputs to data/)
-make run        # computes the 10 cases in turn (on a 4-core machine, representation A 2–3 min per case, B 10–20 min)
-make figs       # figs/*.png, en/figs/*.png and the four tables (standard output)
+make run        # computes the 12 cases in turn (on a 4-core machine, representation A 2–3 min per case, B 10–20 min)
+make figs       # figs/*.png, en/figs/*.png and the five tables (standard output)
 ```
 
 ## Result 1: effect of paddy-field dams (representation B, Δx = 10 m)
@@ -157,7 +160,7 @@ Table 1 (representation B, Δx = 10 m)
 
 | Outlets | max settlement depth m (time) | hours with settlement depth > 0.1 m | max level at the pumping station m | max mean depth of the plots mm | backflow through outlets m³ | inflow over the levees m³ | outflow over the levees m³ |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| N: all normal outlets | 0.51(24.0 h) | 37 or more (still at 48 h) | 0.70 | 135 | 11453 | 11921 | 2821 |
+| N: all normal outlets | 0.51(24.0 h) | 37 or more (still at 48 h) | 0.70 | 135 | 11453 | 11920 | 2821 |
 | D: all paddy-field dams | 0.01(9.5 h) | 0 | -0.09 | 210 | 0 | 10707 | 578 |
 | Du: upstream half dams | 0.33(24.0 h) | 25 | 0.51 | 155 | 1031 | 10521 | 367 |
 | Dd: downstream half dams | 0.41(23.2 h) | 25 | 0.60 | 153 | 311 | 10586 | 267 |
@@ -190,6 +193,46 @@ plots are on higher ground and drain regardless of the water level of the drains
 has a larger effect. This order can change with the slope of the district, the layout of the drains and the capacity of
 the pumping station.
 
+### Supplement to result 1: the small drains at their actual width
+
+In representation B, the small drains are cuts 10 m wide (one cell), so their storage and conveyance come out larger than
+with their actual width (1–2 m). B10_Nw and B10_Dw make the cells of the small drains channel cells (`fn_rw = 'rw.txt'`)
+with their actual width of 1.5 m (subgrid width `fn_width = 'w.txt'`; no levee). The depth of a small drain is then the
+depth within that width, and the storage at the same depth is 0.15 times as large. The other settings (including the
+branch and main drains 10 m wide) are the same as in B10_N and B10_D.
+
+![Comparison of the width of the small drains](figs/drains.png)
+
+(1)(2) Inundation depth in the settlement (probe 1), (3)(4) water level of the northern small drain (probe 4). Left: N;
+right: D. Solid lines are small drains 10 m wide, dashed lines 1.5 m wide, and the dotted line is the field surface of the
+plots south of the small drain.
+
+Table 2 (representation B, width of the small drains)
+
+| Outlets | width of the small drains | max settlement depth m (time) | hours with settlement depth > 0.1 m | max level at the pumping station m | max level of the northern small drain m (time) | water in the small drains at 24 h m³ | inflow over the levees m³ | outflow over the levees m³ |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| N | 10 m (one cell) | 0.51(24.0 h) | 37 or more (still at 48 h) | 0.70 | 0.70(24.0 h) | 14278 | 11920 | 2821 |
+| N | 1.5 m (subgrid width) | 0.57(24.0 h) | 38 or more (still at 48 h) | 0.75 | 0.98(12.0 h) | 2342 | 36725 | 27534 |
+| D | 10 m (one cell) | 0.01(9.5 h) | 0 | -0.09 | 0.48(12.0 h) | 1130 | 10707 | 578 |
+| D | 1.5 m (subgrid width) | 0.01(9.5 h) | 0 | -0.03 | 0.63(12.0 h) | 556 | 10813 | 630 |
+
+The water in the small drains is counted with the same plan fraction as the model (0.15 for the small drains 1.5 m wide,
+0.075 for the cells at their ends).
+
+- **In N, the settlement floods earlier and deeper.** The small drains 1.5 m wide cannot carry the water while the rain
+  is heavy; even in the northern group the level rises to 0.98 m at 12 h, close to the field surface of the plots to the
+  south (1.02 m).
+  - The overflow crosses the levees and passes through the plots (inflow over the levees 37,000 m³ and outflow 28,000 m³;
+    12,000 m³ and 3,000 m³ with a width of 10 m).
+  - What the small drains do not store fills the main drain sooner. The inundation of the settlement exceeds 0.1 m at
+    10.5 h (11.2 h with a width of 10 m), is 0.40 m at 12 h (0.25 m) and reaches 0.57 m (0.51 m).
+- **In D, little changes.** The paddy-field dams throttle the outflow, so the small drains 1.5 m wide can carry it (highest
+  level in the northern group 0.63 m). The highest level at the pumping station is −0.03 m (−0.09 m with a width of 10 m),
+  and the settlement does not flood.
+- With the small drains at their actual width, the effect of the paddy-field dams (the difference between N and D) is
+  therefore larger. Solving the small drains at the width of the grid underestimates the inundation with normal outlets.
+- Representation B in results 2 and 3 has the small drains 10 m wide (B10_N and B10_D).
+
 ## Result 2: the same district solved with representation A (Δx = 30 m)
 
 N and D are compared between representation B (Δx = 10 m) and three ways of giving representation A (Δx = 30 m). The
@@ -215,11 +258,11 @@ mean water depth of the paddy fields. Left: N; right: D. The blue solid line is 
 representation A, whose line shows how it is given (thick solid = two-way with the catchment fraction, long dashes =
 two-way, short dots = one-way).
 
-Table 2 (representation B and representation A under the same conditions)
+Table 3 (representation B and representation A under the same conditions)
 
 | Outlets | Representation | max settlement depth m (time) | hours with settlement depth > 0.1 m | max level at the pumping station m | max mean depth of the paddies mm | backflow through outlets m³ | inflow over the levees m³ |
 |---|---|---:|---:|---:|---:|---:|---:|
-| N | representation B (Δx = 10 m) | 0.51(24.0 h) | 37 or more (still at 48 h) | 0.70 | 135 | 11453 | 11921 |
+| N | representation B (Δx = 10 m) | 0.51(24.0 h) | 37 or more (still at 48 h) | 0.70 | 135 | 11453 | 11920 |
 | N | representation A (Δx = 30 m), one-way | 0.44(24.0 h) | 36 or more (still at 48 h) | 0.62 | 118 | — | — |
 | N | representation A (Δx = 30 m), two-way | 0.52(24.0 h) | 36 or more (still at 48 h) | 0.71 | 148 | 12599 | 459 |
 | N | representation A (Δx = 30 m), two-way, catchment fraction | 0.52(24.0 h) | 36 or more (still at 48 h) | 0.71 | 150 | 11119 | 440 |
@@ -229,10 +272,10 @@ Table 2 (representation B and representation A under the same conditions)
 | D | representation A (Δx = 30 m), two-way, catchment fraction | 0.00(12.0 h) | 0 | -0.16 | 216 | 180 | 0 |
 
 Representation A in the one-way mode lets no surface water into the paddy fields, hence "—". The rain of the catchment
-in Table 3 applies only to the cases with the catchment fraction (in representation B it is part of the inflow over the
+in Table 4 applies only to the cases with the catchment fraction (in representation B it is part of the inflow over the
 levees).
 
-Table 3 (where the water went up to 48 h, m³; rain on the district 125,194 m³)
+Table 4 (where the water went up to 48 h, m³; rain on the district 125,194 m³)
 
 | Outlets | Representation | paddy area ha | rain on the paddy fields | rain of the catchment into the tanks | rain elsewhere | inflow into the paddy fields (backflow + over the levees) | total water into the paddy fields |
 |---|---|---:|---:|---:|---:|---:|---:|
@@ -256,7 +299,7 @@ Table 3 (where the water went up to 48 h, m³; rain on the district 125,194 m³)
 - **Paddy-field dams (D)**: the settlement is not flooded with representation B (maximum level at the pumping station
   −0.09 m, 0.28 m below the ground of the settlement, 0.185 m). Representation A in the two-way mode flooded it by 0.07 m
   (maximum level 0.25 m).
-  - **The main cause of the difference is the water entering the paddy fields** (Table 3). In representation B, the rain
+  - **The main cause of the difference is the water entering the paddy fields** (Table 4). In representation B, the rain
     on the farm roads and the upland, which are higher than the plots (11,000 m³, 9 % of the rain on the district),
     enters the plots over the levees and is stored behind the paddy-field dams. In representation A, the rain on the
     non-paddy part of a cell becomes surface water and has no path into the paddy tanks.
@@ -298,7 +341,7 @@ for representation A, the plot water for representation B). (5)(6) Concentration
 lines are as in the figure of result 2 (blue solid = representation B, thick orange solid = representation A two-way
 with the catchment fraction, long dashes = representation A two-way, short dots = representation A one-way).
 
-Table 4 (where the substance dissolved in the ponding before the rain (10 mg/L) went, % of the initial mass)
+Table 5 (where the substance dissolved in the ponding before the rain (10 mg/L) went, % of the initial mass)
 
 | Outlets | Representation | initial mass kg | pumped out 24 h / 48 h | in the paddies 24 h / 48 h | percolated 48 h | on the surface 48 h | max concentration at the pumping station mg/L (time) | max concentration of the settlement flooding mg/L |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -415,12 +458,14 @@ From result 2, here are hints for making inputs of representation A by coarsenin
 
 **Representation B (Δx = 10 m)**
 
-- The small drains (actually 1–2 m wide) become channels as wide as a cell (10 m), so their storage and conveyance come
-  out large (a capacity of 14,000 m³ below the field surfaces). In N, where the drains fill up, 14,000 m³ was in the small
-  drains at 24 h (1/5 to 1/10 of that with the actual width), so the water levels of the drains and the inundation of the
-  settlement may come out low. In D, where the water levels of the drains stay low, the small drains held 1,800 m³ at
-  15 h and the influence is small. A comparison with the small drains at their actual width (channel cells with a
-  subgrid width) has not been made.
+- In the basic cases (B10_*), the small drains (actually 1–2 m wide) become channels as wide as a cell (10 m), so their
+  storage and conveyance come out large. With their actual width, the settlement in N floods earlier and deeper
+  (supplement to result 1).
+- The small drains 1.5 m wide (B10_*w) are channel cells, and the remaining 8.5 m of the cell (the strip of levees and
+  farm roads) is not in the computation. Rain falling there goes straight into the small drain
+  ([Channels](../../../docs/en/users_guide/channel.md#subgrid-channel-width) of the user's guide). The friction follows the
+  wide-channel approximation set by the depth, so at a depth of 0.5 m a drain conveys about 40 % more than with the
+  hydraulic radius (actual small drains can overflow even more).
 - A plot width of 3 cells is the lower limit for representation B, and the slope of the water surface within a plot is
   represented only coarsely.
 

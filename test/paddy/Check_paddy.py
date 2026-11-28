@@ -26,6 +26,8 @@ Gauss–Legendre の求積で直接求める(モデルは表と展開)。
   python3 Check_paddy.py b_ext    result_b_ext     区画の解像(B): 畦畔を越える外からの流入、水位がそろうこと、保存
   python3 Check_paddy.py b_bank   result_b_bank    区画の解像(B): 畦畔と河川堤防が重なるエッジは天端の大きい方
   python3 Check_paddy.py b_chain  result_b_chain   区画の解像(B): 区画から区画への落水口(田越し)、水深がそろうこと、保存
+  python3 Check_paddy.py b_rw     result_b_rw      区画の解像(B): 落水口が幅 1 m の河道のセル(堤防なし)を向く落水(b_drain と同じ判定)
+  python3 Check_paddy.py b_rwc    result_b_rwc     区画の解像(B): 同じ河道のセルの閉じた領域で、水深 × 平面積率の水量の保存
   python3 Check_paddy.py restart_b <連続の結果> <再開の結果>    区画の解像(B)の保存 → 再開のビット一致
   python3 Check_paddy.py wq_a     result_wq_a      水質: タンクの濃度の一次減衰(厳密解)と質量の収支
   python3 Check_paddy.py wq_rain  result_wq_rain   水質: 雨の物質でタンクの濃度が雨の濃度へ近づくことと質量の収支
@@ -741,6 +743,57 @@ def check_b_chain(res):
 
 
 # ---------------------------------------------------------------- 水質(§127.10)
+def check_b_rw(res):
+    """b_drain と同じ区画と落水口で、落水口の先の列 i = 13 が幅 1 m の河道のセル(サブグリッド幅、堤防なし)。落水は
+    b_drain と同じ判定を満たし(落水口の流量は向きの先のセルの幅によらない)、水は落水口の前の河道のセルを通る"""
+    check_b_drain(res)
+    nx = 16
+    with open(os.path.join(res, "H9999.txt")) as f:
+        hmax = [float(x) for line in f for x in line.split()]
+    hc = [hmax[(j - 1) * nx + 12] for j in (8, 22)]
+    if min(hc) <= 0.0:
+        fail("no water passed through the channel cells in front of the outlets (max depth %s m)" % hc)
+    ok("the outflow passes through the channel cells in front of the outlets (max depth %.3f / %.3f m)" % tuple(hc))
+
+
+def check_b_rwc(res):
+    """閉じた領域で、区画 2 つ(各 3000 m2、初めの湛水深 0.25 m)の落水口が幅 1 m の河道のセルの列 i = 13(堤防なし)を
+    向く。河道のセルの水深は幅の中の水深なので、水量 = Σ 水深 × 平面積率 × セル面積 が 1500 m3 のまま。平面積率は
+    幅 × セルの中の河道の長さ / セル面積(m_swflow_enc_channel の build_wfrac): 列の中ほど 1 × 5 / 25 = 0.2、河道の端の
+    2 セル(j = 1, 32)は長さが半分で 0.1。ほかのセルは 1"""
+    nx, ny, w = 16, 32, 1.0
+    a = [1.0] * (nx * ny)
+    for j in range(1, ny + 1):
+        lch = B_DX / 2 if j in (1, ny) else B_DX
+        a[(j - 1) * nx + 12] = w * lch / (B_DX * B_DX)
+    v0 = 2 * 3000.0 * 0.25
+    worst, vfull = 0.0, 0.0
+    for k in range(0, 7):
+        h = read_bil(os.path.join(res, "H%04d.bil" % k), nx, ny)
+        v = sum(max(h[n], 0.0) * a[n] for n in range(nx * ny)) * B_DX * B_DX
+        worst = max(worst, abs(v - v0))
+        vfull = sum(max(x, 0.0) for x in h) * B_DX * B_DX
+    if worst > 1e-5 * v0:
+        fail("water volume (depth x plan fraction) drifts from %.1f m3 by %.3e m3" % (v0, worst))
+    hc = [h[(j - 1) * nx + 12] for j in range(1, ny + 1)]
+    if not min(hc) > 0.1 or not vfull > 1.05 * v0:
+        fail("the channel cells hold too little water to test the plan fraction (depth %.3f m, full-cell count %.1f m3)"
+             % (min(hc), vfull))
+    ok("water volume = sum of depth x plan fraction x cell area = %.1f m3 at every hour (max |diff| %.1e m3); counting "
+       "the channel cells as full cells would give %.1f m3 at 6 h" % (v0, worst, vfull))
+    s = [v for _, v in read_log(os.path.join(res, "Log.txt"))]
+    if max(abs(x - s[0]) for x in s) > 1e-12 * s[0]:
+        fail("S is not conserved in the closed domain")
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    last = rows[-1]
+    drained = v0 - (last["store1(m3)"] + last["store2(m3)"])
+    if not drained > 0.1 * v0:
+        fail("the plots drained only %.1f m3" % drained)
+    ok("S conserved; the plots drained %.1f m3 through the outlets into the channel (backflow %.1f m3 when the channel "
+       "rose above the field)" % (drained, last["inflow(m3)"]))
+    check_ledger(rows)
+
+
 def wq_closure(res, m0=None, tol=1e-6):
     """wq.csv の質量の収支: 貯留(地表・タンク)+ 出 − 入 が一定(= 初めの質量 m0)。wq.csv は有効数字 8 桁
     (es15.7)なので、許容は初めの質量か入力の累積の大きい方に対して相対 1e-6"""
@@ -1236,6 +1289,10 @@ def main():
         check_b_bank(sys.argv[2])
     elif cmd == "b_chain":
         check_b_chain(sys.argv[2])
+    elif cmd == "b_rw":
+        check_b_rw(sys.argv[2])
+    elif cmd == "b_rwc":
+        check_b_rwc(sys.argv[2])
     elif cmd == "wq_a":
         check_wq_a(sys.argv[2])
     elif cmd == "wq_rain":

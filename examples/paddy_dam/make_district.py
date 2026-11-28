@@ -30,6 +30,8 @@
 #   use.txt               土地利用の番号(図のため。1 農道・2 小排水路・3 支線・4 幹線・5 区画・6 集落・7 畑・8 台地)
 #   catch.txt             雨が区画へ流れ込む割合(0〜1。農道・台地のセルの雨のうち区画に着く割合。catchment() で
 #                         たどる)
+#   rw.txt・w.txt         小排水路のセルの河道マスクとサブグリッド幅 1.5 m(実際の幅。ケース B10_*w。ほかの
+#                         ケースは小排水路を幅 10 m(1 セル)の掘り込みのまま解く)
 #   *30.txt               表現 A の 30 m 格子(10 m の値の 3 × 3 の平均): frac30(水田面積率。0.99 で頭打ち)、
 #                         catch30(集水面積率 fn_pd_catch = catch.txt の平均に、頭打ちで残る畦畔の 0.01 を足す。
 #                         雨の降る 30 m のセルで数える。ケース A30_*2c)、z30(地盤高。
@@ -53,6 +55,7 @@ I_SET2 = 22                       # 集落の東端の列
 UNIT_ROWS = 2 * PL + 2            # 組の行数(農道 + 区画 + 小排水路 + 区画)
 USE = {"road": 1, "drain": 2, "branch": 3, "main": 4, "plot": 5, "house": 6, "field": 7, "hill": 8}
 HLEV = 0.30                       # 畦畔高(param の pd_hlev の既定と同じ)
+W_DRAIN = 1.5                     # 小排水路の実際の幅 (m。ケース B10_*w のサブグリッド幅。実際は 1〜2 m)
 
 
 def catchment(z, use, isp):
@@ -134,6 +137,9 @@ def main():
     np.savetxt(os.path.join(d, "plot.txt"), plot, fmt="%d")
     np.savetxt(os.path.join(d, "outlet.txt"), outl, fmt="%d")
     np.savetxt(os.path.join(d, "use.txt"), use, fmt="%d")
+    isd = use == USE["drain"]                    # 小排水路を河道のセル(堤防なし)にする比べ(ケース B10_*w)
+    np.savetxt(os.path.join(d, "rw.txt"), isd.astype(int), fmt="%d")
+    np.savetxt(os.path.join(d, "w.txt"), np.where(isd, W_DRAIN, 0.0), fmt="%.2f")
     isp = plot > 0
     for tag, cl in (("N", np.where(isp, 1, 0)), ("D", np.where(isp, 2, 0)),
                     ("Du", np.where(isp, np.where(unit <= 2, 2, 1), 0)),

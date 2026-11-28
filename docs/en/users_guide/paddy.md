@@ -304,9 +304,10 @@ The directions of the outlets are counted in the order of the raster (the first 
 6 7 8
 ```
 
-Outside the plots (farm roads, drains, settlements) it is the usual shallow water flow. A main drain can also be given as a
-channel mask with a subgrid width, but an outlet cannot point to a channel cell with a river bank (it would coincide with
-the wall of the bank).
+Outside the plots (farm roads, drains, settlements) it is the usual shallow water flow. A drain narrower than a cell can
+be given its actual width with a channel mask (`fn_rw`) and a subgrid width (`fn_width`), and an outlet can point to such
+a cell (a channel cell without a river bank; a channel cell with a river bank cannot be used, because the outlet would
+coincide with the wall of the bank).
 
 ### Combination with water quality (fn_wq)
 
@@ -463,8 +464,15 @@ levee height is the remaining free storage.
 - An outlet is one edge of the outlet cell and passes only the discharge of the device law (the width of the edge has
   nothing to do with the width of the device). The levee overflow occurs over the whole width of an edge, so the length
   of the overflow above the crest is set by the arrangement of the grid (including the diagonal edges).
-- The drains and roads outside the plots are solved at the width of the grid. A small drain narrower than a cell flows as
-  a channel as wide as the grid.
+- The drains and roads outside the plots are solved at the width of the grid. A small drain narrower than a cell, drawn on
+  the grid as it is, flows as a channel as wide as the grid, and its storage and conveyance come out too large. In the
+  example [paddy_dam](../../../examples/paddy_dam/en/README.md), solving small drains 1–2 m wide as cells 10 m wide gave
+  a smaller maximum inundation depth of the settlement with normal outlets (0.51 m against 0.57 m with the actual width
+  of 1.5 m) and an inundation starting about 40 minutes later (supplement to result 1). Small drains can be given their
+  actual width as channel cells with a subgrid width (without a river bank). A channel cell then has no land surface for
+  the rest of the cell (the strip of levees and farm roads disappears, and rain falling on it goes straight into the
+  drain; [Channels](channel.md#subgrid-channel-width)), and its friction follows the wide-channel approximation set by
+  the depth (a drain 1.5 m wide with a depth of 0.5 m conveys about 40 % more than with the hydraulic radius).
 - The evapotranspiration of the plot water is treated as part of the decrease in depth, so B cannot be combined with
   evapotranspiration (`fn_evap`) or groundwater (`fn_gwflow`). It cannot be combined with the non-hydrostatic correction
   (`f_nonhydrostatic = 1`) or debris flows (`f_debris` of `fn_geomorph`) either (stops at start-up).
