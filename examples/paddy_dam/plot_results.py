@@ -7,6 +7,8 @@
   figs/representations.png  地区と 2 つの表現(入力だけ。計算結果を使わない): 表現 A の地区、表現 B の地区、表現 B の拡大
   figs/maps.png      結果 1: 表現 B の最大水深(N と D)
   figs/series.png    結果 1: 表現 B の雨、集落の浸水深、排水機場の前の水位、区画の平均水深(N・D・Du・Dd)
+  figs/drains.png    結果 1 の補足: 表現 B の小排水路を幅 10 m(1 セル)と実際の幅 1.5 m(サブグリッド幅の河道の
+                     セル。ケース B10_*w)で解いた比べ(集落の浸水深と北の組の小排水路の水位。N と D)
   figs/scale.png     結果 2: 同じ条件の表現 B と表現 A(片方向・双方向・双方向で集水面積率を与える)の比べ(集落の浸水深と
                      水田の平均水深)
   figs/wq.png        結果 3: 雨の前の湛水に溶けた物質の行方(排水機場から出た割合、水田に残った割合、排水機場の前の濃度)
@@ -302,6 +304,78 @@ def fig_series():
     plt.close(fig)
 
 
+# ---------------------------------------------------------------- 結果 1 の補足: 小排水路の幅
+# 表現 B の小排水路を、幅 10 m(1 セル)の掘り込み(B10_N・B10_D)と、実際の幅 1.5 m のサブグリッド幅の河道のセル
+# (B10_Nw・B10_Dw。make_district.py の rw.txt・w.txt)で解いた比べ。色は図 series と同じ落水口の種類(N = 青、D = オレンジ)、
+# 線種は小排水路の幅(実線 = 10 m、破線 = 1.5 m)
+WIDE = [("N", "B10_N", "B10_Nw"), ("D", "B10_D", "B10_Dw")]
+W_DRAIN = 1.5                                  # make_district.py の W_DRAIN と同じ
+PROBE_DRAIN = 4                                # 北の組の小排水路のプローブ(31, 13)
+
+
+def drain_fraction():
+    """幅 1.5 m のケースの小排水路のセルの平面積率(モデルの build_wfrac と同じ: 幅 × セルの中の河道の長さ / セル面積。
+    河道の長さは隣の河道のセルへの半距離の和で、小排水路の両端のセルは半分)。小排水路のセルの真偽と平面積率"""
+    rw = np.loadtxt("data/rw.txt", dtype=int) > 0
+    pad = np.pad(rw, 1)
+    lch = np.zeros(rw.shape)
+    for dj in (-1, 0, 1):
+        for di in (-1, 0, 1):
+            if di or dj:
+                nb = pad[1 + dj:1 + dj + rw.shape[0], 1 + di:1 + di + rw.shape[1]]
+                lch += np.where(nb, DX * np.hypot(di, dj) / 2.0, 0.0)
+    return rw, np.where(rw, W_DRAIN * lch / (DX * DX), 1.0)
+
+
+def drain_volume(case, hour):
+    """小排水路の水量 (m3。時刻 hour の水深 H × 平面積率 × セル面積。幅 10 m のケースは平面積率 1)"""
+    rw, frac = drain_fraction()
+    if not case.endswith("w"):
+        frac = np.ones(rw.shape)
+    h = np.maximum(np.loadtxt(f"result_{case}/H{hour:04d}.txt"), 0.0)
+    return float((h * frac)[rw].sum() * DX * DX)
+
+
+def fig_drains():
+    if not any(have(c) for _, cb, cw in WIDE for c in (cb, cw)):
+        return
+    z = np.loadtxt("data/z.txt")
+    zf = z[13, 30]                             # 小排水路(行 13)の南隣の区画の田面(31, 14)
+    fig, axs = plt.subplots(2, 2, figsize=(9.8, 6.4), sharex=True, sharey="row")
+    for col, (g, cb, cw) in enumerate(WIDE):
+        color = C1 if g == "N" else C2
+        for c, ls in ((cb, "-"), (cw, "--")):
+            if not have(c):
+                continue
+            t, zp, h = probe(c, 1)
+            axs[0, col].plot(t, h, color=color, ls=ls, lw=2)
+            t4, z4, h4 = probe(c, PROBE_DRAIN)
+            axs[1, col].plot(t4, z4 + h4, color=color, ls=ls, lw=2)
+        axs[1, col].axhline(zf, color=INK2, lw=0.8, ls=":")
+        axs[0, col].set_title(T("(%d) 集落の浸水深 — %s" % (col + 1, SCEN[g]), "(%d) settlement depth — %s" % (col + 1, SCEN[g])),
+                              fontsize=9, loc="left", color=INK)
+        axs[1, col].set_title(T("(%d) 北の組の小排水路の水位 — %s" % (col + 3, SCEN[g]),
+                                "(%d) water level of the northern small drain — %s" % (col + 3, SCEN[g])),
+                              fontsize=9, loc="left", color=INK)
+        axs[1, col].set_xlabel(T("時刻 (h)", "time (h)"), fontsize=8, color=INK2)
+        axs[1, col].set_xlim(0, 48)
+        axs[1, col].set_xticks(range(0, 49, 6))
+    axs[0, 0].set_ylabel(T("水深 (m)", "depth (m)"), fontsize=8, color=INK2)
+    axs[1, 0].set_ylabel(T("水位 (m)", "water level (m)"), fontsize=8, color=INK2)
+    for ax in axs.flat:
+        style(ax)
+    # 凡例は空いている (2)(D は集落が浸からない)に 1 つ。色は列ごとに違うので線種だけを灰色で示す
+    hs = [plt.Line2D([], [], color=INK2, ls="-", lw=2), plt.Line2D([], [], color=INK2, ls="--", lw=2),
+          plt.Line2D([], [], color=INK2, ls=":", lw=0.8)]
+    axs[0, 1].legend(hs, [T("小排水路 10 m(1 セル)", "small drains 10 m (one cell)"),
+                          T("小排水路 1.5 m(サブグリッド幅)", "small drains 1.5 m (subgrid width)"),
+                          T("南隣の区画の田面((3)(4))", "field of the plots to the south ((3), (4))")],
+                     fontsize=7, frameon=False, loc="upper right")
+    fig.tight_layout()
+    fig.savefig(os.path.join(FIGDIR, "drains.png"), dpi=130)
+    plt.close(fig)
+
+
 # ---------------------------------------------------------------- 結果 2: 同じ条件の表現 B と表現 A
 # 表現ごとに色を分け(表現 B = 青の実線、表現 A = オレンジ)、表現 A の与え方は線種で。表現 B と最も近く、最終的に
 # 比べたい双方向で集水面積率 fn_pd_catch を与えたものを太い実線で目立たせ、双方向を長い破線、片方向を短い点線にする。
@@ -431,10 +505,10 @@ def fig_wq():
 
 
 def table_wq():
-    """表 4(結果 3): 雨の前の湛水の物質の行き先(初めの質量に対する %)と濃度"""
+    """表 5(結果 3): 雨の前の湛水の物質の行き先(初めの質量に対する %)と濃度"""
     print()
-    print(T("表 4(結果 3。雨の前の湛水 10 mg/L に溶けた物質の行き先。初めの質量に対する %)",
-            "Table 4 (result 3; where the substance dissolved in the ponding before the rain (10 mg/L) went, % of the "
+    print(T("表 5(結果 3。雨の前の湛水 10 mg/L に溶けた物質の行き先。初めの質量に対する %)",
+            "Table 5 (result 3; where the substance dissolved in the ponding before the rain (10 mg/L) went, % of the "
             "initial mass)"))
     print(T("| 落水口 | 表現 | 初めの質量 kg | 排水機場から出た 24 h / 48 h | 水田に残った 24 h / 48 h | 減水深で抜けた 48 h | "
             "地表に残った 48 h | 排水機場の前の最高濃度 mg/L(時刻) | 集落の浸水の最高濃度 mg/L |",
@@ -508,10 +582,30 @@ def table():
         hx, tx, dur, lv, hm, p = stats(c)
         print("| %s | %.2f(%.1f h) | %s | %.2f | %.0f | %.0f | %.0f | %.0f |"
               % (SCEN[s], hx, tx, dur, lv, hm, p["inflow(m3)"][-1], p["levee_in(m3)"][-1], p["spill(m3)"][-1]))
-    # 表 2(結果 2): 同じ条件の表現 B と表現 A
+    # 表 2(結果 1 の補足): 表現 B の小排水路の幅(10 m と 1.5 m)
     print()
-    print(T("表 2(結果 2。同じ条件の %s と %s)" % (REP_B, REP_A),
-            "Table 2 (result 2; %s and %s under the same conditions)" % (REP_B, REP_A)))
+    print(T("表 2(結果 1 の補足。%s。小排水路の幅)" % REP_B,
+            "Table 2 (supplement to result 1; %s; width of the small drains)" % REP_B))
+    print(T("| 落水口 | 小排水路の幅 | 集落の最大浸水深 m(時刻) | 集落の浸水深 > 0.1 m の時間 h | 排水機場の前の最高水位 m | "
+            "北の組の小排水路の最高水位 m(時刻) | 24 h の小排水路の水量 m³ | 畦畔を越えた流入 m³ | 畦畔を越えた流出 m³ |",
+            "| Outlets | width of the small drains | max settlement depth m (time) | hours with settlement depth > 0.1 m | "
+            "max level at the pumping station m | max level of the northern small drain m (time) | water in the small "
+            "drains at 24 h m³ | inflow over the levees m³ | outflow over the levees m³ |"))
+    print("|---|---|---:|---:|---:|---:|---:|---:|---:|")
+    for g, cb, cw in WIDE:
+        for c, wlab in ((cb, T("10 m(1 セル)", "10 m (one cell)")), (cw, T("1.5 m(サブグリッド幅)", "1.5 m (subgrid width)"))):
+            if not have(c):
+                continue
+            hx, tx, dur, lv, hm, p = stats(c)
+            t4, z4, h4 = probe(c, PROBE_DRAIN)
+            k4 = int(np.argmax(z4 + h4))
+            print("| %s | %s | %.2f(%.1f h) | %s | %.2f | %.2f(%.1f h) | %.0f | %.0f | %.0f |"
+                  % (g, wlab, hx, tx, dur, lv, (z4 + h4)[k4], t4[k4], drain_volume(c, 24), p["levee_in(m3)"][-1],
+                     p["spill(m3)"][-1]))
+    # 表 3(結果 2): 同じ条件の表現 B と表現 A
+    print()
+    print(T("表 3(結果 2。同じ条件の %s と %s)" % (REP_B, REP_A),
+            "Table 3 (result 2; %s and %s under the same conditions)" % (REP_B, REP_A)))
     print(T("| 落水口 | 表現 | 集落の最大浸水深 m(時刻) | 集落の浸水深 > 0.1 m の時間 h | 排水機場の前の最高水位 m | "
             "水田の最大の平均水深 mm | 落水口からの逆流 m³ | 畦畔を越えた流入 m³ |",
             "| Outlets | Representation | max settlement depth m (time) | hours with settlement depth > 0.1 m | "
@@ -530,12 +624,12 @@ def table():
                 back, levin = "%.0f" % p["inflow(m3)"][-1], "%.0f" % p["levee_in(m3)"][-1]
             print("| %s | %s | %.2f(%.1f h) | %s | %.2f | %.0f | %s | %s |"
                   % (g, rname, hx, tx, dur, lv, hm, back, levin))
-    # 表 3(結果 2 の仕組み): 48 h までの雨と水田に入った水。地区全体の雨は雨の段の積分 × 面積
+    # 表 4(結果 2 の仕組み): 48 h までの雨と水田に入った水。地区全体の雨は雨の段の積分 × 面積
     tr, rr = rain_series()
     vrain = sum(rr[k] * (tr[k + 1] - tr[k]) for k in range(len(tr) - 1)) / 1000.0 * (NX * DX) * (NY * DX)
     print()
-    print(T("表 3(48 h までの水の行き先 m³。地区に降った雨 %.0f m³)" % vrain,
-            "Table 3 (where the water went up to 48 h, m³; rain on the district %.0f m³)" % vrain))
+    print(T("表 4(48 h までの水の行き先 m³。地区に降った雨 %.0f m³)" % vrain,
+            "Table 4 (where the water went up to 48 h, m³; rain on the district %.0f m³)" % vrain))
     print(T("| 落水口 | 表現 | 水田の面積 ha | 水田の上に降った雨 | 集水面積からタンクへ入った雨 | ほかの所に降った雨 | 水田への流入(逆流 + 畦畔を越えた流入) | 水田に入った水の計 |",
             "| Outlets | Representation | paddy area ha | rain on the paddy fields | rain of the catchment into the tanks | rain elsewhere | inflow into the paddy fields (backflow + over the levees) | total water into the paddy fields |"))
     print("|---|---|---:|---:|---:|---:|---:|---:|")
@@ -564,6 +658,7 @@ if __name__ == "__main__":
     fig_district()
     fig_maps()
     fig_series()
+    fig_drains()
     fig_scale()
     fig_wq()
     table()

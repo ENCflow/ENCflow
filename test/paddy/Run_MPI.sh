@@ -5,7 +5,8 @@
 # 計算と行部分和の決定的総和なので、ランク数によらない)。閉じた領域の水の保存(param_mix.txt)、
 # 雨滴侵食から水田の部分を外す検定(param_wash.txt・param_splash.txt。地盤高も np=1 とバイト比較)、
 # 双方向(二室化)の検定(param_tw_back・tw_flood・tw_drain。np=1 とバイト比較)、
-# 区画の解像(表現 B。§127.8。param_b_*.txt。区画・落水口・市松の角が帯の境にかかる。np=1 とバイト比較)、
+# 区画の解像(表現 B。§127.8。param_b_*.txt。区画・落水口・市松の角が帯の境にかかる。堤防のない幅の河道の
+# セルを向く落水口 b_rw・b_rwc(§127.23)は河道の列が全ての帯をまたぐ。np=1 とバイト比較)、
 # 水質と併用するタンクのプールと区画の解像の減水深の持ち出し、タンクの沈降(param_wq_a・wq_tw・wq_b・wq_vs。
 # np=1 とバイト比較)と
 # その保存 → 再開、土砂(param_sed_tw・b_sed。np=1 とバイト比較)、水質の二相分配(param_wq_kd・wq_bkd。np=1 と
@@ -98,7 +99,7 @@ done
 
 # 区画の解像(表現 B。§127.8): 解析検定と np=1 とのバイト一致
 python3 make_plots.py data_paddy || exit 1
-for t in b_drain b_tight b_over b_back b_ext b_bank b_chain; do
+for t in b_drain b_tight b_over b_back b_ext b_bank b_chain b_rw b_rwc; do
     run "$np" $t param_$t.txt
     python3 Check_paddy.py $t result_$t || exit 1
     if [ "$np" != 1 ]; then

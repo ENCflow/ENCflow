@@ -428,11 +428,11 @@
     {
       "source": "docs/users_guide/paddy.md",
       "target": "docs/en/users_guide/paddy.md",
-      "source_sha256": "fa1752dd5749ed5e194f97d362a2be35b7827786691b89375e1b2ff7ac20452e",
-      "target_sha256": "56fe527ed7b66f16272d8c35123ef853a0ffe71496ff138ee4c2903b4e217b50",
+      "source_sha256": "1d4af2a9176cc8f8ff1e425978a0b7042a599b3d8b386b5cd8f26eaa8ca48ef8",
+      "target_sha256": "2ab92a6eab0c61e5aa33a56bda51e8b3e31b2c1f170926603fb9822467bcb6f7",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "docs/users_guide/parallel.md",
@@ -3407,11 +3407,11 @@
     {
       "source": "examples/paddy_dam/README.md",
       "target": "examples/paddy_dam/en/README.md",
-      "source_sha256": "2e09be41fdb1016dc8fc6891efe84d7721a1e82f76224a9a06bdb5a03c8e6215",
-      "target_sha256": "a6f2995e97b423327809b04fc2ec960891300c231ecdfe8089e4dcf002c983e2",
+      "source_sha256": "977d1f3adae852d327058aef5f1caf747f58e0c5e6e58455333b6471d73ccde1",
+      "target_sha256": "3306ccae9180117ba776ca89ce537de3316207bc0076a862a1b5497eaeb26404",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-27"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "examples/qanat/README.md",
@@ -5450,11 +5450,11 @@
     {
       "source": "test/paddy/README.md",
       "target": "test/paddy/en/README.md",
-      "source_sha256": "4f661693142054ca4602886ae9b2b99b6a9ff815c98bf39a39a8e18387221160",
-      "target_sha256": "ee2830bfe19cdc025295fcdc9d31749f19cc219d1bc9795ac69dc029e8f0e993",
+      "source_sha256": "b38d637ec094fcb7dd832494aa50199bba70429e0746db536fde1382fc6ca3fc",
+      "target_sha256": "4a951b291d771f812c57caea813909bf6dd574cf8b77d3c98e7303202e649a4d",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-26"
+      "reviewed_on": "2026-11-28"
     },
     {
       "source": "test/prmap/README.md",

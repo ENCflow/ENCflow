@@ -1,0 +1,74 @@
+!======================================================================
+! paddy: 区画の解像(表現 B)の落水口が、堤防のない幅の狭い河道のセルを向く(Check_paddy.py b_rw。developer.md §127.23)
+!
+!   b_drain と同じ 16 × 32 セル(Δx = Δy = 5 m)・区画 2 つ・落水口で、落水口の先の列 i = 13 を幅 1 m の河道の
+!   セル(fn_rw・fn_width。サブグリッド幅、堤防なし = 自然河岸)にする。i = 14..16 は地盤 −0.5 m の排水路で、東の辺は
+!   自由流出(落水口は潜らない)。河道のセルの水は横の排水路のセルへ出る。
+!   確認: b_drain と同じ(種類ごとの平均水深 = 堰の厳密解・穴の参照解、台帳の閉合、落水口の流出 = 区画から抜けた
+!   水、畦畔を越える流れがないこと)。落水口の流量は向きの先の河道のセルの幅によらない。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 43200
+  dt_disp = 3600
+  dt_file = 43200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  fn_channel = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_b_rw'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 16
+  ny = 32
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'b_drain_z.txt'
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+  fn_rw = 'b_rw_rw.txt'     ! 列 i = 13 が河道のセル
+  rn0_rw = 0.03
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東の辺(排水路の端)は自由流出。ほかは不透過
+/
+
+&list_paddy
+  fn_pd_plot = 'b_drain_plot.txt'     ! 区画番号
+  fn_pd_outlet = 'b_drain_out.txt'    ! 落水口の向き(5 = 東)
+  fn_pd_class = 'b_drain_class.txt'   ! 装置の種類(区画 1 = 1、区画 2 = 2)
+  pd_hlev = 0.30
+  pd_h0 = 0.25
+  pd_perc_mmd = 0.0
+  pd_dev_type(1:2) = 0, 2
+  pd_board_h(1:2) = 0.03, 0.29
+  pd_board_w(1:2) = 0.30, 0.30
+  pd_cw(1:2) = 0.6, 0.6
+  pd_open_type(2) = 1
+  pd_open_d(2) = 0.05
+  pd_open_z(2) = 0.0
+  pd_co(2) = 0.6
+/
+
+&list_channel
+  fn_width = 'b_rw_w.txt'   ! 河道の幅 1 m(堤防なし)
+/

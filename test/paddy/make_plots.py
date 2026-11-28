@@ -10,6 +10,10 @@
           3000 m2)。i = 13..16 は地盤 −0.5 m の排水路(東の辺は自由流出)、ほかは地盤 0 m の道路。落水口は
           (12, 8) と (12, 22) から東(向き 5)の排水路へ。区画 1 は行 8・9、区画 2 は行 24・25 の帯の境(np = 4)を
           またぐ
+  b_rw    (16 × 32): b_drain と同じ区画・落水口で、落水口の先の列 i = 13 を幅 1 m の河道のセル(b_rw_rw・b_rw_w。
+          サブグリッド幅、堤防なし)にする。i = 14..16 は b_drain と同じ地盤 −0.5 m の排水路(東の辺は自由流出)
+  b_rwc   (16 × 32): b_rw の閉じた変種。i = 13 は地盤 −0.5 m の幅 1 m の河道のセル、i = 14..16 は地盤 +0.5 m
+          (b_rwc_z)。区画から出た水は河道のセルと、あふれた先の道路(地盤 0 m)にだけたまる
   b_tight (20 × 16): 落水口のない区画(地盤はすべて 0 m)。区画 1・2 は i, j = 3..10 の 8 × 8 を斜めの階段で
           分けたもの(i − j ≤ 0 が区画 1)。区画 3(i = 12..17, j = 2..7)の中の 2 つの水たまり(区画でない
           セル)D1 = (14, 4)・D2 = (15, 5) が対角で接する(市松の角。区画 3 のくびれを横切る対角)。区画 5
@@ -53,6 +57,14 @@ def drain(d):
     write(os.path.join(d, "b_drain_out.txt"), nx, ny,
           lambda i, j: 5 if (i, j) in ((12, 8), (12, 22)) else 0, "%d")
     write(os.path.join(d, "b_drain_class.txt"), nx, ny, plot, "%d")   # 区画 1 = 種類 1、区画 2 = 種類 2
+
+
+def rw(d):
+    nx, ny = 16, 32
+    write(os.path.join(d, "b_rw_rw.txt"), nx, ny, lambda i, j: 1 if i == 13 else 0, "%d")
+    write(os.path.join(d, "b_rw_w.txt"), nx, ny, lambda i, j: 1.0 if i == 13 else 0.0, "%.2f")
+    write(os.path.join(d, "b_rwc_z.txt"), nx, ny,
+          lambda i, j: -0.5 if i == 13 else (0.5 if i >= 14 else 0.0), "%.4f")
 
 
 def tight(d):
@@ -137,6 +149,7 @@ def main():
         sys.exit(2)
     d = sys.argv[1]
     drain(d)
+    rw(d)
     tight(d)
     back(d)
     bank(d)
