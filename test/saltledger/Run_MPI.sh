@@ -3,13 +3,14 @@
 #   ./Run_MPI.sh [N](既定 2。N <= 4。どのケースも 8 行以上)
 # 全ケースを N ランクで回して Check_cases.sh で判定し、1 ランク(同じ実行ファイル)でも回して、
 # Log.txt・台帳 salt.csv・最後の塩水の分布(Hss・Hgs)をバイト比較する(台帳の行部分和の集約が
-# ランク数によらないこと、構造物の転送が帯の境で同じ値になること)
+# ランク数によらないこと、底層重力流の受け側の上限と構造物の転送が帯の境で同じ値になること。
+# sea2d は地盤高が x・y の両方で変わり、帯の境をまたいで流れの向きが変わる)
 
 NP=${1:-2}
 sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh mpi || exit 1
 
-cases="sea evap pump0 pump1 pump2 xfer exin exout gwsea"
+cases="sea sea2d evap pump0 pump1 pump2 xfer exin exout gwsea"
 
 tmp=$(mktemp -p .)
 trap 'rm -f "$tmp"' EXIT

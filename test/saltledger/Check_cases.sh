@@ -5,11 +5,13 @@ sdir=$(dirname "$(readlink -f "$0")")
 C="python3 $sdir/Check_saltledger.py"
 rc=0
 # --- 台帳の閉合(全ケース)---
-for c in sea evap pump0 pump1 pump2 xfer exin exout gwsea; do
+for c in sea sea2d evap pump0 pump1 pump2 xfer exin exout gwsea; do
     $C close result_$c || rc=1
 done
 # --- 経路ごとの値 ---
-$C pos   result_sea in_sea_m3 out_sea_m3 || rc=1                 # 海からの流入と、海への流出
+$C sea   result_sea 24 8 10 1 || rc=1                            # 海からの流入・流出、陸の水は全層が塩水
+$C sea   result_sea2d 24 16 10 1 || rc=1                         # 同上(凹凸のある陸。満潮のとき)
+$C sea   result_sea2d 24 16 10 3 || rc=1                         # 同上(潮が引いた後)
 $C evap  result_evap 10000 0.5 2.7777777777777778e-5 10 7200 || rc=1   # 蒸発で縮んだ分が lost_surf
 $C pump  result_pump0 3200 640 0 320 || rc=1                     # 運ばない: 取水側に残り、水深を下回った分が消える
 $C pump  result_pump1 3200 0 960 0 || rc=1                       # 底層から先に: 塩水 0.3 m がすべて出る

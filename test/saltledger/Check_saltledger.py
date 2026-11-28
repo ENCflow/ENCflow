@@ -4,6 +4,9 @@
   Check_saltledger.py close RESDIR
       台帳の閉合(記録の全行): 地表の体積 = 初期 + 海から − 海へ + 辺から − 辺へ − 水位規定 − 浸透 + 湧出
       − 構造物 − lost_surf、地下の体積 = 初期 + 浸透 − 湧出 + gvadj + 海から − 海へ − 揚水 − lost_gw。
+  Check_saltledger.py sea RESDIR NX NY DX N
+      海から入った塩水: 流入と流出の両方が起き、分布 N で陸の塩水層の厚さが水深に等しく(全層が塩水)、
+      整合クランプで消えた量が流入の 1e-6 以下。
   Check_saltledger.py evap RESDIR AREA HSS0 E DT T
       蒸発: 最後の行で lost_surf = (E·(T − DT))·AREA、地表の体積 = (HSS0 − E·(T − DT))·AREA
       (蒸発散は塩水の処理の後に働くので、整合クランプは 1 ステップ遅れる)。
@@ -71,6 +74,27 @@ def check_close(args):
         worst_g = max(worst_g, abs(rg))
     ok = line(worst_s <= TOL * scale, f"地表の塩水の収支の残差 {worst_s:.2e} m3(最大の項 {scale:.4e} m3 の {worst_s/scale:.1e})")
     ok = line(worst_g <= TOL * scale, f"地下の塩水の収支の残差 {worst_g:.2e} m3({worst_g/scale:.1e})") and ok
+    return ok
+
+
+def check_sea(args):
+    res, nx, ny, dx, n = args[0], int(args[1]), int(args[2]), float(args[3]), int(args[4])
+    L = read_ledger(res)
+    v = L[-1]
+    ok = line(v["in_sea_m3"] > 0.0 and v["out_sea_m3"] > 0.0,
+              f"海からの流入 {v['in_sea_m3']:.6e} m3、海への流出 {v['out_sea_m3']:.6e} m3(両方が起きている)")
+    lost = max(r["lost_surf_m3"] for r in L)
+    ok = line(lost <= 1.0e-6 * v["in_sea_m3"],
+              f"整合クランプで消えた量 {lost:.3e} m3(流入の {lost/v['in_sea_m3']:.1e}。1e-6 以下)") and ok
+    h = read_bil(f"{res}/H{n:04d}.bil", nx, ny)
+    s = read_bil(f"{res}/Hss{n:04d}.bil", nx, ny)
+    dev = max(abs(s[j][i] - h[j][i]) for j in range(ny) for i in range(1, nx))
+    hmax = max(h[j][i] for j in range(ny) for i in range(1, nx))
+    ok = line(dev <= 1.0e-6 * hmax, f"分布 {n}: 陸の塩水層と水深の差の最大 {dev:.2e} m(水深の最大 {hmax:.3f} m。全層が塩水)") and ok
+    vol = sum(h[j][i] for j in range(ny) for i in range(1, nx)) * dx * dx
+    it = min(range(len(L)), key=lambda k: abs(L[k]["time_s"] - 600.0 * n))
+    ok = line(near(L[it]["vol_surf_m3"], vol, tol=1.0e-5),
+              f"台帳の地表の体積 {L[it]['vol_surf_m3']:.6e} m3 = 陸の水の体積 {vol:.6e} m3") and ok
     return ok
 
 
@@ -143,7 +167,7 @@ def main():
     if len(sys.argv) < 3:
         raise SystemExit(__doc__)
     mode, args = sys.argv[1], sys.argv[2:]
-    table = {"close": check_close, "evap": check_evap, "pump": check_pump,
+    table = {"close": check_close, "sea": check_sea, "evap": check_evap, "pump": check_pump,
              "xfer": check_xfer, "exin": check_exin, "well": check_well, "pos": check_pos}
     if mode not in table:
         raise SystemExit(__doc__)

@@ -12,7 +12,8 @@ each path. There is no reference.
 
 | Case (param_<name>.txt) | Path | Setup | Criterion |
 |---|---|---|---|
-| sea | Inflow from and outflow to the sea (surface) | Dry land with the sea at the west end (24 × 8 cells). The tide level moves 0 → 2 m → 1.3 m | `in_sea_m3`, `out_sea_m3` > 0. The surface balance closes |
+| sea | Inflow from and outflow to the sea (surface) | Dry land with the sea at the west end (24 × 8 cells). The tide level moves 0 → 2 m → 1.3 m | Both inflow and outflow occur, and the water on land stays entirely salt (salt layer = depth). The amount removed by the consistency clamp is 1e-6 of the inflow or less |
+| sea2d | Same (the flow direction changes from place to place) | The same tide floods land with bumps of 0.8–1.2 m ground elevation (24 × 16 cells) | Both at high tide and after the ebb, the water on land stays entirely salt. The amount removed by the consistency clamp is 1e-6 of the inflow or less |
 | evap | Evaporation lowers the depth below the salt layer | Still water 0.5 m deep, entirely salt, evaporated at 0.1 m/h for 2 hours | The volume by which the salt layer shrinks appears in `lost_surf_m3` (evaporation rate × time × area; one step late) |
 | pump0 | Structures do not carry the salt layer (`f_salt_struct = 0`, the default) | A box 1 m deep (the bottom 0.3 m is salt) pumped down to 0.2 m by a pump drawing from all cells to outside the domain | The salt layer stays, and the 0.1 m by which the depth falls below it appears in `lost_surf_m3` |
 | pump1 | Bottom layer first (`f_salt_struct = 1`) | Same | All 0.3 m of salt water appears in `out_struct_m3` |
@@ -27,8 +28,8 @@ precision of the CSV).
 
 | File | Content |
 |---|---|
-| `Run.sh` | Runs the 9 cases serially and judges them with `Check_cases.sh` (about 10 seconds) |
-| `Run_MPI.sh N` | Runs the 9 cases on N ranks and on 1 rank, judges them, and compares Log.txt, salt.csv and the last salt-water fields (Hss, Hgs) byte by byte |
+| `Run.sh` | Runs the 10 cases serially and judges them with `Check_cases.sh` (about 15 seconds) |
+| `Run_MPI.sh N` | Runs the 10 cases on N ranks and on 1 rank, judges them, and compares Log.txt, salt.csv and the last salt-water fields (Hss, Hgs) byte by byte |
 | `Check_cases.sh` | Judges all cases (calls `Check_saltledger.py` with the arguments of each case) |
 | `Check_saltledger.py` | The checks themselves (Python standard library only) |
 | `make_data.py` | Regenerates the inputs in `data_saltledger/` (sea mask, ground elevation, depth, salt layer, soil thickness, intake and outlet cells) |
@@ -43,6 +44,13 @@ make
 
 ## Findings
 
+- Salt water entering from the sea (sea, sea2d): with advection alone the same amount as the water
+  passes the same faces, so the water on land stays entirely salt. The bottom gravity current limits
+  the total salt water entering a cell from several edges at once to the free capacity of the
+  receiving cell (with a limit per edge only, the part of the total exceeding the free capacity is
+  removed by the consistency clamp; developer.md §140.5). sea2d checks, by comparing the results of
+  different rank counts byte by byte, that this limit takes the same value across the band
+  boundaries of MPI.
 - Evaporation (evap) removes water only, but the fresh and salt water layers hold only the volume of
   salt water, so the salt layer shrinks when the depth falls below it. More concentrated salt water
   and precipitated salt cannot be represented (only the volume appears in `lost_surf_m3`). To follow

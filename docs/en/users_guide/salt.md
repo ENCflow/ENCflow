@@ -286,6 +286,10 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   `lost_surf_m3` and `lost_gw_m3` of the ledger `salt.csv`.
 - Structures and sinks do not carry the surface salt layer by default (`f_salt_struct`; section
   above).
+- The gravity current of the surface salt layer does not put more salt water into a cell than
+  its free capacity (depth − salt layer), counted as the total entering from several directions
+  at once. When water that is entirely salt flows (storm-surge and tsunami inundation), the salt
+  layer does not exceed the depth.
 - The cap of the [river-bed exchange capacity](gwflow.md) (f_gwbed) also
   applies to the salt-zone flux at the boundary between river and non-river
   cells, in the same form (capacity × passage width × saturated salt

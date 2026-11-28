@@ -482,8 +482,8 @@
     {
       "source": "docs/users_guide/salt.md",
       "target": "docs/en/users_guide/salt.md",
-      "source_sha256": "a952ea5ea2ecc953ea872e7cc9684f2ac39431e65646416317a463bc567a5832",
-      "target_sha256": "d8dcb00a1e055c55e24e9f0d5473fdc5dd180a2e4cf142b3dd9d7c9d6a198d1f",
+      "source_sha256": "a3e426dd32236affe8598b25ae7a152f2a7f51ebddd186a52a34b7a63fe9d3b7",
+      "target_sha256": "0c764743b8b7145afccdade24b15863e12b2de90dc818488cb5135e8007a7920",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
@@ -4361,8 +4361,8 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "e4173a79a52c6b4e02820c020b8a4a483d04bfea96805da60c0f270f7273e2c0",
-      "target_sha256": "4a67513180af2074abb2dc881f2089f779659531cbfc308426e3b36459513f20",
+      "source_sha256": "dcb70df21677c688de5343dde19042cad4f8da0961fe827c31b6a1d69ca37c0f",
+      "target_sha256": "e5bd502cce2f379a8f8abc677b7bcbd5f4c3534d57d7169e10edcffcf6dbb7f2",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
@@ -5540,8 +5540,8 @@
     {
       "source": "test/saltledger/README.md",
       "target": "test/saltledger/en/README.md",
-      "source_sha256": "aa74dfd23172acef367dd2143c9508cbc55f7bf29f45d2be73edb9aa3a9d06b4",
-      "target_sha256": "3ac2374a98d53a38ae46a0cca329077f7622ecd44a05f40fb4a092104d381929",
+      "source_sha256": "3e9184c36bbcadb9310df14b79e081b9d4be08e2d43403ad29c39fca8921cfd4",
+      "target_sha256": "760da854218a79c4329602843d8d9ffb5fca84043b5cf817b521d1307902625a",
       "reviewer": "Claude (Claude Code session; full text compared side by side with the Japanese source; numbers checked against the test and example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"

@@ -36,7 +36,8 @@ module m_saltwater
   !      (3) が運ぶ前に消さないため。(3) の連続式の後のクランプが担う。§47.7)
   !  (2) 地表の底層重力流(f_salt_surf=1): 適応サブサイクリング
   !      (m_glacier の SIA と同じ「D_max の allreduce → 分割数」方式。
-  !       全ランク同一 = collective 安全・決定的)
+  !       全ランク同一 = collective 安全・決定的)。流入の合計が受け側のセルの
+  !      空き容量 h − hss を超えないよう、セルごとに縮める(§140.5)
   !  (3) 地下の塩水 zone 側方流(f_salt_gw=1): 上記 (a)(b)。水頭 η と飽和の
   !      判定は層1の側方流の直前の写し(s%hgsnap・s%hsnap)で評価する = 合計と
   !      塩水 zone が同じ状態の流束になる(§47.7。別々の状態だと飽和の判定で
@@ -141,6 +142,8 @@ module m_saltwater
                                      !   側方流と同じ幅を使う。§16.6)
     real, allocatable :: qs(:,:,:)   ! エッジ流量4成分。一時作業領域(共用)
     real, allocatable :: qb(:,:,:)   ! 同(バロクリニック成分。gw のみ)
+    real, allocatable :: frc(:,:)    ! 底層重力流の受け側のセルごとの倍率(流入の合計が空き容量を
+                                     !   超えるセルで 1 未満。一時作業領域。surf のみ。§140.5)
     ! 台帳 salt.csv(§140)。行部分和(real64。体積 m3 の累積)
     !   1 = 海から地表へ、2 = 地表から海へ、3 = 開いた辺から内へ、4 = 開いた辺から外へ、
     !   5 = 水位規定セルへ(正味)、6 = 浸透の配分(地表 → 地下)、7 = 湧出の配分(地下 → 地表)、
@@ -294,6 +297,7 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   call gwflow_lateral_geom_get(lat, sl%sw%rdr, sl%sw%wl, sl%sw%ainv)
   if (sl%sw%gw) call gwflow_lateral_open_get(lat, sl%sw%wlo)
   allocate(sl%sw%qs(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
+  if (sl%sw%surf) allocate(sl%sw%frc(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
   if (sl%sw%gw) allocate(sl%sw%qb(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
 
   ! --- 状態の確保と初期値(海セル・無効セルには置かない) ---
@@ -542,11 +546,11 @@ subroutine surf_gravity_current(sl, g, s, dts)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
-  integer :: i, j, k, in, jn, jt, isub, nsub
+  integer :: i, j, k, in, jn, jt, isub, nsub, jlo, jhi, jr1, jr2
   real :: hmax(1), sum_fac, dcoef, dt_lim, dtsub
   real :: pc, pn, zc, zn, hup, hse, dp, gq, dh_up, dh_rcv, cap_rcv, dhg
-  real :: zsill, zbup
-  logical :: have_bank, have_swall
+  real :: zsill, zbup, qin
+  logical :: have_bank, have_swall, scaled
   character(len=256) :: msg
 
   ! 仮想壁の天端(堤防: 河道セル持ちの g%zbank、海岸堤防: 陸側セル持ちの
@@ -586,12 +590,18 @@ subroutine surf_gravity_current(sl, g, s, dts)
   do isub = 1, nsub
     call par_halo_cell(s%hss)
 
-    ! --- ループ1: エッジ流量(書き手はハロ行 je+1 まで冗長計算) ---
+    ! --- ループ1: エッジ流量(書き手はハロ行まで冗長計算) ---
+    !     連続式(ループ2)が読むのは行 js..je+1 が持つエッジ。受け側のセルごとの上限
+    !     (ループ1b)が行 js−1..je+1 のセルの流入の合計を数えるので、そのセルを囲むエッジ =
+    !     行 js−1..je+2 が持つエッジまで計算する(読むのは行 js−2..je+2 = ハロ 2 行の範囲。
+    !     全域端でクリップ)
     jt = min(dcp%je + 1, dcp%jeh)
+    jlo = max(dcp%js - 1, dcp%jsh)
+    jhi = min(dcp%je + 2, dcp%jeh)
     !$omp parallel do schedule(static) &
     !$omp   private(i, j, k, in, jn, pc, pn, zc, zn, hup, hse, dp, gq, dh_up, dh_rcv, cap_rcv, &
     !$omp           zsill, zbup)
-    do j = dcp%js, jt
+    do j = jlo, jhi
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
         zc = s%z(i,j) + s%hss(i,j)
@@ -669,6 +679,58 @@ subroutine surf_gravity_current(sl, g, s, dts)
       end do
     end do
     !$omp end parallel do
+
+    ! --- ループ1b: 受け側のセルごとの上限(§140.5) ---
+    !     上のエッジごとの制限は、1 本のエッジの流入を受け側の空き容量 h − hss までに
+    !     抑えるだけで、複数のエッジから同時に入ると合計が空き容量を超える。超えた分は次の
+    !     ステップの整合クランプ(m_saltwater_calc の (1))で消え、送り側には不足が残る
+    !     (全層が塩水の水が水面勾配を持つとき、丸めの大きさの不足がステップごとに増えて
+    !     塩水が失われた)。受け側のセルごとに流入の合計を数え、空き容量を超えるセルへの
+    !     流入を同じ倍率で縮める。超えるセルがなければ流量は変えない(従来とビット一致)。
+    !     倍率は行 js−1..je+1 のセルについて求める(ハロ行のセルの倍率は、その行を担当する
+    !     ランクと同じ値・同じ演算順になる)
+    jr1 = max(dcp%js - 1, dcp%jsh)
+    jr2 = min(dcp%je + 1, dcp%jeh)
+    scaled = .false.
+    !$omp parallel do schedule(static) private(i, j, k, qin, cap_rcv) reduction(.or.:scaled)
+    do j = jr1, jr2
+      do i = g%wx(1,j), g%wx(2,j)
+        sl%sw%frc(i,j) = 1.0
+        if (g%x(i,j) <= 0) cycle
+        if (g%sw(i,j) > 0) cycle
+        qin = 0.0
+        do k = 1, 8
+          qin = qin + max(-sign_e(k) * sl%sw%qs(ke(k), i+die(k), j+dje(k)), 0.0)
+        end do
+        if (qin <= 0.0) cycle
+        cap_rcv = max(s%h(i,j) - s%hss(i,j), 0.0)
+        if (qin * dtsub * sl%sw%ainv > cap_rcv) then
+          sl%sw%frc(i,j) = cap_rcv / (qin * dtsub * sl%sw%ainv)
+          scaled = .true.
+        end if
+      end do
+    end do
+    !$omp end parallel do
+    if (scaled) then
+      ! エッジの受け側(流れの向きの先)の倍率を掛ける。連続式が読む行 js..je+1 のエッジだけ
+      !$omp parallel do schedule(static) private(i, j, k, in, jn, gq)
+      do j = dcp%js, jt
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0) cycle
+          do k = 1, 4
+            gq = sl%sw%qs(k, i+die(k), j+dje(k))
+            if (gq > 0.0) then
+              in = i + din(k)
+              jn = j + djn(k)
+              if (sl%sw%frc(in,jn) < 1.0) sl%sw%qs(k, i+die(k), j+dje(k)) = gq * sl%sw%frc(in,jn)
+            else if (gq < 0.0) then
+              if (sl%sw%frc(i,j) < 1.0) sl%sw%qs(k, i+die(k), j+dje(k)) = gq * sl%sw%frc(i,j)
+            end if
+          end do
+        end do
+      end do
+      !$omp end parallel do
+    end if
 
     ! --- ループ2: 連続式(発散)。h は不変(交換流) ---
     !$omp parallel do schedule(static) private(i, j, k, dhg)
@@ -1113,6 +1175,7 @@ subroutine m_saltwater_dispose(sl, p, g, s)
   if (allocated(sl%sw%qs)) deallocate(sl%sw%qs)
   if (allocated(sl%sw%qb)) deallocate(sl%sw%qb)
   if (allocated(sl%sw%wlo)) deallocate(sl%sw%wlo)
+  if (allocated(sl%sw%frc)) deallocate(sl%sw%frc)
   if (allocated(sl%sw%vrow)) deallocate(sl%sw%vrow)
   if (is_root .and. sl%sw%un /= 0) close(sl%sw%un)
   sl%sw%un = 0
