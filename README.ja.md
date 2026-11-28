@@ -185,9 +185,9 @@ ENCflow は、深さ平均・密度一定の平面2次元の世界に意図的�
   第三者が遡れる状態を保つことを、全ソース公開と並ぶ基本方針に
   しています([docs/policy.md](docs/policy.md)。英訳は
   [docs/en/policy.md](docs/en/policy.md))。
-- **プロジェクトとしての持続性** — 設計判断の理由と経緯
-  ([docs/developer.md](docs/developer.md))から全体像
-  ([docs/architecture.md](docs/architecture.md))までが文書化され、
+- **プロジェクトとしての持続性** — 全体像
+  ([docs/architecture.md](docs/architecture.md))から設計判断の理由と経緯
+  ([docs/developer.md](docs/developer.md))までが文書化され、
   変更の正しさは回帰テストと CI が機械的に検証します。開発の知識が
   リポジトリ自体に外在化されているため、全ソース公開と合わせて、
   現在の開発主体が継続しない場合でも第三者による開発の継続が可能です。

@@ -13,9 +13,9 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "183ad38047bc4f92f8f6339ffaa55b9c777c12b8d859fee0970921b00186a67b",
-      "target_sha256": "f8c6cf5cb3d4959888a3891fd7af7dd9750a88cd7c097e494c7d8fda9e752bdd",
-      "reviewer": "Claude (Claude Code session; \"Learning to use it\": the pointers for developers reordered to policy, then the architecture map; both paragraphs compared)",
+      "source_sha256": "70bef17d0bce12d1fe3b941924cd03cac7b41de1c02d725b6b88efb78a467a7b",
+      "target_sha256": "a9e8b595e4e11cf4f779c788d68ed976901d8510b1196cbb077d30c623d97245",
+      "reviewer": "Claude (Claude Code session; \"Sustainability as a project\": the documents reordered to the overall map, then the reasons for each design decision; both bullets compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-28"
     },
